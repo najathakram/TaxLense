@@ -79,6 +79,7 @@ export type ClassificationCountAggregateOutputType = {
   evidenceTier: number
   source: number
   reasoning: number
+  substantiation: number
   isCurrent: number
   createdAt: number
   createdByUserId: number
@@ -139,6 +140,7 @@ export type ClassificationCountAggregateInputType = {
   evidenceTier?: true
   source?: true
   reasoning?: true
+  substantiation?: true
   isCurrent?: true
   createdAt?: true
   createdByUserId?: true
@@ -242,6 +244,7 @@ export type ClassificationGroupByOutputType = {
   evidenceTier: number
   source: $Enums.ClassificationSource
   reasoning: string | null
+  substantiation: runtime.JsonValue | null
   isCurrent: boolean
   createdAt: Date
   createdByUserId: string | null
@@ -281,6 +284,7 @@ export type ClassificationWhereInput = {
   evidenceTier?: Prisma.IntFilter<"Classification"> | number
   source?: Prisma.EnumClassificationSourceFilter<"Classification"> | $Enums.ClassificationSource
   reasoning?: Prisma.StringNullableFilter<"Classification"> | string | null
+  substantiation?: Prisma.JsonNullableFilter<"Classification">
   isCurrent?: Prisma.BoolFilter<"Classification"> | boolean
   createdAt?: Prisma.DateTimeFilter<"Classification"> | Date | string
   createdByUserId?: Prisma.StringNullableFilter<"Classification"> | string | null
@@ -298,6 +302,7 @@ export type ClassificationOrderByWithRelationInput = {
   evidenceTier?: Prisma.SortOrder
   source?: Prisma.SortOrder
   reasoning?: Prisma.SortOrderInput | Prisma.SortOrder
+  substantiation?: Prisma.SortOrderInput | Prisma.SortOrder
   isCurrent?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   createdByUserId?: Prisma.SortOrderInput | Prisma.SortOrder
@@ -318,6 +323,7 @@ export type ClassificationWhereUniqueInput = Prisma.AtLeast<{
   evidenceTier?: Prisma.IntFilter<"Classification"> | number
   source?: Prisma.EnumClassificationSourceFilter<"Classification"> | $Enums.ClassificationSource
   reasoning?: Prisma.StringNullableFilter<"Classification"> | string | null
+  substantiation?: Prisma.JsonNullableFilter<"Classification">
   isCurrent?: Prisma.BoolFilter<"Classification"> | boolean
   createdAt?: Prisma.DateTimeFilter<"Classification"> | Date | string
   createdByUserId?: Prisma.StringNullableFilter<"Classification"> | string | null
@@ -335,6 +341,7 @@ export type ClassificationOrderByWithAggregationInput = {
   evidenceTier?: Prisma.SortOrder
   source?: Prisma.SortOrder
   reasoning?: Prisma.SortOrderInput | Prisma.SortOrder
+  substantiation?: Prisma.SortOrderInput | Prisma.SortOrder
   isCurrent?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   createdByUserId?: Prisma.SortOrderInput | Prisma.SortOrder
@@ -359,6 +366,7 @@ export type ClassificationScalarWhereWithAggregatesInput = {
   evidenceTier?: Prisma.IntWithAggregatesFilter<"Classification"> | number
   source?: Prisma.EnumClassificationSourceWithAggregatesFilter<"Classification"> | $Enums.ClassificationSource
   reasoning?: Prisma.StringNullableWithAggregatesFilter<"Classification"> | string | null
+  substantiation?: Prisma.JsonNullableWithAggregatesFilter<"Classification">
   isCurrent?: Prisma.BoolWithAggregatesFilter<"Classification"> | boolean
   createdAt?: Prisma.DateTimeWithAggregatesFilter<"Classification"> | Date | string
   createdByUserId?: Prisma.StringNullableWithAggregatesFilter<"Classification"> | string | null
@@ -374,6 +382,7 @@ export type ClassificationCreateInput = {
   evidenceTier: number
   source: $Enums.ClassificationSource
   reasoning?: string | null
+  substantiation?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   isCurrent?: boolean
   createdAt?: Date | string
   createdByUserId?: string | null
@@ -391,6 +400,7 @@ export type ClassificationUncheckedCreateInput = {
   evidenceTier: number
   source: $Enums.ClassificationSource
   reasoning?: string | null
+  substantiation?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   isCurrent?: boolean
   createdAt?: Date | string
   createdByUserId?: string | null
@@ -406,6 +416,7 @@ export type ClassificationUpdateInput = {
   evidenceTier?: Prisma.IntFieldUpdateOperationsInput | number
   source?: Prisma.EnumClassificationSourceFieldUpdateOperationsInput | $Enums.ClassificationSource
   reasoning?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  substantiation?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   isCurrent?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   createdByUserId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -423,6 +434,7 @@ export type ClassificationUncheckedUpdateInput = {
   evidenceTier?: Prisma.IntFieldUpdateOperationsInput | number
   source?: Prisma.EnumClassificationSourceFieldUpdateOperationsInput | $Enums.ClassificationSource
   reasoning?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  substantiation?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   isCurrent?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   createdByUserId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -439,6 +451,7 @@ export type ClassificationCreateManyInput = {
   evidenceTier: number
   source: $Enums.ClassificationSource
   reasoning?: string | null
+  substantiation?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   isCurrent?: boolean
   createdAt?: Date | string
   createdByUserId?: string | null
@@ -454,6 +467,7 @@ export type ClassificationUpdateManyMutationInput = {
   evidenceTier?: Prisma.IntFieldUpdateOperationsInput | number
   source?: Prisma.EnumClassificationSourceFieldUpdateOperationsInput | $Enums.ClassificationSource
   reasoning?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  substantiation?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   isCurrent?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   createdByUserId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -470,6 +484,7 @@ export type ClassificationUncheckedUpdateManyInput = {
   evidenceTier?: Prisma.IntFieldUpdateOperationsInput | number
   source?: Prisma.EnumClassificationSourceFieldUpdateOperationsInput | $Enums.ClassificationSource
   reasoning?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  substantiation?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   isCurrent?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   createdByUserId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -496,6 +511,7 @@ export type ClassificationCountOrderByAggregateInput = {
   evidenceTier?: Prisma.SortOrder
   source?: Prisma.SortOrder
   reasoning?: Prisma.SortOrder
+  substantiation?: Prisma.SortOrder
   isCurrent?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   createdByUserId?: Prisma.SortOrder
@@ -620,6 +636,7 @@ export type ClassificationCreateWithoutTransactionInput = {
   evidenceTier: number
   source: $Enums.ClassificationSource
   reasoning?: string | null
+  substantiation?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   isCurrent?: boolean
   createdAt?: Date | string
   createdByUserId?: string | null
@@ -635,6 +652,7 @@ export type ClassificationUncheckedCreateWithoutTransactionInput = {
   evidenceTier: number
   source: $Enums.ClassificationSource
   reasoning?: string | null
+  substantiation?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   isCurrent?: boolean
   createdAt?: Date | string
   createdByUserId?: string | null
@@ -680,6 +698,7 @@ export type ClassificationScalarWhereInput = {
   evidenceTier?: Prisma.IntFilter<"Classification"> | number
   source?: Prisma.EnumClassificationSourceFilter<"Classification"> | $Enums.ClassificationSource
   reasoning?: Prisma.StringNullableFilter<"Classification"> | string | null
+  substantiation?: Prisma.JsonNullableFilter<"Classification">
   isCurrent?: Prisma.BoolFilter<"Classification"> | boolean
   createdAt?: Prisma.DateTimeFilter<"Classification"> | Date | string
   createdByUserId?: Prisma.StringNullableFilter<"Classification"> | string | null
@@ -695,6 +714,7 @@ export type ClassificationCreateManyTransactionInput = {
   evidenceTier: number
   source: $Enums.ClassificationSource
   reasoning?: string | null
+  substantiation?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   isCurrent?: boolean
   createdAt?: Date | string
   createdByUserId?: string | null
@@ -710,6 +730,7 @@ export type ClassificationUpdateWithoutTransactionInput = {
   evidenceTier?: Prisma.IntFieldUpdateOperationsInput | number
   source?: Prisma.EnumClassificationSourceFieldUpdateOperationsInput | $Enums.ClassificationSource
   reasoning?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  substantiation?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   isCurrent?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   createdByUserId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -725,6 +746,7 @@ export type ClassificationUncheckedUpdateWithoutTransactionInput = {
   evidenceTier?: Prisma.IntFieldUpdateOperationsInput | number
   source?: Prisma.EnumClassificationSourceFieldUpdateOperationsInput | $Enums.ClassificationSource
   reasoning?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  substantiation?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   isCurrent?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   createdByUserId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -740,6 +762,7 @@ export type ClassificationUncheckedUpdateManyWithoutTransactionInput = {
   evidenceTier?: Prisma.IntFieldUpdateOperationsInput | number
   source?: Prisma.EnumClassificationSourceFieldUpdateOperationsInput | $Enums.ClassificationSource
   reasoning?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  substantiation?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   isCurrent?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   createdByUserId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -758,6 +781,7 @@ export type ClassificationSelect<ExtArgs extends runtime.Types.Extensions.Intern
   evidenceTier?: boolean
   source?: boolean
   reasoning?: boolean
+  substantiation?: boolean
   isCurrent?: boolean
   createdAt?: boolean
   createdByUserId?: boolean
@@ -775,6 +799,7 @@ export type ClassificationSelectCreateManyAndReturn<ExtArgs extends runtime.Type
   evidenceTier?: boolean
   source?: boolean
   reasoning?: boolean
+  substantiation?: boolean
   isCurrent?: boolean
   createdAt?: boolean
   createdByUserId?: boolean
@@ -792,6 +817,7 @@ export type ClassificationSelectUpdateManyAndReturn<ExtArgs extends runtime.Type
   evidenceTier?: boolean
   source?: boolean
   reasoning?: boolean
+  substantiation?: boolean
   isCurrent?: boolean
   createdAt?: boolean
   createdByUserId?: boolean
@@ -809,12 +835,13 @@ export type ClassificationSelectScalar = {
   evidenceTier?: boolean
   source?: boolean
   reasoning?: boolean
+  substantiation?: boolean
   isCurrent?: boolean
   createdAt?: boolean
   createdByUserId?: boolean
 }
 
-export type ClassificationOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "transactionId" | "code" | "scheduleCLine" | "businessPct" | "ircCitations" | "confidence" | "evidenceTier" | "source" | "reasoning" | "isCurrent" | "createdAt" | "createdByUserId", ExtArgs["result"]["classification"]>
+export type ClassificationOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "transactionId" | "code" | "scheduleCLine" | "businessPct" | "ircCitations" | "confidence" | "evidenceTier" | "source" | "reasoning" | "substantiation" | "isCurrent" | "createdAt" | "createdByUserId", ExtArgs["result"]["classification"]>
 export type ClassificationInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   transaction?: boolean | Prisma.TransactionDefaultArgs<ExtArgs>
 }
@@ -841,6 +868,7 @@ export type $ClassificationPayload<ExtArgs extends runtime.Types.Extensions.Inte
     evidenceTier: number
     source: $Enums.ClassificationSource
     reasoning: string | null
+    substantiation: runtime.JsonValue | null
     isCurrent: boolean
     createdAt: Date
     createdByUserId: string | null
@@ -1278,6 +1306,7 @@ export interface ClassificationFieldRefs {
   readonly evidenceTier: Prisma.FieldRef<"Classification", 'Int'>
   readonly source: Prisma.FieldRef<"Classification", 'ClassificationSource'>
   readonly reasoning: Prisma.FieldRef<"Classification", 'String'>
+  readonly substantiation: Prisma.FieldRef<"Classification", 'Json'>
   readonly isCurrent: Prisma.FieldRef<"Classification", 'Boolean'>
   readonly createdAt: Prisma.FieldRef<"Classification", 'DateTime'>
   readonly createdByUserId: Prisma.FieldRef<"Classification", 'String'>

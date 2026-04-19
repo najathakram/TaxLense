@@ -60,7 +60,7 @@ These are the design rails. If a future change violates one of these, the change
 - [x] Prompt 3 — Ingestion
 - [x] Prompt 4 — Merchant Intelligence
 - [x] Prompt 5 — STOPs + Ledger Review
-- [ ] Prompt 6 — Residual AI + Lock
+- [x] Prompt 6 — Residual AI + Lock
 - [ ] Prompt 7 — Output Artifacts
 - [ ] Prompt 8 — Polish + E2E
 
@@ -255,3 +255,20 @@ These were discovered during Prompt 1 and must be respected in all future sessio
 - **`vitest.config.ts`** — added `fileParallelism: false` so DB-backed tests don't step on each other's fixture counts (seed smoke was seeing 21 txns when split test's synthetic parent was alive).
 - **Tests**: 177 passing (153 original + 24 new across stops-resolve / amazon-split / nl-override / ledger-perf). `pnpm build` clean — 3 new routes registered.
 - **Verify**: `pnpm test`; `pnpm build`; `/years/2025/stops` walks PENDING items; `/years/2025/ledger` virtualizes + NL override + split.
+
+## Prompt 6 notes
+
+- **Migration**: `add_substantiation` — `Classification.substantiation Json?` for §274(d) attendees/purpose (required by assertion A08 and risk signal MEAL_SUB_MISSING). STOP resolution for MEALS_* already writes `substantiation` via `derive.ts` (added; existing callers unaffected).
+- **Residual Agent** (`lib/ai/residualTransaction.ts`): claude-sonnet-4-6, temp 0, max_tokens 1024. Input = one txn + its MerchantRule + 5-before/5-after neighbors + active trip. Output = Classification or StopItem. Retry once on JSON parse fail; second failure → escalate to StopItem. AuditEvents: `RESIDUAL_AI_CALL` / `RESIDUAL_AI_PARSE_FAIL` / `RESIDUAL_AI_RUN_COMPLETE`. Invariants mirror Merchant Agent (confidence < 0.60, §274(d) off-trip, citation whitelist).
+- **Residual candidates** (`lib/ai/residualCandidates.ts`): three deterministic gates — (a) GRAY rule with confidence < 0.85, (b) amount > 3σ outlier (needs ≥5 same-merchant samples), (c) GRAY + |amount| > $500 + within ±2 days of trip boundary. Excludes PERSONAL/TRANSFER/PAYMENT and anything the user already decided (source USER/AI_USER_CONFIRMED).
+- **QA Assertions** (`lib/validation/assertions.ts`): all 12 from spec §12 + A13 deposits reconstruction (spec §12.1). Each returns `{ id, name, passed, details, blocking, offendingTransactionIds? }`. `runLockAssertions` returns `{ passed, failed, blockingFailures }`. A11 (refund pairs) is advisory-only in V1 (pairing may be partial); everything else is blocking. All filter `isSplit=false` and `isCurrent=true`.
+- **Risk Score** (`lib/risk/score.ts`): pure function, no AI. Signals from spec §11.2 (meal ratio >5%, vehicle 75%/100%, loss year N², round numbers, Line 27a >10%, tier-4 §274(d), income short, unclassified deposits, meal sub missing, NEEDS_CONTEXT, pending STOPs). Bands: ≤20 LOW, 21–40 MODERATE, 41–70 HIGH, >70 CRITICAL. Tax impact = deductions × 0.25 with explicit "informational estimate" note.
+- **Ledger hash** (`lib/lock/hash.ts`): SHA-256 over canonical JSON of `[{id, postedDate, amountNormalized, merchantNormalized, code, scheduleCLine, businessPct, evidenceTier, ircCitations}]` sorted by txn id. Stored in `TaxYear.lockedSnapshotHash`.
+- **Lock flow** (`/years/[year]/lock/actions.ts`): `attemptLock` returns `{ blocked, reasons[], assertions, risk }`. `confirmLock` re-checks, throws if blocked, otherwise `$transaction`: sets `TaxYear.status=LOCKED`, `lockedAt=now`, stores hash, writes AuditEvent `TAXYEAR_LOCKED`. Redirects back to the page (now in LOCKED state).
+- **Unlock** (same `actions.ts`): `unlockTaxYear(year, rationale)` — rationale must be ≥10 chars. `TaxYear.status → REVIEW`, marks all `Report` rows `isCurrent=false`, writes AuditEvent `TAXYEAR_UNLOCKED` with rationale + prior hash preserved in `beforeState`.
+- **Risk dashboard** (`/years/[year]/risk/page.tsx`): server-computes risk + assertions in parallel. Big score badge with band color, deductions/tax-impact/lock-status cards, grouped signals (Critical/High/Medium/Low) with per-signal border colors, assertions panel with pass/fail icons. Disabled "Attempt lock" button when blockers exist.
+- **Lock page** (`/years/[year]/lock/page.tsx`): locked state shows timestamp + hash + unlock form; unlocked+blocked shows blocker list with deep links to STOPs/ledger/risk; unlocked+clean shows confirm dialog with two-step "I understand" → "Confirm lock" interaction.
+- **Anthropic SDK content-block typing**: use `(b as { text: string }).text` after a `.filter((b) => b.type === "text")` — the typed `TextBlock` shape in `@anthropic-ai/sdk ^0.90.0` now requires `citations`, so the old user-defined type predicate `b is { type: "text"; text: string }` fails the `is-assignable-to-parameter` check.
+- **Tests**: 193 passing (177 original + 16 new across residual-candidates / assertions / risk-score / lock-flow). `pnpm build` clean — 15 routes total (2 new: `/risk`, `/lock`).
+- **Dev server gotcha**: after `prisma generate`, an already-running Turbopack dev server can cache the old client bundle and throw `Unknown argument \`isSplit\`` at runtime even though types are fine. Restart the preview server after schema migrations.
+- **Verify**: `pnpm test` (193 passing); `pnpm build` (clean); preview-verified `/years/2025/risk` renders dashboard with score/signals/assertions and `/years/2025/lock` correctly blocks the seed fixture (20 unclassified + 4 unclassified deposits).

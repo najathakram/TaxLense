@@ -395,6 +395,7 @@ model Classification {
   evidenceTier    Int                  // 1–5; Int for numeric comparison (spec §3.4)
   source          ClassificationSource
   reasoning       String?
+  substantiation  Json?                // §274(d) attendees/purpose/outcome + freeform tags (spec §12.1, Prompt 6)
   isCurrent       Boolean              @default(true)
   createdAt       DateTime             @default(now())
   createdByUserId String?              // User ID or null when actor is AI/SYSTEM

@@ -289,6 +289,7 @@ export const ClassificationScalarFieldEnum = {
   evidenceTier: 'evidenceTier',
   source: 'source',
   reasoning: 'reasoning',
+  substantiation: 'substantiation',
   isCurrent: 'isCurrent',
   createdAt: 'createdAt',
   createdByUserId: 'createdByUserId'
