@@ -1,147 +1,160 @@
 @AGENTS.md
 
-# TaxLens — Claude Development Guide
+# TaxLens — Project Context for Claude Code
 
-## Project Purpose
-TaxLens is a Schedule C tax-preparation SaaS. It ingests bank/credit-card statements, runs AI classification against IRS rules, and produces a ready-to-file Schedule C. Single user (sole prop / single-member LLC). Multi-year workspace model.
+## What this project is
 
----
+A web application that takes a self-employed person's raw bank/card statements (PDF, CSV) and produces a locked master transaction ledger, a 5-sheet financial statements workbook (General Ledger, Schedule C, P&L, Balance Sheet, Schedule C Detail), and an audit defense packet — with every deductible dollar carrying an IRC citation, an evidence tier, and a confidence score.
 
-## 10 Non-Negotiable Principles
+TaxLens is an AI-first **bookkeeping reconstruction** engine. The AI does the reasoning; the user confirms or corrects; the app writes the defensible output. It is a **single-taxpayer, single-tax-year** tool in V1, **Federal Schedule C–focused**, and a **CPA handoff** tool — the user (or their CPA) files the return. The app never files anything. It is **an audit defense system** — every artifact is produced as if an IRS agent will read it next week.
 
-1. **Read before you write.** Always read the relevant source file(s) before editing. Never write from memory alone.
-2. **Schema is the source of truth.** Every field in `prisma/schema.prisma` was chosen deliberately. Do not add, rename, or remove columns without explicit instruction.
-3. **Append-only tables are immutable.** `Transaction`, `Classification`, and `AuditEvent` have NO `@updatedAt`. Never run `UPDATE` or `DELETE` on these rows. Use `isCurrent` flip + new insert for corrections.
-4. **DB triggers are deferred to Session 8.** Until then, append-only enforcement is in application code only.
-5. **Prisma v7 driver adapter is required.** The `PrismaClient` constructor requires `adapter: new PrismaPg({ connectionString })`. No direct URL option exists. See `lib/db.ts`.
-6. **Next.js 16 uses `proxy.ts`, not `middleware.ts`.** Proxy defaults to Node.js runtime. The file exports `proxy` (not `default`) + `config.matcher`. JWT session check via `next-auth/jwt getToken`.
-7. **Async params in Next.js 16.** Route params are `Promise<{...}>` — always `await params` before destructuring.
-8. **`@/app/generated/prisma/client`** is the correct Prisma import path (not `@prisma/client` or `@/app/generated/prisma`). The v7 generator writes to a custom output dir with `client.ts` as the entry point.
-9. **EvidenceTier is Int (1–5).** Numeric for range queries. businessPct is also Int (0–100). Never Float.
-10. **Financial accounts = FinancialAccount** (not Account). The `Account` model is reserved for NextAuth OAuth tokens.
+TaxLens is NOT tax preparation, NOT a general accounting package, NOT a chatbot, NOT an open-ended rules engine, and NOT a "maximum deduction" tool. The app prefers the *better-documented* position over the bigger number. A defensible $30K beats a flimsy $40K every day of the week in an exam.
 
 ---
 
-## Tech Stack (locked — do not upgrade without instruction)
+## The ten non-negotiable principles
 
-| Layer | Version | Notes |
-|---|---|---|
-| Next.js | 16.2.4 | App Router, no src/ dir, `@/*` alias to project root |
-| React | 19.2.4 | |
-| TypeScript | 5.x | |
-| Tailwind | v4 | CSS-variable config in globals.css, no tailwind.config.js |
-| shadcn/ui | manual | CLI is fully interactive; components hand-written in components/ui/ |
-| Prisma | v7.7.0 | generator `prisma-client`; output `app/generated/prisma`; URL in prisma.config.ts |
-| @prisma/adapter-pg | 7.7.0 | Required runtime adapter |
-| pg | 8.x | PostgreSQL driver |
-| NextAuth | v5.0.0-beta.31 | JWT strategy; PrismaAdapter in auth.ts |
-| bcryptjs | 3.x | Password hashing (12 rounds) |
-| Vitest | 4.x | jsdom env for React tests; node env for DB/server tests |
-| dotenv | 17.x | Loaded manually in seed.ts and tests |
-| zod | 4.x | Schema validation |
+These are the design rails. If a future change violates one of these, the change is wrong.
+
+1. **Single source of truth.** The master locked transaction ledger is the only input to every report. Per-account workbooks may exist as views, never as sources. (This rule was paid for in real double-counting pain.)
+2. **Deductions travel as triples.** Every deductible line carries three things together or zero things: IRC citation, evidence tier, confidence. Strip any of the three and the deduction is not claimable.
+3. **Silence is a bug.** If the AI lacks data to classify, it escalates — it does not guess. STOP is a feature, not a failure.
+4. **Append-only at the DB level.** Transactions and classifications are never mutated in place. Reclassification is a new row; prior rows persist. A locked year is reproducible forever.
+5. **Rule library is versioned and pinned per tax year.** A 2025 report regenerated in 2027 applies 2025 rules. OBBBA rewrote §168(k) and §179 mid-2025; this is not theoretical.
+6. **The CPA signs the return, not the AI.** Every gray-zone position (100% meals, Augusta, wardrobe %, §475(f), QBI aggregation) ships as a position memo with facts/law/analysis/conclusion. The user or their CPA decides.
+7. **Cohan is a rescue, not a strategy.** §274(d) categories (meals, travel, vehicle, gifts, listed property) require contemporaneous substantiation. The app never labels reconstructed §274(d) evidence as contemporaneous.
+8. **No fabrication, ever.** The AI writes templates the user fills in. It doesn't invent meeting attendees, client names, or business purposes. If a meal has no attendee record, the app demotes it — it doesn't make one up.
+9. **Bounded autonomy.** The app produces documents. It does not file anything, share anything externally, or modify permissions on any user system.
+10. **V1 scope is sacred.** Three output artifacts, eight build sessions, one entity type (sole prop / SMLLC disregarded), one federal return (Schedule C), one tax year. Everything else is V2+.
 
 ---
 
-## Session Build Progress
+## Tech stack
 
-### ✅ Session 1 — Foundation (complete)
-- [x] Next.js 16.2.4 scaffold (App Router, TypeScript, Tailwind v4)
-- [x] Prisma v7 schema — 17 models, 13 enums
-- [x] Migration applied: `prisma/migrations/`
-- [x] Prisma client generated: `app/generated/prisma/`
-- [x] `@prisma/adapter-pg` wired in `lib/db.ts`
-- [x] NextAuth v5 JWT strategy with PrismaAdapter (`auth.ts`)
-- [x] `lib/auth.ts` — `getSession`, `requireAuth`, `getCurrentUserId`
-- [x] `proxy.ts` — JWT session check, redirects to /login (Next.js 16 proxy convention)
-- [x] Route stubs: dashboard, onboarding, years/[year], login, signup
-- [x] shadcn/ui components: Button, Card, Input, Label, Badge
-- [x] Seed script: 1 user, 1 TaxYear, 5 accounts, 20 transactions, 20 classifications
-- [x] 8/8 Vitest smoke tests passing
-- [x] Dev server: 200 OK on `/login`
-
-### ⬜ Session 2 — Profile Wizard (next)
-- 12-question onboarding form
-- BusinessProfile write-back
-- Trip and KnownEntity management
-
-### ⬜ Session 3 — Statement Ingestion
-- CSV/OFX/QFX upload, parse, dedup
-- StatementImport tracking
-
-### ⬜ Session 4 — AI Classification (Agent 1)
-- Merchant rule generation
-- Batch transaction classification
-- GRAY / STOP queue population
-
-### ⬜ Session 5 — Review UI
-- Classification review table
-- Override workflow, isCurrent flip
-
-### ⬜ Session 6 — Report Generation
-- Master Ledger, Financial Statements, Audit Packet PDFs
-
-### ⬜ Session 7 — Lock & Archive
-- TaxYear lock + snapshot hash
-- Export archive
-
-### ⬜ Session 8 — DB Hardening
-- Append-only triggers (deny UPDATE/DELETE on Transaction/Classification/AuditEvent)
-- Migrations for trigger functions
+| Layer | Spec version | Actual installed | Notes |
+|---|---|---|---|
+| Next.js | 15 | **16.2.4** | Upgraded — see Implementation Notes below |
+| React | 19 | 19.2.4 | |
+| TypeScript | 5.x strict | 5.x | |
+| Tailwind | v4 | v4 | CSS-variable config in `app/globals.css`; no `tailwind.config.js` |
+| shadcn/ui | latest | manual | CLI v4.3.0 is fully interactive; components hand-written |
+| Prisma | 5/7 | **v7.7.0** | See Implementation Notes; `@prisma/adapter-pg` required |
+| NextAuth | v5 beta | v5.0.0-beta.31 | JWT strategy; PrismaAdapter |
+| Anthropic SDK | latest | 0.90.x | claude-sonnet-4-6 (classification); claude-opus-4-7 (position memos >$5K) |
+| TanStack Query | v5 | v5 | |
+| TanStack Table | v8 | v8 | |
+| Zustand | v5 | v5 | |
+| Vitest | latest | v4.x | |
+| zod | v4 | v4 | |
+| bcryptjs | 3.x | 3.x | 12 rounds |
+| papaparse | 5.x | 5.x | CSV parsing |
+| exceljs | 4.x | 4.x | XLSX output artifacts |
 
 ---
 
-## Decisions Locked (do not override)
+## Build progress
 
-- **EvidenceTier = Int** not enum — numeric range comparisons in classification logic
-- **FinancialAccount** not Account — avoids NextAuth adapter conflict
-- **JWT session strategy** (not database sessions) — avoids NextAuth Session table lock contention
-- **No `src/` directory** — `@/*` alias maps directly to project root
-- **Tailwind v4** — no `tailwind.config.js`; theme in `app/globals.css` via `@theme inline`
-- **`prisma.config.ts`** holds DATABASE_URL for Prisma CLI; runtime uses `PrismaPg` adapter
-- **`proxy.ts`** not `middleware.ts` (deprecated in Next.js 16)
-- **Transaction self-relations** use 4 named relations: TxDuplicate, TxTransfer, TxPayment, TxRefund
-
----
-
-## What NOT to Do
-
-- ❌ Do NOT run `npx shadcn@latest` — it's fully interactive and will hang
-- ❌ Do NOT use `@prisma/client` as import path — use `@/app/generated/prisma/client`
-- ❌ Do NOT add `datasourceUrl` to PrismaClient constructor — it doesn't exist in v7
-- ❌ Do NOT create `middleware.ts` — use `proxy.ts` (Next.js 16)
-- ❌ Do NOT use `export const runtime = 'edge'` anywhere — Prisma v7 requires Node.js
-- ❌ Do NOT use `params.year` directly — `params` is a Promise in Next.js 16, `await params` first
-- ❌ Do NOT add `@updatedAt` to Transaction, Classification, or AuditEvent
-- ❌ Do NOT use Float for businessPct or evidenceTier
-- ❌ Do NOT create new Railway projects — project "amusing-patience" is the TaxLens project (provisioning Postgres deferred until Railway credits are topped up)
+- [x] Prompt 0 — Environment verified, CLAUDE.md, .env.example in place
+- [x] Prompt 1 — Foundation (Next.js scaffold, Prisma schema, NextAuth, seed, route stubs, smoke tests)
+- [ ] Prompt 2 — Profile Wizard
+- [ ] Prompt 3 — Ingestion
+- [ ] Prompt 4 — Merchant Intelligence
+- [ ] Prompt 5 — STOPs + Ledger Review
+- [ ] Prompt 6 — Residual AI + Lock
+- [ ] Prompt 7 — Output Artifacts
+- [ ] Prompt 8 — Polish + E2E
 
 ---
 
-## Session Handoff Protocol
+## Decisions locked
 
-At the start of each session:
-1. Run `pnpm test` — all tests must pass before writing new code
-2. Read this CLAUDE.md and the relevant spec parts for the session
-3. Read the current files you'll modify (never write from memory)
-4. Present a step-by-step plan and wait for approval
-5. Execute steps one at a time, committing at the end
-
-At the end of each session:
-1. Run `pnpm test` — all tests must still pass
-2. Update the Build Progress checklist above
-3. Add Session N notes below
-4. `git add -A && git commit -m "feat(session-N): description"`
+- **Runtime: Node everywhere.** No Python service in V1. pdf-parse in Node; exceljs in Node.
+- **AI models:** claude-sonnet-4-6 for Merchant Intelligence Agent + Residual Transaction Agent; claude-opus-4-7 for Position Memos on gray-zone items with >$5K exposure; claude-haiku-4-5 as retry fallback for Merchant Intelligence.
+- **Entity scope V1:** Sole prop / SMLLC disregarded only. S-Corp, Partnership, QJV deferred to V3.
+- **Tax year V1:** One year at a time. Multi-year is V2.
+- **Wardrobe default:** 0% (Pevsner-strict); 50% is opt-in with position memo.
+- **Acceptance test for V1:** Reprocess the Maznah Media 2025 fixture (10 accounts, 720 transactions, multiple trips) and match locked numbers from the Excel deliverable.
+- **EvidenceTier = Int (1–5)** not enum — numeric range comparisons in classification logic.
+- **businessPct = Int (0–100)** — never Float.
+- **FinancialAccount** not Account — avoids NextAuth adapter conflict.
+- **JWT session strategy** (not database sessions) — avoids lock contention with PrismaAdapter.
+- **No `src/` directory** — `@/*` alias maps directly to project root.
+- **`prisma.config.ts`** holds DATABASE_URL for Prisma CLI; runtime uses `PrismaPg` adapter.
+- **`proxy.ts`** not `middleware.ts` — deprecated in Next.js 16 (see Implementation Notes).
+- **Transaction self-relations** use 4 named relations: TxDuplicate, TxTransfer, TxPayment, TxRefund.
+- **Railway PostgreSQL** deferred — provisioning failed (account credit limit $1.85). Using local Docker Postgres (`localhost:5433`) until credits are topped up.
 
 ---
 
-## Session 1 Notes
+## What NOT to do
 
-- Scaffolded in `taxlens-init/` subdir (pnpm create forbids capital letters in cwd name), then moved files
-- shadcn CLI is fully interactive at v4.3.0 — wrote components by hand
+- ❌ Do NOT introduce Python. Node only for V1.
+- ❌ Do NOT add features beyond V1 scope (see spec Part 13.2 — the explicit exclusion table).
+- ❌ Do NOT modify Transaction, Classification, or AuditEvent rows in-place — append-only always.
+- ❌ Do NOT invent IRC citations. Use the rule library only. Use `[VERIFY]` placeholders if unsure.
+- ❌ Do NOT file anything, share anything externally, or modify any system permissions.
+- ❌ Do NOT commit secrets or real `.env` / `.env.local` files.
+- ❌ Do NOT run `npx shadcn@latest` — it's fully interactive at v4.3.0 and will hang; write components by hand.
+- ❌ Do NOT use `@prisma/client` as import path — use `@/app/generated/prisma/client`.
+- ❌ Do NOT add `datasourceUrl` to PrismaClient constructor — it doesn't exist in Prisma v7; use `adapter`.
+- ❌ Do NOT create `middleware.ts` — use `proxy.ts` (Next.js 16).
+- ❌ Do NOT use `export const runtime = 'edge'` anywhere — Prisma v7 adapter requires Node.js.
+- ❌ Do NOT use `params.year` directly — `params` is a Promise in Next.js 16; always `await params` first.
+- ❌ Do NOT add `@updatedAt` to Transaction, Classification, or AuditEvent.
+- ❌ Do NOT use Float for businessPct or evidenceTier.
+
+---
+
+## Session handoff protocol
+
+Every prompt ends by:
+1. Running `pnpm test` — all tests must still pass.
+2. Updating the "Build progress" checklist above.
+3. Writing a `## Prompt N notes` section below with: what changed, how to verify, any open issues for next session.
+4. `git add -A && git commit -m "feat(prompt-N): description"`
+
+At the start of each prompt:
+1. Run `pnpm test` — all tests must pass before writing new code.
+2. Read this CLAUDE.md and the relevant spec parts for the session.
+3. Read the current files you'll modify (never write from memory).
+4. Present a step-by-step plan and wait for approval.
+
+---
+
+## Implementation Notes (Next.js 16 + Prisma v7 breaking changes)
+
+These were discovered during Prompt 1 and must be respected in all future sessions:
+
+### Next.js 16
+- **`middleware.ts` is deprecated** → use `proxy.ts` at project root; export `function proxy(request)` + `config`
+- **Proxy defaults to Node.js runtime** (not Edge) — no `export const runtime` needed or allowed
+- **Route params are async**: `params: Promise<{ year: string }>` — always `await params` before destructuring
+- **`cookies()` is async** in Next.js 16 server components
+
+### Prisma v7
+- **Generator**: `provider = "prisma-client"` (not `prisma-client-js`)
+- **Output**: `output = "../app/generated/prisma"` — entry point is `client.ts`, not `index.ts`
+- **Import path**: `import { PrismaClient } from "@/app/generated/prisma/client"` (the `/client` suffix is required)
+- **URL config**: moved from schema to `prisma.config.ts`; runtime requires `@prisma/adapter-pg`
+- **Constructor**: `new PrismaClient({ adapter: new PrismaPg({ connectionString }) })` — no `datasourceUrl`
+
+---
+
+## Prompt 0 notes
+
+- Environment verified: Node v24.14.0, pnpm 9.15.9, Docker Postgres on port 5433
+- Git initialized; `.env.example` and `.env.local` in place (gitignored)
+- `prompts/` and `tests/fixtures/` directories created
+- `CLAUDE.md` written from spec verbatim (Parts 1.1–1.4, decisions from Part 13/16)
+- Railway PostgreSQL provisioning failed ("Unknown error") — $1.85 credit remaining; deferred
+
+## Prompt 1 / Session 1 notes
+
+- Scaffolded in `taxlens-init/` subdir (pnpm create forbids capital letters in cwd name), moved files
+- shadcn CLI is fully interactive at v4.3.0 — components written by hand (Button, Card, Input, Label, Badge)
 - Docker Desktop not running; used `docker -H npipe:////./pipe/docker_engine` for local Postgres on port 5433
-- Prisma v7 breaking changes: generator is `prisma-client`, output to `app/generated/prisma`, URL in `prisma.config.ts`, runtime requires `@prisma/adapter-pg`
-- Next.js 16 breaking changes: `middleware.ts` → `proxy.ts`, `export default` → `export function proxy`, runs in Node.js runtime by default
-- Next.js 16 async params: `params: Promise<{ year: string }>`, must `await params`
-- Railway PostgreSQL provisioning failed ("Unknown error") — likely account credit limit ($1.85 remaining). Using local Docker Postgres (`localhost:5433`). Wire Railway DB in a future session.
-- Database credentials (local dev): `postgresql://taxlens:taxlens_dev@localhost:5433/taxlens`
-- Seed user: `najathakram1@gmail.com` / `taxlens2025!`
+- Prisma v7 breaking changes discovered and documented above
+- Next.js 16 breaking changes discovered and documented above
+- Seed user: `najathakram1@gmail.com` / `taxlens2025!` (not test@taxlens.local — see Prompt 2 gap)
+- 8/8 Vitest smoke tests passing; dev server 200 OK on `/login`
+- Open issues for Prompt 2: seed should use `test@taxlens.local`; missing shadcn components (dialog, select, table, tabs, toast, progress, alert, separator, popover, dropdown-menu, form, textarea, checkbox, slider)
