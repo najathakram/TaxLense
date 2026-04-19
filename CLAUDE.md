@@ -58,7 +58,7 @@ These are the design rails. If a future change violates one of these, the change
 - [x] Prompt 1 — Foundation (Next.js scaffold, Prisma schema, NextAuth, seed, route stubs, smoke tests)
 - [x] Prompt 2 — Profile Wizard
 - [x] Prompt 3 — Ingestion
-- [ ] Prompt 4 — Merchant Intelligence
+- [x] Prompt 4 — Merchant Intelligence
 - [ ] Prompt 5 — STOPs + Ledger Review
 - [ ] Prompt 6 — Residual AI + Lock
 - [ ] Prompt 7 — Output Artifacts
@@ -205,3 +205,23 @@ These were discovered during Prompt 1 and must be respected in all future sessio
 - **Tests** (69 total, all passing): `parsers.test.ts` (sign normalisation for all 7 parsers), `dedup.test.ts`, `reconciliation.test.ts` (totals/periodStart/error handling), `coverage.test.ts` (gap detection logic)
 - **Build**: clean `pnpm build` — 12 routes; TypeScript strict; no errors
 - **Verify**: `pnpm test` (69 passing); `pnpm build` (clean); upload page at `/years/2025/upload`; coverage at `/years/2025/coverage`
+
+## Prompt 4 notes
+
+- **No schema migration** — all required fields existed from Prompt 1 schema
+- **Merchant normalization** (`lib/merchants/normalize.ts`): deterministic 11-step pipeline; key insight — single-word city strip requires ≥6 char minimum to avoid eating brand words like "KING" (4), "ROOM" (4); 32/32 unit tests
+- **Pairing modules** (`lib/pairing/`): transfers (±5 day, same-abs-cents, cross-account, scored), payments (PAYMENT_PATTERNS regex → card inflow matched to checking outflow), refunds (90-day window, same merchant, smallest-amount-delta preference)
+- **Merchant Intelligence Agent** (`lib/ai/merchantIntelligence.ts`):
+  - Model string: `claude-sonnet-4-6` — verified present in `@anthropic-ai/sdk ^0.90.0`
+  - Temperature: 0; max_tokens: 4096; batch: 25 merchants/call
+  - System prompt includes: NAICS, biz description, trips with dates, known entities + keywords, rule library IDs (R-162-001 through R-Cohan-001), 11-code vocabulary, evidence tier definitions, §274(d) guardrail
+  - Cross-field invariants enforced post-Zod: confidence < 0.60 → requires_human_input; unknown citations coerced to [VERIFY]; §274(d) codes without trip override → STOP
+  - On JSON parse fail: retry once with fix instruction → if still bad, all batch merchants → NEEDS_CONTEXT + StopItem
+  - Every run logged to AuditEvent: MERCHANT_AI_CALL / MERCHANT_AI_PARSE_FAIL / MERCHANT_AI_RUN_COMPLETE
+- **Rule application** (`lib/classification/apply.ts`): trip override — non-restaurant in trip → WRITE_OFF_TRAVEL 100%; restaurant in trip → MEALS_50 100%; tier bumped to 2; idempotent (skips existing current classifications unless force=true)
+- **StopItems**: one per requires_human_input MerchantRule; TRANSFER stops for unmatched outflows > $500 with keyword hints
+- **Pipeline page** (`app/(app)/years/[year]/pipeline/page.tsx`): 6 trigger buttons (normalize, transfers, payments, refunds, AI, apply rules); 4 stat cards; run log
+- **Token cost estimate** (Maznah 419-merchant fixture): ~17 batches × ~8,300 tokens = ~$1.34/run; ~$1.20 with system-prompt caching
+- **`@prisma/client/runtime/library`** does NOT exist in Prisma v7 — use `{ toString(): string }` for Decimal parameter types
+- **Tests**: 153 total (69 original + 84 new); clean `pnpm build` — 13 routes
+- **Verify**: `pnpm test` (153 passing); `pnpm build` (clean); pipeline at `/years/2025/pipeline`
