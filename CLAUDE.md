@@ -225,3 +225,19 @@ These were discovered during Prompt 1 and must be respected in all future sessio
 - **`@prisma/client/runtime/library`** does NOT exist in Prisma v7 — use `{ toString(): string }` for Decimal parameter types
 - **Tests**: 153 total (69 original + 84 new); clean `pnpm build` — 13 routes
 - **Verify**: `pnpm test` (153 passing); `pnpm build` (clean); pipeline at `/years/2025/pipeline`
+
+### Prompt 4 seed/pipeline fixes (discovered during verification)
+- **Seed `amountNormalized` bug fixed**: was stripping minus signs (all amounts positive) → fixed to `tx.amount` (inflows negative, outflows positive per spec convention)
+- **Seed `merchantNormalized` fixed**: was storing `lowercase_underscore` format → now `null`; `normalizeMerchantsForYear` sets correct `UPPER CASE SPACES` format matching Merchant Intelligence rule keys
+- **Seed cleanup expanded**: `prisma.stopItem.deleteMany` + `prisma.merchantRule.deleteMany` added before fixture recreation so re-seed produces a clean state
+- **Verification scripts**: `scripts/run-pipeline.ts` (deterministic steps + report), `scripts/verify-trip-override.ts` (3 test MerchantRules, trip override assertions, cleanup)
+
+### Human verification checklist results (no ANTHROPIC_API_KEY; AI step skipped)
+- ✓ **Transfer pair**: tx_019/tx_020 (ONLINE TRANSFER TO AMEX ↔ PAYMENT THANK YOU, $3000, Feb 28) — pre-seeded pair shown in TRANSFER PAIRS report; excluded from P&L
+- ✓ **Income correctly identified as inflows**: THEKNOT WEDDING WIRE $8500/$12000 are negative (inflows) — NOT flagged as transfer outflows after sign fix
+- ✓ **STOP question**: ZELLE RANDI $2200 (checking outflow, matches /zelle/i, no matching inflow in other accounts) — STOP includes date, amount, account, merchant
+- ✓ **Card payments not double-counted**: tx_020 (PAYMENT THANK YOU) excluded from matchCardPayments because it carries `isTransferPairedWith`
+- ✓ **Trip override verified**: RUSTIC GOAT ANCHORAGE Aug 5 (inside Alaska trip Aug 2–13) → MEALS_50 @ 100% pct, tier 2, reasoning includes trip name+dates+destination; §274(d) citation added
+- ✓ **Non-trip transaction unaffected**: ADOBE SYSTEMS (Jan 5, no active trip) → WRITE_OFF 100%, no override
+- ✓ **requiresHumanInput → NEEDS_CONTEXT**: BLUEWAVE CAR WASH (requires vehicle %) → code=NEEDS_CONTEXT, pct=0
+- ⚠ **AI-dependent items deferred**: full 20-classification sample, live IRC citation verification, and 3-merchant AI batch require ANTHROPIC_API_KEY; verified by unit tests (merchant-ai.test.ts) and test MerchantRules above

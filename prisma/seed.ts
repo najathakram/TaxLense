@@ -265,9 +265,11 @@ async function main() {
   // 7. Financial Accounts (5)
   //    Matching spec §14 Session 1 fixture list
   // ------------------------------------------------------------------
-  // Delete in FK order: Classification → Transaction → FinancialAccount
+  // Delete in FK order: Classification → Transaction → FinancialAccount; also StopItems + MerchantRules
   const fixtureAcctIds = ["acct_chase_freedom", "acct_amex_platinum", "acct_costco_citi", "acct_chase_checking", "acct_robinhood"]
   const fixtureIds2 = Array.from({ length: 20 }, (_, i) => `tx_${String(i + 1).padStart(3, "0")}`)
+  await prisma.stopItem.deleteMany({ where: { taxYearId: taxYear.id } })
+  await prisma.merchantRule.deleteMany({ where: { taxYearId: taxYear.id } })
   await prisma.classification.deleteMany({ where: { transactionId: { in: fixtureIds2 } } })
   await prisma.transaction.deleteMany({ where: { id: { in: fixtureIds2 } } })
   await prisma.financialAccount.deleteMany({ where: { id: { in: fixtureAcctIds } } })
@@ -538,11 +540,9 @@ async function main() {
         taxYearId: taxYear.id,
         postedDate: new Date(tx.date),
         amountOriginal: tx.amount,
-        amountNormalized: tx.amount.startsWith("-")
-          ? tx.amount.replace("-", "")
-          : tx.amount,
+        amountNormalized: tx.amount,
         merchantRaw: tx.merchant,
-        merchantNormalized: tx.merchant.toLowerCase().replace(/[^a-z0-9]+/g, "_"),
+        merchantNormalized: null, // set by normalizeMerchantsForYear pipeline step
         descriptionRaw: tx.desc,
         idempotencyKey: ikey,
       },
