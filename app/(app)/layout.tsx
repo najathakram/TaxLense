@@ -1,6 +1,7 @@
-import { requireAuth } from "@/lib/auth"
+import { requireAuth, getCurrentUserId } from "@/lib/auth"
 import { getClientContext } from "@/lib/cpa/clientContext"
 import { exitClientSession } from "@/lib/cpa/actions"
+import { prisma } from "@/lib/db"
 import Link from "next/link"
 import { signOut } from "@/auth"
 import { Button } from "@/components/ui/button"
@@ -8,6 +9,12 @@ import { Button } from "@/components/ui/button"
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
   const session = await requireAuth()
   const clientCtx = await getClientContext()
+  const userId = await getCurrentUserId()
+  const activeYear = await prisma.taxYear.findFirst({
+    where: { userId },
+    orderBy: { year: "desc" },
+    select: { year: true, status: true },
+  })
 
   return (
     <div className="flex min-h-screen bg-background">
@@ -44,6 +51,36 @@ export default async function AppLayout({ children }: { children: React.ReactNod
           >
             Business Profile
           </Link>
+          {activeYear && (
+            <div className="pt-3 mt-3 border-t space-y-1">
+              <Link
+                href={`/years/${activeYear.year}`}
+                className="flex items-center justify-between px-3 py-2 rounded-md text-sm font-semibold text-foreground hover:bg-accent hover:text-accent-foreground transition-colors"
+              >
+                <span>Tax Year {activeYear.year}</span>
+                <span className="text-[10px] text-muted-foreground">{activeYear.status}</span>
+              </Link>
+              {[
+                { href: `/years/${activeYear.year}/upload`, label: "Upload Statements" },
+                { href: `/years/${activeYear.year}/coverage`, label: "Coverage" },
+                { href: `/years/${activeYear.year}/pipeline`, label: "Pipeline" },
+                { href: `/years/${activeYear.year}/stops`, label: "Stops" },
+                { href: `/years/${activeYear.year}/ledger`, label: "Ledger" },
+                { href: `/years/${activeYear.year}/risk`, label: "Risk" },
+                { href: `/years/${activeYear.year}/analytics`, label: "Analytics" },
+                { href: `/years/${activeYear.year}/lock`, label: "Lock" },
+                { href: `/years/${activeYear.year}/download`, label: "Download" },
+              ].map((item) => (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  className="flex items-center pl-6 pr-3 py-1.5 rounded-md text-sm text-muted-foreground hover:bg-accent hover:text-accent-foreground transition-colors"
+                >
+                  {item.label}
+                </Link>
+              ))}
+            </div>
+          )}
         </nav>
         <div className="p-3 border-t">
           <p className="text-xs text-muted-foreground truncate mb-2">{session.user?.email}</p>
