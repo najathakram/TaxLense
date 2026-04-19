@@ -153,8 +153,23 @@ async function main() {
         "ecommerce",
       ],
       firstYear: false,
+      draftStep: 1,
     },
-    update: {},
+    update: {
+      // Always reset fixture profile to spec values on re-seed
+      naicsCode: "711510",
+      entityType: "SOLE_PROP",
+      primaryState: "TX",
+      businessDescription: "Wedding photography, travel content creation, and e-commerce",
+      grossReceiptsEstimate: 281800,
+      accountingMethod: "CASH",
+      homeOfficeConfig: { has: true, dedicated: true, officeSqft: 200, homeSqft: 2000 },
+      vehicleConfig: { has: true, bizPct: 60 },
+      inventoryConfig: { has: true, physical: true, dropship: false },
+      revenueStreams: ["wedding_photography", "travel_content", "brand_deals", "affiliate", "digital_products", "ecommerce"],
+      firstYear: false,
+      draftStep: 1,
+    },
   })
   console.log(`  ✓ BusinessProfile: NAICS ${profile.naicsCode} — ${profile.businessDescription}`)
 
@@ -250,7 +265,12 @@ async function main() {
   // 7. Financial Accounts (5)
   //    Matching spec §14 Session 1 fixture list
   // ------------------------------------------------------------------
-  await prisma.financialAccount.deleteMany({ where: { taxYearId: taxYear.id } })
+  // Delete in FK order: Classification → Transaction → FinancialAccount
+  const fixtureAcctIds = ["acct_chase_freedom", "acct_amex_platinum", "acct_costco_citi", "acct_chase_checking", "acct_robinhood"]
+  const fixtureIds2 = Array.from({ length: 20 }, (_, i) => `tx_${String(i + 1).padStart(3, "0")}`)
+  await prisma.classification.deleteMany({ where: { transactionId: { in: fixtureIds2 } } })
+  await prisma.transaction.deleteMany({ where: { id: { in: fixtureIds2 } } })
+  await prisma.financialAccount.deleteMany({ where: { id: { in: fixtureAcctIds } } })
 
   const accounts = await Promise.all([
     prisma.financialAccount.create({
