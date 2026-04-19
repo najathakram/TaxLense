@@ -1,0 +1,564 @@
+// TaxLens — Prisma v7 Schema
+// Spec: TaxLens v6 Part 5.1
+// Immutability note: Transaction, Classification, AuditEvent have NO @updatedAt.
+// DB-level triggers (deny UPDATE/DELETE) deferred to Session 8.
+// Classification.is_current flip is managed in application code until Session 8.
+
+generator client {
+  provider = "prisma-client"
+  output   = "../app/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+  // url is configured in prisma.config.ts from DATABASE_URL env var
+}
+
+// ---------------------------------------------------------------------------
+// ENUMS
+// ---------------------------------------------------------------------------
+
+enum EntityType {
+  SOLE_PROP
+  LLC_SINGLE
+}
+
+enum AccountingMethod {
+  CASH
+  ACCRUAL
+}
+
+enum TaxYearStatus {
+  CREATED
+  INGESTION
+  CLASSIFICATION
+  REVIEW
+  LOCKED
+  ARCHIVED
+}
+
+enum AccountType {
+  CHECKING
+  SAVINGS
+  CREDIT_CARD
+  BROKERAGE
+  PAYMENT_PROCESSOR
+}
+
+enum ParseStatus {
+  PENDING
+  SUCCESS
+  FAILED
+  PARTIAL
+}
+
+enum ReportKind {
+  MASTER_LEDGER
+  FINANCIAL_STATEMENTS
+  AUDIT_PACKET
+  TAX_PACKAGE
+}
+
+enum ExtractionPath {
+  CSV
+  OFX
+  PDF_PARSE
+  HAIKU_CLEANUP
+  VISION_DOC
+}
+
+enum ImportSessionStatus {
+  IN_PROGRESS
+  COMPLETE
+  ABORTED
+}
+
+// All 9 classification codes + 2 supplementary (spec §3.1)
+enum TransactionCode {
+  WRITE_OFF
+  WRITE_OFF_TRAVEL
+  WRITE_OFF_COGS
+  MEALS_50
+  MEALS_100
+  GRAY
+  PERSONAL
+  TRANSFER
+  PAYMENT
+  BIZ_INCOME
+  NEEDS_CONTEXT
+}
+
+enum ClassificationSource {
+  AI
+  USER
+  AI_USER_CONFIRMED
+}
+
+enum StopCategory {
+  MERCHANT
+  TRANSFER
+  PERIOD_GAP
+  DEPOSIT
+  SECTION_274D
+}
+
+enum StopState {
+  PENDING
+  ANSWERED
+  DEFERRED
+}
+
+enum ActorType {
+  USER
+  AI
+  SYSTEM
+}
+
+enum KnownEntityKind {
+  PERSON_PERSONAL
+  PERSON_CONTRACTOR
+  PERSON_CLIENT
+  PATTERN_EXCLUDED
+  PATTERN_INCOME
+}
+
+enum UserRole {
+  CPA
+  CLIENT
+}
+
+// ---------------------------------------------------------------------------
+// NEXTAUTH V5 MODELS (required by PrismaAdapter)
+// "Account" here = OAuth account; financial accounts = FinancialAccount
+// ---------------------------------------------------------------------------
+
+model User {
+  id            String    @id @default(cuid())
+  name          String?
+  email         String    @unique
+  emailVerified DateTime?
+  image         String?
+  password      String?   // bcrypt hash; null for OAuth-only users
+  role          UserRole  @default(CLIENT)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  // NextAuth relations
+  accounts          Account[]
+  sessions          Session[]
+
+  // App relations
+  taxYears          TaxYear[]
+  financialAccounts FinancialAccount[]
+  businessProfiles  BusinessProfile[]
+  auditEvents       AuditEvent[]
+
+  // CPA relations
+  cpaClients  CpaClient[] @relation("CpaRelation")
+  cpaOf       CpaClient[] @relation("ClientRelation")
+}
+
+model CpaClient {
+  id           String   @id @default(cuid())
+  cpaUserId    String
+  clientUserId String
+  displayName  String?  // CPA's custom label for this client
+  notes        String?
+  createdAt    DateTime @default(now())
+
+  cpa    User @relation("CpaRelation",    fields: [cpaUserId],    references: [id], onDelete: Cascade)
+  client User @relation("ClientRelation", fields: [clientUserId], references: [id], onDelete: Cascade)
+
+  @@unique([cpaUserId, clientUserId])
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+// ---------------------------------------------------------------------------
+// RULE VERSION (referenced by TaxYear; must come before TaxYear)
+// ---------------------------------------------------------------------------
+
+model RuleVersion {
+  id             String   @id @default(cuid())
+  effectiveDate  DateTime
+  ruleSet        Json     // Minimal in Session 1; full library loaded in Session 8
+  summary        String?
+  supersededById String?
+
+  supersededBy  RuleVersion?  @relation("Supersession", fields: [supersededById], references: [id])
+  supersededFor RuleVersion[] @relation("Supersession")
+
+  taxYears TaxYear[]
+  reports  Report[]
+}
+
+// ---------------------------------------------------------------------------
+// TAX YEAR
+// ---------------------------------------------------------------------------
+
+model TaxYear {
+  id                 String        @id @default(cuid())
+  userId             String
+  year               Int
+  status             TaxYearStatus @default(CREATED)
+  ruleVersionId      String?
+  lockedAt           DateTime?
+  lockedSnapshotHash String?
+  createdAt          DateTime      @default(now())
+
+  user              User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  ruleVersion       RuleVersion?       @relation(fields: [ruleVersionId], references: [id])
+  businessProfile   BusinessProfile?
+  financialAccounts FinancialAccount[]
+  statementImports  StatementImport[]
+  transactions      Transaction[]
+  merchantRules     MerchantRule[]
+  stopItems         StopItem[]
+  reports           Report[]
+  importSessions    ImportSession[]
+
+  @@unique([userId, year])
+}
+
+// ---------------------------------------------------------------------------
+// BUSINESS PROFILE (one per TaxYear; answers to the 12 universal questions)
+// ---------------------------------------------------------------------------
+
+model BusinessProfile {
+  id                    String           @id @default(cuid())
+  userId                String
+  taxYearId             String           @unique
+  naicsCode             String?          // Nullable: filled in Step 2 of wizard
+  entityType            EntityType       @default(SOLE_PROP)
+  primaryState          String           @default("")
+  businessDescription   String?          // Nullable: filled in Step 2 of wizard
+  grossReceiptsEstimate Decimal?         @db.Decimal(15, 2) // Nullable: filled in Step 3
+  accountingMethod      AccountingMethod @default(CASH)
+  // JSONB configs (spec §4.1):
+  homeOfficeConfig      Json             @default("{\"has\":false}") // { has, dedicated, officeSqft, homeSqft }
+  vehicleConfig         Json             @default("{\"has\":false}") // { has, bizPct }
+  inventoryConfig       Json?            // { has, physical, dropship }
+  revenueStreams         String[]
+  firstYear             Boolean          @default(false)
+  draftStep             Int              @default(1)  // Wizard progress persistence
+  incomeSources         Json?            // [{ platform, expectedTotal, categories }]
+  createdAt             DateTime         @default(now())
+  updatedAt             DateTime         @updatedAt
+
+  user          User            @relation(fields: [userId],    references: [id], onDelete: Cascade)
+  taxYear       TaxYear         @relation(fields: [taxYearId], references: [id], onDelete: Cascade)
+  knownEntities KnownEntity[]
+  trips         Trip[]
+}
+
+// ---------------------------------------------------------------------------
+// KNOWN ENTITIES (people & patterns; drives auto-classification)
+// ---------------------------------------------------------------------------
+
+model KnownEntity {
+  id            String           @id @default(cuid())
+  profileId     String
+  kind          KnownEntityKind
+  displayName   String
+  matchKeywords String[]         // Strings to match in transaction descriptions
+  defaultCode   TransactionCode?
+  notes         String?
+
+  profile BusinessProfile @relation(fields: [profileId], references: [id], onDelete: Cascade)
+}
+
+// ---------------------------------------------------------------------------
+// TRIP (confirmed business trips; dates drive WRITE_OFF_TRAVEL promotion)
+// ---------------------------------------------------------------------------
+
+model Trip {
+  id                     String   @id @default(cuid())
+  profileId              String
+  name                   String
+  destination            String
+  startDate              DateTime
+  endDate                DateTime
+  purpose                String
+  deliverableDescription String?
+  isConfirmed            Boolean  @default(false)
+
+  profile BusinessProfile @relation(fields: [profileId], references: [id], onDelete: Cascade)
+}
+
+// ---------------------------------------------------------------------------
+// FINANCIAL ACCOUNT (renamed from spec's "Account" to avoid NextAuth conflict)
+// ---------------------------------------------------------------------------
+
+model FinancialAccount {
+  id                String      @id @default(cuid())
+  userId            String
+  taxYearId         String
+  type              AccountType
+  institution       String
+  mask              String?     // Last 4 digits for display
+  nickname          String?
+  isPrimaryBusiness Boolean     @default(false)
+
+  user             User              @relation(fields: [userId],    references: [id], onDelete: Cascade)
+  taxYear          TaxYear           @relation(fields: [taxYearId], references: [id], onDelete: Cascade)
+  statementImports StatementImport[]
+  transactions     Transaction[]
+}
+
+// ---------------------------------------------------------------------------
+// STATEMENT IMPORT (one per uploaded file)
+// ---------------------------------------------------------------------------
+
+model StatementImport {
+  id                   String          @id @default(cuid())
+  accountId            String
+  taxYearId            String
+  sessionId            String?         // Session 9: groups uploads in one client session
+  filePath             String
+  originalFilename     String
+  fileType             String
+  institution          String?
+  periodStart          DateTime?
+  periodEnd            DateTime?
+  sourceHash           String
+  parseStatus          ParseStatus     @default(PENDING)
+  parseConfidence      Float?
+  totalInflows         Decimal?        @db.Decimal(15, 2)
+  totalOutflows        Decimal?        @db.Decimal(15, 2)
+  transactionCount     Int             @default(0)
+  reconciliationOk     Boolean?
+  reconciliationDelta  Decimal?        @db.Decimal(15, 2)
+  parseError           String?
+  extractionPath       ExtractionPath?
+  extractionConfidence Float?
+  aiModel              String?
+  aiTokensIn           Int?
+  aiTokensOut          Int?
+  userNotes            Json?           // { institutionConfirmed, accountPurpose, unusualDeposits, gapExplanation, freeText }
+  uploadedAt           DateTime        @default(now())
+
+  account      FinancialAccount @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  taxYear      TaxYear          @relation(fields: [taxYearId], references: [id], onDelete: Cascade)
+  session      ImportSession?   @relation(fields: [sessionId], references: [id], onDelete: SetNull)
+  transactions Transaction[]
+
+  @@unique([accountId, sourceHash])
+}
+
+// ---------------------------------------------------------------------------
+// IMPORT SESSION (Session 9: groups a batch of uploads + client notes)
+// ---------------------------------------------------------------------------
+
+model ImportSession {
+  id             String              @id @default(cuid())
+  taxYearId      String
+  cpaUserId      String?             // CPA who initiated the session, if any
+  status         ImportSessionStatus @default(IN_PROGRESS)
+  totalApiCalls  Int                 @default(0)
+  apiCallLimit   Int                 @default(50)
+  notes          String?             // Free-text notes for this upload session
+  uploadedAt     DateTime            @default(now())
+  closedAt       DateTime?
+
+  taxYear TaxYear           @relation(fields: [taxYearId], references: [id], onDelete: Cascade)
+  imports StatementImport[]
+}
+
+// ---------------------------------------------------------------------------
+// TRANSACTION (INSERT-only — spec §5.2; NO @updatedAt)
+// ---------------------------------------------------------------------------
+
+model Transaction {
+  id                   String    @id @default(cuid())
+  statementImportId    String?   // Null for synthetic/seed data
+  accountId            String
+  taxYearId            String
+  postedDate           DateTime
+  transactionDate      DateTime?
+  amountOriginal       Decimal   @db.Decimal(15, 2) // Signed per source convention
+  amountNormalized     Decimal   @db.Decimal(15, 2) // Outflows +, inflows - (spec §4.2)
+  merchantRaw          String
+  merchantNormalized   String?
+  descriptionRaw       String?
+  idempotencyKey       String    @unique // Hash of (accountId + postedDate + amount + merchantRaw)
+  isDuplicateOf        String?
+  isTransferPairedWith String?
+  isPaymentPairedWith  String?
+  isRefundPairedWith   String?
+  isSplit              Boolean   @default(false) // true on the parent when its amount is split into child txns
+  splitOfId            String?   // set on child rows pointing back to the parent txn
+  createdAt            DateTime  @default(now())
+  // NO updatedAt — immutable by design
+
+  statementImport  StatementImport?  @relation(fields: [statementImportId], references: [id])
+  account          FinancialAccount  @relation(fields: [accountId],         references: [id])
+  taxYear          TaxYear           @relation(fields: [taxYearId],          references: [id])
+
+  duplicateOf   Transaction?  @relation("TxDuplicate", fields: [isDuplicateOf],        references: [id])
+  duplicateFor  Transaction[] @relation("TxDuplicate")
+  transferPair  Transaction?  @relation("TxTransfer",  fields: [isTransferPairedWith], references: [id])
+  transferPairs Transaction[] @relation("TxTransfer")
+  paymentPair   Transaction?  @relation("TxPayment",   fields: [isPaymentPairedWith],  references: [id])
+  paymentPairs  Transaction[] @relation("TxPayment")
+  refundPair    Transaction?  @relation("TxRefund",    fields: [isRefundPairedWith],   references: [id])
+  refundPairs   Transaction[] @relation("TxRefund")
+  splitOf       Transaction?  @relation("TxSplit",     fields: [splitOfId],            references: [id])
+  splitChildren Transaction[] @relation("TxSplit")
+
+  classifications Classification[]
+
+  // Spec §5.1 indexes
+  @@index([taxYearId, postedDate])
+  @@index([accountId, postedDate])
+}
+
+// ---------------------------------------------------------------------------
+// CLASSIFICATION (append-only — spec §5.2; NO @updatedAt)
+// is_current flip managed in app code; DB trigger added in Session 8
+// ---------------------------------------------------------------------------
+
+model Classification {
+  id              String               @id @default(cuid())
+  transactionId   String
+  code            TransactionCode
+  scheduleCLine   String?
+  businessPct     Int                  // 0–100; use Int not Float per spec
+  ircCitations    String[]
+  confidence      Float                // 0.0–1.0
+  evidenceTier    Int                  // 1–5; Int for numeric comparison (spec §3.4)
+  source          ClassificationSource
+  reasoning       String?
+  substantiation  Json?                // §274(d) attendees/purpose/outcome + freeform tags (spec §12.1, Prompt 6)
+  isCurrent       Boolean              @default(true)
+  createdAt       DateTime             @default(now())
+  createdByUserId String?              // User ID or null when actor is AI/SYSTEM
+  // NO updatedAt — append-only by design
+
+  transaction Transaction @relation(fields: [transactionId], references: [id])
+
+  // Spec §5.1 index
+  @@index([transactionId, isCurrent])
+}
+
+// ---------------------------------------------------------------------------
+// MERCHANT RULE (one per unique merchant per tax year; output of Agent 1)
+// ---------------------------------------------------------------------------
+
+model MerchantRule {
+  id                  String          @id @default(cuid())
+  taxYearId           String
+  merchantKey         String          // Normalized merchant name
+  code                TransactionCode
+  scheduleCLine       String?
+  businessPctDefault  Int             // 0–100
+  appliesTripOverride Boolean         @default(false)
+  ircCitations        String[]
+  evidenceTierDefault Int             // 1–5
+  confidence          Float
+  reasoning           String?
+  requiresHumanInput  Boolean         @default(false)
+  humanQuestion       String?
+  isConfirmed         Boolean         @default(false)
+  originalSample      String?
+  totalTransactions   Int             @default(0)
+  totalAmount         Decimal         @db.Decimal(15, 2) @default(0)
+
+  taxYear   TaxYear    @relation(fields: [taxYearId], references: [id], onDelete: Cascade)
+  stopItems StopItem[]
+
+  @@unique([taxYearId, merchantKey])
+}
+
+// ---------------------------------------------------------------------------
+// STOP ITEM (AI-generated questions requiring user input; spec §9)
+// ---------------------------------------------------------------------------
+
+model StopItem {
+  id             String       @id @default(cuid())
+  taxYearId      String
+  merchantRuleId String?
+  category       StopCategory
+  question       String
+  context        Json         // { merchant, count, totalAmount, dateRange, ... }
+  transactionIds String[]     // Denormalized array of affected transaction IDs
+  state          StopState    @default(PENDING)
+  userAnswer     Json?
+  answeredAt     DateTime?
+
+  taxYear      TaxYear       @relation(fields: [taxYearId],      references: [id], onDelete: Cascade)
+  merchantRule MerchantRule? @relation(fields: [merchantRuleId], references: [id])
+}
+
+// ---------------------------------------------------------------------------
+// AUDIT EVENT (INSERT-only — spec §5.2; NO @updatedAt)
+// ---------------------------------------------------------------------------
+
+model AuditEvent {
+  id          String    @id @default(cuid())
+  userId      String?
+  actorType   ActorType
+  eventType   String
+  entityType  String
+  entityId    String?
+  beforeState Json?
+  afterState  Json?
+  rationale   String?
+  occurredAt  DateTime  @default(now())
+  // NO updatedAt — insert-only by design
+
+  user User? @relation(fields: [userId], references: [id])
+
+  @@index([userId, occurredAt(sort: Desc)])
+}
+
+// ---------------------------------------------------------------------------
+// REPORT (three V1 output artifacts; spec §10)
+// ---------------------------------------------------------------------------
+
+model Report {
+  id                      String     @id @default(cuid())
+  taxYearId               String
+  kind                    ReportKind
+  filePath                String
+  ruleVersionId           String?
+  transactionSnapshotHash String?
+  generatedAt             DateTime   @default(now())
+  isCurrent               Boolean    @default(true)
+
+  taxYear     TaxYear      @relation(fields: [taxYearId],     references: [id], onDelete: Cascade)
+  ruleVersion RuleVersion? @relation(fields: [ruleVersionId], references: [id])
+}
