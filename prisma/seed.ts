@@ -566,13 +566,215 @@ async function main() {
   // Classifications are created by the AI agent in Prompt 4.
   // ------------------------------------------------------------------
 
+  // ==================================================================
+  // CPA DEMO FIXTURE
+  // ==================================================================
+
+  // CPA account
+  const cpaPassword = await bcrypt.hash("test123", 12)
+  const cpa = await prisma.user.upsert({
+    where: { email: "cpa@taxlens.local" },
+    create: {
+      id: "user_cpa_001",
+      name: "Alex Rivera",
+      email: "cpa@taxlens.local",
+      password: cpaPassword,
+      role: "CPA",
+    },
+    update: { name: "Alex Rivera", role: "CPA" },
+  })
+  console.log(`  ✓ CPA user: ${cpa.email}`)
+
+  // Demo client 1 — Sarah Chen, landscape architect, REVIEW status
+  const client1 = await prisma.user.upsert({
+    where: { email: "sarah.chen@taxlens.local" },
+    create: {
+      id: "user_client_001",
+      name: "Sarah Chen",
+      email: "sarah.chen@taxlens.local",
+      password: cpaPassword,
+      role: "CLIENT",
+    },
+    update: { name: "Sarah Chen", role: "CLIENT" },
+  })
+
+  const ty_sarah = await prisma.taxYear.upsert({
+    where: { userId_year: { userId: client1.id, year: 2025 } },
+    create: {
+      id: "ty_sarah_2025",
+      userId: client1.id,
+      year: 2025,
+      status: "REVIEW",
+      ruleVersionId: rv2025.id,
+    },
+    update: { status: "REVIEW", ruleVersionId: rv2025.id },
+  })
+
+  await prisma.businessProfile.upsert({
+    where: { taxYearId: ty_sarah.id },
+    create: {
+      userId: client1.id,
+      taxYearId: ty_sarah.id,
+      naicsCode: "541320",
+      entityType: "SOLE_PROP",
+      primaryState: "TX",
+      businessDescription: "Landscape architecture and garden design consulting",
+      grossReceiptsEstimate: 95000,
+      accountingMethod: "CASH",
+      homeOfficeConfig: { has: true, method: "SIMPLIFIED", officeSqft: 150, homeSqft: 2200 },
+      vehicleConfig: { has: true, bizPct: 70 },
+      revenueStreams: ["consulting", "design_fees"],
+      firstYear: false,
+      draftStep: 10,
+    },
+    update: {},
+  })
+
+  const acct_sarah = await prisma.financialAccount.upsert({
+    where: { id: "acct_sarah_checking" },
+    create: {
+      id: "acct_sarah_checking",
+      userId: client1.id,
+      taxYearId: ty_sarah.id,
+      type: "CHECKING",
+      institution: "Chase",
+      mask: "3344",
+      isPrimaryBusiness: true,
+    },
+    update: {},
+  })
+
+  // A handful of Sarah's transactions
+  const sarahTxns = [
+    { id: "stx_001", date: "2025-02-10", amount: "-18500.00", merchant: "CHEN DESIGN STUDIO CLIENT" },
+    { id: "stx_002", date: "2025-04-22", amount: "-12000.00", merchant: "LANDSCAPE CONSULTING FEE" },
+    { id: "stx_003", date: "2025-01-15", amount: "320.00", merchant: "HOME DEPOT" },
+    { id: "stx_004", date: "2025-03-08", amount: "89.00", merchant: "AUTOCAD SUBSCRIPTION" },
+    { id: "stx_005", date: "2025-05-19", amount: "245.00", merchant: "MILEAGE REIMBURSEMENT SUPPLY" },
+  ]
+  for (const tx of sarahTxns) {
+    const ikey = txKey(acct_sarah.id, tx.date, tx.amount, tx.merchant)
+    await prisma.transaction.upsert({
+      where: { idempotencyKey: ikey },
+      create: {
+        id: tx.id,
+        accountId: acct_sarah.id,
+        taxYearId: ty_sarah.id,
+        postedDate: new Date(tx.date),
+        amountOriginal: tx.amount,
+        amountNormalized: tx.amount,
+        merchantRaw: tx.merchant,
+        idempotencyKey: ikey,
+      },
+      update: {},
+    })
+  }
+  console.log(`  ✓ Client 1: ${client1.email} — TY 2025 REVIEW, 5 txns`)
+
+  // Demo client 2 — Marcus Johnson, freelance developer, LOCKED status
+  const client2 = await prisma.user.upsert({
+    where: { email: "marcus.j@taxlens.local" },
+    create: {
+      id: "user_client_002",
+      name: "Marcus Johnson",
+      email: "marcus.j@taxlens.local",
+      password: cpaPassword,
+      role: "CLIENT",
+    },
+    update: { name: "Marcus Johnson", role: "CLIENT" },
+  })
+
+  const ty_marcus = await prisma.taxYear.upsert({
+    where: { userId_year: { userId: client2.id, year: 2025 } },
+    create: {
+      id: "ty_marcus_2025",
+      userId: client2.id,
+      year: 2025,
+      status: "LOCKED",
+      ruleVersionId: rv2025.id,
+      lockedAt: new Date("2026-01-20T10:00:00Z"),
+      lockedSnapshotHash: "abc123def456" + "0".repeat(52),
+    },
+    update: { status: "LOCKED" },
+  })
+
+  await prisma.businessProfile.upsert({
+    where: { taxYearId: ty_marcus.id },
+    create: {
+      userId: client2.id,
+      taxYearId: ty_marcus.id,
+      naicsCode: "541511",
+      entityType: "SOLE_PROP",
+      primaryState: "CA",
+      businessDescription: "Freelance web and mobile app development",
+      grossReceiptsEstimate: 140000,
+      accountingMethod: "CASH",
+      homeOfficeConfig: { has: true, method: "SIMPLIFIED", officeSqft: 200, homeSqft: 1800 },
+      vehicleConfig: { has: false },
+      revenueStreams: ["contract_dev", "consulting"],
+      firstYear: false,
+      draftStep: 10,
+    },
+    update: {},
+  })
+
+  const acct_marcus = await prisma.financialAccount.upsert({
+    where: { id: "acct_marcus_checking" },
+    create: {
+      id: "acct_marcus_checking",
+      userId: client2.id,
+      taxYearId: ty_marcus.id,
+      type: "CHECKING",
+      institution: "Bank of America",
+      mask: "7788",
+      isPrimaryBusiness: true,
+    },
+    update: {},
+  })
+
+  const marcusTxns = [
+    { id: "mtx_001", date: "2025-01-20", amount: "-45000.00", merchant: "STRIPE PAYOUT CLIENT A" },
+    { id: "mtx_002", date: "2025-03-15", amount: "-35000.00", merchant: "STRIPE PAYOUT CLIENT B" },
+    { id: "mtx_003", date: "2025-02-01", amount: "299.00", merchant: "GITHUB COPILOT PRO" },
+    { id: "mtx_004", date: "2025-01-10", amount: "1200.00", merchant: "MACBOOK PRO APPLE STORE" },
+  ]
+  for (const tx of marcusTxns) {
+    const ikey = txKey(acct_marcus.id, tx.date, tx.amount, tx.merchant)
+    await prisma.transaction.upsert({
+      where: { idempotencyKey: ikey },
+      create: {
+        id: tx.id,
+        accountId: acct_marcus.id,
+        taxYearId: ty_marcus.id,
+        postedDate: new Date(tx.date),
+        amountOriginal: tx.amount,
+        amountNormalized: tx.amount,
+        merchantRaw: tx.merchant,
+        idempotencyKey: ikey,
+      },
+      update: {},
+    })
+  }
+  console.log(`  ✓ Client 2: ${client2.email} — TY 2025 LOCKED, 4 txns`)
+
+  // CpaClient relationships
+  await prisma.cpaClient.upsert({
+    where: { cpaUserId_clientUserId: { cpaUserId: cpa.id, clientUserId: client1.id } },
+    create: { cpaUserId: cpa.id, clientUserId: client1.id },
+    update: {},
+  })
+  await prisma.cpaClient.upsert({
+    where: { cpaUserId_clientUserId: { cpaUserId: cpa.id, clientUserId: client2.id } },
+    create: { cpaUserId: cpa.id, clientUserId: client2.id, displayName: "Johnson Dev Consulting" },
+    update: {},
+  })
+  console.log("  ✓ CpaClient relationships: 2")
+
   console.log("\n✅  Seed complete!")
-  console.log(`   User:      ${user.email}  (password: test123)`)
+  console.log(`   Main user: ${user.email}  (password: test123)`)
   console.log(`   Tax Year:  2025  |  Status: CREATED`)
-  console.log(`   Profile:   NAICS 711510 — Wedding photography / travel content / e-commerce`)
-  console.log(`   Trips:     Alaska (Aug 2–13) · Sri Lanka (Sep 15–Nov 3) · Colorado (Dec 4–12)`)
-  console.log(`   Accounts:  Chase Freedom CC · Amex Platinum CC · Costco Citi CC · Chase Checking 9517 · Robinhood`)
-  console.log(`   Txns:      20  |  Classifications: 0 (seeded by AI agent in Prompt 4)`)
+  console.log(`   CPA:       ${cpa.email}  (password: test123)`)
+  console.log(`   Clients:   ${client1.email}  ·  ${client2.email}  (password: test123)`)
 }
 
 main()

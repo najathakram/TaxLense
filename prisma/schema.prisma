@@ -107,6 +107,11 @@ enum KnownEntityKind {
   PATTERN_INCOME
 }
 
+enum UserRole {
+  CPA
+  CLIENT
+}
+
 // ---------------------------------------------------------------------------
 // NEXTAUTH V5 MODELS (required by PrismaAdapter)
 // "Account" here = OAuth account; financial accounts = FinancialAccount
@@ -119,6 +124,7 @@ model User {
   emailVerified DateTime?
   image         String?
   password      String?   // bcrypt hash; null for OAuth-only users
+  role          UserRole  @default(CLIENT)
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
 
@@ -131,6 +137,24 @@ model User {
   financialAccounts FinancialAccount[]
   businessProfiles  BusinessProfile[]
   auditEvents       AuditEvent[]
+
+  // CPA relations
+  cpaClients  CpaClient[] @relation("CpaRelation")
+  cpaOf       CpaClient[] @relation("ClientRelation")
+}
+
+model CpaClient {
+  id           String   @id @default(cuid())
+  cpaUserId    String
+  clientUserId String
+  displayName  String?  // CPA's custom label for this client
+  notes        String?
+  createdAt    DateTime @default(now())
+
+  cpa    User @relation("CpaRelation",    fields: [cpaUserId],    references: [id], onDelete: Cascade)
+  client User @relation("ClientRelation", fields: [clientUserId], references: [id], onDelete: Cascade)
+
+  @@unique([cpaUserId, clientUserId])
 }
 
 model Account {

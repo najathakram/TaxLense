@@ -10,7 +10,7 @@
  */
 
 import { revalidatePath } from "next/cache"
-import { requireAuth } from "@/lib/auth"
+import { getCurrentUserId } from "@/lib/auth"
 import { prisma } from "@/lib/db"
 import { parseStatement, fileHash, transactionKey } from "@/lib/parsers"
 import { writeFile, mkdir, readFile } from "node:fs/promises"
@@ -43,8 +43,7 @@ export type UploadResult =
   | { ok: false; error: string }
 
 export async function uploadStatement(formData: FormData): Promise<UploadResult> {
-  const session = await requireAuth()
-  const userId = session.user!.id!
+  const userId = await getCurrentUserId()
 
   const file = formData.get("file") as File | null
   const accountId = formData.get("accountId") as string | null
@@ -192,8 +191,7 @@ export async function uploadStatement(formData: FormData): Promise<UploadResult>
 export type DeleteImportResult = { ok: true } | { ok: false; error: string }
 
 export async function deleteImport(importId: string, year: number): Promise<DeleteImportResult> {
-  const session = await requireAuth()
-  const userId = session.user!.id!
+  const userId = await getCurrentUserId()
 
   const imp = await prisma.statementImport.findFirst({
     where: { id: importId, account: { userId } },
@@ -232,8 +230,7 @@ export type CreateAccountResult =
   | { ok: false; error: string }
 
 export async function createAccount(input: z.infer<typeof CreateAccountSchema>): Promise<CreateAccountResult> {
-  const session = await requireAuth()
-  const userId = session.user!.id!
+  const userId = await getCurrentUserId()
 
   const parsed = CreateAccountSchema.safeParse(input)
   if (!parsed.success) return { ok: false, error: parsed.error.issues[0]?.message ?? "Invalid input" }
@@ -273,8 +270,7 @@ export type ReparseResult =
   | { ok: false; error: string }
 
 export async function reparseImport(importId: string, year: number): Promise<ReparseResult> {
-  const session = await requireAuth()
-  const userId = session.user!.id!
+  const userId = await getCurrentUserId()
 
   const imp = await prisma.statementImport.findFirst({
     where: { id: importId, account: { userId } },

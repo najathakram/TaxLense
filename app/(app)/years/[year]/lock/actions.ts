@@ -1,7 +1,7 @@
 "use server"
 
 import { prisma } from "@/lib/db"
-import { requireAuth } from "@/lib/auth"
+import { getCurrentUserId } from "@/lib/auth"
 import { revalidatePath } from "next/cache"
 import { redirect } from "next/navigation"
 import { runLockAssertions, type AssertionRunResult } from "@/lib/validation/assertions"
@@ -16,8 +16,7 @@ export interface LockAttemptResult {
 }
 
 async function resolveTaxYear(year: number) {
-  const session = await requireAuth()
-  const userId = session.user!.id!
+  const userId = await getCurrentUserId()
   const taxYear = await prisma.taxYear.findUnique({ where: { userId_year: { userId, year } } })
   if (!taxYear) throw new Error("TaxYear not found")
   return { taxYear, userId }

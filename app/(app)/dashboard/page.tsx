@@ -1,5 +1,8 @@
 import { requireAuth } from "@/lib/auth"
+import { getCurrentUserId } from "@/lib/auth"
+import { getClientContext } from "@/lib/cpa/clientContext"
 import { prisma } from "@/lib/db"
+import { redirect } from "next/navigation"
 import Link from "next/link"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
@@ -25,7 +28,16 @@ const STATUS_VARIANTS: Record<string, "default" | "secondary" | "outline"> = {
 
 export default async function DashboardPage() {
   const session = await requireAuth()
-  const userId = session.user!.id!
+  const loggedInUserId = session.user!.id!
+
+  // CPA without an active client context → send them to the client list
+  const me = await prisma.user.findUnique({ where: { id: loggedInUserId }, select: { role: true } })
+  if (me?.role === "CPA") {
+    const ctx = await getClientContext()
+    if (!ctx) redirect("/clients")
+  }
+
+  const userId = await getCurrentUserId()
 
   const taxYears = await prisma.taxYear.findMany({
     where: { userId },

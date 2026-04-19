@@ -1,7 +1,7 @@
 "use server"
 
 import { prisma } from "@/lib/db"
-import { requireAuth } from "@/lib/auth"
+import { getCurrentUserId } from "@/lib/auth"
 import { revalidatePath } from "next/cache"
 import type { TransactionCode, ClassificationSource } from "@/app/generated/prisma/client"
 import { MAX_SPLITS_PER_TRANSACTION } from "@/lib/splits/config"
@@ -17,8 +17,7 @@ export interface SingleEdit {
 }
 
 export async function editClassification(year: number, edit: SingleEdit) {
-  const session = await requireAuth()
-  const userId = session.user!.id!
+  const userId = await getCurrentUserId()
 
   await prisma.$transaction(async (tx) => {
     const txn = await tx.transaction.findUnique({
@@ -89,8 +88,7 @@ export interface BulkEdit {
 }
 
 export async function bulkReclassify(year: number, edit: BulkEdit) {
-  const session = await requireAuth()
-  const userId = session.user!.id!
+  const userId = await getCurrentUserId()
 
   if (edit.transactionIds.length === 0) return { updated: 0 }
   if (edit.transactionIds.length > 1000) throw new Error("Too many transactions (max 1000)")
@@ -166,8 +164,7 @@ export interface SplitInput {
 }
 
 export async function splitTransaction(year: number, parentId: string, splits: SplitInput[]) {
-  const session = await requireAuth()
-  const userId = session.user!.id!
+  const userId = await getCurrentUserId()
 
   if (splits.length < 1) throw new Error("At least one split required")
   if (splits.length > MAX_SPLITS_PER_TRANSACTION)
@@ -298,8 +295,7 @@ export async function applyReclassification(
   matches: NLMatch[],
   ruleUpdates: NLRuleUpdate[]
 ) {
-  const session = await requireAuth()
-  const userId = session.user!.id!
+  const userId = await getCurrentUserId()
 
   if (matches.length === 0) return { updated: 0, rulesUpdated: 0 }
   if (matches.length > 500) throw new Error("Too many transactions (max 500)")

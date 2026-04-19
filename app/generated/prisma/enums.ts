@@ -131,3 +131,11 @@ export const KnownEntityKind = {
 } as const
 
 export type KnownEntityKind = (typeof KnownEntityKind)[keyof typeof KnownEntityKind]
+
+
+export const UserRole = {
+  CPA: 'CPA',
+  CLIENT: 'CLIENT'
+} as const
+
+export type UserRole = (typeof UserRole)[keyof typeof UserRole]

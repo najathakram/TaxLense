@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server"
 import { z } from "zod"
-import { requireAuth } from "@/lib/auth"
+import { getCurrentUserId } from "@/lib/auth"
 import { prisma } from "@/lib/db"
 import { reclassifyByInstruction, type NLCandidate } from "@/lib/ai/reclassifyNL"
 
@@ -11,8 +11,7 @@ const BodySchema = z.object({
 })
 
 export async function POST(req: Request) {
-  const session = await requireAuth()
-  const userId = session.user!.id!
+  const userId = await getCurrentUserId()
 
   const body = BodySchema.parse(await req.json())
 

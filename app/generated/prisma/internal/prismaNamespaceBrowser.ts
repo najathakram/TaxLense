@@ -52,6 +52,7 @@ export const AnyNull = runtime.AnyNull
 
 export const ModelName = {
   User: 'User',
+  CpaClient: 'CpaClient',
   Account: 'Account',
   Session: 'Session',
   VerificationToken: 'VerificationToken',
@@ -93,11 +94,24 @@ export const UserScalarFieldEnum = {
   emailVerified: 'emailVerified',
   image: 'image',
   password: 'password',
+  role: 'role',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
 } as const
 
 export type UserScalarFieldEnum = (typeof UserScalarFieldEnum)[keyof typeof UserScalarFieldEnum]
+
+
+export const CpaClientScalarFieldEnum = {
+  id: 'id',
+  cpaUserId: 'cpaUserId',
+  clientUserId: 'clientUserId',
+  displayName: 'displayName',
+  notes: 'notes',
+  createdAt: 'createdAt'
+} as const
+
+export type CpaClientScalarFieldEnum = (typeof CpaClientScalarFieldEnum)[keyof typeof CpaClientScalarFieldEnum]
 
 
 export const AccountScalarFieldEnum = {

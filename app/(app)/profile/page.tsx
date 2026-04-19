@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation"
-import { requireAuth } from "@/lib/auth"
+import { getCurrentUserId } from "@/lib/auth"
 import { prisma } from "@/lib/db"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -8,8 +8,7 @@ import ProfileEditClient from "./profile-edit-client"
 import type { WizardData, TripFormData, KnownEntityFormData, IncomeSourceFormData } from "@/app/(app)/onboarding/types"
 
 export default async function ProfilePage() {
-  const session = await requireAuth()
-  const userId = session.user!.id!
+  const userId = await getCurrentUserId()
 
   // Find the most recently active profile (any status except CREATED — i.e., wizard complete)
   const taxYear = await prisma.taxYear.findFirst({

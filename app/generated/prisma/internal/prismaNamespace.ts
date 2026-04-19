@@ -385,6 +385,7 @@ type FieldRefInputType<Model, FieldType> = Model extends never ? never : FieldRe
 
 export const ModelName = {
   User: 'User',
+  CpaClient: 'CpaClient',
   Account: 'Account',
   Session: 'Session',
   VerificationToken: 'VerificationToken',
@@ -416,7 +417,7 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
     omit: GlobalOmitOptions
   }
   meta: {
-    modelProps: "user" | "account" | "session" | "verificationToken" | "ruleVersion" | "taxYear" | "businessProfile" | "knownEntity" | "trip" | "financialAccount" | "statementImport" | "transaction" | "classification" | "merchantRule" | "stopItem" | "auditEvent" | "report"
+    modelProps: "user" | "cpaClient" | "account" | "session" | "verificationToken" | "ruleVersion" | "taxYear" | "businessProfile" | "knownEntity" | "trip" | "financialAccount" | "statementImport" | "transaction" | "classification" | "merchantRule" | "stopItem" | "auditEvent" | "report"
     txIsolationLevel: TransactionIsolationLevel
   }
   model: {
@@ -491,6 +492,80 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
         count: {
           args: Prisma.UserCountArgs<ExtArgs>
           result: runtime.Types.Utils.Optional<Prisma.UserCountAggregateOutputType> | number
+        }
+      }
+    }
+    CpaClient: {
+      payload: Prisma.$CpaClientPayload<ExtArgs>
+      fields: Prisma.CpaClientFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.CpaClientFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$CpaClientPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.CpaClientFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$CpaClientPayload>
+        }
+        findFirst: {
+          args: Prisma.CpaClientFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$CpaClientPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.CpaClientFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$CpaClientPayload>
+        }
+        findMany: {
+          args: Prisma.CpaClientFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$CpaClientPayload>[]
+        }
+        create: {
+          args: Prisma.CpaClientCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$CpaClientPayload>
+        }
+        createMany: {
+          args: Prisma.CpaClientCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.CpaClientCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$CpaClientPayload>[]
+        }
+        delete: {
+          args: Prisma.CpaClientDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$CpaClientPayload>
+        }
+        update: {
+          args: Prisma.CpaClientUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$CpaClientPayload>
+        }
+        deleteMany: {
+          args: Prisma.CpaClientDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.CpaClientUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.CpaClientUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$CpaClientPayload>[]
+        }
+        upsert: {
+          args: Prisma.CpaClientUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$CpaClientPayload>
+        }
+        aggregate: {
+          args: Prisma.CpaClientAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateCpaClient>
+        }
+        groupBy: {
+          args: Prisma.CpaClientGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.CpaClientGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.CpaClientCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.CpaClientCountAggregateOutputType> | number
         }
       }
     }
@@ -1724,11 +1799,24 @@ export const UserScalarFieldEnum = {
   emailVerified: 'emailVerified',
   image: 'image',
   password: 'password',
+  role: 'role',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
 } as const
 
 export type UserScalarFieldEnum = (typeof UserScalarFieldEnum)[keyof typeof UserScalarFieldEnum]
+
+
+export const CpaClientScalarFieldEnum = {
+  id: 'id',
+  cpaUserId: 'cpaUserId',
+  clientUserId: 'clientUserId',
+  displayName: 'displayName',
+  notes: 'notes',
+  createdAt: 'createdAt'
+} as const
+
+export type CpaClientScalarFieldEnum = (typeof CpaClientScalarFieldEnum)[keyof typeof CpaClientScalarFieldEnum]
 
 
 export const AccountScalarFieldEnum = {
@@ -2081,6 +2169,20 @@ export type ListDateTimeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaM
 
 
 /**
+ * Reference to a field of type 'UserRole'
+ */
+export type EnumUserRoleFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'UserRole'>
+    
+
+
+/**
+ * Reference to a field of type 'UserRole[]'
+ */
+export type ListEnumUserRoleFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'UserRole[]'>
+    
+
+
+/**
  * Reference to a field of type 'Int'
  */
 export type IntFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Int'>
@@ -2406,6 +2508,7 @@ export type PrismaClientOptions = ({
 }
 export type GlobalOmitConfig = {
   user?: Prisma.UserOmit
+  cpaClient?: Prisma.CpaClientOmit
   account?: Prisma.AccountOmit
   session?: Prisma.SessionOmit
   verificationToken?: Prisma.VerificationTokenOmit

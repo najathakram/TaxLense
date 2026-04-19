@@ -1,12 +1,11 @@
 import { redirect } from "next/navigation"
-import { requireAuth } from "@/lib/auth"
+import { getCurrentUserId } from "@/lib/auth"
 import { prisma } from "@/lib/db"
 import Wizard from "./wizard"
 import type { WizardData, TripFormData, KnownEntityFormData, IncomeSourceFormData } from "./types"
 
 export default async function OnboardingPage() {
-  const session = await requireAuth()
-  const userId = session.user!.id!
+  const userId = await getCurrentUserId()
 
   // Find the active (CREATED) tax year for this user
   const taxYear = await prisma.taxYear.findFirst({

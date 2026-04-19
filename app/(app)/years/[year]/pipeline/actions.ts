@@ -1,6 +1,6 @@
 "use server"
 
-import { requireAuth } from "@/lib/auth"
+import { getCurrentUserId } from "@/lib/auth"
 import { prisma } from "@/lib/db"
 import { normalizeMerchantsForYear, applyMerchantRules } from "@/lib/classification/apply"
 import { matchTransfers } from "@/lib/pairing/transfers"
@@ -18,8 +18,7 @@ async function getTaxYear(userId: string, year: number) {
 }
 
 export async function runNormalizeMerchants(year: number) {
-  const session = await requireAuth()
-  const userId = session.user!.id!
+  const userId = await getCurrentUserId()
   const taxYear = await getTaxYear(userId, year)
   const updated = await normalizeMerchantsForYear(taxYear.id)
   revalidatePath(`/years/${year}/pipeline`)
@@ -27,8 +26,7 @@ export async function runNormalizeMerchants(year: number) {
 }
 
 export async function runMatchTransfers(year: number) {
-  const session = await requireAuth()
-  const userId = session.user!.id!
+  const userId = await getCurrentUserId()
   const taxYear = await getTaxYear(userId, year)
   const result = await matchTransfers(taxYear.id)
   revalidatePath(`/years/${year}/pipeline`)
@@ -36,8 +34,7 @@ export async function runMatchTransfers(year: number) {
 }
 
 export async function runMatchPayments(year: number) {
-  const session = await requireAuth()
-  const userId = session.user!.id!
+  const userId = await getCurrentUserId()
   const taxYear = await getTaxYear(userId, year)
   const result = await matchCardPayments(taxYear.id)
   revalidatePath(`/years/${year}/pipeline`)
@@ -45,8 +42,7 @@ export async function runMatchPayments(year: number) {
 }
 
 export async function runMatchRefunds(year: number) {
-  const session = await requireAuth()
-  const userId = session.user!.id!
+  const userId = await getCurrentUserId()
   const taxYear = await getTaxYear(userId, year)
   const result = await matchRefunds(taxYear.id)
   revalidatePath(`/years/${year}/pipeline`)
@@ -54,8 +50,7 @@ export async function runMatchRefunds(year: number) {
 }
 
 export async function runMerchantAI(year: number) {
-  const session = await requireAuth()
-  const userId = session.user!.id!
+  const userId = await getCurrentUserId()
   const taxYear = await getTaxYear(userId, year)
   const result = await runMerchantIntelligence(taxYear.id)
   revalidatePath(`/years/${year}/pipeline`)
@@ -63,8 +58,7 @@ export async function runMerchantAI(year: number) {
 }
 
 export async function runApplyRules(year: number) {
-  const session = await requireAuth()
-  const userId = session.user!.id!
+  const userId = await getCurrentUserId()
   const taxYear = await getTaxYear(userId, year)
   const result = await applyMerchantRules(taxYear.id)
   revalidatePath(`/years/${year}/pipeline`)

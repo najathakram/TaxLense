@@ -1,4 +1,4 @@
-import { requireAuth } from "@/lib/auth"
+import { getCurrentUserId } from "@/lib/auth"
 import { prisma } from "@/lib/db"
 import { notFound } from "next/navigation"
 import Link from "next/link"
@@ -14,8 +14,7 @@ interface Props {
 
 export default async function LockPage({ params }: Props) {
   const { year: yearParam } = await params
-  const session = await requireAuth()
-  const userId = session.user!.id!
+  const userId = await getCurrentUserId()
   const year = parseInt(yearParam, 10)
   if (isNaN(year)) notFound()
 

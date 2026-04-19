@@ -1,7 +1,7 @@
 "use server"
 
 import { prisma } from "@/lib/db"
-import { requireAuth } from "@/lib/auth"
+import { getCurrentUserId } from "@/lib/auth"
 import { revalidatePath } from "next/cache"
 import { applyMerchantRules } from "@/lib/classification/apply"
 import type { Prisma } from "@/app/generated/prisma/client"
@@ -16,8 +16,7 @@ export async function resolveStop(
   answer: StopAnswer,
   applyToSimilar: boolean
 ) {
-  const session = await requireAuth()
-  const userId = session.user!.id!
+  const userId = await getCurrentUserId()
 
   await prisma.$transaction(
     async (tx) => {
@@ -145,8 +144,7 @@ async function getYearFor(stopId: string): Promise<number | null> {
 // ---------- deferStop ----------
 
 export async function deferStop(stopId: string) {
-  const session = await requireAuth()
-  const userId = session.user!.id!
+  const userId = await getCurrentUserId()
 
   const stop = await prisma.stopItem.findUnique({
     where: { id: stopId },

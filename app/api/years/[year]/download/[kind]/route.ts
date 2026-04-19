@@ -1,5 +1,5 @@
 import { NextRequest } from "next/server"
-import { requireAuth } from "@/lib/auth"
+import { getCurrentUserId } from "@/lib/auth"
 import { prisma } from "@/lib/db"
 import { buildMasterLedger } from "@/lib/reports/masterLedger"
 import { buildFinancialStatements } from "@/lib/reports/financialStatements"
@@ -35,13 +35,12 @@ export async function GET(
   const { year: yearParam, kind: kindParam } = await params
 
   // Auth
-  let session: Awaited<ReturnType<typeof requireAuth>>
+  let userId: string
   try {
-    session = await requireAuth()
+    userId = await getCurrentUserId()
   } catch {
     return new Response("Unauthorized", { status: 401 })
   }
-  const userId = session.user!.id!
 
   // Validate year
   const year = parseInt(yearParam, 10)

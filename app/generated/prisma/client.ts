@@ -47,6 +47,11 @@ export { Prisma }
  */
 export type User = Prisma.UserModel
 /**
+ * Model CpaClient
+ * 
+ */
+export type CpaClient = Prisma.CpaClientModel
+/**
  * Model Account
  * 
  */
