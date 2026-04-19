@@ -1808,6 +1808,8 @@ export const BusinessProfileScalarFieldEnum = {
   inventoryConfig: 'inventoryConfig',
   revenueStreams: 'revenueStreams',
   firstYear: 'firstYear',
+  draftStep: 'draftStep',
+  incomeSources: 'incomeSources',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
 } as const

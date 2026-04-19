@@ -222,18 +222,20 @@ model BusinessProfile {
   id                    String           @id @default(cuid())
   userId                String
   taxYearId             String           @unique
-  naicsCode             String
-  entityType            EntityType
-  primaryState          String
-  businessDescription   String
-  grossReceiptsEstimate Decimal          @db.Decimal(15, 2)
+  naicsCode             String?          // Nullable: filled in Step 2 of wizard
+  entityType            EntityType       @default(SOLE_PROP)
+  primaryState          String           @default("")
+  businessDescription   String?          // Nullable: filled in Step 2 of wizard
+  grossReceiptsEstimate Decimal?         @db.Decimal(15, 2) // Nullable: filled in Step 3
   accountingMethod      AccountingMethod @default(CASH)
   // JSONB configs (spec §4.1):
-  homeOfficeConfig      Json             // { has, dedicated, officeSqft, homeSqft }
-  vehicleConfig         Json             // { has, bizPct }
+  homeOfficeConfig      Json             @default("{\"has\":false}") // { has, dedicated, officeSqft, homeSqft }
+  vehicleConfig         Json             @default("{\"has\":false}") // { has, bizPct }
   inventoryConfig       Json?            // { has, physical, dropship }
   revenueStreams         String[]
   firstYear             Boolean          @default(false)
+  draftStep             Int              @default(1)  // Wizard progress persistence
+  incomeSources         Json?            // [{ platform, expectedTotal, categories }]
   createdAt             DateTime         @default(now())
   updatedAt             DateTime         @updatedAt
 

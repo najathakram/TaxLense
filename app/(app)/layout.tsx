@@ -26,6 +26,12 @@ export default async function AppLayout({ children }: { children: React.ReactNod
           >
             Profile Wizard
           </Link>
+          <Link
+            href="/profile"
+            className="flex items-center px-3 py-2 rounded-md text-sm font-medium text-foreground hover:bg-accent hover:text-accent-foreground transition-colors"
+          >
+            Business Profile
+          </Link>
         </nav>
         <div className="p-3 border-t">
           <p className="text-xs text-muted-foreground truncate mb-2">{session.user?.email}</p>

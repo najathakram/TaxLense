@@ -56,7 +56,7 @@ These are the design rails. If a future change violates one of these, the change
 
 - [x] Prompt 0 — Environment verified, CLAUDE.md, .env.example in place
 - [x] Prompt 1 — Foundation (Next.js scaffold, Prisma schema, NextAuth, seed, route stubs, smoke tests)
-- [ ] Prompt 2 — Profile Wizard
+- [x] Prompt 2 — Profile Wizard
 - [ ] Prompt 3 — Ingestion
 - [ ] Prompt 4 — Merchant Intelligence
 - [ ] Prompt 5 — STOPs + Ledger Review
@@ -157,6 +157,17 @@ These were discovered during Prompt 1 and must be respected in all future sessio
 - Next.js 16 breaking changes discovered and documented above
 - Dev database: `postgresql://taxlens:taxlens_dev@localhost:5433/taxlens`
 - 8/8 Vitest smoke tests passing; dev server 200 OK on `/login`
+
+## Prompt 2 notes
+
+- **Migration**: `add_wizard_fields` — BusinessProfile gets `draftStep Int @default(1)`, `incomeSources Json?`; `naicsCode`/`businessDescription`/`grossReceiptsEstimate` made nullable for progressive wizard capture
+- **10-step wizard** at `/app/(app)/onboarding/` — client wizard shell + individual step components (steps 1–10)
+- **Server actions** at `app/(app)/onboarding/actions.ts` — `saveStep1`–`saveStep9` + `finalizeOnboarding` + `saveProfileEdit`; all Zod-validated server-side
+- **Progress persistence** — `draftStep` on BusinessProfile; wizard resumes at saved step on reload
+- **Edit flow** at `/app/(app)/profile/` — read-only summary with per-section Edit → Dialog; calls `saveProfileEdit` which writes AuditEvent
+- **Key UX details**: V1 entity wall (OTHER entity type), §280A simplified-method preview (Step 4), §274(d) vehicle warnings at 75%+/90%+ (Step 5), §471(c) V2 notice (Step 6), keyword-tag UI for known entities (Step 8)
+- **Auth route fix**: `app/api/auth/[...nextauth]/route.ts` — was `export { GET, POST } from "@/auth"` (wrong); now `import { handlers } from "@/auth"; export const { GET, POST } = handlers`
+- **14/14 tests passing** (8 smoke + 6 onboarding); clean `pnpm build`; dev server 200 OK
 
 ## Prompt 1 gap-fill notes
 

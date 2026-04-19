@@ -28,10 +28,12 @@ export type AggregateBusinessProfile = {
 
 export type BusinessProfileAvgAggregateOutputType = {
   grossReceiptsEstimate: runtime.Decimal | null
+  draftStep: number | null
 }
 
 export type BusinessProfileSumAggregateOutputType = {
   grossReceiptsEstimate: runtime.Decimal | null
+  draftStep: number | null
 }
 
 export type BusinessProfileMinAggregateOutputType = {
@@ -45,6 +47,7 @@ export type BusinessProfileMinAggregateOutputType = {
   grossReceiptsEstimate: runtime.Decimal | null
   accountingMethod: $Enums.AccountingMethod | null
   firstYear: boolean | null
+  draftStep: number | null
   createdAt: Date | null
   updatedAt: Date | null
 }
@@ -60,6 +63,7 @@ export type BusinessProfileMaxAggregateOutputType = {
   grossReceiptsEstimate: runtime.Decimal | null
   accountingMethod: $Enums.AccountingMethod | null
   firstYear: boolean | null
+  draftStep: number | null
   createdAt: Date | null
   updatedAt: Date | null
 }
@@ -79,6 +83,8 @@ export type BusinessProfileCountAggregateOutputType = {
   inventoryConfig: number
   revenueStreams: number
   firstYear: number
+  draftStep: number
+  incomeSources: number
   createdAt: number
   updatedAt: number
   _all: number
@@ -87,10 +93,12 @@ export type BusinessProfileCountAggregateOutputType = {
 
 export type BusinessProfileAvgAggregateInputType = {
   grossReceiptsEstimate?: true
+  draftStep?: true
 }
 
 export type BusinessProfileSumAggregateInputType = {
   grossReceiptsEstimate?: true
+  draftStep?: true
 }
 
 export type BusinessProfileMinAggregateInputType = {
@@ -104,6 +112,7 @@ export type BusinessProfileMinAggregateInputType = {
   grossReceiptsEstimate?: true
   accountingMethod?: true
   firstYear?: true
+  draftStep?: true
   createdAt?: true
   updatedAt?: true
 }
@@ -119,6 +128,7 @@ export type BusinessProfileMaxAggregateInputType = {
   grossReceiptsEstimate?: true
   accountingMethod?: true
   firstYear?: true
+  draftStep?: true
   createdAt?: true
   updatedAt?: true
 }
@@ -138,6 +148,8 @@ export type BusinessProfileCountAggregateInputType = {
   inventoryConfig?: true
   revenueStreams?: true
   firstYear?: true
+  draftStep?: true
+  incomeSources?: true
   createdAt?: true
   updatedAt?: true
   _all?: true
@@ -233,17 +245,19 @@ export type BusinessProfileGroupByOutputType = {
   id: string
   userId: string
   taxYearId: string
-  naicsCode: string
+  naicsCode: string | null
   entityType: $Enums.EntityType
   primaryState: string
-  businessDescription: string
-  grossReceiptsEstimate: runtime.Decimal
+  businessDescription: string | null
+  grossReceiptsEstimate: runtime.Decimal | null
   accountingMethod: $Enums.AccountingMethod
   homeOfficeConfig: runtime.JsonValue
   vehicleConfig: runtime.JsonValue
   inventoryConfig: runtime.JsonValue | null
   revenueStreams: string[]
   firstYear: boolean
+  draftStep: number
+  incomeSources: runtime.JsonValue | null
   createdAt: Date
   updatedAt: Date
   _count: BusinessProfileCountAggregateOutputType | null
@@ -275,17 +289,19 @@ export type BusinessProfileWhereInput = {
   id?: Prisma.StringFilter<"BusinessProfile"> | string
   userId?: Prisma.StringFilter<"BusinessProfile"> | string
   taxYearId?: Prisma.StringFilter<"BusinessProfile"> | string
-  naicsCode?: Prisma.StringFilter<"BusinessProfile"> | string
+  naicsCode?: Prisma.StringNullableFilter<"BusinessProfile"> | string | null
   entityType?: Prisma.EnumEntityTypeFilter<"BusinessProfile"> | $Enums.EntityType
   primaryState?: Prisma.StringFilter<"BusinessProfile"> | string
-  businessDescription?: Prisma.StringFilter<"BusinessProfile"> | string
-  grossReceiptsEstimate?: Prisma.DecimalFilter<"BusinessProfile"> | runtime.Decimal | runtime.DecimalJsLike | number | string
+  businessDescription?: Prisma.StringNullableFilter<"BusinessProfile"> | string | null
+  grossReceiptsEstimate?: Prisma.DecimalNullableFilter<"BusinessProfile"> | runtime.Decimal | runtime.DecimalJsLike | number | string | null
   accountingMethod?: Prisma.EnumAccountingMethodFilter<"BusinessProfile"> | $Enums.AccountingMethod
   homeOfficeConfig?: Prisma.JsonFilter<"BusinessProfile">
   vehicleConfig?: Prisma.JsonFilter<"BusinessProfile">
   inventoryConfig?: Prisma.JsonNullableFilter<"BusinessProfile">
   revenueStreams?: Prisma.StringNullableListFilter<"BusinessProfile">
   firstYear?: Prisma.BoolFilter<"BusinessProfile"> | boolean
+  draftStep?: Prisma.IntFilter<"BusinessProfile"> | number
+  incomeSources?: Prisma.JsonNullableFilter<"BusinessProfile">
   createdAt?: Prisma.DateTimeFilter<"BusinessProfile"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"BusinessProfile"> | Date | string
   user?: Prisma.XOR<Prisma.UserScalarRelationFilter, Prisma.UserWhereInput>
@@ -298,17 +314,19 @@ export type BusinessProfileOrderByWithRelationInput = {
   id?: Prisma.SortOrder
   userId?: Prisma.SortOrder
   taxYearId?: Prisma.SortOrder
-  naicsCode?: Prisma.SortOrder
+  naicsCode?: Prisma.SortOrderInput | Prisma.SortOrder
   entityType?: Prisma.SortOrder
   primaryState?: Prisma.SortOrder
-  businessDescription?: Prisma.SortOrder
-  grossReceiptsEstimate?: Prisma.SortOrder
+  businessDescription?: Prisma.SortOrderInput | Prisma.SortOrder
+  grossReceiptsEstimate?: Prisma.SortOrderInput | Prisma.SortOrder
   accountingMethod?: Prisma.SortOrder
   homeOfficeConfig?: Prisma.SortOrder
   vehicleConfig?: Prisma.SortOrder
   inventoryConfig?: Prisma.SortOrderInput | Prisma.SortOrder
   revenueStreams?: Prisma.SortOrder
   firstYear?: Prisma.SortOrder
+  draftStep?: Prisma.SortOrder
+  incomeSources?: Prisma.SortOrderInput | Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
   user?: Prisma.UserOrderByWithRelationInput
@@ -324,17 +342,19 @@ export type BusinessProfileWhereUniqueInput = Prisma.AtLeast<{
   OR?: Prisma.BusinessProfileWhereInput[]
   NOT?: Prisma.BusinessProfileWhereInput | Prisma.BusinessProfileWhereInput[]
   userId?: Prisma.StringFilter<"BusinessProfile"> | string
-  naicsCode?: Prisma.StringFilter<"BusinessProfile"> | string
+  naicsCode?: Prisma.StringNullableFilter<"BusinessProfile"> | string | null
   entityType?: Prisma.EnumEntityTypeFilter<"BusinessProfile"> | $Enums.EntityType
   primaryState?: Prisma.StringFilter<"BusinessProfile"> | string
-  businessDescription?: Prisma.StringFilter<"BusinessProfile"> | string
-  grossReceiptsEstimate?: Prisma.DecimalFilter<"BusinessProfile"> | runtime.Decimal | runtime.DecimalJsLike | number | string
+  businessDescription?: Prisma.StringNullableFilter<"BusinessProfile"> | string | null
+  grossReceiptsEstimate?: Prisma.DecimalNullableFilter<"BusinessProfile"> | runtime.Decimal | runtime.DecimalJsLike | number | string | null
   accountingMethod?: Prisma.EnumAccountingMethodFilter<"BusinessProfile"> | $Enums.AccountingMethod
   homeOfficeConfig?: Prisma.JsonFilter<"BusinessProfile">
   vehicleConfig?: Prisma.JsonFilter<"BusinessProfile">
   inventoryConfig?: Prisma.JsonNullableFilter<"BusinessProfile">
   revenueStreams?: Prisma.StringNullableListFilter<"BusinessProfile">
   firstYear?: Prisma.BoolFilter<"BusinessProfile"> | boolean
+  draftStep?: Prisma.IntFilter<"BusinessProfile"> | number
+  incomeSources?: Prisma.JsonNullableFilter<"BusinessProfile">
   createdAt?: Prisma.DateTimeFilter<"BusinessProfile"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"BusinessProfile"> | Date | string
   user?: Prisma.XOR<Prisma.UserScalarRelationFilter, Prisma.UserWhereInput>
@@ -347,17 +367,19 @@ export type BusinessProfileOrderByWithAggregationInput = {
   id?: Prisma.SortOrder
   userId?: Prisma.SortOrder
   taxYearId?: Prisma.SortOrder
-  naicsCode?: Prisma.SortOrder
+  naicsCode?: Prisma.SortOrderInput | Prisma.SortOrder
   entityType?: Prisma.SortOrder
   primaryState?: Prisma.SortOrder
-  businessDescription?: Prisma.SortOrder
-  grossReceiptsEstimate?: Prisma.SortOrder
+  businessDescription?: Prisma.SortOrderInput | Prisma.SortOrder
+  grossReceiptsEstimate?: Prisma.SortOrderInput | Prisma.SortOrder
   accountingMethod?: Prisma.SortOrder
   homeOfficeConfig?: Prisma.SortOrder
   vehicleConfig?: Prisma.SortOrder
   inventoryConfig?: Prisma.SortOrderInput | Prisma.SortOrder
   revenueStreams?: Prisma.SortOrder
   firstYear?: Prisma.SortOrder
+  draftStep?: Prisma.SortOrder
+  incomeSources?: Prisma.SortOrderInput | Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
   _count?: Prisma.BusinessProfileCountOrderByAggregateInput
@@ -374,34 +396,38 @@ export type BusinessProfileScalarWhereWithAggregatesInput = {
   id?: Prisma.StringWithAggregatesFilter<"BusinessProfile"> | string
   userId?: Prisma.StringWithAggregatesFilter<"BusinessProfile"> | string
   taxYearId?: Prisma.StringWithAggregatesFilter<"BusinessProfile"> | string
-  naicsCode?: Prisma.StringWithAggregatesFilter<"BusinessProfile"> | string
+  naicsCode?: Prisma.StringNullableWithAggregatesFilter<"BusinessProfile"> | string | null
   entityType?: Prisma.EnumEntityTypeWithAggregatesFilter<"BusinessProfile"> | $Enums.EntityType
   primaryState?: Prisma.StringWithAggregatesFilter<"BusinessProfile"> | string
-  businessDescription?: Prisma.StringWithAggregatesFilter<"BusinessProfile"> | string
-  grossReceiptsEstimate?: Prisma.DecimalWithAggregatesFilter<"BusinessProfile"> | runtime.Decimal | runtime.DecimalJsLike | number | string
+  businessDescription?: Prisma.StringNullableWithAggregatesFilter<"BusinessProfile"> | string | null
+  grossReceiptsEstimate?: Prisma.DecimalNullableWithAggregatesFilter<"BusinessProfile"> | runtime.Decimal | runtime.DecimalJsLike | number | string | null
   accountingMethod?: Prisma.EnumAccountingMethodWithAggregatesFilter<"BusinessProfile"> | $Enums.AccountingMethod
   homeOfficeConfig?: Prisma.JsonWithAggregatesFilter<"BusinessProfile">
   vehicleConfig?: Prisma.JsonWithAggregatesFilter<"BusinessProfile">
   inventoryConfig?: Prisma.JsonNullableWithAggregatesFilter<"BusinessProfile">
   revenueStreams?: Prisma.StringNullableListFilter<"BusinessProfile">
   firstYear?: Prisma.BoolWithAggregatesFilter<"BusinessProfile"> | boolean
+  draftStep?: Prisma.IntWithAggregatesFilter<"BusinessProfile"> | number
+  incomeSources?: Prisma.JsonNullableWithAggregatesFilter<"BusinessProfile">
   createdAt?: Prisma.DateTimeWithAggregatesFilter<"BusinessProfile"> | Date | string
   updatedAt?: Prisma.DateTimeWithAggregatesFilter<"BusinessProfile"> | Date | string
 }
 
 export type BusinessProfileCreateInput = {
   id?: string
-  naicsCode: string
-  entityType: $Enums.EntityType
-  primaryState: string
-  businessDescription: string
-  grossReceiptsEstimate: runtime.Decimal | runtime.DecimalJsLike | number | string
+  naicsCode?: string | null
+  entityType?: $Enums.EntityType
+  primaryState?: string
+  businessDescription?: string | null
+  grossReceiptsEstimate?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
   accountingMethod?: $Enums.AccountingMethod
-  homeOfficeConfig: Prisma.JsonNullValueInput | runtime.InputJsonValue
-  vehicleConfig: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  homeOfficeConfig?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  vehicleConfig?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   inventoryConfig?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   revenueStreams?: Prisma.BusinessProfileCreaterevenueStreamsInput | string[]
   firstYear?: boolean
+  draftStep?: number
+  incomeSources?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   createdAt?: Date | string
   updatedAt?: Date | string
   user: Prisma.UserCreateNestedOneWithoutBusinessProfilesInput
@@ -414,17 +440,19 @@ export type BusinessProfileUncheckedCreateInput = {
   id?: string
   userId: string
   taxYearId: string
-  naicsCode: string
-  entityType: $Enums.EntityType
-  primaryState: string
-  businessDescription: string
-  grossReceiptsEstimate: runtime.Decimal | runtime.DecimalJsLike | number | string
+  naicsCode?: string | null
+  entityType?: $Enums.EntityType
+  primaryState?: string
+  businessDescription?: string | null
+  grossReceiptsEstimate?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
   accountingMethod?: $Enums.AccountingMethod
-  homeOfficeConfig: Prisma.JsonNullValueInput | runtime.InputJsonValue
-  vehicleConfig: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  homeOfficeConfig?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  vehicleConfig?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   inventoryConfig?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   revenueStreams?: Prisma.BusinessProfileCreaterevenueStreamsInput | string[]
   firstYear?: boolean
+  draftStep?: number
+  incomeSources?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   createdAt?: Date | string
   updatedAt?: Date | string
   knownEntities?: Prisma.KnownEntityUncheckedCreateNestedManyWithoutProfileInput
@@ -433,17 +461,19 @@ export type BusinessProfileUncheckedCreateInput = {
 
 export type BusinessProfileUpdateInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
-  naicsCode?: Prisma.StringFieldUpdateOperationsInput | string
+  naicsCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   entityType?: Prisma.EnumEntityTypeFieldUpdateOperationsInput | $Enums.EntityType
   primaryState?: Prisma.StringFieldUpdateOperationsInput | string
-  businessDescription?: Prisma.StringFieldUpdateOperationsInput | string
-  grossReceiptsEstimate?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
+  businessDescription?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  grossReceiptsEstimate?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
   accountingMethod?: Prisma.EnumAccountingMethodFieldUpdateOperationsInput | $Enums.AccountingMethod
   homeOfficeConfig?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   vehicleConfig?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   inventoryConfig?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   revenueStreams?: Prisma.BusinessProfileUpdaterevenueStreamsInput | string[]
   firstYear?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  draftStep?: Prisma.IntFieldUpdateOperationsInput | number
+  incomeSources?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   user?: Prisma.UserUpdateOneRequiredWithoutBusinessProfilesNestedInput
@@ -456,17 +486,19 @@ export type BusinessProfileUncheckedUpdateInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   userId?: Prisma.StringFieldUpdateOperationsInput | string
   taxYearId?: Prisma.StringFieldUpdateOperationsInput | string
-  naicsCode?: Prisma.StringFieldUpdateOperationsInput | string
+  naicsCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   entityType?: Prisma.EnumEntityTypeFieldUpdateOperationsInput | $Enums.EntityType
   primaryState?: Prisma.StringFieldUpdateOperationsInput | string
-  businessDescription?: Prisma.StringFieldUpdateOperationsInput | string
-  grossReceiptsEstimate?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
+  businessDescription?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  grossReceiptsEstimate?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
   accountingMethod?: Prisma.EnumAccountingMethodFieldUpdateOperationsInput | $Enums.AccountingMethod
   homeOfficeConfig?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   vehicleConfig?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   inventoryConfig?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   revenueStreams?: Prisma.BusinessProfileUpdaterevenueStreamsInput | string[]
   firstYear?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  draftStep?: Prisma.IntFieldUpdateOperationsInput | number
+  incomeSources?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   knownEntities?: Prisma.KnownEntityUncheckedUpdateManyWithoutProfileNestedInput
@@ -477,34 +509,38 @@ export type BusinessProfileCreateManyInput = {
   id?: string
   userId: string
   taxYearId: string
-  naicsCode: string
-  entityType: $Enums.EntityType
-  primaryState: string
-  businessDescription: string
-  grossReceiptsEstimate: runtime.Decimal | runtime.DecimalJsLike | number | string
+  naicsCode?: string | null
+  entityType?: $Enums.EntityType
+  primaryState?: string
+  businessDescription?: string | null
+  grossReceiptsEstimate?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
   accountingMethod?: $Enums.AccountingMethod
-  homeOfficeConfig: Prisma.JsonNullValueInput | runtime.InputJsonValue
-  vehicleConfig: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  homeOfficeConfig?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  vehicleConfig?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   inventoryConfig?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   revenueStreams?: Prisma.BusinessProfileCreaterevenueStreamsInput | string[]
   firstYear?: boolean
+  draftStep?: number
+  incomeSources?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   createdAt?: Date | string
   updatedAt?: Date | string
 }
 
 export type BusinessProfileUpdateManyMutationInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
-  naicsCode?: Prisma.StringFieldUpdateOperationsInput | string
+  naicsCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   entityType?: Prisma.EnumEntityTypeFieldUpdateOperationsInput | $Enums.EntityType
   primaryState?: Prisma.StringFieldUpdateOperationsInput | string
-  businessDescription?: Prisma.StringFieldUpdateOperationsInput | string
-  grossReceiptsEstimate?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
+  businessDescription?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  grossReceiptsEstimate?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
   accountingMethod?: Prisma.EnumAccountingMethodFieldUpdateOperationsInput | $Enums.AccountingMethod
   homeOfficeConfig?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   vehicleConfig?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   inventoryConfig?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   revenueStreams?: Prisma.BusinessProfileUpdaterevenueStreamsInput | string[]
   firstYear?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  draftStep?: Prisma.IntFieldUpdateOperationsInput | number
+  incomeSources?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -513,17 +549,19 @@ export type BusinessProfileUncheckedUpdateManyInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   userId?: Prisma.StringFieldUpdateOperationsInput | string
   taxYearId?: Prisma.StringFieldUpdateOperationsInput | string
-  naicsCode?: Prisma.StringFieldUpdateOperationsInput | string
+  naicsCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   entityType?: Prisma.EnumEntityTypeFieldUpdateOperationsInput | $Enums.EntityType
   primaryState?: Prisma.StringFieldUpdateOperationsInput | string
-  businessDescription?: Prisma.StringFieldUpdateOperationsInput | string
-  grossReceiptsEstimate?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
+  businessDescription?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  grossReceiptsEstimate?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
   accountingMethod?: Prisma.EnumAccountingMethodFieldUpdateOperationsInput | $Enums.AccountingMethod
   homeOfficeConfig?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   vehicleConfig?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   inventoryConfig?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   revenueStreams?: Prisma.BusinessProfileUpdaterevenueStreamsInput | string[]
   firstYear?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  draftStep?: Prisma.IntFieldUpdateOperationsInput | number
+  incomeSources?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -566,12 +604,15 @@ export type BusinessProfileCountOrderByAggregateInput = {
   inventoryConfig?: Prisma.SortOrder
   revenueStreams?: Prisma.SortOrder
   firstYear?: Prisma.SortOrder
+  draftStep?: Prisma.SortOrder
+  incomeSources?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
 }
 
 export type BusinessProfileAvgOrderByAggregateInput = {
   grossReceiptsEstimate?: Prisma.SortOrder
+  draftStep?: Prisma.SortOrder
 }
 
 export type BusinessProfileMaxOrderByAggregateInput = {
@@ -585,6 +626,7 @@ export type BusinessProfileMaxOrderByAggregateInput = {
   grossReceiptsEstimate?: Prisma.SortOrder
   accountingMethod?: Prisma.SortOrder
   firstYear?: Prisma.SortOrder
+  draftStep?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
 }
@@ -600,12 +642,14 @@ export type BusinessProfileMinOrderByAggregateInput = {
   grossReceiptsEstimate?: Prisma.SortOrder
   accountingMethod?: Prisma.SortOrder
   firstYear?: Prisma.SortOrder
+  draftStep?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
 }
 
 export type BusinessProfileSumOrderByAggregateInput = {
   grossReceiptsEstimate?: Prisma.SortOrder
+  draftStep?: Prisma.SortOrder
 }
 
 export type BusinessProfileScalarRelationFilter = {
@@ -695,8 +739,8 @@ export type EnumEntityTypeFieldUpdateOperationsInput = {
   set?: $Enums.EntityType
 }
 
-export type DecimalFieldUpdateOperationsInput = {
-  set?: runtime.Decimal | runtime.DecimalJsLike | number | string
+export type NullableDecimalFieldUpdateOperationsInput = {
+  set?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
   increment?: runtime.Decimal | runtime.DecimalJsLike | number | string
   decrement?: runtime.Decimal | runtime.DecimalJsLike | number | string
   multiply?: runtime.Decimal | runtime.DecimalJsLike | number | string
@@ -746,17 +790,19 @@ export type BusinessProfileUpdateOneRequiredWithoutTripsNestedInput = {
 
 export type BusinessProfileCreateWithoutUserInput = {
   id?: string
-  naicsCode: string
-  entityType: $Enums.EntityType
-  primaryState: string
-  businessDescription: string
-  grossReceiptsEstimate: runtime.Decimal | runtime.DecimalJsLike | number | string
+  naicsCode?: string | null
+  entityType?: $Enums.EntityType
+  primaryState?: string
+  businessDescription?: string | null
+  grossReceiptsEstimate?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
   accountingMethod?: $Enums.AccountingMethod
-  homeOfficeConfig: Prisma.JsonNullValueInput | runtime.InputJsonValue
-  vehicleConfig: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  homeOfficeConfig?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  vehicleConfig?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   inventoryConfig?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   revenueStreams?: Prisma.BusinessProfileCreaterevenueStreamsInput | string[]
   firstYear?: boolean
+  draftStep?: number
+  incomeSources?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   createdAt?: Date | string
   updatedAt?: Date | string
   taxYear: Prisma.TaxYearCreateNestedOneWithoutBusinessProfileInput
@@ -767,17 +813,19 @@ export type BusinessProfileCreateWithoutUserInput = {
 export type BusinessProfileUncheckedCreateWithoutUserInput = {
   id?: string
   taxYearId: string
-  naicsCode: string
-  entityType: $Enums.EntityType
-  primaryState: string
-  businessDescription: string
-  grossReceiptsEstimate: runtime.Decimal | runtime.DecimalJsLike | number | string
+  naicsCode?: string | null
+  entityType?: $Enums.EntityType
+  primaryState?: string
+  businessDescription?: string | null
+  grossReceiptsEstimate?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
   accountingMethod?: $Enums.AccountingMethod
-  homeOfficeConfig: Prisma.JsonNullValueInput | runtime.InputJsonValue
-  vehicleConfig: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  homeOfficeConfig?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  vehicleConfig?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   inventoryConfig?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   revenueStreams?: Prisma.BusinessProfileCreaterevenueStreamsInput | string[]
   firstYear?: boolean
+  draftStep?: number
+  incomeSources?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   createdAt?: Date | string
   updatedAt?: Date | string
   knownEntities?: Prisma.KnownEntityUncheckedCreateNestedManyWithoutProfileInput
@@ -817,34 +865,38 @@ export type BusinessProfileScalarWhereInput = {
   id?: Prisma.StringFilter<"BusinessProfile"> | string
   userId?: Prisma.StringFilter<"BusinessProfile"> | string
   taxYearId?: Prisma.StringFilter<"BusinessProfile"> | string
-  naicsCode?: Prisma.StringFilter<"BusinessProfile"> | string
+  naicsCode?: Prisma.StringNullableFilter<"BusinessProfile"> | string | null
   entityType?: Prisma.EnumEntityTypeFilter<"BusinessProfile"> | $Enums.EntityType
   primaryState?: Prisma.StringFilter<"BusinessProfile"> | string
-  businessDescription?: Prisma.StringFilter<"BusinessProfile"> | string
-  grossReceiptsEstimate?: Prisma.DecimalFilter<"BusinessProfile"> | runtime.Decimal | runtime.DecimalJsLike | number | string
+  businessDescription?: Prisma.StringNullableFilter<"BusinessProfile"> | string | null
+  grossReceiptsEstimate?: Prisma.DecimalNullableFilter<"BusinessProfile"> | runtime.Decimal | runtime.DecimalJsLike | number | string | null
   accountingMethod?: Prisma.EnumAccountingMethodFilter<"BusinessProfile"> | $Enums.AccountingMethod
   homeOfficeConfig?: Prisma.JsonFilter<"BusinessProfile">
   vehicleConfig?: Prisma.JsonFilter<"BusinessProfile">
   inventoryConfig?: Prisma.JsonNullableFilter<"BusinessProfile">
   revenueStreams?: Prisma.StringNullableListFilter<"BusinessProfile">
   firstYear?: Prisma.BoolFilter<"BusinessProfile"> | boolean
+  draftStep?: Prisma.IntFilter<"BusinessProfile"> | number
+  incomeSources?: Prisma.JsonNullableFilter<"BusinessProfile">
   createdAt?: Prisma.DateTimeFilter<"BusinessProfile"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"BusinessProfile"> | Date | string
 }
 
 export type BusinessProfileCreateWithoutTaxYearInput = {
   id?: string
-  naicsCode: string
-  entityType: $Enums.EntityType
-  primaryState: string
-  businessDescription: string
-  grossReceiptsEstimate: runtime.Decimal | runtime.DecimalJsLike | number | string
+  naicsCode?: string | null
+  entityType?: $Enums.EntityType
+  primaryState?: string
+  businessDescription?: string | null
+  grossReceiptsEstimate?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
   accountingMethod?: $Enums.AccountingMethod
-  homeOfficeConfig: Prisma.JsonNullValueInput | runtime.InputJsonValue
-  vehicleConfig: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  homeOfficeConfig?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  vehicleConfig?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   inventoryConfig?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   revenueStreams?: Prisma.BusinessProfileCreaterevenueStreamsInput | string[]
   firstYear?: boolean
+  draftStep?: number
+  incomeSources?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   createdAt?: Date | string
   updatedAt?: Date | string
   user: Prisma.UserCreateNestedOneWithoutBusinessProfilesInput
@@ -855,17 +907,19 @@ export type BusinessProfileCreateWithoutTaxYearInput = {
 export type BusinessProfileUncheckedCreateWithoutTaxYearInput = {
   id?: string
   userId: string
-  naicsCode: string
-  entityType: $Enums.EntityType
-  primaryState: string
-  businessDescription: string
-  grossReceiptsEstimate: runtime.Decimal | runtime.DecimalJsLike | number | string
+  naicsCode?: string | null
+  entityType?: $Enums.EntityType
+  primaryState?: string
+  businessDescription?: string | null
+  grossReceiptsEstimate?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
   accountingMethod?: $Enums.AccountingMethod
-  homeOfficeConfig: Prisma.JsonNullValueInput | runtime.InputJsonValue
-  vehicleConfig: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  homeOfficeConfig?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  vehicleConfig?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   inventoryConfig?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   revenueStreams?: Prisma.BusinessProfileCreaterevenueStreamsInput | string[]
   firstYear?: boolean
+  draftStep?: number
+  incomeSources?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   createdAt?: Date | string
   updatedAt?: Date | string
   knownEntities?: Prisma.KnownEntityUncheckedCreateNestedManyWithoutProfileInput
@@ -890,17 +944,19 @@ export type BusinessProfileUpdateToOneWithWhereWithoutTaxYearInput = {
 
 export type BusinessProfileUpdateWithoutTaxYearInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
-  naicsCode?: Prisma.StringFieldUpdateOperationsInput | string
+  naicsCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   entityType?: Prisma.EnumEntityTypeFieldUpdateOperationsInput | $Enums.EntityType
   primaryState?: Prisma.StringFieldUpdateOperationsInput | string
-  businessDescription?: Prisma.StringFieldUpdateOperationsInput | string
-  grossReceiptsEstimate?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
+  businessDescription?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  grossReceiptsEstimate?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
   accountingMethod?: Prisma.EnumAccountingMethodFieldUpdateOperationsInput | $Enums.AccountingMethod
   homeOfficeConfig?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   vehicleConfig?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   inventoryConfig?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   revenueStreams?: Prisma.BusinessProfileUpdaterevenueStreamsInput | string[]
   firstYear?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  draftStep?: Prisma.IntFieldUpdateOperationsInput | number
+  incomeSources?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   user?: Prisma.UserUpdateOneRequiredWithoutBusinessProfilesNestedInput
@@ -911,17 +967,19 @@ export type BusinessProfileUpdateWithoutTaxYearInput = {
 export type BusinessProfileUncheckedUpdateWithoutTaxYearInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   userId?: Prisma.StringFieldUpdateOperationsInput | string
-  naicsCode?: Prisma.StringFieldUpdateOperationsInput | string
+  naicsCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   entityType?: Prisma.EnumEntityTypeFieldUpdateOperationsInput | $Enums.EntityType
   primaryState?: Prisma.StringFieldUpdateOperationsInput | string
-  businessDescription?: Prisma.StringFieldUpdateOperationsInput | string
-  grossReceiptsEstimate?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
+  businessDescription?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  grossReceiptsEstimate?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
   accountingMethod?: Prisma.EnumAccountingMethodFieldUpdateOperationsInput | $Enums.AccountingMethod
   homeOfficeConfig?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   vehicleConfig?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   inventoryConfig?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   revenueStreams?: Prisma.BusinessProfileUpdaterevenueStreamsInput | string[]
   firstYear?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  draftStep?: Prisma.IntFieldUpdateOperationsInput | number
+  incomeSources?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   knownEntities?: Prisma.KnownEntityUncheckedUpdateManyWithoutProfileNestedInput
@@ -930,17 +988,19 @@ export type BusinessProfileUncheckedUpdateWithoutTaxYearInput = {
 
 export type BusinessProfileCreateWithoutKnownEntitiesInput = {
   id?: string
-  naicsCode: string
-  entityType: $Enums.EntityType
-  primaryState: string
-  businessDescription: string
-  grossReceiptsEstimate: runtime.Decimal | runtime.DecimalJsLike | number | string
+  naicsCode?: string | null
+  entityType?: $Enums.EntityType
+  primaryState?: string
+  businessDescription?: string | null
+  grossReceiptsEstimate?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
   accountingMethod?: $Enums.AccountingMethod
-  homeOfficeConfig: Prisma.JsonNullValueInput | runtime.InputJsonValue
-  vehicleConfig: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  homeOfficeConfig?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  vehicleConfig?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   inventoryConfig?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   revenueStreams?: Prisma.BusinessProfileCreaterevenueStreamsInput | string[]
   firstYear?: boolean
+  draftStep?: number
+  incomeSources?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   createdAt?: Date | string
   updatedAt?: Date | string
   user: Prisma.UserCreateNestedOneWithoutBusinessProfilesInput
@@ -952,17 +1012,19 @@ export type BusinessProfileUncheckedCreateWithoutKnownEntitiesInput = {
   id?: string
   userId: string
   taxYearId: string
-  naicsCode: string
-  entityType: $Enums.EntityType
-  primaryState: string
-  businessDescription: string
-  grossReceiptsEstimate: runtime.Decimal | runtime.DecimalJsLike | number | string
+  naicsCode?: string | null
+  entityType?: $Enums.EntityType
+  primaryState?: string
+  businessDescription?: string | null
+  grossReceiptsEstimate?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
   accountingMethod?: $Enums.AccountingMethod
-  homeOfficeConfig: Prisma.JsonNullValueInput | runtime.InputJsonValue
-  vehicleConfig: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  homeOfficeConfig?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  vehicleConfig?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   inventoryConfig?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   revenueStreams?: Prisma.BusinessProfileCreaterevenueStreamsInput | string[]
   firstYear?: boolean
+  draftStep?: number
+  incomeSources?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   createdAt?: Date | string
   updatedAt?: Date | string
   trips?: Prisma.TripUncheckedCreateNestedManyWithoutProfileInput
@@ -986,17 +1048,19 @@ export type BusinessProfileUpdateToOneWithWhereWithoutKnownEntitiesInput = {
 
 export type BusinessProfileUpdateWithoutKnownEntitiesInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
-  naicsCode?: Prisma.StringFieldUpdateOperationsInput | string
+  naicsCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   entityType?: Prisma.EnumEntityTypeFieldUpdateOperationsInput | $Enums.EntityType
   primaryState?: Prisma.StringFieldUpdateOperationsInput | string
-  businessDescription?: Prisma.StringFieldUpdateOperationsInput | string
-  grossReceiptsEstimate?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
+  businessDescription?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  grossReceiptsEstimate?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
   accountingMethod?: Prisma.EnumAccountingMethodFieldUpdateOperationsInput | $Enums.AccountingMethod
   homeOfficeConfig?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   vehicleConfig?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   inventoryConfig?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   revenueStreams?: Prisma.BusinessProfileUpdaterevenueStreamsInput | string[]
   firstYear?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  draftStep?: Prisma.IntFieldUpdateOperationsInput | number
+  incomeSources?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   user?: Prisma.UserUpdateOneRequiredWithoutBusinessProfilesNestedInput
@@ -1008,17 +1072,19 @@ export type BusinessProfileUncheckedUpdateWithoutKnownEntitiesInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   userId?: Prisma.StringFieldUpdateOperationsInput | string
   taxYearId?: Prisma.StringFieldUpdateOperationsInput | string
-  naicsCode?: Prisma.StringFieldUpdateOperationsInput | string
+  naicsCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   entityType?: Prisma.EnumEntityTypeFieldUpdateOperationsInput | $Enums.EntityType
   primaryState?: Prisma.StringFieldUpdateOperationsInput | string
-  businessDescription?: Prisma.StringFieldUpdateOperationsInput | string
-  grossReceiptsEstimate?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
+  businessDescription?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  grossReceiptsEstimate?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
   accountingMethod?: Prisma.EnumAccountingMethodFieldUpdateOperationsInput | $Enums.AccountingMethod
   homeOfficeConfig?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   vehicleConfig?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   inventoryConfig?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   revenueStreams?: Prisma.BusinessProfileUpdaterevenueStreamsInput | string[]
   firstYear?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  draftStep?: Prisma.IntFieldUpdateOperationsInput | number
+  incomeSources?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   trips?: Prisma.TripUncheckedUpdateManyWithoutProfileNestedInput
@@ -1026,17 +1092,19 @@ export type BusinessProfileUncheckedUpdateWithoutKnownEntitiesInput = {
 
 export type BusinessProfileCreateWithoutTripsInput = {
   id?: string
-  naicsCode: string
-  entityType: $Enums.EntityType
-  primaryState: string
-  businessDescription: string
-  grossReceiptsEstimate: runtime.Decimal | runtime.DecimalJsLike | number | string
+  naicsCode?: string | null
+  entityType?: $Enums.EntityType
+  primaryState?: string
+  businessDescription?: string | null
+  grossReceiptsEstimate?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
   accountingMethod?: $Enums.AccountingMethod
-  homeOfficeConfig: Prisma.JsonNullValueInput | runtime.InputJsonValue
-  vehicleConfig: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  homeOfficeConfig?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  vehicleConfig?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   inventoryConfig?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   revenueStreams?: Prisma.BusinessProfileCreaterevenueStreamsInput | string[]
   firstYear?: boolean
+  draftStep?: number
+  incomeSources?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   createdAt?: Date | string
   updatedAt?: Date | string
   user: Prisma.UserCreateNestedOneWithoutBusinessProfilesInput
@@ -1048,17 +1116,19 @@ export type BusinessProfileUncheckedCreateWithoutTripsInput = {
   id?: string
   userId: string
   taxYearId: string
-  naicsCode: string
-  entityType: $Enums.EntityType
-  primaryState: string
-  businessDescription: string
-  grossReceiptsEstimate: runtime.Decimal | runtime.DecimalJsLike | number | string
+  naicsCode?: string | null
+  entityType?: $Enums.EntityType
+  primaryState?: string
+  businessDescription?: string | null
+  grossReceiptsEstimate?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
   accountingMethod?: $Enums.AccountingMethod
-  homeOfficeConfig: Prisma.JsonNullValueInput | runtime.InputJsonValue
-  vehicleConfig: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  homeOfficeConfig?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  vehicleConfig?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   inventoryConfig?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   revenueStreams?: Prisma.BusinessProfileCreaterevenueStreamsInput | string[]
   firstYear?: boolean
+  draftStep?: number
+  incomeSources?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   createdAt?: Date | string
   updatedAt?: Date | string
   knownEntities?: Prisma.KnownEntityUncheckedCreateNestedManyWithoutProfileInput
@@ -1082,17 +1152,19 @@ export type BusinessProfileUpdateToOneWithWhereWithoutTripsInput = {
 
 export type BusinessProfileUpdateWithoutTripsInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
-  naicsCode?: Prisma.StringFieldUpdateOperationsInput | string
+  naicsCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   entityType?: Prisma.EnumEntityTypeFieldUpdateOperationsInput | $Enums.EntityType
   primaryState?: Prisma.StringFieldUpdateOperationsInput | string
-  businessDescription?: Prisma.StringFieldUpdateOperationsInput | string
-  grossReceiptsEstimate?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
+  businessDescription?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  grossReceiptsEstimate?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
   accountingMethod?: Prisma.EnumAccountingMethodFieldUpdateOperationsInput | $Enums.AccountingMethod
   homeOfficeConfig?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   vehicleConfig?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   inventoryConfig?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   revenueStreams?: Prisma.BusinessProfileUpdaterevenueStreamsInput | string[]
   firstYear?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  draftStep?: Prisma.IntFieldUpdateOperationsInput | number
+  incomeSources?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   user?: Prisma.UserUpdateOneRequiredWithoutBusinessProfilesNestedInput
@@ -1104,17 +1176,19 @@ export type BusinessProfileUncheckedUpdateWithoutTripsInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   userId?: Prisma.StringFieldUpdateOperationsInput | string
   taxYearId?: Prisma.StringFieldUpdateOperationsInput | string
-  naicsCode?: Prisma.StringFieldUpdateOperationsInput | string
+  naicsCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   entityType?: Prisma.EnumEntityTypeFieldUpdateOperationsInput | $Enums.EntityType
   primaryState?: Prisma.StringFieldUpdateOperationsInput | string
-  businessDescription?: Prisma.StringFieldUpdateOperationsInput | string
-  grossReceiptsEstimate?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
+  businessDescription?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  grossReceiptsEstimate?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
   accountingMethod?: Prisma.EnumAccountingMethodFieldUpdateOperationsInput | $Enums.AccountingMethod
   homeOfficeConfig?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   vehicleConfig?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   inventoryConfig?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   revenueStreams?: Prisma.BusinessProfileUpdaterevenueStreamsInput | string[]
   firstYear?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  draftStep?: Prisma.IntFieldUpdateOperationsInput | number
+  incomeSources?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   knownEntities?: Prisma.KnownEntityUncheckedUpdateManyWithoutProfileNestedInput
@@ -1123,34 +1197,38 @@ export type BusinessProfileUncheckedUpdateWithoutTripsInput = {
 export type BusinessProfileCreateManyUserInput = {
   id?: string
   taxYearId: string
-  naicsCode: string
-  entityType: $Enums.EntityType
-  primaryState: string
-  businessDescription: string
-  grossReceiptsEstimate: runtime.Decimal | runtime.DecimalJsLike | number | string
+  naicsCode?: string | null
+  entityType?: $Enums.EntityType
+  primaryState?: string
+  businessDescription?: string | null
+  grossReceiptsEstimate?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
   accountingMethod?: $Enums.AccountingMethod
-  homeOfficeConfig: Prisma.JsonNullValueInput | runtime.InputJsonValue
-  vehicleConfig: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  homeOfficeConfig?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  vehicleConfig?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   inventoryConfig?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   revenueStreams?: Prisma.BusinessProfileCreaterevenueStreamsInput | string[]
   firstYear?: boolean
+  draftStep?: number
+  incomeSources?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   createdAt?: Date | string
   updatedAt?: Date | string
 }
 
 export type BusinessProfileUpdateWithoutUserInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
-  naicsCode?: Prisma.StringFieldUpdateOperationsInput | string
+  naicsCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   entityType?: Prisma.EnumEntityTypeFieldUpdateOperationsInput | $Enums.EntityType
   primaryState?: Prisma.StringFieldUpdateOperationsInput | string
-  businessDescription?: Prisma.StringFieldUpdateOperationsInput | string
-  grossReceiptsEstimate?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
+  businessDescription?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  grossReceiptsEstimate?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
   accountingMethod?: Prisma.EnumAccountingMethodFieldUpdateOperationsInput | $Enums.AccountingMethod
   homeOfficeConfig?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   vehicleConfig?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   inventoryConfig?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   revenueStreams?: Prisma.BusinessProfileUpdaterevenueStreamsInput | string[]
   firstYear?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  draftStep?: Prisma.IntFieldUpdateOperationsInput | number
+  incomeSources?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   taxYear?: Prisma.TaxYearUpdateOneRequiredWithoutBusinessProfileNestedInput
@@ -1161,17 +1239,19 @@ export type BusinessProfileUpdateWithoutUserInput = {
 export type BusinessProfileUncheckedUpdateWithoutUserInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   taxYearId?: Prisma.StringFieldUpdateOperationsInput | string
-  naicsCode?: Prisma.StringFieldUpdateOperationsInput | string
+  naicsCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   entityType?: Prisma.EnumEntityTypeFieldUpdateOperationsInput | $Enums.EntityType
   primaryState?: Prisma.StringFieldUpdateOperationsInput | string
-  businessDescription?: Prisma.StringFieldUpdateOperationsInput | string
-  grossReceiptsEstimate?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
+  businessDescription?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  grossReceiptsEstimate?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
   accountingMethod?: Prisma.EnumAccountingMethodFieldUpdateOperationsInput | $Enums.AccountingMethod
   homeOfficeConfig?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   vehicleConfig?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   inventoryConfig?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   revenueStreams?: Prisma.BusinessProfileUpdaterevenueStreamsInput | string[]
   firstYear?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  draftStep?: Prisma.IntFieldUpdateOperationsInput | number
+  incomeSources?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   knownEntities?: Prisma.KnownEntityUncheckedUpdateManyWithoutProfileNestedInput
@@ -1181,17 +1261,19 @@ export type BusinessProfileUncheckedUpdateWithoutUserInput = {
 export type BusinessProfileUncheckedUpdateManyWithoutUserInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   taxYearId?: Prisma.StringFieldUpdateOperationsInput | string
-  naicsCode?: Prisma.StringFieldUpdateOperationsInput | string
+  naicsCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   entityType?: Prisma.EnumEntityTypeFieldUpdateOperationsInput | $Enums.EntityType
   primaryState?: Prisma.StringFieldUpdateOperationsInput | string
-  businessDescription?: Prisma.StringFieldUpdateOperationsInput | string
-  grossReceiptsEstimate?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
+  businessDescription?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  grossReceiptsEstimate?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
   accountingMethod?: Prisma.EnumAccountingMethodFieldUpdateOperationsInput | $Enums.AccountingMethod
   homeOfficeConfig?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   vehicleConfig?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   inventoryConfig?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   revenueStreams?: Prisma.BusinessProfileUpdaterevenueStreamsInput | string[]
   firstYear?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  draftStep?: Prisma.IntFieldUpdateOperationsInput | number
+  incomeSources?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -1251,6 +1333,8 @@ export type BusinessProfileSelect<ExtArgs extends runtime.Types.Extensions.Inter
   inventoryConfig?: boolean
   revenueStreams?: boolean
   firstYear?: boolean
+  draftStep?: boolean
+  incomeSources?: boolean
   createdAt?: boolean
   updatedAt?: boolean
   user?: boolean | Prisma.UserDefaultArgs<ExtArgs>
@@ -1275,6 +1359,8 @@ export type BusinessProfileSelectCreateManyAndReturn<ExtArgs extends runtime.Typ
   inventoryConfig?: boolean
   revenueStreams?: boolean
   firstYear?: boolean
+  draftStep?: boolean
+  incomeSources?: boolean
   createdAt?: boolean
   updatedAt?: boolean
   user?: boolean | Prisma.UserDefaultArgs<ExtArgs>
@@ -1296,6 +1382,8 @@ export type BusinessProfileSelectUpdateManyAndReturn<ExtArgs extends runtime.Typ
   inventoryConfig?: boolean
   revenueStreams?: boolean
   firstYear?: boolean
+  draftStep?: boolean
+  incomeSources?: boolean
   createdAt?: boolean
   updatedAt?: boolean
   user?: boolean | Prisma.UserDefaultArgs<ExtArgs>
@@ -1317,11 +1405,13 @@ export type BusinessProfileSelectScalar = {
   inventoryConfig?: boolean
   revenueStreams?: boolean
   firstYear?: boolean
+  draftStep?: boolean
+  incomeSources?: boolean
   createdAt?: boolean
   updatedAt?: boolean
 }
 
-export type BusinessProfileOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "userId" | "taxYearId" | "naicsCode" | "entityType" | "primaryState" | "businessDescription" | "grossReceiptsEstimate" | "accountingMethod" | "homeOfficeConfig" | "vehicleConfig" | "inventoryConfig" | "revenueStreams" | "firstYear" | "createdAt" | "updatedAt", ExtArgs["result"]["businessProfile"]>
+export type BusinessProfileOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "userId" | "taxYearId" | "naicsCode" | "entityType" | "primaryState" | "businessDescription" | "grossReceiptsEstimate" | "accountingMethod" | "homeOfficeConfig" | "vehicleConfig" | "inventoryConfig" | "revenueStreams" | "firstYear" | "draftStep" | "incomeSources" | "createdAt" | "updatedAt", ExtArgs["result"]["businessProfile"]>
 export type BusinessProfileInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   user?: boolean | Prisma.UserDefaultArgs<ExtArgs>
   taxYear?: boolean | Prisma.TaxYearDefaultArgs<ExtArgs>
@@ -1350,17 +1440,19 @@ export type $BusinessProfilePayload<ExtArgs extends runtime.Types.Extensions.Int
     id: string
     userId: string
     taxYearId: string
-    naicsCode: string
+    naicsCode: string | null
     entityType: $Enums.EntityType
     primaryState: string
-    businessDescription: string
-    grossReceiptsEstimate: runtime.Decimal
+    businessDescription: string | null
+    grossReceiptsEstimate: runtime.Decimal | null
     accountingMethod: $Enums.AccountingMethod
     homeOfficeConfig: runtime.JsonValue
     vehicleConfig: runtime.JsonValue
     inventoryConfig: runtime.JsonValue | null
     revenueStreams: string[]
     firstYear: boolean
+    draftStep: number
+    incomeSources: runtime.JsonValue | null
     createdAt: Date
     updatedAt: Date
   }, ExtArgs["result"]["businessProfile"]>
@@ -1804,6 +1896,8 @@ export interface BusinessProfileFieldRefs {
   readonly inventoryConfig: Prisma.FieldRef<"BusinessProfile", 'Json'>
   readonly revenueStreams: Prisma.FieldRef<"BusinessProfile", 'String[]'>
   readonly firstYear: Prisma.FieldRef<"BusinessProfile", 'Boolean'>
+  readonly draftStep: Prisma.FieldRef<"BusinessProfile", 'Int'>
+  readonly incomeSources: Prisma.FieldRef<"BusinessProfile", 'Json'>
   readonly createdAt: Prisma.FieldRef<"BusinessProfile", 'DateTime'>
   readonly updatedAt: Prisma.FieldRef<"BusinessProfile", 'DateTime'>
 }
