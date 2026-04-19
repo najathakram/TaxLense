@@ -24,10 +24,14 @@ export async function proxy(request: NextRequest) {
     return NextResponse.next()
   }
 
-  // Validate JWT session token (reads from cookie; no DB call)
+  // Validate JWT session token (reads from cookie; no DB call).
+  // secureCookie must match the Set-Cookie prefix NextAuth used:
+  //   https → `__Secure-authjs.session-token`
+  //   http  → `authjs.session-token`
   const token = await getToken({
     req: request,
     secret: process.env["AUTH_SECRET"]!,
+    secureCookie: request.nextUrl.protocol === "https:",
   })
 
   if (!token) {
