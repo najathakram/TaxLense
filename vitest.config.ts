@@ -9,6 +9,9 @@ export default defineConfig({
     globals: true,
     setupFiles: [],
     include: ["tests/**/*.test.ts", "tests/**/*.test.tsx"],
+    // DB-backed tests share one Postgres instance — disable file-level parallelism
+    // so transaction-count assertions aren't perturbed by concurrent fixture setup.
+    fileParallelism: false,
   },
   resolve: {
     alias: {

@@ -10,7 +10,9 @@
  */
 
 import { prisma } from "@/lib/db"
-import type { MerchantRule, Trip, TransactionCode } from "@/app/generated/prisma/client"
+import type { MerchantRule, Trip, TransactionCode, Prisma } from "@/app/generated/prisma/client"
+
+type PrismaLike = Prisma.TransactionClient | typeof prisma
 
 
 const RESTAURANT_CODES: TransactionCode[] = ["MEALS_50", "MEALS_100"]
@@ -35,26 +37,34 @@ export interface ApplyRulesResult {
 
 export async function applyMerchantRules(
   taxYearId: string,
-  options: { force?: boolean } = {}
+  options: { force?: boolean; merchantKey?: string; tx?: PrismaLike } = {}
 ): Promise<ApplyRulesResult> {
-  // Load all merchant rules for this year
-  const rules = await prisma.merchantRule.findMany({ where: { taxYearId } })
+  const db: PrismaLike = options.tx ?? prisma
+  // Load all merchant rules for this year (optionally filtered to one key)
+  const rules = await db.merchantRule.findMany({
+    where: {
+      taxYearId,
+      ...(options.merchantKey ? { merchantKey: options.merchantKey } : {}),
+    },
+  })
   const ruleByKey = new Map(rules.map((r) => [r.merchantKey.toUpperCase(), r]))
 
   // Load confirmed trips
-  const trips = await prisma.trip.findMany({
+  const trips = await db.trip.findMany({
     where: { profile: { taxYearId }, isConfirmed: true },
   })
 
   // Load transactions needing classification
   // Skip already-paired (TRANSFER / PAYMENT handled by pairing steps)
-  const txns = await prisma.transaction.findMany({
+  const txns = await db.transaction.findMany({
     where: {
       taxYearId,
       isTransferPairedWith: null,
       isPaymentPairedWith: null,
       isDuplicateOf: null,
+      isSplit: false,
       merchantNormalized: { not: null },
+      ...(options.merchantKey ? { merchantNormalized: options.merchantKey } : {}),
     },
   })
 
@@ -65,7 +75,7 @@ export async function applyMerchantRules(
   for (const tx of txns) {
     // Check for existing current AI classification
     if (!options.force) {
-      const existing = await prisma.classification.findFirst({
+      const existing = await db.classification.findFirst({
         where: { transactionId: tx.id, isCurrent: true },
       })
       if (existing) {
@@ -116,13 +126,13 @@ export async function applyMerchantRules(
     }
 
     // Flip any prior current classification to false
-    await prisma.classification.updateMany({
+    await db.classification.updateMany({
       where: { transactionId: tx.id, isCurrent: true },
       data: { isCurrent: false },
     })
 
     // Insert new classification
-    await prisma.classification.create({
+    await db.classification.create({
       data: {
         transactionId: tx.id,
         code,

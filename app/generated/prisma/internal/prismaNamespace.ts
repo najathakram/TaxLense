@@ -1901,6 +1901,8 @@ export const TransactionScalarFieldEnum = {
   isTransferPairedWith: 'isTransferPairedWith',
   isPaymentPairedWith: 'isPaymentPairedWith',
   isRefundPairedWith: 'isRefundPairedWith',
+  isSplit: 'isSplit',
+  splitOfId: 'splitOfId',
   createdAt: 'createdAt'
 } as const
 

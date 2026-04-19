@@ -59,7 +59,7 @@ These are the design rails. If a future change violates one of these, the change
 - [x] Prompt 2 — Profile Wizard
 - [x] Prompt 3 — Ingestion
 - [x] Prompt 4 — Merchant Intelligence
-- [ ] Prompt 5 — STOPs + Ledger Review
+- [x] Prompt 5 — STOPs + Ledger Review
 - [ ] Prompt 6 — Residual AI + Lock
 - [ ] Prompt 7 — Output Artifacts
 - [ ] Prompt 8 — Polish + E2E
@@ -241,3 +241,17 @@ These were discovered during Prompt 1 and must be respected in all future sessio
 - ✓ **Non-trip transaction unaffected**: ADOBE SYSTEMS (Jan 5, no active trip) → WRITE_OFF 100%, no override
 - ✓ **requiresHumanInput → NEEDS_CONTEXT**: BLUEWAVE CAR WASH (requires vehicle %) → code=NEEDS_CONTEXT, pct=0
 - ⚠ **AI-dependent items deferred**: full 20-classification sample, live IRC citation verification, and 3-merchant AI batch require ANTHROPIC_API_KEY; verified by unit tests (merchant-ai.test.ts) and test MerchantRules above
+
+## Prompt 5 notes
+
+- **Migration**: `add_split_support` — Transaction gets `isSplit Boolean @default(false)` + `splitOfId String?` with `TxSplit` self-relation. Parent is flagged `isSplit=true`; children carry their own Classifications. **Session 7 reports MUST filter `WHERE isSplit=false`** to exclude parents and include children.
+- **STOP queue** (`/years/[year]/stops`): server page + `stops-client.tsx` tabs (merchant / transfer / deposit / §274(d) / period_gap) with per-category forms from spec §9.3. Cards sorted by context.totalAmount desc. "Apply to similar merchants" toggle default ON for MERCHANT category.
+- **`lib/stops/derive.ts`** — pure `deriveFromAnswer(answer, fallback)` split out of actions.ts so server-action files don't export non-async fns and so it's unit-testable. Returns `{code, businessPct, scheduleCLine, ircCitations, evidenceTier, reasoning, source}`. Source is `AI_USER_CONFIRMED` when user picks what AI suggested, else `USER`.
+- **`/stops/actions.ts`** — `resolveStop(stopId, answer, applyToSimilar)` wraps in `$transaction`: flips prior `isCurrent=true` classifications to false, inserts new classification per affected txn, optionally updates MerchantRule + re-runs `applyMerchantRules({ merchantKey, tx })`, writes `AuditEvent{ eventType: "STOP_RESOLVED" }`, sets StopItem.state=ANSWERED. `deferStop` writes `STOP_DEFERRED`.
+- **`lib/classification/apply.ts`** gained a `{ force?, merchantKey?, tx? }` option bag so the STOP resolver can re-apply a single merchant rule inside the outer Prisma transaction.
+- **Virtualized ledger** (`/years/[year]/ledger`): TanStack Virtual windowed list (~30 rows in DOM for a 2000-row set). Columns per spec §4.6; color coding per §10.1 (`codeColorClass` in `lib/classification/constants.ts`). Inline edits go through `editClassification`; bulk actions through `bulkReclassify` — both use the same flip-and-insert pattern and write one AuditEvent per affected txn (`LEDGER_EDIT` / `LEDGER_BULK`).
+- **Amazon split** (`components/splits/amazon-split-dialog.tsx` + `splitTransaction` action): threshold + regex in `lib/splits/config.ts` (`AMAZON_MERCHANT_PATTERN`, `AMAZON_SPLIT_THRESHOLD=50`, `MAX_SPLITS_PER_TRANSACTION=5`). Children get `idempotencyKey = ${parent.id}|split|${idx}|${cents}`, inherit accountId/taxYearId/postedDate/merchant. Parent classifications flipped to `isCurrent=false`, `isSplit=true`. Sum validated in cents; mismatch → throws, no DB writes. AuditEvent `TXN_SPLIT`.
+- **Natural-language override** — `POST /api/reclassify` calls `lib/ai/reclassifyNL.ts` (claude-sonnet-4-6, temperature 0, Zod-validated with retry-once, fenced-JSON tolerant). Returns `{matches, rule_updates}` **without writing**. Client shows preview Dialog; `applyReclassification` then does flip-and-insert + MerchantRule upserts + `AuditEvent{ eventType: "NL_OVERRIDE" }`.
+- **`vitest.config.ts`** — added `fileParallelism: false` so DB-backed tests don't step on each other's fixture counts (seed smoke was seeing 21 txns when split test's synthetic parent was alive).
+- **Tests**: 177 passing (153 original + 24 new across stops-resolve / amazon-split / nl-override / ledger-perf). `pnpm build` clean — 3 new routes registered.
+- **Verify**: `pnpm test`; `pnpm build`; `/years/2025/stops` walks PENDING items; `/years/2025/ledger` virtualizes + NL override + split.

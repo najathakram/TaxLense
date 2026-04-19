@@ -352,6 +352,8 @@ model Transaction {
   isTransferPairedWith String?
   isPaymentPairedWith  String?
   isRefundPairedWith   String?
+  isSplit              Boolean   @default(false) // true on the parent when its amount is split into child txns
+  splitOfId            String?   // set on child rows pointing back to the parent txn
   createdAt            DateTime  @default(now())
   // NO updatedAt — immutable by design
 
@@ -367,6 +369,8 @@ model Transaction {
   paymentPairs  Transaction[] @relation("TxPayment")
   refundPair    Transaction?  @relation("TxRefund",    fields: [isRefundPairedWith],   references: [id])
   refundPairs   Transaction[] @relation("TxRefund")
+  splitOf       Transaction?  @relation("TxSplit",     fields: [splitOfId],            references: [id])
+  splitChildren Transaction[] @relation("TxSplit")
 
   classifications Classification[]
 
