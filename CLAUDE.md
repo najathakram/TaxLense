@@ -155,6 +155,13 @@ These were discovered during Prompt 1 and must be respected in all future sessio
 - Docker Desktop not running; used `docker -H npipe:////./pipe/docker_engine` for local Postgres on port 5433
 - Prisma v7 breaking changes discovered and documented above
 - Next.js 16 breaking changes discovered and documented above
-- Seed user: `najathakram1@gmail.com` / `taxlens2025!` (not test@taxlens.local — see Prompt 2 gap)
+- Dev database: `postgresql://taxlens:taxlens_dev@localhost:5433/taxlens`
 - 8/8 Vitest smoke tests passing; dev server 200 OK on `/login`
-- Open issues for Prompt 2: seed should use `test@taxlens.local`; missing shadcn components (dialog, select, table, tabs, toast, progress, alert, separator, popover, dropdown-menu, form, textarea, checkbox, slider)
+
+## Prompt 1 gap-fill notes
+
+- **Missing shadcn components added** (16 total): separator, progress, textarea, alert, checkbox, slider, tabs, dialog, popover, select, dropdown-menu, table, toast, use-toast, toaster, form — all hand-written in `components/ui/`
+- **Seed rewritten** with spec-correct Maznah Media fixture: `test@taxlens.local` / `test123`, NAICS 711510, TX, wedding photography/travel content, 5 accounts (Chase Freedom CC, Amex Platinum CC, Costco Citi CC, Chase Checking 9517, Robinhood), 3 trips (Alaska Aug 2–13, Sri Lanka Sep 15–Nov 3, Colorado Dec 4–12), 3 KnownEntities, 20 transactions, 0 classifications
+- **Seed is idempotent** — cleans up FK-dependent rows (Classification → Transaction) before re-creating fixture IDs
+- **Smoke tests updated** to use `test@taxlens.local`; query via userId to avoid collision with old fixture rows; tx transfer pair now tx_019/tx_020; asserts 0 classifications (not 20)
+- **8/8 tests passing**; dev server 200 OK on `/login`

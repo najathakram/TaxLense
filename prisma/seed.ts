@@ -1,6 +1,8 @@
 /**
  * TaxLens — Prisma seed script
- * Session 1 fixture data for Najath's dev/test environment.
+ *
+ * Fixture: Najath's profile — wedding photography / travel content / e-commerce.
+ * This matches the Maznah Media 2025 acceptance-test archetype from spec §14.
  *
  * Run:  pnpm seed
  */
@@ -34,53 +36,64 @@ async function main() {
   console.log("🌱  Seeding TaxLens database…")
 
   // ------------------------------------------------------------------
-  // 1. Rule versions (two; v2 supersedes v1)
+  // 1. Rule versions
+  //    rv_2024 = pre-OBBBA (§168(k) 60% bonus 2024)
+  //    rv_2025 = post-OBBBA (§168(k) 100% bonus restored Jan 20 2025)
   // ------------------------------------------------------------------
-  const rv1 = await prisma.ruleVersion.upsert({
+  const rv2024 = await prisma.ruleVersion.upsert({
     where: { id: "rv_2024_001" },
     create: {
       id: "rv_2024_001",
       effectiveDate: new Date("2024-01-01"),
-      ruleSet: { version: "1.0", rules: [] },
-      summary: "Initial rule set — Session 1 placeholder",
+      ruleSet: {
+        version: "1.0-pre-obbba",
+        notes: "§168(k) 60% bonus depreciation; §179 $1.22M limit",
+        rules: [],
+      },
+      summary: "Pre-OBBBA rule set — 60% bonus depreciation",
     },
     update: {},
   })
 
-  const rv2 = await prisma.ruleVersion.upsert({
+  const rv2025 = await prisma.ruleVersion.upsert({
     where: { id: "rv_2025_001" },
     create: {
       id: "rv_2025_001",
-      effectiveDate: new Date("2025-01-01"),
-      ruleSet: { version: "2.0", rules: [] },
-      summary: "Updated rule set for TY 2025 — Session 1 placeholder",
+      effectiveDate: new Date("2025-01-20"),
+      ruleSet: {
+        version: "2.0-post-obbba",
+        notes: "OBBBA signed Jan 20 2025: §168(k) 100% bonus restored for post-Jan-19-2025 acquisitions; §179 $1.25M limit",
+        rules: [],
+      },
+      summary: "Post-OBBBA rule set — 100% bonus depreciation restored",
       supersededById: null,
     },
     update: {},
   })
 
-  // Link rv1 superseded by rv2 (update after both exist)
+  // rv2024 superseded by rv2025
   await prisma.ruleVersion.update({
     where: { id: "rv_2024_001" },
-    data: { supersededById: rv2.id },
+    data: { supersededById: rv2025.id },
   })
+  console.log("  ✓ RuleVersions: 2 (pre-OBBBA + post-OBBBA)")
 
   // ------------------------------------------------------------------
-  // 2. User — Najath
+  // 2. User — canonical fixture account
   // ------------------------------------------------------------------
-  const password = await bcrypt.hash("taxlens2025!", 12)
+  const password = await bcrypt.hash("test123", 12)
 
   const user = await prisma.user.upsert({
-    where: { email: "najathakram1@gmail.com" },
+    where: { email: "test@taxlens.local" },
     create: {
-      id: "user_najath",
+      id: "user_fixture_001",
       name: "Najath Akram",
-      email: "najathakram1@gmail.com",
+      email: "test@taxlens.local",
       password,
     },
     update: { name: "Najath Akram" },
   })
-  console.log(`  ✓ User: ${user.email}`)
+  console.log(`  ✓ User: ${user.email}  (password: test123)`)
 
   // ------------------------------------------------------------------
   // 3. Tax Year 2025
@@ -88,85 +101,99 @@ async function main() {
   const taxYear = await prisma.taxYear.upsert({
     where: { userId_year: { userId: user.id, year: 2025 } },
     create: {
-      id: "ty_2025",
+      id: "ty_2025_fixture",
       userId: user.id,
       year: 2025,
-      status: "CLASSIFICATION",
-      ruleVersionId: rv2.id,
+      status: "CREATED",
+      ruleVersionId: rv2025.id,
     },
-    update: { status: "CLASSIFICATION", ruleVersionId: rv2.id },
+    update: { ruleVersionId: rv2025.id },
   })
-  console.log(`  ✓ TaxYear: ${taxYear.year}`)
+  console.log(`  ✓ TaxYear: ${taxYear.year}  (status: ${taxYear.status})`)
 
   // ------------------------------------------------------------------
   // 4. Business Profile
+  //    NAICS 711510 = Independent Artists, Writers, and Performers
+  //    Matches Maznah Media archetype: wedding photography + travel content + e-commerce
   // ------------------------------------------------------------------
   const profile = await prisma.businessProfile.upsert({
     where: { taxYearId: taxYear.id },
     create: {
-      id: "bp_2025",
+      id: "bp_2025_fixture",
       userId: user.id,
       taxYearId: taxYear.id,
-      naicsCode: "541511",
+      naicsCode: "711510",
       entityType: "SOLE_PROP",
-      primaryState: "CA",
-      businessDescription: "Custom software development and technical consulting",
-      grossReceiptsEstimate: 185000,
+      primaryState: "TX",
+      businessDescription:
+        "Wedding photography, travel content creation, and e-commerce",
+      grossReceiptsEstimate: 281800,
       accountingMethod: "CASH",
       homeOfficeConfig: {
         has: true,
         dedicated: true,
-        officeSqft: 180,
-        homeSqft: 1200,
+        officeSqft: 200,
+        homeSqft: 2000,
       },
       vehicleConfig: {
         has: true,
         bizPct: 60,
       },
       inventoryConfig: {
-        has: false,
-        physical: false,
+        has: true,
+        physical: true,
         dropship: false,
       },
-      revenueStreams: ["consulting", "contract_development", "saas_licensing"],
+      revenueStreams: [
+        "wedding_photography",
+        "travel_content",
+        "brand_deals",
+        "affiliate",
+        "digital_products",
+        "ecommerce",
+      ],
       firstYear: false,
     },
     update: {},
   })
-  console.log(`  ✓ BusinessProfile: ${profile.naicsCode}`)
+  console.log(`  ✓ BusinessProfile: NAICS ${profile.naicsCode} — ${profile.businessDescription}`)
 
   // ------------------------------------------------------------------
   // 5. Known Entities (3)
+  //    These drive auto-classification:
+  //    - Spouse: personal transfers → PERSONAL
+  //    - Business partner (Zelle): partner payments → PERSONAL (not deductible draws)
+  //    - HSMCA: donations → PERSONAL (non-deductible for Sch C)
   // ------------------------------------------------------------------
   await prisma.knownEntity.deleteMany({ where: { profileId: profile.id } })
   await prisma.knownEntity.createMany({
     data: [
       {
-        id: "ke_001",
-        profileId: profile.id,
-        kind: "PERSON_CLIENT",
-        displayName: "Acme Corp",
-        matchKeywords: ["ACME", "ACME CORP"],
-        defaultCode: "BIZ_INCOME",
-        notes: "Primary enterprise client — monthly retainer",
-      },
-      {
-        id: "ke_002",
+        id: "ke_spouse_001",
         profileId: profile.id,
         kind: "PERSON_PERSONAL",
-        displayName: "Parents",
-        matchKeywords: ["MOM", "DAD", "FAMILY TRANSFER"],
+        displayName: "Spouse",
+        matchKeywords: ["RANDI", "ZELLE RANDI", "VENMO RANDI"],
         defaultCode: "PERSONAL",
-        notes: "Personal family transfers",
+        notes: "Personal transfers to spouse — not deductible",
       },
       {
-        id: "ke_003",
+        id: "ke_partner_001",
+        profileId: profile.id,
+        kind: "PERSON_PERSONAL",
+        displayName: "Business Partner",
+        matchKeywords: ["ZELLE ALI", "VENMO ALI", "PARTNER DRAW"],
+        defaultCode: "PERSONAL",
+        notes: "Zelle payments to business partner — personal draws",
+      },
+      {
+        id: "ke_hsmca_001",
         profileId: profile.id,
         kind: "PATTERN_EXCLUDED",
-        displayName: "Internal Transfers",
-        matchKeywords: ["TRANSFER", "ONLINE TRANSFER", "ACH TRANSFER"],
-        defaultCode: "TRANSFER",
-        notes: "Between-account transfers — exclude from Schedule C",
+        displayName: "HSMCA Donations",
+        matchKeywords: ["HSMCA", "HS MCA", "MUSLIM CHARITY"],
+        defaultCode: "PERSONAL",
+        notes: "Charitable donations — not deductible on Schedule C",
       },
     ],
   })
@@ -174,457 +201,358 @@ async function main() {
 
   // ------------------------------------------------------------------
   // 6. Trips (3)
+  //    Spec fixture trips from §14 Session 8 acceptance criteria
   // ------------------------------------------------------------------
   await prisma.trip.deleteMany({ where: { profileId: profile.id } })
   await prisma.trip.createMany({
     data: [
       {
-        id: "trip_001",
+        id: "trip_alaska_2025",
         profileId: profile.id,
-        name: "AWS re:Invent 2024",
-        destination: "Las Vegas, NV",
-        startDate: new Date("2024-12-02"),
-        endDate: new Date("2024-12-06"),
-        purpose: "Cloud architecture conference and client networking",
-        deliverableDescription: "Architecture review deck for Acme migration",
+        name: "Alaska Content Trip",
+        destination: "Denali / Anchorage, AK",
+        startDate: new Date("2025-08-02"),
+        endDate: new Date("2025-08-13"),
+        purpose: "Travel content creation — glaciers, wildlife, landscape photography",
+        deliverableDescription:
+          "Instagram Reels series + blog post + 3 brand deal deliverables (REI, Peak Design, Visit Alaska)",
         isConfirmed: true,
       },
       {
-        id: "trip_002",
+        id: "trip_srilanka_2025",
         profileId: profile.id,
-        name: "Acme On-site — Q1 2025",
-        destination: "San Francisco, CA",
-        startDate: new Date("2025-02-10"),
-        endDate: new Date("2025-02-12"),
-        purpose: "Client kickoff and sprint planning",
-        deliverableDescription: "Signed SOW and sprint backlog",
+        name: "Sri Lanka Content Trip",
+        destination: "Colombo / Galle / Ella, Sri Lanka",
+        startDate: new Date("2025-09-15"),
+        endDate: new Date("2025-11-03"),
+        purpose: "Extended travel content creation — cultural photography and brand collaboration",
+        deliverableDescription:
+          "YouTube series (6 episodes) + brand deals (Airbnb, Capture One, local tourism board)",
         isConfirmed: true,
       },
       {
-        id: "trip_003",
+        id: "trip_colorado_2025",
         profileId: profile.id,
-        name: "GTC AI Conference",
-        destination: "San Jose, CA",
-        startDate: new Date("2025-03-17"),
-        endDate: new Date("2025-03-21"),
-        purpose: "AI/ML tooling research and vendor evaluation",
-        deliverableDescription: "Vendor comparison report",
+        name: "Colorado Winter Shoot",
+        destination: "Telluride / Aspen, CO",
+        startDate: new Date("2025-12-04"),
+        endDate: new Date("2025-12-12"),
+        purpose: "Winter wedding photography + ski resort content partnership",
+        deliverableDescription:
+          "Wedding album delivery + Instagram content for Telluride Ski Resort",
         isConfirmed: false,
       },
     ],
   })
-  console.log("  ✓ Trips: 3")
+  console.log("  ✓ Trips: 3 (Alaska Aug, Sri Lanka Sep–Nov, Colorado Dec)")
 
   // ------------------------------------------------------------------
   // 7. Financial Accounts (5)
+  //    Matching spec §14 Session 1 fixture list
   // ------------------------------------------------------------------
   await prisma.financialAccount.deleteMany({ where: { taxYearId: taxYear.id } })
 
   const accounts = await Promise.all([
     prisma.financialAccount.create({
       data: {
-        id: "acct_chase_biz",
+        id: "acct_chase_freedom",
         userId: user.id,
         taxYearId: taxYear.id,
-        type: "CHECKING",
-        institution: "Chase Bank",
-        mask: "4821",
-        nickname: "Chase Biz Checking",
+        type: "CREDIT_CARD",
+        institution: "Chase",
+        mask: "4242",
+        nickname: "Chase Freedom Unlimited",
         isPrimaryBusiness: true,
       },
     }),
     prisma.financialAccount.create({
       data: {
-        id: "acct_chase_personal",
+        id: "acct_amex_platinum",
         userId: user.id,
         taxYearId: taxYear.id,
-        type: "CHECKING",
-        institution: "Chase Bank",
-        mask: "9203",
-        nickname: "Chase Personal",
+        type: "CREDIT_CARD",
+        institution: "American Express",
+        mask: "1001",
+        nickname: "Amex Platinum",
+        isPrimaryBusiness: true,
+      },
+    }),
+    prisma.financialAccount.create({
+      data: {
+        id: "acct_costco_citi",
+        userId: user.id,
+        taxYearId: taxYear.id,
+        type: "CREDIT_CARD",
+        institution: "Citi / Costco",
+        mask: "5555",
+        nickname: "Costco Anywhere Visa",
         isPrimaryBusiness: false,
       },
     }),
     prisma.financialAccount.create({
       data: {
-        id: "acct_amex",
+        id: "acct_chase_checking",
         userId: user.id,
         taxYearId: taxYear.id,
-        type: "CREDIT_CARD",
-        institution: "American Express",
-        mask: "1005",
-        nickname: "Amex Blue Cash Biz",
+        type: "CHECKING",
+        institution: "Chase",
+        mask: "9517",
+        nickname: "Chase Checking 9517",
         isPrimaryBusiness: true,
       },
     }),
     prisma.financialAccount.create({
       data: {
-        id: "acct_stripe",
+        id: "acct_robinhood",
         userId: user.id,
         taxYearId: taxYear.id,
-        type: "PAYMENT_PROCESSOR",
-        institution: "Stripe",
+        type: "BROKERAGE",
+        institution: "Robinhood",
         mask: null,
-        nickname: "Stripe Payments",
-        isPrimaryBusiness: true,
-      },
-    }),
-    prisma.financialAccount.create({
-      data: {
-        id: "acct_schwab",
-        userId: user.id,
-        taxYearId: taxYear.id,
-        type: "SAVINGS",
-        institution: "Charles Schwab",
-        mask: "7744",
-        nickname: "Schwab High-Yield",
+        nickname: "Robinhood Brokerage",
         isPrimaryBusiness: false,
       },
     }),
   ])
   console.log("  ✓ FinancialAccounts: 5")
 
-  const [bizChecking, personalChecking, amex, , ] = accounts
+  const [chaseFreedom, amex, costcoCiti, chaseChecking, robinhood] = accounts
 
   // ------------------------------------------------------------------
-  // 8. Transactions (20)
+  // 8. Transactions (20) — realistic for a photographer/creator in 2025
   // ------------------------------------------------------------------
   await prisma.transaction.deleteMany({ where: { taxYearId: taxYear.id } })
 
   const txData = [
-    // --- Biz income from Acme Corp
+    // ── INCOME ──────────────────────────────────────────────────────
     {
       id: "tx_001",
-      accountId: bizChecking.id,
-      postedDate: "2025-01-15",
-      amount: "-15000.00",
-      merchant: "ACME CORP ACH PYMT",
-      description: "Consulting retainer January 2025",
+      accountId: chaseChecking.id,
+      date: "2025-01-20",
+      amount: "-8500.00",   // credit = income
+      merchant: "THEKNOT WEDDING WIRE",
+      desc: "Wedding booking deposit — Jan couple",
     },
-    // --- AWS (biz expense)
     {
       id: "tx_002",
-      accountId: amex.id,
-      postedDate: "2025-01-02",
-      amount: "847.32",
-      merchant: "AWS",
-      description: "Amazon Web Services Jan 2025",
+      accountId: chaseChecking.id,
+      date: "2025-03-15",
+      amount: "-12000.00",
+      merchant: "THEKNOT WEDDING WIRE",
+      desc: "Wedding final payment — March couple",
     },
-    // --- GitHub (biz expense)
     {
       id: "tx_003",
-      accountId: amex.id,
-      postedDate: "2025-01-04",
-      amount: "21.00",
-      merchant: "GITHUB",
-      description: "GitHub Team plan",
+      accountId: chaseChecking.id,
+      date: "2025-04-01",
+      amount: "-3200.00",
+      merchant: "BRAND DEAL DIRECT DEPOSIT",
+      desc: "REI brand deal — spring campaign",
     },
-    // --- Figma (biz expense)
+
+    // ── BUSINESS EXPENSES — SOFTWARE / SUBSCRIPTIONS ─────────────
     {
       id: "tx_004",
       accountId: amex.id,
-      postedDate: "2025-01-06",
-      amount: "45.00",
-      merchant: "FIGMA",
-      description: "Figma Professional",
+      date: "2025-01-05",
+      amount: "55.00",
+      merchant: "ADOBE SYSTEMS",
+      desc: "Adobe Creative Cloud — monthly",
     },
-    // --- United Airlines (travel expense — trip_001 dates)
     {
       id: "tx_005",
       accountId: amex.id,
-      postedDate: "2025-01-10",
-      amount: "612.00",
-      merchant: "UNITED AIRLINES",
-      description: "Flight SFO-LAS for re:Invent",
+      date: "2025-01-08",
+      amount: "299.00",
+      merchant: "CAPTURE ONE",
+      desc: "Capture One Pro annual license",
     },
-    // --- Hotel (travel expense)
     {
       id: "tx_006",
       accountId: amex.id,
-      postedDate: "2025-01-12",
-      amount: "1230.00",
-      merchant: "MGM GRAND LAS VEGAS",
-      description: "Hotel 4 nights re:Invent",
+      date: "2025-02-01",
+      amount: "16.00",
+      merchant: "NOTION",
+      desc: "Notion Pro subscription",
     },
-    // --- Meal 50%
+
+    // ── EQUIPMENT ────────────────────────────────────────────────
     {
       id: "tx_007",
       accountId: amex.id,
-      postedDate: "2025-01-13",
-      amount: "127.45",
-      merchant: "NOBU LAS VEGAS",
-      description: "Client dinner re:Invent",
+      date: "2025-02-14",
+      amount: "2849.00",
+      merchant: "B&H PHOTO VIDEO",
+      desc: "Sony a7R V body — primary camera",
     },
-    // --- Personal grocery
     {
       id: "tx_008",
-      accountId: personalChecking.id,
-      postedDate: "2025-01-18",
-      amount: "213.67",
-      merchant: "WHOLE FOODS",
-      description: "Weekly groceries",
+      accountId: amex.id,
+      date: "2025-03-22",
+      amount: "389.00",
+      merchant: "PEAK DESIGN",
+      desc: "Travel tripod + capture clips",
     },
-    // --- Biz income February
+
+    // ── MEALS — CLIENT / TRAVEL ───────────────────────────────────
     {
       id: "tx_009",
-      accountId: bizChecking.id,
-      postedDate: "2025-02-15",
-      amount: "-15000.00",
-      merchant: "ACME CORP ACH PYMT",
-      description: "Consulting retainer February 2025",
+      accountId: chaseFreedom.id,
+      date: "2025-01-28",
+      amount: "147.50",
+      merchant: "UCHIKO AUSTIN",
+      desc: "Client dinner — wedding consultation",
     },
-    // --- Notion (biz expense)
     {
       id: "tx_010",
-      accountId: amex.id,
-      postedDate: "2025-02-03",
-      amount: "16.00",
-      merchant: "NOTION",
-      description: "Notion Team plan",
+      accountId: chaseFreedom.id,
+      date: "2025-08-05",  // During Alaska trip
+      amount: "62.00",
+      merchant: "RUSTIC GOAT ANCHORAGE",
+      desc: "Dinner during Alaska content trip",
     },
-    // --- Zoom (biz expense)
+
+    // ── TRAVEL — ALASKA TRIP (Aug 2–13) ──────────────────────────
     {
       id: "tx_011",
       accountId: amex.id,
-      postedDate: "2025-02-05",
-      amount: "15.99",
-      merchant: "ZOOM",
-      description: "Zoom Pro subscription",
+      date: "2025-07-30",
+      amount: "687.00",
+      merchant: "DELTA AIR LINES",
+      desc: "IAH-ANC round trip — Alaska trip",
     },
-    // --- Delta (travel — trip_002)
     {
       id: "tx_012",
       accountId: amex.id,
-      postedDate: "2025-02-08",
-      amount: "389.00",
-      merchant: "DELTA AIR LINES",
-      description: "Flight LAX-SFO for Acme on-site",
+      date: "2025-08-02",
+      amount: "1840.00",
+      merchant: "AIRBNB",
+      desc: "Cabin rental Denali area Aug 2–12",
     },
-    // --- Client lunch (50% meals)
+
+    // ── TRAVEL — SRI LANKA TRIP (Sep 15–Nov 3) ───────────────────
     {
       id: "tx_013",
       accountId: amex.id,
-      postedDate: "2025-02-11",
-      amount: "94.20",
-      merchant: "ATELIER CRENN SF",
-      description: "Lunch with Acme PM team",
+      date: "2025-09-10",
+      amount: "1420.00",
+      merchant: "EMIRATES AIRLINES",
+      desc: "IAH-CMB round trip — Sri Lanka content trip",
     },
-    // --- Personal Netflix
     {
       id: "tx_014",
-      accountId: personalChecking.id,
-      postedDate: "2025-02-18",
-      amount: "22.99",
-      merchant: "NETFLIX",
-      description: "Netflix subscription",
+      accountId: amex.id,
+      date: "2025-09-15",
+      amount: "2100.00",
+      merchant: "AIRBNB",
+      desc: "Villa Galle Sri Lanka Sep 15–Nov 3",
     },
-    // --- Transfer biz→personal
+
+    // ── VEHICLE / GRAY ───────────────────────────────────────────
     {
       id: "tx_015",
-      accountId: bizChecking.id,
-      postedDate: "2025-02-20",
-      amount: "5000.00",
-      merchant: "ONLINE TRANSFER",
-      description: "Owner draw",
+      accountId: chaseFreedom.id,
+      date: "2025-04-10",
+      amount: "89.00",
+      merchant: "BLUEWAVE CAR WASH",
+      desc: "Car wash — vehicle maintenance",
     },
-    // --- Corresponding transfer personal←biz
     {
       id: "tx_016",
-      accountId: personalChecking.id,
-      postedDate: "2025-02-20",
-      amount: "-5000.00",
-      merchant: "ONLINE TRANSFER",
-      description: "Transfer from biz account",
+      accountId: chaseFreedom.id,
+      date: "2025-05-22",
+      amount: "112.40",
+      merchant: "CHEVRON",
+      desc: "Gas — vehicle business use",
     },
-    // --- March — biz income
+
+    // ── PERSONAL ─────────────────────────────────────────────────
     {
       id: "tx_017",
-      accountId: bizChecking.id,
-      postedDate: "2025-03-15",
-      amount: "-20000.00",
-      merchant: "ACME CORP ACH PYMT",
-      description: "Consulting retainer March 2025 + milestone bonus",
+      accountId: chaseChecking.id,
+      date: "2025-03-01",
+      amount: "2200.00",
+      merchant: "ZELLE RANDI",
+      desc: "Transfer to spouse",
     },
-    // --- OpenAI (biz expense)
     {
       id: "tx_018",
-      accountId: amex.id,
-      postedDate: "2025-03-03",
-      amount: "20.00",
-      merchant: "OPENAI",
-      description: "ChatGPT Plus subscription",
+      accountId: chaseChecking.id,
+      date: "2025-06-15",
+      amount: "500.00",
+      merchant: "HSMCA",
+      desc: "Monthly donation",
     },
-    // --- NVIDIA GTC registration (biz expense — trip_003)
+
+    // ── TRANSFERS ────────────────────────────────────────────────
     {
       id: "tx_019",
-      accountId: amex.id,
-      postedDate: "2025-03-10",
-      amount: "1499.00",
-      merchant: "NVIDIA GTC REGISTRATION",
-      description: "GTC 2025 conference pass",
+      accountId: chaseChecking.id,
+      date: "2025-02-28",
+      amount: "3000.00",
+      merchant: "ONLINE TRANSFER TO AMEX",
+      desc: "Credit card payment",
     },
-    // --- Gray area — home internet (partial biz)
     {
       id: "tx_020",
-      accountId: bizChecking.id,
-      postedDate: "2025-03-22",
-      amount: "79.99",
-      merchant: "AT&T INTERNET",
-      description: "Monthly internet bill",
+      accountId: amex.id,
+      date: "2025-02-28",
+      amount: "-3000.00",
+      merchant: "PAYMENT THANK YOU",
+      desc: "Amex payment received",
     },
   ]
 
+  // Delete existing fixture data (idempotent re-seed across taxYear versions)
+  // Must respect FK order: Classification → Transaction
+  const fixtureIds = Array.from({ length: 20 }, (_, i) => `tx_${String(i + 1).padStart(3, "0")}`)
+  await prisma.classification.deleteMany({ where: { transactionId: { in: fixtureIds } } })
+  await prisma.transaction.deleteMany({ where: { id: { in: fixtureIds } } })
+
   for (const tx of txData) {
-    const ikey = txKey(tx.accountId, tx.postedDate, tx.amount, tx.merchant)
+    const ikey = txKey(tx.accountId, tx.date, tx.amount, tx.merchant)
     await prisma.transaction.create({
       data: {
         id: tx.id,
         accountId: tx.accountId,
         taxYearId: taxYear.id,
-        postedDate: new Date(tx.postedDate),
+        postedDate: new Date(tx.date),
         amountOriginal: tx.amount,
         amountNormalized: tx.amount.startsWith("-")
-          ? tx.amount.replace("-", "") // income → positive normalized
-          : tx.amount,                 // expense → positive normalized
+          ? tx.amount.replace("-", "")
+          : tx.amount,
         merchantRaw: tx.merchant,
-        merchantNormalized: tx.merchant.toLowerCase().replace(/\s+/g, "_"),
-        descriptionRaw: tx.description,
+        merchantNormalized: tx.merchant.toLowerCase().replace(/[^a-z0-9]+/g, "_"),
+        descriptionRaw: tx.desc,
         idempotencyKey: ikey,
       },
     })
   }
   console.log("  ✓ Transactions: 20")
 
-  // ------------------------------------------------------------------
-  // 9. Wire transfer pair (tx_015 / tx_016)
-  // ------------------------------------------------------------------
+  // Wire transfer pair (tx_019 / tx_020)
   await prisma.transaction.update({
-    where: { id: "tx_015" },
-    data: { isTransferPairedWith: "tx_016" },
+    where: { id: "tx_019" },
+    data: { isTransferPairedWith: "tx_020" },
   })
   await prisma.transaction.update({
-    where: { id: "tx_016" },
-    data: { isTransferPairedWith: "tx_015" },
+    where: { id: "tx_020" },
+    data: { isTransferPairedWith: "tx_019" },
   })
-  console.log("  ✓ Transfer pair linked")
+  console.log("  ✓ Transfer pair linked (credit card payment)")
 
   // ------------------------------------------------------------------
-  // 10. Seed classifications for the obvious transactions
+  // No Classifications seeded — that's intentional.
+  // Classifications are created by the AI agent in Prompt 4.
   // ------------------------------------------------------------------
-  await prisma.classification.deleteMany({
-    where: { transaction: { taxYearId: taxYear.id } },
-  })
-
-  const bizIncomeIds = ["tx_001", "tx_009", "tx_017"]
-  const writeOffIds  = ["tx_002", "tx_003", "tx_004", "tx_010", "tx_011", "tx_018", "tx_019"]
-  const travelIds    = ["tx_005", "tx_006", "tx_012"]
-  const meals50Ids   = ["tx_007", "tx_013"]
-  const personalIds  = ["tx_008", "tx_014"]
-  const transferIds  = ["tx_015", "tx_016"]
-  const grayIds      = ["tx_020"]
-
-  const classificationRows: {
-    transactionId: string
-    code: string
-    businessPct: number
-    confidence: number
-    evidenceTier: number
-    source: string
-    reasoning: string
-    scheduleCLine: string | null
-  }[] = [
-    ...bizIncomeIds.map((id) => ({
-      transactionId: id,
-      code: "BIZ_INCOME",
-      businessPct: 100,
-      confidence: 0.98,
-      evidenceTier: 3,
-      source: "AI",
-      reasoning: "Recurring ACH payment from known client ACME CORP",
-      scheduleCLine: null,
-    })),
-    ...writeOffIds.map((id) => ({
-      transactionId: id,
-      code: "WRITE_OFF",
-      businessPct: 100,
-      confidence: 0.92,
-      evidenceTier: 2,
-      source: "AI",
-      reasoning: "Software/SaaS subscription — direct business tool",
-      scheduleCLine: "18",
-    })),
-    ...travelIds.map((id) => ({
-      transactionId: id,
-      code: "WRITE_OFF_TRAVEL",
-      businessPct: 100,
-      confidence: 0.88,
-      evidenceTier: 2,
-      source: "AI",
-      reasoning: "Travel expense during confirmed business trip",
-      scheduleCLine: "24a",
-    })),
-    ...meals50Ids.map((id) => ({
-      transactionId: id,
-      code: "MEALS_50",
-      businessPct: 50,
-      confidence: 0.85,
-      evidenceTier: 2,
-      source: "AI",
-      reasoning: "Business meal — 50% deductible per IRC §274",
-      scheduleCLine: "24b",
-    })),
-    ...personalIds.map((id) => ({
-      transactionId: id,
-      code: "PERSONAL",
-      businessPct: 0,
-      confidence: 0.95,
-      evidenceTier: 1,
-      source: "AI",
-      reasoning: "Personal expense — no business connection",
-      scheduleCLine: null,
-    })),
-    ...transferIds.map((id) => ({
-      transactionId: id,
-      code: "TRANSFER",
-      businessPct: 0,
-      confidence: 0.97,
-      evidenceTier: 1,
-      source: "AI",
-      reasoning: "Between-account transfer — not a deductible expense",
-      scheduleCLine: null,
-    })),
-    ...grayIds.map((id) => ({
-      transactionId: id,
-      code: "GRAY",
-      businessPct: 60,
-      confidence: 0.62,
-      evidenceTier: 2,
-      source: "AI",
-      reasoning: "Home internet — partial business use per home office % (60%)",
-      scheduleCLine: "25",
-    })),
-  ]
-
-  await prisma.classification.createMany({
-    data: classificationRows.map((r) => ({
-      transactionId: r.transactionId,
-      code: r.code as never,
-      scheduleCLine: r.scheduleCLine,
-      businessPct: r.businessPct,
-      ircCitations: [],
-      confidence: r.confidence,
-      evidenceTier: r.evidenceTier,
-      source: r.source as never,
-      reasoning: r.reasoning,
-      isCurrent: true,
-    })),
-  })
-  console.log(`  ✓ Classifications: ${classificationRows.length}`)
 
   console.log("\n✅  Seed complete!")
-  console.log(`   User:         ${user.email}  (password: taxlens2025!)`)
-  console.log(`   Tax Year:     ${taxYear.year}  (status: ${taxYear.status})`)
-  console.log("   Accounts:     5  |  Transactions: 20  |  Classified: 20")
+  console.log(`   User:      ${user.email}  (password: test123)`)
+  console.log(`   Tax Year:  2025  |  Status: CREATED`)
+  console.log(`   Profile:   NAICS 711510 — Wedding photography / travel content / e-commerce`)
+  console.log(`   Trips:     Alaska (Aug 2–13) · Sri Lanka (Sep 15–Nov 3) · Colorado (Dec 4–12)`)
+  console.log(`   Accounts:  Chase Freedom CC · Amex Platinum CC · Costco Citi CC · Chase Checking 9517 · Robinhood`)
+  console.log(`   Txns:      20  |  Classifications: 0 (seeded by AI agent in Prompt 4)`)
 }
 
 main()
