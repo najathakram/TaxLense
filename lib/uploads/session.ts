@@ -8,7 +8,7 @@
 
 import { prisma } from "@/lib/db"
 
-export const DEFAULT_API_CALL_LIMIT = 50
+export const DEFAULT_API_CALL_LIMIT = 150
 
 export class RateLimitError extends Error {
   constructor(message: string, public readonly limit: number, public readonly used: number) {
