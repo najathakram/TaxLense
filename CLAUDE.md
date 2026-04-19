@@ -61,7 +61,7 @@ These are the design rails. If a future change violates one of these, the change
 - [x] Prompt 4 — Merchant Intelligence
 - [x] Prompt 5 — STOPs + Ledger Review
 - [x] Prompt 6 — Residual AI + Lock
-- [ ] Prompt 7 — Output Artifacts
+- [x] Prompt 7 — Output Artifacts
 - [ ] Prompt 8 — Polish + E2E
 
 ---
@@ -272,3 +272,20 @@ These were discovered during Prompt 1 and must be respected in all future sessio
 - **Tests**: 193 passing (177 original + 16 new across residual-candidates / assertions / risk-score / lock-flow). `pnpm build` clean — 15 routes total (2 new: `/risk`, `/lock`).
 - **Dev server gotcha**: after `prisma generate`, an already-running Turbopack dev server can cache the old client bundle and throw `Unknown argument \`isSplit\`` at runtime even though types are fine. Restart the preview server after schema migrations.
 - **Verify**: `pnpm test` (193 passing); `pnpm build` (clean); preview-verified `/years/2025/risk` renders dashboard with score/signals/assertions and `/years/2025/lock` correctly blocks the seed fixture (20 unclassified + 4 unclassified deposits).
+
+## Prompt 7 notes
+
+- **No schema migration** — `Report` model already had all required fields (`kind`, `filePath`, `transactionSnapshotHash`, `isCurrent`, `ruleVersionId`).
+- **New package**: `archiver@7.0.1` + `@types/archiver@7.0.0` for ZIP assembly.
+- **`lib/rules/memoRules.ts`**: static citation lookup for all four memo types (§183_hobby, §274n2_100pct_meals, §280A_home_office, wardrobe). AI may only use these citations; must write `[VERIFY]` for anything not in the list.
+- **`lib/reports/masterLedger.ts`**: `buildMasterLedger(taxYearId)` → 5-sheet XLSX (Transactions, Merchant Rules, Stop Resolutions, Profile Snapshot, Metadata). Transactions sheet: row fill colors per `CODE_FILL` ARGB map matching spec §10.1, freeze row 1, autofilter.
+- **`lib/reports/financialStatements.ts`**: `buildFinancialStatements(taxYearId)` → 5-sheet XLSX (General Ledger, Schedule C, P&L, Balance Sheet, Schedule C Detail). Schedule C grand total = Σ(deductible) where MEALS_50 applies ×0.5 multiplier. Assertion: this total matches A03.
+- **`lib/ai/positionMemo.ts`**: `generatePositionMemo(type, taxYearId)` and `detectNeededMemos(taxYearId)`. Model: `claude-sonnet-4-6` when exposure < $5 000, `claude-opus-4-7` when ≥ $5 000. Requires four labeled sections (FACTS/LAW/ANALYSIS/CONCLUSION); adds stub if any missing. AuditEvent `POSITION_MEMO_GENERATED`.
+- **`lib/reports/auditPacket.ts`**: `buildAuditPacket(taxYearId, skipMemos?)` → ZIP Buffer. Uses `archiver` piped to a `PassThrough` stream collected as Buffer. Contents: 01_transaction_ledger.xlsx, 02_274d_substantiation/*.csv, 03_cohan_labels.csv, 04_position_memos/*.txt, 05_income_reconciliation.csv, 06_source_documents_inventory.csv, README.md. `skipMemos=true` bypasses AI calls in tests.
+- **PDF decision**: V1 delivers XLSX + CSV + TXT instead of PDF. PDF generation requires Puppeteer/headless browser which conflicts with Node-only constraint. Documented in README.md inside the ZIP.
+- **Download UI** (`/years/[year]/download/page.tsx` + `download-client.tsx`): three cards with "Generate & Download" buttons. Disabled unless `TaxYear.status === 'LOCKED'`. Shows last-generated timestamp from `Report` row.
+- **API route** (`/api/years/[year]/download/[kind]`): GET route, generates on-the-fly, upserts `Report` row (marks prior `isCurrent=false`), writes AuditEvent `REPORT_GENERATED`, returns `Response(new Uint8Array(buf), ...)`. Kind slugs: `master-ledger`, `financial-statements`, `audit-packet`.
+- **TypeScript fixes**: `Buffer` not assignable to `BodyInit` → use `new Uint8Array(buf)`; `NodeJS.ReadableStream` not assignable to archiver's `Readable` → import `Readable` from `node:stream` and type the return explicitly; `null` not assignable to `InputJsonValue` in Prisma → use `undefined` instead.
+- **Vitest mock gotcha**: `vi.mock` factory is hoisted above all `const` declarations — inline string literals directly in the factory; do NOT reference module-level variables.
+- **Tests**: 223 passing (193 original + 30 new across master-ledger / financial-statements / audit-packet / position-memo / report-route). `pnpm build` clean — 20 routes total (2 new: `/years/[year]/download`, `/api/years/[year]/download/[kind]`).
+- **Verify**: `pnpm test` (223 passing); `pnpm build` (clean); lock the fixture year, visit `/years/2025/download`, click "Generate & Download" for each artifact, open in Excel, confirm 5 sheets on each XLSX and valid ZIP.
