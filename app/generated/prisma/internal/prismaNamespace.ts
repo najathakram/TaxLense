@@ -396,6 +396,7 @@ export const ModelName = {
   Trip: 'Trip',
   FinancialAccount: 'FinancialAccount',
   StatementImport: 'StatementImport',
+  ImportSession: 'ImportSession',
   Transaction: 'Transaction',
   Classification: 'Classification',
   MerchantRule: 'MerchantRule',
@@ -417,7 +418,7 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
     omit: GlobalOmitOptions
   }
   meta: {
-    modelProps: "user" | "cpaClient" | "account" | "session" | "verificationToken" | "ruleVersion" | "taxYear" | "businessProfile" | "knownEntity" | "trip" | "financialAccount" | "statementImport" | "transaction" | "classification" | "merchantRule" | "stopItem" | "auditEvent" | "report"
+    modelProps: "user" | "cpaClient" | "account" | "session" | "verificationToken" | "ruleVersion" | "taxYear" | "businessProfile" | "knownEntity" | "trip" | "financialAccount" | "statementImport" | "importSession" | "transaction" | "classification" | "merchantRule" | "stopItem" | "auditEvent" | "report"
     txIsolationLevel: TransactionIsolationLevel
   }
   model: {
@@ -1309,6 +1310,80 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
         }
       }
     }
+    ImportSession: {
+      payload: Prisma.$ImportSessionPayload<ExtArgs>
+      fields: Prisma.ImportSessionFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.ImportSessionFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ImportSessionPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.ImportSessionFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ImportSessionPayload>
+        }
+        findFirst: {
+          args: Prisma.ImportSessionFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ImportSessionPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.ImportSessionFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ImportSessionPayload>
+        }
+        findMany: {
+          args: Prisma.ImportSessionFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ImportSessionPayload>[]
+        }
+        create: {
+          args: Prisma.ImportSessionCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ImportSessionPayload>
+        }
+        createMany: {
+          args: Prisma.ImportSessionCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.ImportSessionCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ImportSessionPayload>[]
+        }
+        delete: {
+          args: Prisma.ImportSessionDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ImportSessionPayload>
+        }
+        update: {
+          args: Prisma.ImportSessionUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ImportSessionPayload>
+        }
+        deleteMany: {
+          args: Prisma.ImportSessionDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.ImportSessionUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.ImportSessionUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ImportSessionPayload>[]
+        }
+        upsert: {
+          args: Prisma.ImportSessionUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ImportSessionPayload>
+        }
+        aggregate: {
+          args: Prisma.ImportSessionAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateImportSession>
+        }
+        groupBy: {
+          args: Prisma.ImportSessionGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.ImportSessionGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.ImportSessionCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.ImportSessionCountAggregateOutputType> | number
+        }
+      }
+    }
     Transaction: {
       payload: Prisma.$TransactionPayload<ExtArgs>
       fields: Prisma.TransactionFieldRefs
@@ -1951,6 +2026,7 @@ export const StatementImportScalarFieldEnum = {
   id: 'id',
   accountId: 'accountId',
   taxYearId: 'taxYearId',
+  sessionId: 'sessionId',
   filePath: 'filePath',
   originalFilename: 'originalFilename',
   fileType: 'fileType',
@@ -1966,10 +2042,31 @@ export const StatementImportScalarFieldEnum = {
   reconciliationOk: 'reconciliationOk',
   reconciliationDelta: 'reconciliationDelta',
   parseError: 'parseError',
+  extractionPath: 'extractionPath',
+  extractionConfidence: 'extractionConfidence',
+  aiModel: 'aiModel',
+  aiTokensIn: 'aiTokensIn',
+  aiTokensOut: 'aiTokensOut',
+  userNotes: 'userNotes',
   uploadedAt: 'uploadedAt'
 } as const
 
 export type StatementImportScalarFieldEnum = (typeof StatementImportScalarFieldEnum)[keyof typeof StatementImportScalarFieldEnum]
+
+
+export const ImportSessionScalarFieldEnum = {
+  id: 'id',
+  taxYearId: 'taxYearId',
+  cpaUserId: 'cpaUserId',
+  status: 'status',
+  totalApiCalls: 'totalApiCalls',
+  apiCallLimit: 'apiCallLimit',
+  notes: 'notes',
+  uploadedAt: 'uploadedAt',
+  closedAt: 'closedAt'
+} as const
+
+export type ImportSessionScalarFieldEnum = (typeof ImportSessionScalarFieldEnum)[keyof typeof ImportSessionScalarFieldEnum]
 
 
 export const TransactionScalarFieldEnum = {
@@ -2344,6 +2441,34 @@ export type ListFloatFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaMode
 
 
 /**
+ * Reference to a field of type 'ExtractionPath'
+ */
+export type EnumExtractionPathFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'ExtractionPath'>
+    
+
+
+/**
+ * Reference to a field of type 'ExtractionPath[]'
+ */
+export type ListEnumExtractionPathFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'ExtractionPath[]'>
+    
+
+
+/**
+ * Reference to a field of type 'ImportSessionStatus'
+ */
+export type EnumImportSessionStatusFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'ImportSessionStatus'>
+    
+
+
+/**
+ * Reference to a field of type 'ImportSessionStatus[]'
+ */
+export type ListEnumImportSessionStatusFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'ImportSessionStatus[]'>
+    
+
+
+/**
  * Reference to a field of type 'ClassificationSource'
  */
 export type EnumClassificationSourceFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'ClassificationSource'>
@@ -2519,6 +2644,7 @@ export type GlobalOmitConfig = {
   trip?: Prisma.TripOmit
   financialAccount?: Prisma.FinancialAccountOmit
   statementImport?: Prisma.StatementImportOmit
+  importSession?: Prisma.ImportSessionOmit
   transaction?: Prisma.TransactionOmit
   classification?: Prisma.ClassificationOmit
   merchantRule?: Prisma.MerchantRuleOmit

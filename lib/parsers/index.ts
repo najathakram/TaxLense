@@ -11,14 +11,35 @@
  * Spec §4.2: parse_status = FAILED if pdf-parse returns empty/gibberish text.
  */
 
-import { extractPdfText, isUsableText } from "./pdf-extractor"
+import Anthropic from "@anthropic-ai/sdk"
+import { extractPdfText, pdfPageCount } from "./pdf-extractor"
 import { extractCsvRows } from "./csv-extractor"
 import { detectInstitution, dispatchCsvParse } from "./institutions"
 import { parseOfxGeneric } from "./institutions/ofx-generic"
+import { routePdf, scorePdfText, type PdfRoutingPath } from "./pdf-router"
+import { extractViaHaikuCleanup } from "./haiku-cleanup"
+import { extractViaVisionDoc } from "./vision-doc"
 import type { ParseResult } from "./types"
+import type { ExtractorTelemetry } from "./haiku-cleanup"
 
 export type { ParseResult, RawTx } from "./types"
 export { fileHash, transactionKey } from "./dedup"
+export type { ExtractorTelemetry } from "./haiku-cleanup"
+
+export interface ParseStatementOptions {
+  /** Override the default AI client (for tests). */
+  anthropicClient?: Anthropic
+  /** Rate limit hook: called per AI API call; throw to abort. */
+  onAiCall?: () => Promise<void> | void
+}
+
+/**
+ * Extended parse result carrying extraction telemetry for StatementImport.
+ */
+export interface ExtendedParseResult extends ParseResult {
+  extractionPath?: PdfRoutingPath | "CSV" | "OFX"
+  extractionTelemetry?: ExtractorTelemetry
+}
 
 /** File type resolved from extension + content sniffing */
 type FileType = "pdf" | "csv" | "ofx" | "unknown"
@@ -53,42 +74,35 @@ function resolveFileType(filename: string, buffer: Buffer): FileType {
 export async function parseStatement(
   buffer: Buffer,
   filename: string,
-): Promise<ParseResult> {
+  options: ParseStatementOptions = {},
+): Promise<ExtendedParseResult> {
   const fileType = resolveFileType(filename, buffer)
 
   // ── OFX / QFX ──────────────────────────────────────────────────────────────
   if (fileType === "ofx") {
     const text = buffer.toString("utf8")
-    return parseOfxGeneric(text)
+    const result = parseOfxGeneric(text)
+    return { ...result, extractionPath: "OFX" }
   }
 
   // ── PDF ────────────────────────────────────────────────────────────────────
   if (fileType === "pdf") {
-    const text = await extractPdfText(buffer)
-    if (!isUsableText(text)) {
-      return {
-        ok: false,
-        error: "PDF appears to be scanned or encrypted — no extractable text",
-        institution: undefined,
-        transactions: [],
-        totalInflows: 0,
-        totalOutflows: 0,
-        reconciliation: { ok: false },
-        parseConfidence: 0,
-      }
-    }
+    const { text, numpages } = await extractPdfText(buffer)
+    const score = scorePdfText(text, numpages)
+    const route = routePdf(score)
 
-    // V1: no PDF institution parsers yet — return structured failure
-    // (PDF parsing is a V2+ feature; users must use CSV exports for now)
+    // Rate-limit gate — increment before any AI call
+    if (options.onAiCall) await options.onAiCall()
+
+    const { parseResult, telemetry } =
+      route === "VISION_DOC"
+        ? await extractViaVisionDoc(buffer, options.anthropicClient)
+        : await extractViaHaikuCleanup(text, options.anthropicClient)
+
     return {
-      ok: false,
-      error: "PDF text extraction succeeded but no PDF parser is implemented for this institution in V1. Please export as CSV.",
-      institution: undefined,
-      transactions: [],
-      totalInflows: 0,
-      totalOutflows: 0,
-      reconciliation: { ok: false },
-      parseConfidence: 0,
+      ...parseResult,
+      extractionPath: route,
+      extractionTelemetry: telemetry,
     }
   }
 
@@ -106,9 +120,14 @@ export async function parseStatement(
       totalOutflows: 0,
       reconciliation: { ok: true },
       parseConfidence: 0,
+      extractionPath: "CSV",
     }
   }
 
   const institution = detectInstitution(headers, text)
-  return dispatchCsvParse(institution, rows, headers)
+  const result = dispatchCsvParse(institution, rows, headers)
+  return { ...result, extractionPath: "CSV" }
 }
+
+/** Kept exported for tests. */
+export { pdfPageCount }

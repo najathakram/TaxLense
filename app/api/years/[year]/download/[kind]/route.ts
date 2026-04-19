@@ -4,10 +4,11 @@ import { prisma } from "@/lib/db"
 import { buildMasterLedger } from "@/lib/reports/masterLedger"
 import { buildFinancialStatements } from "@/lib/reports/financialStatements"
 import { buildAuditPacket } from "@/lib/reports/auditPacket"
+import { buildTaxPackage } from "@/lib/reports/taxPackage"
 
-type KindSlug = "master-ledger" | "financial-statements" | "audit-packet"
+type KindSlug = "master-ledger" | "financial-statements" | "audit-packet" | "tax-package"
 
-const SLUG_TO_KIND: Record<KindSlug, { kind: "MASTER_LEDGER" | "FINANCIAL_STATEMENTS" | "AUDIT_PACKET"; ext: string; contentType: string; label: string }> = {
+const SLUG_TO_KIND: Record<KindSlug, { kind: "MASTER_LEDGER" | "FINANCIAL_STATEMENTS" | "AUDIT_PACKET" | "TAX_PACKAGE"; ext: string; contentType: string; label: string }> = {
   "master-ledger": {
     kind: "MASTER_LEDGER",
     ext: "xlsx",
@@ -25,6 +26,12 @@ const SLUG_TO_KIND: Record<KindSlug, { kind: "MASTER_LEDGER" | "FINANCIAL_STATEM
     ext: "zip",
     contentType: "application/zip",
     label: "audit-packet",
+  },
+  "tax-package": {
+    kind: "TAX_PACKAGE",
+    ext: "zip",
+    contentType: "application/zip",
+    label: "tax-package",
   },
 }
 
@@ -69,6 +76,9 @@ export async function GET(
         break
       case "AUDIT_PACKET":
         buf = await buildAuditPacket(taxYear.id)
+        break
+      case "TAX_PACKAGE":
+        buf = await buildTaxPackage(taxYear.id)
         break
     }
   } catch (e) {

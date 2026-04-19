@@ -32,6 +32,9 @@ export type StatementImportAvgAggregateOutputType = {
   totalOutflows: runtime.Decimal | null
   transactionCount: number | null
   reconciliationDelta: runtime.Decimal | null
+  extractionConfidence: number | null
+  aiTokensIn: number | null
+  aiTokensOut: number | null
 }
 
 export type StatementImportSumAggregateOutputType = {
@@ -40,12 +43,16 @@ export type StatementImportSumAggregateOutputType = {
   totalOutflows: runtime.Decimal | null
   transactionCount: number | null
   reconciliationDelta: runtime.Decimal | null
+  extractionConfidence: number | null
+  aiTokensIn: number | null
+  aiTokensOut: number | null
 }
 
 export type StatementImportMinAggregateOutputType = {
   id: string | null
   accountId: string | null
   taxYearId: string | null
+  sessionId: string | null
   filePath: string | null
   originalFilename: string | null
   fileType: string | null
@@ -61,6 +68,11 @@ export type StatementImportMinAggregateOutputType = {
   reconciliationOk: boolean | null
   reconciliationDelta: runtime.Decimal | null
   parseError: string | null
+  extractionPath: $Enums.ExtractionPath | null
+  extractionConfidence: number | null
+  aiModel: string | null
+  aiTokensIn: number | null
+  aiTokensOut: number | null
   uploadedAt: Date | null
 }
 
@@ -68,6 +80,7 @@ export type StatementImportMaxAggregateOutputType = {
   id: string | null
   accountId: string | null
   taxYearId: string | null
+  sessionId: string | null
   filePath: string | null
   originalFilename: string | null
   fileType: string | null
@@ -83,6 +96,11 @@ export type StatementImportMaxAggregateOutputType = {
   reconciliationOk: boolean | null
   reconciliationDelta: runtime.Decimal | null
   parseError: string | null
+  extractionPath: $Enums.ExtractionPath | null
+  extractionConfidence: number | null
+  aiModel: string | null
+  aiTokensIn: number | null
+  aiTokensOut: number | null
   uploadedAt: Date | null
 }
 
@@ -90,6 +108,7 @@ export type StatementImportCountAggregateOutputType = {
   id: number
   accountId: number
   taxYearId: number
+  sessionId: number
   filePath: number
   originalFilename: number
   fileType: number
@@ -105,6 +124,12 @@ export type StatementImportCountAggregateOutputType = {
   reconciliationOk: number
   reconciliationDelta: number
   parseError: number
+  extractionPath: number
+  extractionConfidence: number
+  aiModel: number
+  aiTokensIn: number
+  aiTokensOut: number
+  userNotes: number
   uploadedAt: number
   _all: number
 }
@@ -116,6 +141,9 @@ export type StatementImportAvgAggregateInputType = {
   totalOutflows?: true
   transactionCount?: true
   reconciliationDelta?: true
+  extractionConfidence?: true
+  aiTokensIn?: true
+  aiTokensOut?: true
 }
 
 export type StatementImportSumAggregateInputType = {
@@ -124,12 +152,16 @@ export type StatementImportSumAggregateInputType = {
   totalOutflows?: true
   transactionCount?: true
   reconciliationDelta?: true
+  extractionConfidence?: true
+  aiTokensIn?: true
+  aiTokensOut?: true
 }
 
 export type StatementImportMinAggregateInputType = {
   id?: true
   accountId?: true
   taxYearId?: true
+  sessionId?: true
   filePath?: true
   originalFilename?: true
   fileType?: true
@@ -145,6 +177,11 @@ export type StatementImportMinAggregateInputType = {
   reconciliationOk?: true
   reconciliationDelta?: true
   parseError?: true
+  extractionPath?: true
+  extractionConfidence?: true
+  aiModel?: true
+  aiTokensIn?: true
+  aiTokensOut?: true
   uploadedAt?: true
 }
 
@@ -152,6 +189,7 @@ export type StatementImportMaxAggregateInputType = {
   id?: true
   accountId?: true
   taxYearId?: true
+  sessionId?: true
   filePath?: true
   originalFilename?: true
   fileType?: true
@@ -167,6 +205,11 @@ export type StatementImportMaxAggregateInputType = {
   reconciliationOk?: true
   reconciliationDelta?: true
   parseError?: true
+  extractionPath?: true
+  extractionConfidence?: true
+  aiModel?: true
+  aiTokensIn?: true
+  aiTokensOut?: true
   uploadedAt?: true
 }
 
@@ -174,6 +217,7 @@ export type StatementImportCountAggregateInputType = {
   id?: true
   accountId?: true
   taxYearId?: true
+  sessionId?: true
   filePath?: true
   originalFilename?: true
   fileType?: true
@@ -189,6 +233,12 @@ export type StatementImportCountAggregateInputType = {
   reconciliationOk?: true
   reconciliationDelta?: true
   parseError?: true
+  extractionPath?: true
+  extractionConfidence?: true
+  aiModel?: true
+  aiTokensIn?: true
+  aiTokensOut?: true
+  userNotes?: true
   uploadedAt?: true
   _all?: true
 }
@@ -283,6 +333,7 @@ export type StatementImportGroupByOutputType = {
   id: string
   accountId: string
   taxYearId: string
+  sessionId: string | null
   filePath: string
   originalFilename: string
   fileType: string
@@ -298,6 +349,12 @@ export type StatementImportGroupByOutputType = {
   reconciliationOk: boolean | null
   reconciliationDelta: runtime.Decimal | null
   parseError: string | null
+  extractionPath: $Enums.ExtractionPath | null
+  extractionConfidence: number | null
+  aiModel: string | null
+  aiTokensIn: number | null
+  aiTokensOut: number | null
+  userNotes: runtime.JsonValue | null
   uploadedAt: Date
   _count: StatementImportCountAggregateOutputType | null
   _avg: StatementImportAvgAggregateOutputType | null
@@ -328,6 +385,7 @@ export type StatementImportWhereInput = {
   id?: Prisma.StringFilter<"StatementImport"> | string
   accountId?: Prisma.StringFilter<"StatementImport"> | string
   taxYearId?: Prisma.StringFilter<"StatementImport"> | string
+  sessionId?: Prisma.StringNullableFilter<"StatementImport"> | string | null
   filePath?: Prisma.StringFilter<"StatementImport"> | string
   originalFilename?: Prisma.StringFilter<"StatementImport"> | string
   fileType?: Prisma.StringFilter<"StatementImport"> | string
@@ -343,9 +401,16 @@ export type StatementImportWhereInput = {
   reconciliationOk?: Prisma.BoolNullableFilter<"StatementImport"> | boolean | null
   reconciliationDelta?: Prisma.DecimalNullableFilter<"StatementImport"> | runtime.Decimal | runtime.DecimalJsLike | number | string | null
   parseError?: Prisma.StringNullableFilter<"StatementImport"> | string | null
+  extractionPath?: Prisma.EnumExtractionPathNullableFilter<"StatementImport"> | $Enums.ExtractionPath | null
+  extractionConfidence?: Prisma.FloatNullableFilter<"StatementImport"> | number | null
+  aiModel?: Prisma.StringNullableFilter<"StatementImport"> | string | null
+  aiTokensIn?: Prisma.IntNullableFilter<"StatementImport"> | number | null
+  aiTokensOut?: Prisma.IntNullableFilter<"StatementImport"> | number | null
+  userNotes?: Prisma.JsonNullableFilter<"StatementImport">
   uploadedAt?: Prisma.DateTimeFilter<"StatementImport"> | Date | string
   account?: Prisma.XOR<Prisma.FinancialAccountScalarRelationFilter, Prisma.FinancialAccountWhereInput>
   taxYear?: Prisma.XOR<Prisma.TaxYearScalarRelationFilter, Prisma.TaxYearWhereInput>
+  session?: Prisma.XOR<Prisma.ImportSessionNullableScalarRelationFilter, Prisma.ImportSessionWhereInput> | null
   transactions?: Prisma.TransactionListRelationFilter
 }
 
@@ -353,6 +418,7 @@ export type StatementImportOrderByWithRelationInput = {
   id?: Prisma.SortOrder
   accountId?: Prisma.SortOrder
   taxYearId?: Prisma.SortOrder
+  sessionId?: Prisma.SortOrderInput | Prisma.SortOrder
   filePath?: Prisma.SortOrder
   originalFilename?: Prisma.SortOrder
   fileType?: Prisma.SortOrder
@@ -368,9 +434,16 @@ export type StatementImportOrderByWithRelationInput = {
   reconciliationOk?: Prisma.SortOrderInput | Prisma.SortOrder
   reconciliationDelta?: Prisma.SortOrderInput | Prisma.SortOrder
   parseError?: Prisma.SortOrderInput | Prisma.SortOrder
+  extractionPath?: Prisma.SortOrderInput | Prisma.SortOrder
+  extractionConfidence?: Prisma.SortOrderInput | Prisma.SortOrder
+  aiModel?: Prisma.SortOrderInput | Prisma.SortOrder
+  aiTokensIn?: Prisma.SortOrderInput | Prisma.SortOrder
+  aiTokensOut?: Prisma.SortOrderInput | Prisma.SortOrder
+  userNotes?: Prisma.SortOrderInput | Prisma.SortOrder
   uploadedAt?: Prisma.SortOrder
   account?: Prisma.FinancialAccountOrderByWithRelationInput
   taxYear?: Prisma.TaxYearOrderByWithRelationInput
+  session?: Prisma.ImportSessionOrderByWithRelationInput
   transactions?: Prisma.TransactionOrderByRelationAggregateInput
 }
 
@@ -382,6 +455,7 @@ export type StatementImportWhereUniqueInput = Prisma.AtLeast<{
   NOT?: Prisma.StatementImportWhereInput | Prisma.StatementImportWhereInput[]
   accountId?: Prisma.StringFilter<"StatementImport"> | string
   taxYearId?: Prisma.StringFilter<"StatementImport"> | string
+  sessionId?: Prisma.StringNullableFilter<"StatementImport"> | string | null
   filePath?: Prisma.StringFilter<"StatementImport"> | string
   originalFilename?: Prisma.StringFilter<"StatementImport"> | string
   fileType?: Prisma.StringFilter<"StatementImport"> | string
@@ -397,9 +471,16 @@ export type StatementImportWhereUniqueInput = Prisma.AtLeast<{
   reconciliationOk?: Prisma.BoolNullableFilter<"StatementImport"> | boolean | null
   reconciliationDelta?: Prisma.DecimalNullableFilter<"StatementImport"> | runtime.Decimal | runtime.DecimalJsLike | number | string | null
   parseError?: Prisma.StringNullableFilter<"StatementImport"> | string | null
+  extractionPath?: Prisma.EnumExtractionPathNullableFilter<"StatementImport"> | $Enums.ExtractionPath | null
+  extractionConfidence?: Prisma.FloatNullableFilter<"StatementImport"> | number | null
+  aiModel?: Prisma.StringNullableFilter<"StatementImport"> | string | null
+  aiTokensIn?: Prisma.IntNullableFilter<"StatementImport"> | number | null
+  aiTokensOut?: Prisma.IntNullableFilter<"StatementImport"> | number | null
+  userNotes?: Prisma.JsonNullableFilter<"StatementImport">
   uploadedAt?: Prisma.DateTimeFilter<"StatementImport"> | Date | string
   account?: Prisma.XOR<Prisma.FinancialAccountScalarRelationFilter, Prisma.FinancialAccountWhereInput>
   taxYear?: Prisma.XOR<Prisma.TaxYearScalarRelationFilter, Prisma.TaxYearWhereInput>
+  session?: Prisma.XOR<Prisma.ImportSessionNullableScalarRelationFilter, Prisma.ImportSessionWhereInput> | null
   transactions?: Prisma.TransactionListRelationFilter
 }, "id" | "accountId_sourceHash">
 
@@ -407,6 +488,7 @@ export type StatementImportOrderByWithAggregationInput = {
   id?: Prisma.SortOrder
   accountId?: Prisma.SortOrder
   taxYearId?: Prisma.SortOrder
+  sessionId?: Prisma.SortOrderInput | Prisma.SortOrder
   filePath?: Prisma.SortOrder
   originalFilename?: Prisma.SortOrder
   fileType?: Prisma.SortOrder
@@ -422,6 +504,12 @@ export type StatementImportOrderByWithAggregationInput = {
   reconciliationOk?: Prisma.SortOrderInput | Prisma.SortOrder
   reconciliationDelta?: Prisma.SortOrderInput | Prisma.SortOrder
   parseError?: Prisma.SortOrderInput | Prisma.SortOrder
+  extractionPath?: Prisma.SortOrderInput | Prisma.SortOrder
+  extractionConfidence?: Prisma.SortOrderInput | Prisma.SortOrder
+  aiModel?: Prisma.SortOrderInput | Prisma.SortOrder
+  aiTokensIn?: Prisma.SortOrderInput | Prisma.SortOrder
+  aiTokensOut?: Prisma.SortOrderInput | Prisma.SortOrder
+  userNotes?: Prisma.SortOrderInput | Prisma.SortOrder
   uploadedAt?: Prisma.SortOrder
   _count?: Prisma.StatementImportCountOrderByAggregateInput
   _avg?: Prisma.StatementImportAvgOrderByAggregateInput
@@ -437,6 +525,7 @@ export type StatementImportScalarWhereWithAggregatesInput = {
   id?: Prisma.StringWithAggregatesFilter<"StatementImport"> | string
   accountId?: Prisma.StringWithAggregatesFilter<"StatementImport"> | string
   taxYearId?: Prisma.StringWithAggregatesFilter<"StatementImport"> | string
+  sessionId?: Prisma.StringNullableWithAggregatesFilter<"StatementImport"> | string | null
   filePath?: Prisma.StringWithAggregatesFilter<"StatementImport"> | string
   originalFilename?: Prisma.StringWithAggregatesFilter<"StatementImport"> | string
   fileType?: Prisma.StringWithAggregatesFilter<"StatementImport"> | string
@@ -452,6 +541,12 @@ export type StatementImportScalarWhereWithAggregatesInput = {
   reconciliationOk?: Prisma.BoolNullableWithAggregatesFilter<"StatementImport"> | boolean | null
   reconciliationDelta?: Prisma.DecimalNullableWithAggregatesFilter<"StatementImport"> | runtime.Decimal | runtime.DecimalJsLike | number | string | null
   parseError?: Prisma.StringNullableWithAggregatesFilter<"StatementImport"> | string | null
+  extractionPath?: Prisma.EnumExtractionPathNullableWithAggregatesFilter<"StatementImport"> | $Enums.ExtractionPath | null
+  extractionConfidence?: Prisma.FloatNullableWithAggregatesFilter<"StatementImport"> | number | null
+  aiModel?: Prisma.StringNullableWithAggregatesFilter<"StatementImport"> | string | null
+  aiTokensIn?: Prisma.IntNullableWithAggregatesFilter<"StatementImport"> | number | null
+  aiTokensOut?: Prisma.IntNullableWithAggregatesFilter<"StatementImport"> | number | null
+  userNotes?: Prisma.JsonNullableWithAggregatesFilter<"StatementImport">
   uploadedAt?: Prisma.DateTimeWithAggregatesFilter<"StatementImport"> | Date | string
 }
 
@@ -472,9 +567,16 @@ export type StatementImportCreateInput = {
   reconciliationOk?: boolean | null
   reconciliationDelta?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
   parseError?: string | null
+  extractionPath?: $Enums.ExtractionPath | null
+  extractionConfidence?: number | null
+  aiModel?: string | null
+  aiTokensIn?: number | null
+  aiTokensOut?: number | null
+  userNotes?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   uploadedAt?: Date | string
   account: Prisma.FinancialAccountCreateNestedOneWithoutStatementImportsInput
   taxYear: Prisma.TaxYearCreateNestedOneWithoutStatementImportsInput
+  session?: Prisma.ImportSessionCreateNestedOneWithoutImportsInput
   transactions?: Prisma.TransactionCreateNestedManyWithoutStatementImportInput
 }
 
@@ -482,6 +584,7 @@ export type StatementImportUncheckedCreateInput = {
   id?: string
   accountId: string
   taxYearId: string
+  sessionId?: string | null
   filePath: string
   originalFilename: string
   fileType: string
@@ -497,6 +600,12 @@ export type StatementImportUncheckedCreateInput = {
   reconciliationOk?: boolean | null
   reconciliationDelta?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
   parseError?: string | null
+  extractionPath?: $Enums.ExtractionPath | null
+  extractionConfidence?: number | null
+  aiModel?: string | null
+  aiTokensIn?: number | null
+  aiTokensOut?: number | null
+  userNotes?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   uploadedAt?: Date | string
   transactions?: Prisma.TransactionUncheckedCreateNestedManyWithoutStatementImportInput
 }
@@ -518,9 +627,16 @@ export type StatementImportUpdateInput = {
   reconciliationOk?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   reconciliationDelta?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
   parseError?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  extractionPath?: Prisma.NullableEnumExtractionPathFieldUpdateOperationsInput | $Enums.ExtractionPath | null
+  extractionConfidence?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  aiModel?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  aiTokensIn?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  aiTokensOut?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  userNotes?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   uploadedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   account?: Prisma.FinancialAccountUpdateOneRequiredWithoutStatementImportsNestedInput
   taxYear?: Prisma.TaxYearUpdateOneRequiredWithoutStatementImportsNestedInput
+  session?: Prisma.ImportSessionUpdateOneWithoutImportsNestedInput
   transactions?: Prisma.TransactionUpdateManyWithoutStatementImportNestedInput
 }
 
@@ -528,6 +644,7 @@ export type StatementImportUncheckedUpdateInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   accountId?: Prisma.StringFieldUpdateOperationsInput | string
   taxYearId?: Prisma.StringFieldUpdateOperationsInput | string
+  sessionId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   filePath?: Prisma.StringFieldUpdateOperationsInput | string
   originalFilename?: Prisma.StringFieldUpdateOperationsInput | string
   fileType?: Prisma.StringFieldUpdateOperationsInput | string
@@ -543,6 +660,12 @@ export type StatementImportUncheckedUpdateInput = {
   reconciliationOk?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   reconciliationDelta?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
   parseError?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  extractionPath?: Prisma.NullableEnumExtractionPathFieldUpdateOperationsInput | $Enums.ExtractionPath | null
+  extractionConfidence?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  aiModel?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  aiTokensIn?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  aiTokensOut?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  userNotes?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   uploadedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   transactions?: Prisma.TransactionUncheckedUpdateManyWithoutStatementImportNestedInput
 }
@@ -551,6 +674,7 @@ export type StatementImportCreateManyInput = {
   id?: string
   accountId: string
   taxYearId: string
+  sessionId?: string | null
   filePath: string
   originalFilename: string
   fileType: string
@@ -566,6 +690,12 @@ export type StatementImportCreateManyInput = {
   reconciliationOk?: boolean | null
   reconciliationDelta?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
   parseError?: string | null
+  extractionPath?: $Enums.ExtractionPath | null
+  extractionConfidence?: number | null
+  aiModel?: string | null
+  aiTokensIn?: number | null
+  aiTokensOut?: number | null
+  userNotes?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   uploadedAt?: Date | string
 }
 
@@ -586,6 +716,12 @@ export type StatementImportUpdateManyMutationInput = {
   reconciliationOk?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   reconciliationDelta?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
   parseError?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  extractionPath?: Prisma.NullableEnumExtractionPathFieldUpdateOperationsInput | $Enums.ExtractionPath | null
+  extractionConfidence?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  aiModel?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  aiTokensIn?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  aiTokensOut?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  userNotes?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   uploadedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
 
@@ -593,6 +729,7 @@ export type StatementImportUncheckedUpdateManyInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   accountId?: Prisma.StringFieldUpdateOperationsInput | string
   taxYearId?: Prisma.StringFieldUpdateOperationsInput | string
+  sessionId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   filePath?: Prisma.StringFieldUpdateOperationsInput | string
   originalFilename?: Prisma.StringFieldUpdateOperationsInput | string
   fileType?: Prisma.StringFieldUpdateOperationsInput | string
@@ -608,6 +745,12 @@ export type StatementImportUncheckedUpdateManyInput = {
   reconciliationOk?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   reconciliationDelta?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
   parseError?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  extractionPath?: Prisma.NullableEnumExtractionPathFieldUpdateOperationsInput | $Enums.ExtractionPath | null
+  extractionConfidence?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  aiModel?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  aiTokensIn?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  aiTokensOut?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  userNotes?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   uploadedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
 
@@ -630,6 +773,7 @@ export type StatementImportCountOrderByAggregateInput = {
   id?: Prisma.SortOrder
   accountId?: Prisma.SortOrder
   taxYearId?: Prisma.SortOrder
+  sessionId?: Prisma.SortOrder
   filePath?: Prisma.SortOrder
   originalFilename?: Prisma.SortOrder
   fileType?: Prisma.SortOrder
@@ -645,6 +789,12 @@ export type StatementImportCountOrderByAggregateInput = {
   reconciliationOk?: Prisma.SortOrder
   reconciliationDelta?: Prisma.SortOrder
   parseError?: Prisma.SortOrder
+  extractionPath?: Prisma.SortOrder
+  extractionConfidence?: Prisma.SortOrder
+  aiModel?: Prisma.SortOrder
+  aiTokensIn?: Prisma.SortOrder
+  aiTokensOut?: Prisma.SortOrder
+  userNotes?: Prisma.SortOrder
   uploadedAt?: Prisma.SortOrder
 }
 
@@ -654,12 +804,16 @@ export type StatementImportAvgOrderByAggregateInput = {
   totalOutflows?: Prisma.SortOrder
   transactionCount?: Prisma.SortOrder
   reconciliationDelta?: Prisma.SortOrder
+  extractionConfidence?: Prisma.SortOrder
+  aiTokensIn?: Prisma.SortOrder
+  aiTokensOut?: Prisma.SortOrder
 }
 
 export type StatementImportMaxOrderByAggregateInput = {
   id?: Prisma.SortOrder
   accountId?: Prisma.SortOrder
   taxYearId?: Prisma.SortOrder
+  sessionId?: Prisma.SortOrder
   filePath?: Prisma.SortOrder
   originalFilename?: Prisma.SortOrder
   fileType?: Prisma.SortOrder
@@ -675,6 +829,11 @@ export type StatementImportMaxOrderByAggregateInput = {
   reconciliationOk?: Prisma.SortOrder
   reconciliationDelta?: Prisma.SortOrder
   parseError?: Prisma.SortOrder
+  extractionPath?: Prisma.SortOrder
+  extractionConfidence?: Prisma.SortOrder
+  aiModel?: Prisma.SortOrder
+  aiTokensIn?: Prisma.SortOrder
+  aiTokensOut?: Prisma.SortOrder
   uploadedAt?: Prisma.SortOrder
 }
 
@@ -682,6 +841,7 @@ export type StatementImportMinOrderByAggregateInput = {
   id?: Prisma.SortOrder
   accountId?: Prisma.SortOrder
   taxYearId?: Prisma.SortOrder
+  sessionId?: Prisma.SortOrder
   filePath?: Prisma.SortOrder
   originalFilename?: Prisma.SortOrder
   fileType?: Prisma.SortOrder
@@ -697,6 +857,11 @@ export type StatementImportMinOrderByAggregateInput = {
   reconciliationOk?: Prisma.SortOrder
   reconciliationDelta?: Prisma.SortOrder
   parseError?: Prisma.SortOrder
+  extractionPath?: Prisma.SortOrder
+  extractionConfidence?: Prisma.SortOrder
+  aiModel?: Prisma.SortOrder
+  aiTokensIn?: Prisma.SortOrder
+  aiTokensOut?: Prisma.SortOrder
   uploadedAt?: Prisma.SortOrder
 }
 
@@ -706,6 +871,9 @@ export type StatementImportSumOrderByAggregateInput = {
   totalOutflows?: Prisma.SortOrder
   transactionCount?: Prisma.SortOrder
   reconciliationDelta?: Prisma.SortOrder
+  extractionConfidence?: Prisma.SortOrder
+  aiTokensIn?: Prisma.SortOrder
+  aiTokensOut?: Prisma.SortOrder
 }
 
 export type StatementImportNullableScalarRelationFilter = {
@@ -813,6 +981,52 @@ export type NullableBoolFieldUpdateOperationsInput = {
   set?: boolean | null
 }
 
+export type NullableEnumExtractionPathFieldUpdateOperationsInput = {
+  set?: $Enums.ExtractionPath | null
+}
+
+export type StatementImportCreateNestedManyWithoutSessionInput = {
+  create?: Prisma.XOR<Prisma.StatementImportCreateWithoutSessionInput, Prisma.StatementImportUncheckedCreateWithoutSessionInput> | Prisma.StatementImportCreateWithoutSessionInput[] | Prisma.StatementImportUncheckedCreateWithoutSessionInput[]
+  connectOrCreate?: Prisma.StatementImportCreateOrConnectWithoutSessionInput | Prisma.StatementImportCreateOrConnectWithoutSessionInput[]
+  createMany?: Prisma.StatementImportCreateManySessionInputEnvelope
+  connect?: Prisma.StatementImportWhereUniqueInput | Prisma.StatementImportWhereUniqueInput[]
+}
+
+export type StatementImportUncheckedCreateNestedManyWithoutSessionInput = {
+  create?: Prisma.XOR<Prisma.StatementImportCreateWithoutSessionInput, Prisma.StatementImportUncheckedCreateWithoutSessionInput> | Prisma.StatementImportCreateWithoutSessionInput[] | Prisma.StatementImportUncheckedCreateWithoutSessionInput[]
+  connectOrCreate?: Prisma.StatementImportCreateOrConnectWithoutSessionInput | Prisma.StatementImportCreateOrConnectWithoutSessionInput[]
+  createMany?: Prisma.StatementImportCreateManySessionInputEnvelope
+  connect?: Prisma.StatementImportWhereUniqueInput | Prisma.StatementImportWhereUniqueInput[]
+}
+
+export type StatementImportUpdateManyWithoutSessionNestedInput = {
+  create?: Prisma.XOR<Prisma.StatementImportCreateWithoutSessionInput, Prisma.StatementImportUncheckedCreateWithoutSessionInput> | Prisma.StatementImportCreateWithoutSessionInput[] | Prisma.StatementImportUncheckedCreateWithoutSessionInput[]
+  connectOrCreate?: Prisma.StatementImportCreateOrConnectWithoutSessionInput | Prisma.StatementImportCreateOrConnectWithoutSessionInput[]
+  upsert?: Prisma.StatementImportUpsertWithWhereUniqueWithoutSessionInput | Prisma.StatementImportUpsertWithWhereUniqueWithoutSessionInput[]
+  createMany?: Prisma.StatementImportCreateManySessionInputEnvelope
+  set?: Prisma.StatementImportWhereUniqueInput | Prisma.StatementImportWhereUniqueInput[]
+  disconnect?: Prisma.StatementImportWhereUniqueInput | Prisma.StatementImportWhereUniqueInput[]
+  delete?: Prisma.StatementImportWhereUniqueInput | Prisma.StatementImportWhereUniqueInput[]
+  connect?: Prisma.StatementImportWhereUniqueInput | Prisma.StatementImportWhereUniqueInput[]
+  update?: Prisma.StatementImportUpdateWithWhereUniqueWithoutSessionInput | Prisma.StatementImportUpdateWithWhereUniqueWithoutSessionInput[]
+  updateMany?: Prisma.StatementImportUpdateManyWithWhereWithoutSessionInput | Prisma.StatementImportUpdateManyWithWhereWithoutSessionInput[]
+  deleteMany?: Prisma.StatementImportScalarWhereInput | Prisma.StatementImportScalarWhereInput[]
+}
+
+export type StatementImportUncheckedUpdateManyWithoutSessionNestedInput = {
+  create?: Prisma.XOR<Prisma.StatementImportCreateWithoutSessionInput, Prisma.StatementImportUncheckedCreateWithoutSessionInput> | Prisma.StatementImportCreateWithoutSessionInput[] | Prisma.StatementImportUncheckedCreateWithoutSessionInput[]
+  connectOrCreate?: Prisma.StatementImportCreateOrConnectWithoutSessionInput | Prisma.StatementImportCreateOrConnectWithoutSessionInput[]
+  upsert?: Prisma.StatementImportUpsertWithWhereUniqueWithoutSessionInput | Prisma.StatementImportUpsertWithWhereUniqueWithoutSessionInput[]
+  createMany?: Prisma.StatementImportCreateManySessionInputEnvelope
+  set?: Prisma.StatementImportWhereUniqueInput | Prisma.StatementImportWhereUniqueInput[]
+  disconnect?: Prisma.StatementImportWhereUniqueInput | Prisma.StatementImportWhereUniqueInput[]
+  delete?: Prisma.StatementImportWhereUniqueInput | Prisma.StatementImportWhereUniqueInput[]
+  connect?: Prisma.StatementImportWhereUniqueInput | Prisma.StatementImportWhereUniqueInput[]
+  update?: Prisma.StatementImportUpdateWithWhereUniqueWithoutSessionInput | Prisma.StatementImportUpdateWithWhereUniqueWithoutSessionInput[]
+  updateMany?: Prisma.StatementImportUpdateManyWithWhereWithoutSessionInput | Prisma.StatementImportUpdateManyWithWhereWithoutSessionInput[]
+  deleteMany?: Prisma.StatementImportScalarWhereInput | Prisma.StatementImportScalarWhereInput[]
+}
+
 export type StatementImportCreateNestedOneWithoutTransactionsInput = {
   create?: Prisma.XOR<Prisma.StatementImportCreateWithoutTransactionsInput, Prisma.StatementImportUncheckedCreateWithoutTransactionsInput>
   connectOrCreate?: Prisma.StatementImportCreateOrConnectWithoutTransactionsInput
@@ -846,14 +1060,22 @@ export type StatementImportCreateWithoutTaxYearInput = {
   reconciliationOk?: boolean | null
   reconciliationDelta?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
   parseError?: string | null
+  extractionPath?: $Enums.ExtractionPath | null
+  extractionConfidence?: number | null
+  aiModel?: string | null
+  aiTokensIn?: number | null
+  aiTokensOut?: number | null
+  userNotes?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   uploadedAt?: Date | string
   account: Prisma.FinancialAccountCreateNestedOneWithoutStatementImportsInput
+  session?: Prisma.ImportSessionCreateNestedOneWithoutImportsInput
   transactions?: Prisma.TransactionCreateNestedManyWithoutStatementImportInput
 }
 
 export type StatementImportUncheckedCreateWithoutTaxYearInput = {
   id?: string
   accountId: string
+  sessionId?: string | null
   filePath: string
   originalFilename: string
   fileType: string
@@ -869,6 +1091,12 @@ export type StatementImportUncheckedCreateWithoutTaxYearInput = {
   reconciliationOk?: boolean | null
   reconciliationDelta?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
   parseError?: string | null
+  extractionPath?: $Enums.ExtractionPath | null
+  extractionConfidence?: number | null
+  aiModel?: string | null
+  aiTokensIn?: number | null
+  aiTokensOut?: number | null
+  userNotes?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   uploadedAt?: Date | string
   transactions?: Prisma.TransactionUncheckedCreateNestedManyWithoutStatementImportInput
 }
@@ -906,6 +1134,7 @@ export type StatementImportScalarWhereInput = {
   id?: Prisma.StringFilter<"StatementImport"> | string
   accountId?: Prisma.StringFilter<"StatementImport"> | string
   taxYearId?: Prisma.StringFilter<"StatementImport"> | string
+  sessionId?: Prisma.StringNullableFilter<"StatementImport"> | string | null
   filePath?: Prisma.StringFilter<"StatementImport"> | string
   originalFilename?: Prisma.StringFilter<"StatementImport"> | string
   fileType?: Prisma.StringFilter<"StatementImport"> | string
@@ -921,6 +1150,12 @@ export type StatementImportScalarWhereInput = {
   reconciliationOk?: Prisma.BoolNullableFilter<"StatementImport"> | boolean | null
   reconciliationDelta?: Prisma.DecimalNullableFilter<"StatementImport"> | runtime.Decimal | runtime.DecimalJsLike | number | string | null
   parseError?: Prisma.StringNullableFilter<"StatementImport"> | string | null
+  extractionPath?: Prisma.EnumExtractionPathNullableFilter<"StatementImport"> | $Enums.ExtractionPath | null
+  extractionConfidence?: Prisma.FloatNullableFilter<"StatementImport"> | number | null
+  aiModel?: Prisma.StringNullableFilter<"StatementImport"> | string | null
+  aiTokensIn?: Prisma.IntNullableFilter<"StatementImport"> | number | null
+  aiTokensOut?: Prisma.IntNullableFilter<"StatementImport"> | number | null
+  userNotes?: Prisma.JsonNullableFilter<"StatementImport">
   uploadedAt?: Prisma.DateTimeFilter<"StatementImport"> | Date | string
 }
 
@@ -941,14 +1176,22 @@ export type StatementImportCreateWithoutAccountInput = {
   reconciliationOk?: boolean | null
   reconciliationDelta?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
   parseError?: string | null
+  extractionPath?: $Enums.ExtractionPath | null
+  extractionConfidence?: number | null
+  aiModel?: string | null
+  aiTokensIn?: number | null
+  aiTokensOut?: number | null
+  userNotes?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   uploadedAt?: Date | string
   taxYear: Prisma.TaxYearCreateNestedOneWithoutStatementImportsInput
+  session?: Prisma.ImportSessionCreateNestedOneWithoutImportsInput
   transactions?: Prisma.TransactionCreateNestedManyWithoutStatementImportInput
 }
 
 export type StatementImportUncheckedCreateWithoutAccountInput = {
   id?: string
   taxYearId: string
+  sessionId?: string | null
   filePath: string
   originalFilename: string
   fileType: string
@@ -964,6 +1207,12 @@ export type StatementImportUncheckedCreateWithoutAccountInput = {
   reconciliationOk?: boolean | null
   reconciliationDelta?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
   parseError?: string | null
+  extractionPath?: $Enums.ExtractionPath | null
+  extractionConfidence?: number | null
+  aiModel?: string | null
+  aiTokensIn?: number | null
+  aiTokensOut?: number | null
+  userNotes?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   uploadedAt?: Date | string
   transactions?: Prisma.TransactionUncheckedCreateNestedManyWithoutStatementImportInput
 }
@@ -994,7 +1243,7 @@ export type StatementImportUpdateManyWithWhereWithoutAccountInput = {
   data: Prisma.XOR<Prisma.StatementImportUpdateManyMutationInput, Prisma.StatementImportUncheckedUpdateManyWithoutAccountInput>
 }
 
-export type StatementImportCreateWithoutTransactionsInput = {
+export type StatementImportCreateWithoutSessionInput = {
   id?: string
   filePath: string
   originalFilename: string
@@ -1011,12 +1260,19 @@ export type StatementImportCreateWithoutTransactionsInput = {
   reconciliationOk?: boolean | null
   reconciliationDelta?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
   parseError?: string | null
+  extractionPath?: $Enums.ExtractionPath | null
+  extractionConfidence?: number | null
+  aiModel?: string | null
+  aiTokensIn?: number | null
+  aiTokensOut?: number | null
+  userNotes?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   uploadedAt?: Date | string
   account: Prisma.FinancialAccountCreateNestedOneWithoutStatementImportsInput
   taxYear: Prisma.TaxYearCreateNestedOneWithoutStatementImportsInput
+  transactions?: Prisma.TransactionCreateNestedManyWithoutStatementImportInput
 }
 
-export type StatementImportUncheckedCreateWithoutTransactionsInput = {
+export type StatementImportUncheckedCreateWithoutSessionInput = {
   id?: string
   accountId: string
   taxYearId: string
@@ -1035,6 +1291,97 @@ export type StatementImportUncheckedCreateWithoutTransactionsInput = {
   reconciliationOk?: boolean | null
   reconciliationDelta?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
   parseError?: string | null
+  extractionPath?: $Enums.ExtractionPath | null
+  extractionConfidence?: number | null
+  aiModel?: string | null
+  aiTokensIn?: number | null
+  aiTokensOut?: number | null
+  userNotes?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  uploadedAt?: Date | string
+  transactions?: Prisma.TransactionUncheckedCreateNestedManyWithoutStatementImportInput
+}
+
+export type StatementImportCreateOrConnectWithoutSessionInput = {
+  where: Prisma.StatementImportWhereUniqueInput
+  create: Prisma.XOR<Prisma.StatementImportCreateWithoutSessionInput, Prisma.StatementImportUncheckedCreateWithoutSessionInput>
+}
+
+export type StatementImportCreateManySessionInputEnvelope = {
+  data: Prisma.StatementImportCreateManySessionInput | Prisma.StatementImportCreateManySessionInput[]
+  skipDuplicates?: boolean
+}
+
+export type StatementImportUpsertWithWhereUniqueWithoutSessionInput = {
+  where: Prisma.StatementImportWhereUniqueInput
+  update: Prisma.XOR<Prisma.StatementImportUpdateWithoutSessionInput, Prisma.StatementImportUncheckedUpdateWithoutSessionInput>
+  create: Prisma.XOR<Prisma.StatementImportCreateWithoutSessionInput, Prisma.StatementImportUncheckedCreateWithoutSessionInput>
+}
+
+export type StatementImportUpdateWithWhereUniqueWithoutSessionInput = {
+  where: Prisma.StatementImportWhereUniqueInput
+  data: Prisma.XOR<Prisma.StatementImportUpdateWithoutSessionInput, Prisma.StatementImportUncheckedUpdateWithoutSessionInput>
+}
+
+export type StatementImportUpdateManyWithWhereWithoutSessionInput = {
+  where: Prisma.StatementImportScalarWhereInput
+  data: Prisma.XOR<Prisma.StatementImportUpdateManyMutationInput, Prisma.StatementImportUncheckedUpdateManyWithoutSessionInput>
+}
+
+export type StatementImportCreateWithoutTransactionsInput = {
+  id?: string
+  filePath: string
+  originalFilename: string
+  fileType: string
+  institution?: string | null
+  periodStart?: Date | string | null
+  periodEnd?: Date | string | null
+  sourceHash: string
+  parseStatus?: $Enums.ParseStatus
+  parseConfidence?: number | null
+  totalInflows?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  totalOutflows?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  transactionCount?: number
+  reconciliationOk?: boolean | null
+  reconciliationDelta?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  parseError?: string | null
+  extractionPath?: $Enums.ExtractionPath | null
+  extractionConfidence?: number | null
+  aiModel?: string | null
+  aiTokensIn?: number | null
+  aiTokensOut?: number | null
+  userNotes?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  uploadedAt?: Date | string
+  account: Prisma.FinancialAccountCreateNestedOneWithoutStatementImportsInput
+  taxYear: Prisma.TaxYearCreateNestedOneWithoutStatementImportsInput
+  session?: Prisma.ImportSessionCreateNestedOneWithoutImportsInput
+}
+
+export type StatementImportUncheckedCreateWithoutTransactionsInput = {
+  id?: string
+  accountId: string
+  taxYearId: string
+  sessionId?: string | null
+  filePath: string
+  originalFilename: string
+  fileType: string
+  institution?: string | null
+  periodStart?: Date | string | null
+  periodEnd?: Date | string | null
+  sourceHash: string
+  parseStatus?: $Enums.ParseStatus
+  parseConfidence?: number | null
+  totalInflows?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  totalOutflows?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  transactionCount?: number
+  reconciliationOk?: boolean | null
+  reconciliationDelta?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  parseError?: string | null
+  extractionPath?: $Enums.ExtractionPath | null
+  extractionConfidence?: number | null
+  aiModel?: string | null
+  aiTokensIn?: number | null
+  aiTokensOut?: number | null
+  userNotes?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   uploadedAt?: Date | string
 }
 
@@ -1071,15 +1418,23 @@ export type StatementImportUpdateWithoutTransactionsInput = {
   reconciliationOk?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   reconciliationDelta?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
   parseError?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  extractionPath?: Prisma.NullableEnumExtractionPathFieldUpdateOperationsInput | $Enums.ExtractionPath | null
+  extractionConfidence?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  aiModel?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  aiTokensIn?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  aiTokensOut?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  userNotes?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   uploadedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   account?: Prisma.FinancialAccountUpdateOneRequiredWithoutStatementImportsNestedInput
   taxYear?: Prisma.TaxYearUpdateOneRequiredWithoutStatementImportsNestedInput
+  session?: Prisma.ImportSessionUpdateOneWithoutImportsNestedInput
 }
 
 export type StatementImportUncheckedUpdateWithoutTransactionsInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   accountId?: Prisma.StringFieldUpdateOperationsInput | string
   taxYearId?: Prisma.StringFieldUpdateOperationsInput | string
+  sessionId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   filePath?: Prisma.StringFieldUpdateOperationsInput | string
   originalFilename?: Prisma.StringFieldUpdateOperationsInput | string
   fileType?: Prisma.StringFieldUpdateOperationsInput | string
@@ -1095,12 +1450,19 @@ export type StatementImportUncheckedUpdateWithoutTransactionsInput = {
   reconciliationOk?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   reconciliationDelta?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
   parseError?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  extractionPath?: Prisma.NullableEnumExtractionPathFieldUpdateOperationsInput | $Enums.ExtractionPath | null
+  extractionConfidence?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  aiModel?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  aiTokensIn?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  aiTokensOut?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  userNotes?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   uploadedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
 
 export type StatementImportCreateManyTaxYearInput = {
   id?: string
   accountId: string
+  sessionId?: string | null
   filePath: string
   originalFilename: string
   fileType: string
@@ -1116,6 +1478,12 @@ export type StatementImportCreateManyTaxYearInput = {
   reconciliationOk?: boolean | null
   reconciliationDelta?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
   parseError?: string | null
+  extractionPath?: $Enums.ExtractionPath | null
+  extractionConfidence?: number | null
+  aiModel?: string | null
+  aiTokensIn?: number | null
+  aiTokensOut?: number | null
+  userNotes?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   uploadedAt?: Date | string
 }
 
@@ -1136,14 +1504,22 @@ export type StatementImportUpdateWithoutTaxYearInput = {
   reconciliationOk?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   reconciliationDelta?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
   parseError?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  extractionPath?: Prisma.NullableEnumExtractionPathFieldUpdateOperationsInput | $Enums.ExtractionPath | null
+  extractionConfidence?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  aiModel?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  aiTokensIn?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  aiTokensOut?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  userNotes?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   uploadedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   account?: Prisma.FinancialAccountUpdateOneRequiredWithoutStatementImportsNestedInput
+  session?: Prisma.ImportSessionUpdateOneWithoutImportsNestedInput
   transactions?: Prisma.TransactionUpdateManyWithoutStatementImportNestedInput
 }
 
 export type StatementImportUncheckedUpdateWithoutTaxYearInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   accountId?: Prisma.StringFieldUpdateOperationsInput | string
+  sessionId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   filePath?: Prisma.StringFieldUpdateOperationsInput | string
   originalFilename?: Prisma.StringFieldUpdateOperationsInput | string
   fileType?: Prisma.StringFieldUpdateOperationsInput | string
@@ -1159,6 +1535,12 @@ export type StatementImportUncheckedUpdateWithoutTaxYearInput = {
   reconciliationOk?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   reconciliationDelta?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
   parseError?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  extractionPath?: Prisma.NullableEnumExtractionPathFieldUpdateOperationsInput | $Enums.ExtractionPath | null
+  extractionConfidence?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  aiModel?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  aiTokensIn?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  aiTokensOut?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  userNotes?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   uploadedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   transactions?: Prisma.TransactionUncheckedUpdateManyWithoutStatementImportNestedInput
 }
@@ -1166,6 +1548,7 @@ export type StatementImportUncheckedUpdateWithoutTaxYearInput = {
 export type StatementImportUncheckedUpdateManyWithoutTaxYearInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   accountId?: Prisma.StringFieldUpdateOperationsInput | string
+  sessionId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   filePath?: Prisma.StringFieldUpdateOperationsInput | string
   originalFilename?: Prisma.StringFieldUpdateOperationsInput | string
   fileType?: Prisma.StringFieldUpdateOperationsInput | string
@@ -1181,12 +1564,19 @@ export type StatementImportUncheckedUpdateManyWithoutTaxYearInput = {
   reconciliationOk?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   reconciliationDelta?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
   parseError?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  extractionPath?: Prisma.NullableEnumExtractionPathFieldUpdateOperationsInput | $Enums.ExtractionPath | null
+  extractionConfidence?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  aiModel?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  aiTokensIn?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  aiTokensOut?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  userNotes?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   uploadedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
 
 export type StatementImportCreateManyAccountInput = {
   id?: string
   taxYearId: string
+  sessionId?: string | null
   filePath: string
   originalFilename: string
   fileType: string
@@ -1202,6 +1592,12 @@ export type StatementImportCreateManyAccountInput = {
   reconciliationOk?: boolean | null
   reconciliationDelta?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
   parseError?: string | null
+  extractionPath?: $Enums.ExtractionPath | null
+  extractionConfidence?: number | null
+  aiModel?: string | null
+  aiTokensIn?: number | null
+  aiTokensOut?: number | null
+  userNotes?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   uploadedAt?: Date | string
 }
 
@@ -1222,14 +1618,22 @@ export type StatementImportUpdateWithoutAccountInput = {
   reconciliationOk?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   reconciliationDelta?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
   parseError?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  extractionPath?: Prisma.NullableEnumExtractionPathFieldUpdateOperationsInput | $Enums.ExtractionPath | null
+  extractionConfidence?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  aiModel?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  aiTokensIn?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  aiTokensOut?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  userNotes?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   uploadedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   taxYear?: Prisma.TaxYearUpdateOneRequiredWithoutStatementImportsNestedInput
+  session?: Prisma.ImportSessionUpdateOneWithoutImportsNestedInput
   transactions?: Prisma.TransactionUpdateManyWithoutStatementImportNestedInput
 }
 
 export type StatementImportUncheckedUpdateWithoutAccountInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   taxYearId?: Prisma.StringFieldUpdateOperationsInput | string
+  sessionId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   filePath?: Prisma.StringFieldUpdateOperationsInput | string
   originalFilename?: Prisma.StringFieldUpdateOperationsInput | string
   fileType?: Prisma.StringFieldUpdateOperationsInput | string
@@ -1245,6 +1649,12 @@ export type StatementImportUncheckedUpdateWithoutAccountInput = {
   reconciliationOk?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   reconciliationDelta?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
   parseError?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  extractionPath?: Prisma.NullableEnumExtractionPathFieldUpdateOperationsInput | $Enums.ExtractionPath | null
+  extractionConfidence?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  aiModel?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  aiTokensIn?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  aiTokensOut?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  userNotes?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   uploadedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   transactions?: Prisma.TransactionUncheckedUpdateManyWithoutStatementImportNestedInput
 }
@@ -1252,6 +1662,7 @@ export type StatementImportUncheckedUpdateWithoutAccountInput = {
 export type StatementImportUncheckedUpdateManyWithoutAccountInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   taxYearId?: Prisma.StringFieldUpdateOperationsInput | string
+  sessionId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   filePath?: Prisma.StringFieldUpdateOperationsInput | string
   originalFilename?: Prisma.StringFieldUpdateOperationsInput | string
   fileType?: Prisma.StringFieldUpdateOperationsInput | string
@@ -1267,6 +1678,126 @@ export type StatementImportUncheckedUpdateManyWithoutAccountInput = {
   reconciliationOk?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   reconciliationDelta?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
   parseError?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  extractionPath?: Prisma.NullableEnumExtractionPathFieldUpdateOperationsInput | $Enums.ExtractionPath | null
+  extractionConfidence?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  aiModel?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  aiTokensIn?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  aiTokensOut?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  userNotes?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  uploadedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+}
+
+export type StatementImportCreateManySessionInput = {
+  id?: string
+  accountId: string
+  taxYearId: string
+  filePath: string
+  originalFilename: string
+  fileType: string
+  institution?: string | null
+  periodStart?: Date | string | null
+  periodEnd?: Date | string | null
+  sourceHash: string
+  parseStatus?: $Enums.ParseStatus
+  parseConfidence?: number | null
+  totalInflows?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  totalOutflows?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  transactionCount?: number
+  reconciliationOk?: boolean | null
+  reconciliationDelta?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  parseError?: string | null
+  extractionPath?: $Enums.ExtractionPath | null
+  extractionConfidence?: number | null
+  aiModel?: string | null
+  aiTokensIn?: number | null
+  aiTokensOut?: number | null
+  userNotes?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  uploadedAt?: Date | string
+}
+
+export type StatementImportUpdateWithoutSessionInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  filePath?: Prisma.StringFieldUpdateOperationsInput | string
+  originalFilename?: Prisma.StringFieldUpdateOperationsInput | string
+  fileType?: Prisma.StringFieldUpdateOperationsInput | string
+  institution?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  periodStart?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  periodEnd?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  sourceHash?: Prisma.StringFieldUpdateOperationsInput | string
+  parseStatus?: Prisma.EnumParseStatusFieldUpdateOperationsInput | $Enums.ParseStatus
+  parseConfidence?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  totalInflows?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  totalOutflows?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  transactionCount?: Prisma.IntFieldUpdateOperationsInput | number
+  reconciliationOk?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  reconciliationDelta?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  parseError?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  extractionPath?: Prisma.NullableEnumExtractionPathFieldUpdateOperationsInput | $Enums.ExtractionPath | null
+  extractionConfidence?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  aiModel?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  aiTokensIn?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  aiTokensOut?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  userNotes?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  uploadedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  account?: Prisma.FinancialAccountUpdateOneRequiredWithoutStatementImportsNestedInput
+  taxYear?: Prisma.TaxYearUpdateOneRequiredWithoutStatementImportsNestedInput
+  transactions?: Prisma.TransactionUpdateManyWithoutStatementImportNestedInput
+}
+
+export type StatementImportUncheckedUpdateWithoutSessionInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  accountId?: Prisma.StringFieldUpdateOperationsInput | string
+  taxYearId?: Prisma.StringFieldUpdateOperationsInput | string
+  filePath?: Prisma.StringFieldUpdateOperationsInput | string
+  originalFilename?: Prisma.StringFieldUpdateOperationsInput | string
+  fileType?: Prisma.StringFieldUpdateOperationsInput | string
+  institution?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  periodStart?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  periodEnd?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  sourceHash?: Prisma.StringFieldUpdateOperationsInput | string
+  parseStatus?: Prisma.EnumParseStatusFieldUpdateOperationsInput | $Enums.ParseStatus
+  parseConfidence?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  totalInflows?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  totalOutflows?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  transactionCount?: Prisma.IntFieldUpdateOperationsInput | number
+  reconciliationOk?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  reconciliationDelta?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  parseError?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  extractionPath?: Prisma.NullableEnumExtractionPathFieldUpdateOperationsInput | $Enums.ExtractionPath | null
+  extractionConfidence?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  aiModel?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  aiTokensIn?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  aiTokensOut?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  userNotes?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  uploadedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  transactions?: Prisma.TransactionUncheckedUpdateManyWithoutStatementImportNestedInput
+}
+
+export type StatementImportUncheckedUpdateManyWithoutSessionInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  accountId?: Prisma.StringFieldUpdateOperationsInput | string
+  taxYearId?: Prisma.StringFieldUpdateOperationsInput | string
+  filePath?: Prisma.StringFieldUpdateOperationsInput | string
+  originalFilename?: Prisma.StringFieldUpdateOperationsInput | string
+  fileType?: Prisma.StringFieldUpdateOperationsInput | string
+  institution?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  periodStart?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  periodEnd?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  sourceHash?: Prisma.StringFieldUpdateOperationsInput | string
+  parseStatus?: Prisma.EnumParseStatusFieldUpdateOperationsInput | $Enums.ParseStatus
+  parseConfidence?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  totalInflows?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  totalOutflows?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  transactionCount?: Prisma.IntFieldUpdateOperationsInput | number
+  reconciliationOk?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  reconciliationDelta?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  parseError?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  extractionPath?: Prisma.NullableEnumExtractionPathFieldUpdateOperationsInput | $Enums.ExtractionPath | null
+  extractionConfidence?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  aiModel?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  aiTokensIn?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  aiTokensOut?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  userNotes?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   uploadedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
 
@@ -1305,6 +1836,7 @@ export type StatementImportSelect<ExtArgs extends runtime.Types.Extensions.Inter
   id?: boolean
   accountId?: boolean
   taxYearId?: boolean
+  sessionId?: boolean
   filePath?: boolean
   originalFilename?: boolean
   fileType?: boolean
@@ -1320,9 +1852,16 @@ export type StatementImportSelect<ExtArgs extends runtime.Types.Extensions.Inter
   reconciliationOk?: boolean
   reconciliationDelta?: boolean
   parseError?: boolean
+  extractionPath?: boolean
+  extractionConfidence?: boolean
+  aiModel?: boolean
+  aiTokensIn?: boolean
+  aiTokensOut?: boolean
+  userNotes?: boolean
   uploadedAt?: boolean
   account?: boolean | Prisma.FinancialAccountDefaultArgs<ExtArgs>
   taxYear?: boolean | Prisma.TaxYearDefaultArgs<ExtArgs>
+  session?: boolean | Prisma.StatementImport$sessionArgs<ExtArgs>
   transactions?: boolean | Prisma.StatementImport$transactionsArgs<ExtArgs>
   _count?: boolean | Prisma.StatementImportCountOutputTypeDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["statementImport"]>
@@ -1331,6 +1870,7 @@ export type StatementImportSelectCreateManyAndReturn<ExtArgs extends runtime.Typ
   id?: boolean
   accountId?: boolean
   taxYearId?: boolean
+  sessionId?: boolean
   filePath?: boolean
   originalFilename?: boolean
   fileType?: boolean
@@ -1346,15 +1886,23 @@ export type StatementImportSelectCreateManyAndReturn<ExtArgs extends runtime.Typ
   reconciliationOk?: boolean
   reconciliationDelta?: boolean
   parseError?: boolean
+  extractionPath?: boolean
+  extractionConfidence?: boolean
+  aiModel?: boolean
+  aiTokensIn?: boolean
+  aiTokensOut?: boolean
+  userNotes?: boolean
   uploadedAt?: boolean
   account?: boolean | Prisma.FinancialAccountDefaultArgs<ExtArgs>
   taxYear?: boolean | Prisma.TaxYearDefaultArgs<ExtArgs>
+  session?: boolean | Prisma.StatementImport$sessionArgs<ExtArgs>
 }, ExtArgs["result"]["statementImport"]>
 
 export type StatementImportSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   id?: boolean
   accountId?: boolean
   taxYearId?: boolean
+  sessionId?: boolean
   filePath?: boolean
   originalFilename?: boolean
   fileType?: boolean
@@ -1370,15 +1918,23 @@ export type StatementImportSelectUpdateManyAndReturn<ExtArgs extends runtime.Typ
   reconciliationOk?: boolean
   reconciliationDelta?: boolean
   parseError?: boolean
+  extractionPath?: boolean
+  extractionConfidence?: boolean
+  aiModel?: boolean
+  aiTokensIn?: boolean
+  aiTokensOut?: boolean
+  userNotes?: boolean
   uploadedAt?: boolean
   account?: boolean | Prisma.FinancialAccountDefaultArgs<ExtArgs>
   taxYear?: boolean | Prisma.TaxYearDefaultArgs<ExtArgs>
+  session?: boolean | Prisma.StatementImport$sessionArgs<ExtArgs>
 }, ExtArgs["result"]["statementImport"]>
 
 export type StatementImportSelectScalar = {
   id?: boolean
   accountId?: boolean
   taxYearId?: boolean
+  sessionId?: boolean
   filePath?: boolean
   originalFilename?: boolean
   fileType?: boolean
@@ -1394,23 +1950,32 @@ export type StatementImportSelectScalar = {
   reconciliationOk?: boolean
   reconciliationDelta?: boolean
   parseError?: boolean
+  extractionPath?: boolean
+  extractionConfidence?: boolean
+  aiModel?: boolean
+  aiTokensIn?: boolean
+  aiTokensOut?: boolean
+  userNotes?: boolean
   uploadedAt?: boolean
 }
 
-export type StatementImportOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "accountId" | "taxYearId" | "filePath" | "originalFilename" | "fileType" | "institution" | "periodStart" | "periodEnd" | "sourceHash" | "parseStatus" | "parseConfidence" | "totalInflows" | "totalOutflows" | "transactionCount" | "reconciliationOk" | "reconciliationDelta" | "parseError" | "uploadedAt", ExtArgs["result"]["statementImport"]>
+export type StatementImportOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "accountId" | "taxYearId" | "sessionId" | "filePath" | "originalFilename" | "fileType" | "institution" | "periodStart" | "periodEnd" | "sourceHash" | "parseStatus" | "parseConfidence" | "totalInflows" | "totalOutflows" | "transactionCount" | "reconciliationOk" | "reconciliationDelta" | "parseError" | "extractionPath" | "extractionConfidence" | "aiModel" | "aiTokensIn" | "aiTokensOut" | "userNotes" | "uploadedAt", ExtArgs["result"]["statementImport"]>
 export type StatementImportInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   account?: boolean | Prisma.FinancialAccountDefaultArgs<ExtArgs>
   taxYear?: boolean | Prisma.TaxYearDefaultArgs<ExtArgs>
+  session?: boolean | Prisma.StatementImport$sessionArgs<ExtArgs>
   transactions?: boolean | Prisma.StatementImport$transactionsArgs<ExtArgs>
   _count?: boolean | Prisma.StatementImportCountOutputTypeDefaultArgs<ExtArgs>
 }
 export type StatementImportIncludeCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   account?: boolean | Prisma.FinancialAccountDefaultArgs<ExtArgs>
   taxYear?: boolean | Prisma.TaxYearDefaultArgs<ExtArgs>
+  session?: boolean | Prisma.StatementImport$sessionArgs<ExtArgs>
 }
 export type StatementImportIncludeUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   account?: boolean | Prisma.FinancialAccountDefaultArgs<ExtArgs>
   taxYear?: boolean | Prisma.TaxYearDefaultArgs<ExtArgs>
+  session?: boolean | Prisma.StatementImport$sessionArgs<ExtArgs>
 }
 
 export type $StatementImportPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
@@ -1418,12 +1983,14 @@ export type $StatementImportPayload<ExtArgs extends runtime.Types.Extensions.Int
   objects: {
     account: Prisma.$FinancialAccountPayload<ExtArgs>
     taxYear: Prisma.$TaxYearPayload<ExtArgs>
+    session: Prisma.$ImportSessionPayload<ExtArgs> | null
     transactions: Prisma.$TransactionPayload<ExtArgs>[]
   }
   scalars: runtime.Types.Extensions.GetPayloadResult<{
     id: string
     accountId: string
     taxYearId: string
+    sessionId: string | null
     filePath: string
     originalFilename: string
     fileType: string
@@ -1439,6 +2006,12 @@ export type $StatementImportPayload<ExtArgs extends runtime.Types.Extensions.Int
     reconciliationOk: boolean | null
     reconciliationDelta: runtime.Decimal | null
     parseError: string | null
+    extractionPath: $Enums.ExtractionPath | null
+    extractionConfidence: number | null
+    aiModel: string | null
+    aiTokensIn: number | null
+    aiTokensOut: number | null
+    userNotes: runtime.JsonValue | null
     uploadedAt: Date
   }, ExtArgs["result"]["statementImport"]>
   composites: {}
@@ -1836,6 +2409,7 @@ export interface Prisma__StatementImportClient<T, Null = never, ExtArgs extends 
   readonly [Symbol.toStringTag]: "PrismaPromise"
   account<T extends Prisma.FinancialAccountDefaultArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.FinancialAccountDefaultArgs<ExtArgs>>): Prisma.Prisma__FinancialAccountClient<runtime.Types.Result.GetResult<Prisma.$FinancialAccountPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
   taxYear<T extends Prisma.TaxYearDefaultArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.TaxYearDefaultArgs<ExtArgs>>): Prisma.Prisma__TaxYearClient<runtime.Types.Result.GetResult<Prisma.$TaxYearPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
+  session<T extends Prisma.StatementImport$sessionArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.StatementImport$sessionArgs<ExtArgs>>): Prisma.Prisma__ImportSessionClient<runtime.Types.Result.GetResult<Prisma.$ImportSessionPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
   transactions<T extends Prisma.StatementImport$transactionsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.StatementImport$transactionsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$TransactionPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   /**
    * Attaches callbacks for the resolution and/or rejection of the Promise.
@@ -1869,6 +2443,7 @@ export interface StatementImportFieldRefs {
   readonly id: Prisma.FieldRef<"StatementImport", 'String'>
   readonly accountId: Prisma.FieldRef<"StatementImport", 'String'>
   readonly taxYearId: Prisma.FieldRef<"StatementImport", 'String'>
+  readonly sessionId: Prisma.FieldRef<"StatementImport", 'String'>
   readonly filePath: Prisma.FieldRef<"StatementImport", 'String'>
   readonly originalFilename: Prisma.FieldRef<"StatementImport", 'String'>
   readonly fileType: Prisma.FieldRef<"StatementImport", 'String'>
@@ -1884,6 +2459,12 @@ export interface StatementImportFieldRefs {
   readonly reconciliationOk: Prisma.FieldRef<"StatementImport", 'Boolean'>
   readonly reconciliationDelta: Prisma.FieldRef<"StatementImport", 'Decimal'>
   readonly parseError: Prisma.FieldRef<"StatementImport", 'String'>
+  readonly extractionPath: Prisma.FieldRef<"StatementImport", 'ExtractionPath'>
+  readonly extractionConfidence: Prisma.FieldRef<"StatementImport", 'Float'>
+  readonly aiModel: Prisma.FieldRef<"StatementImport", 'String'>
+  readonly aiTokensIn: Prisma.FieldRef<"StatementImport", 'Int'>
+  readonly aiTokensOut: Prisma.FieldRef<"StatementImport", 'Int'>
+  readonly userNotes: Prisma.FieldRef<"StatementImport", 'Json'>
   readonly uploadedAt: Prisma.FieldRef<"StatementImport", 'DateTime'>
 }
     
@@ -2283,6 +2864,25 @@ export type StatementImportDeleteManyArgs<ExtArgs extends runtime.Types.Extensio
    * Limit how many StatementImports to delete.
    */
   limit?: number
+}
+
+/**
+ * StatementImport.session
+ */
+export type StatementImport$sessionArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the ImportSession
+   */
+  select?: Prisma.ImportSessionSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the ImportSession
+   */
+  omit?: Prisma.ImportSessionOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.ImportSessionInclude<ExtArgs> | null
+  where?: Prisma.ImportSessionWhereInput
 }
 
 /**

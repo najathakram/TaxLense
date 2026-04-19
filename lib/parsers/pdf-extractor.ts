@@ -1,7 +1,7 @@
 /**
  * TaxLens — PDF text extractor
  * Uses pdf-parse (text-selectable PDFs only).
- * Returns empty string for scanned/image PDFs — caller marks FAILED.
+ * Returns text + page count for router scoring (Session 9).
  * Spec §4.2: "If pdf-parse returns empty or gibberish, mark parse_status=FAILED."
  */
 
@@ -13,19 +13,27 @@ const pdfParse = require("pdf-parse") as (
 ) => Promise<{ text: string; numpages: number }>
 
 /**
- * Extract all text from a PDF buffer.
- * Returns empty string on error (caller decides what to do).
+ * Extract all text + page count from a PDF buffer.
+ * Returns { text: "", numpages: 0 } on error; caller routes to VISION_DOC.
  */
-export async function extractPdfText(buffer: Buffer): Promise<string> {
+export async function extractPdfText(
+  buffer: Buffer,
+): Promise<{ text: string; numpages: number }> {
   try {
-    const result = await pdfParse(buffer, { max: 0 }) // max:0 = all pages
-    return result.text ?? ""
+    const result = await pdfParse(buffer, { max: 0 })
+    return { text: result.text ?? "", numpages: result.numpages ?? 0 }
   } catch {
-    return ""
+    return { text: "", numpages: 0 }
   }
 }
 
-/** Heuristic: fewer than 80 chars almost certainly means scanned / encrypted. */
+/** Convenience: page count only. */
+export async function pdfPageCount(buffer: Buffer): Promise<number> {
+  const { numpages } = await extractPdfText(buffer)
+  return numpages
+}
+
+/** Back-compat for callers that only need a usable-text gate. */
 export function isUsableText(text: string): boolean {
   return text.trim().length >= 80
 }

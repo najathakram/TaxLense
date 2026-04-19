@@ -473,6 +473,13 @@ export type BoolNullableFilter<$PrismaModel = never> = {
   not?: Prisma.NestedBoolNullableFilter<$PrismaModel> | boolean | null
 }
 
+export type EnumExtractionPathNullableFilter<$PrismaModel = never> = {
+  equals?: $Enums.ExtractionPath | Prisma.EnumExtractionPathFieldRefInput<$PrismaModel> | null
+  in?: $Enums.ExtractionPath[] | Prisma.ListEnumExtractionPathFieldRefInput<$PrismaModel> | null
+  notIn?: $Enums.ExtractionPath[] | Prisma.ListEnumExtractionPathFieldRefInput<$PrismaModel> | null
+  not?: Prisma.NestedEnumExtractionPathNullableFilter<$PrismaModel> | $Enums.ExtractionPath | null
+}
+
 export type EnumParseStatusWithAggregatesFilter<$PrismaModel = never> = {
   equals?: $Enums.ParseStatus | Prisma.EnumParseStatusFieldRefInput<$PrismaModel>
   in?: $Enums.ParseStatus[] | Prisma.ListEnumParseStatusFieldRefInput<$PrismaModel>
@@ -505,6 +512,33 @@ export type BoolNullableWithAggregatesFilter<$PrismaModel = never> = {
   _count?: Prisma.NestedIntNullableFilter<$PrismaModel>
   _min?: Prisma.NestedBoolNullableFilter<$PrismaModel>
   _max?: Prisma.NestedBoolNullableFilter<$PrismaModel>
+}
+
+export type EnumExtractionPathNullableWithAggregatesFilter<$PrismaModel = never> = {
+  equals?: $Enums.ExtractionPath | Prisma.EnumExtractionPathFieldRefInput<$PrismaModel> | null
+  in?: $Enums.ExtractionPath[] | Prisma.ListEnumExtractionPathFieldRefInput<$PrismaModel> | null
+  notIn?: $Enums.ExtractionPath[] | Prisma.ListEnumExtractionPathFieldRefInput<$PrismaModel> | null
+  not?: Prisma.NestedEnumExtractionPathNullableWithAggregatesFilter<$PrismaModel> | $Enums.ExtractionPath | null
+  _count?: Prisma.NestedIntNullableFilter<$PrismaModel>
+  _min?: Prisma.NestedEnumExtractionPathNullableFilter<$PrismaModel>
+  _max?: Prisma.NestedEnumExtractionPathNullableFilter<$PrismaModel>
+}
+
+export type EnumImportSessionStatusFilter<$PrismaModel = never> = {
+  equals?: $Enums.ImportSessionStatus | Prisma.EnumImportSessionStatusFieldRefInput<$PrismaModel>
+  in?: $Enums.ImportSessionStatus[] | Prisma.ListEnumImportSessionStatusFieldRefInput<$PrismaModel>
+  notIn?: $Enums.ImportSessionStatus[] | Prisma.ListEnumImportSessionStatusFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumImportSessionStatusFilter<$PrismaModel> | $Enums.ImportSessionStatus
+}
+
+export type EnumImportSessionStatusWithAggregatesFilter<$PrismaModel = never> = {
+  equals?: $Enums.ImportSessionStatus | Prisma.EnumImportSessionStatusFieldRefInput<$PrismaModel>
+  in?: $Enums.ImportSessionStatus[] | Prisma.ListEnumImportSessionStatusFieldRefInput<$PrismaModel>
+  notIn?: $Enums.ImportSessionStatus[] | Prisma.ListEnumImportSessionStatusFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumImportSessionStatusWithAggregatesFilter<$PrismaModel> | $Enums.ImportSessionStatus
+  _count?: Prisma.NestedIntFilter<$PrismaModel>
+  _min?: Prisma.NestedEnumImportSessionStatusFilter<$PrismaModel>
+  _max?: Prisma.NestedEnumImportSessionStatusFilter<$PrismaModel>
 }
 
 export type DecimalFilter<$PrismaModel = never> = {
@@ -1070,6 +1104,13 @@ export type NestedBoolNullableFilter<$PrismaModel = never> = {
   not?: Prisma.NestedBoolNullableFilter<$PrismaModel> | boolean | null
 }
 
+export type NestedEnumExtractionPathNullableFilter<$PrismaModel = never> = {
+  equals?: $Enums.ExtractionPath | Prisma.EnumExtractionPathFieldRefInput<$PrismaModel> | null
+  in?: $Enums.ExtractionPath[] | Prisma.ListEnumExtractionPathFieldRefInput<$PrismaModel> | null
+  notIn?: $Enums.ExtractionPath[] | Prisma.ListEnumExtractionPathFieldRefInput<$PrismaModel> | null
+  not?: Prisma.NestedEnumExtractionPathNullableFilter<$PrismaModel> | $Enums.ExtractionPath | null
+}
+
 export type NestedEnumParseStatusWithAggregatesFilter<$PrismaModel = never> = {
   equals?: $Enums.ParseStatus | Prisma.EnumParseStatusFieldRefInput<$PrismaModel>
   in?: $Enums.ParseStatus[] | Prisma.ListEnumParseStatusFieldRefInput<$PrismaModel>
@@ -1102,6 +1143,33 @@ export type NestedBoolNullableWithAggregatesFilter<$PrismaModel = never> = {
   _count?: Prisma.NestedIntNullableFilter<$PrismaModel>
   _min?: Prisma.NestedBoolNullableFilter<$PrismaModel>
   _max?: Prisma.NestedBoolNullableFilter<$PrismaModel>
+}
+
+export type NestedEnumExtractionPathNullableWithAggregatesFilter<$PrismaModel = never> = {
+  equals?: $Enums.ExtractionPath | Prisma.EnumExtractionPathFieldRefInput<$PrismaModel> | null
+  in?: $Enums.ExtractionPath[] | Prisma.ListEnumExtractionPathFieldRefInput<$PrismaModel> | null
+  notIn?: $Enums.ExtractionPath[] | Prisma.ListEnumExtractionPathFieldRefInput<$PrismaModel> | null
+  not?: Prisma.NestedEnumExtractionPathNullableWithAggregatesFilter<$PrismaModel> | $Enums.ExtractionPath | null
+  _count?: Prisma.NestedIntNullableFilter<$PrismaModel>
+  _min?: Prisma.NestedEnumExtractionPathNullableFilter<$PrismaModel>
+  _max?: Prisma.NestedEnumExtractionPathNullableFilter<$PrismaModel>
+}
+
+export type NestedEnumImportSessionStatusFilter<$PrismaModel = never> = {
+  equals?: $Enums.ImportSessionStatus | Prisma.EnumImportSessionStatusFieldRefInput<$PrismaModel>
+  in?: $Enums.ImportSessionStatus[] | Prisma.ListEnumImportSessionStatusFieldRefInput<$PrismaModel>
+  notIn?: $Enums.ImportSessionStatus[] | Prisma.ListEnumImportSessionStatusFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumImportSessionStatusFilter<$PrismaModel> | $Enums.ImportSessionStatus
+}
+
+export type NestedEnumImportSessionStatusWithAggregatesFilter<$PrismaModel = never> = {
+  equals?: $Enums.ImportSessionStatus | Prisma.EnumImportSessionStatusFieldRefInput<$PrismaModel>
+  in?: $Enums.ImportSessionStatus[] | Prisma.ListEnumImportSessionStatusFieldRefInput<$PrismaModel>
+  notIn?: $Enums.ImportSessionStatus[] | Prisma.ListEnumImportSessionStatusFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumImportSessionStatusWithAggregatesFilter<$PrismaModel> | $Enums.ImportSessionStatus
+  _count?: Prisma.NestedIntFilter<$PrismaModel>
+  _min?: Prisma.NestedEnumImportSessionStatusFilter<$PrismaModel>
+  _max?: Prisma.NestedEnumImportSessionStatusFilter<$PrismaModel>
 }
 
 export type NestedDecimalFilter<$PrismaModel = never> = {

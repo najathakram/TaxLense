@@ -63,6 +63,7 @@ export const ModelName = {
   Trip: 'Trip',
   FinancialAccount: 'FinancialAccount',
   StatementImport: 'StatementImport',
+  ImportSession: 'ImportSession',
   Transaction: 'Transaction',
   Classification: 'Classification',
   MerchantRule: 'MerchantRule',
@@ -246,6 +247,7 @@ export const StatementImportScalarFieldEnum = {
   id: 'id',
   accountId: 'accountId',
   taxYearId: 'taxYearId',
+  sessionId: 'sessionId',
   filePath: 'filePath',
   originalFilename: 'originalFilename',
   fileType: 'fileType',
@@ -261,10 +263,31 @@ export const StatementImportScalarFieldEnum = {
   reconciliationOk: 'reconciliationOk',
   reconciliationDelta: 'reconciliationDelta',
   parseError: 'parseError',
+  extractionPath: 'extractionPath',
+  extractionConfidence: 'extractionConfidence',
+  aiModel: 'aiModel',
+  aiTokensIn: 'aiTokensIn',
+  aiTokensOut: 'aiTokensOut',
+  userNotes: 'userNotes',
   uploadedAt: 'uploadedAt'
 } as const
 
 export type StatementImportScalarFieldEnum = (typeof StatementImportScalarFieldEnum)[keyof typeof StatementImportScalarFieldEnum]
+
+
+export const ImportSessionScalarFieldEnum = {
+  id: 'id',
+  taxYearId: 'taxYearId',
+  cpaUserId: 'cpaUserId',
+  status: 'status',
+  totalApiCalls: 'totalApiCalls',
+  apiCallLimit: 'apiCallLimit',
+  notes: 'notes',
+  uploadedAt: 'uploadedAt',
+  closedAt: 'closedAt'
+} as const
+
+export type ImportSessionScalarFieldEnum = (typeof ImportSessionScalarFieldEnum)[keyof typeof ImportSessionScalarFieldEnum]
 
 
 export const TransactionScalarFieldEnum = {

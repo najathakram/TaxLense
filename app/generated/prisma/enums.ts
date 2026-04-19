@@ -61,10 +61,31 @@ export type ParseStatus = (typeof ParseStatus)[keyof typeof ParseStatus]
 export const ReportKind = {
   MASTER_LEDGER: 'MASTER_LEDGER',
   FINANCIAL_STATEMENTS: 'FINANCIAL_STATEMENTS',
-  AUDIT_PACKET: 'AUDIT_PACKET'
+  AUDIT_PACKET: 'AUDIT_PACKET',
+  TAX_PACKAGE: 'TAX_PACKAGE'
 } as const
 
 export type ReportKind = (typeof ReportKind)[keyof typeof ReportKind]
+
+
+export const ExtractionPath = {
+  CSV: 'CSV',
+  OFX: 'OFX',
+  PDF_PARSE: 'PDF_PARSE',
+  HAIKU_CLEANUP: 'HAIKU_CLEANUP',
+  VISION_DOC: 'VISION_DOC'
+} as const
+
+export type ExtractionPath = (typeof ExtractionPath)[keyof typeof ExtractionPath]
+
+
+export const ImportSessionStatus = {
+  IN_PROGRESS: 'IN_PROGRESS',
+  COMPLETE: 'COMPLETE',
+  ABORTED: 'ABORTED'
+} as const
+
+export type ImportSessionStatus = (typeof ImportSessionStatus)[keyof typeof ImportSessionStatus]
 
 
 export const TransactionCode = {

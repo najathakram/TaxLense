@@ -9,8 +9,18 @@ import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog"
 import { Alert, AlertDescription } from "@/components/ui/alert"
-import { uploadStatement, deleteImport, createAccount, reparseImport } from "./actions"
+import { Textarea } from "@/components/ui/textarea"
+import {
+  uploadStatement,
+  deleteImport,
+  createAccount,
+  reparseImport,
+  saveImportNotes,
+  saveUploadSessionNotes,
+  closeUploadSession,
+} from "./actions"
 import type { ParseStatus } from "@/app/generated/prisma/client"
+import type { ContextualPrompt } from "@/lib/uploads/contextualPrompts"
 
 // ── Types (serialised from server) ──────────────────────────────────────────
 
@@ -42,11 +52,20 @@ interface AccountRow {
   statementImports: ImportRow[]
 }
 
+interface SessionSnapshot {
+  id: string
+  totalApiCalls: number
+  apiCallLimit: number
+  notes: string | null
+  uploadedAt: string
+}
+
 interface Props {
   year: number
   taxYearId: string
   taxYearStatus: string
   accounts: AccountRow[]
+  session: SessionSnapshot | null
 }
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -195,7 +214,17 @@ function AddAccountDialog({
 
 // ── Upload Card (per account) ─────────────────────────────────────────────────
 
-function UploadCard({ account, year }: { account: AccountRow; year: number }) {
+function UploadCard({
+  account,
+  year,
+  onPrompts,
+  onSessionUpdate,
+}: {
+  account: AccountRow
+  year: number
+  onPrompts: (importId: string, prompts: ContextualPrompt[]) => void
+  onSessionUpdate: (snap: { id: string; used: number; limit: number }) => void
+}) {
   const [isPending, startTransition] = useTransition()
   const [uploadError, setUploadError] = useState<string | null>(null)
   const [uploadSuccess, setUploadSuccess] = useState<string | null>(null)
@@ -219,6 +248,14 @@ function UploadCard({ account, year }: { account: AccountRow; year: number }) {
         const inst = result.institution ? ` (${result.institution})` : ""
         const skipNote = result.skipped > 0 ? `, ${result.skipped} duplicate(s) skipped` : ""
         setUploadSuccess(`${result.txCount} transactions imported${inst}${skipNote}`)
+        onSessionUpdate({
+          id: result.sessionId,
+          used: result.apiCallsUsed,
+          limit: result.apiCallLimit,
+        })
+        if (result.prompts && result.prompts.length > 0) {
+          onPrompts(result.importId, result.prompts as ContextualPrompt[])
+        }
       } else {
         setUploadError(result.error)
       }
@@ -360,8 +397,12 @@ function UploadCard({ account, year }: { account: AccountRow; year: number }) {
 
 // ── Main Client Component ────────────────────────────────────────────────────
 
-export function UploadClient({ year, taxYearId, taxYearStatus, accounts }: Props) {
+export function UploadClient({ year, taxYearStatus, accounts, session }: Props) {
   const [showAddAccount, setShowAddAccount] = useState(false)
+  const [sessionState, setSessionState] = useState(
+    session ? { id: session.id, used: session.totalApiCalls, limit: session.apiCallLimit } : null,
+  )
+  const [promptQueue, setPromptQueue] = useState<{ importId: string; prompts: ContextualPrompt[] } | null>(null)
   const isLocked = taxYearStatus === "LOCKED"
 
   return (
@@ -373,6 +414,11 @@ export function UploadClient({ year, taxYearId, taxYearStatus, accounts }: Props
         </div>
         <div className="flex items-center gap-3">
           <Badge variant="outline">{taxYearStatus}</Badge>
+          {sessionState && (
+            <Badge variant={sessionState.used >= sessionState.limit ? "destructive" : "secondary"}>
+              API calls: {sessionState.used} / {sessionState.limit}
+            </Badge>
+          )}
           {!isLocked && (
             <Button onClick={() => setShowAddAccount(true)}>
               + Add Account
@@ -405,9 +451,23 @@ export function UploadClient({ year, taxYearId, taxYearStatus, accounts }: Props
       ) : (
         <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
           {accounts.map((acct) => (
-            <UploadCard key={acct.id} account={acct} year={year} />
+            <UploadCard
+              key={acct.id}
+              account={acct}
+              year={year}
+              onPrompts={(importId, prompts) => setPromptQueue({ importId, prompts })}
+              onSessionUpdate={(snap) => setSessionState(snap)}
+            />
           ))}
         </div>
+      )}
+
+      {sessionState && !isLocked && (
+        <SessionNotesCard
+          year={year}
+          sessionId={sessionState.id}
+          initialNotes={session?.notes ?? ""}
+        />
       )}
 
       <AddAccountDialog
@@ -415,6 +475,161 @@ export function UploadClient({ year, taxYearId, taxYearStatus, accounts }: Props
         open={showAddAccount}
         onClose={() => setShowAddAccount(false)}
       />
+
+      {promptQueue && (
+        <ContextualPromptsDialog
+          year={year}
+          importId={promptQueue.importId}
+          prompts={promptQueue.prompts}
+          onClose={() => setPromptQueue(null)}
+        />
+      )}
     </div>
+  )
+}
+
+// ── Session Notes Card ───────────────────────────────────────────────────────
+
+function SessionNotesCard({
+  year,
+  sessionId,
+  initialNotes,
+}: {
+  year: number
+  sessionId: string
+  initialNotes: string
+}) {
+  const [notes, setNotes] = useState(initialNotes)
+  const [isPending, startTransition] = useTransition()
+  const [savedAt, setSavedAt] = useState<string | null>(null)
+  const [error, setError] = useState<string | null>(null)
+
+  function handleSave() {
+    setError(null)
+    startTransition(async () => {
+      const res = await saveUploadSessionNotes(sessionId, year, notes)
+      if (res.ok) setSavedAt(new Date().toLocaleTimeString())
+      else setError(res.error)
+    })
+  }
+
+  function handleClose() {
+    if (!confirm("Close this upload session? A new session will open on the next upload.")) return
+    startTransition(async () => {
+      const res = await closeUploadSession(sessionId, year)
+      if (!res.ok) setError(res.error)
+    })
+  }
+
+  return (
+    <Card>
+      <CardHeader className="pb-3">
+        <CardTitle className="text-base">Session notes</CardTitle>
+        <p className="text-xs text-muted-foreground">
+          These notes are added to the AI classification prompt as client context.
+        </p>
+      </CardHeader>
+      <CardContent className="space-y-3">
+        <Textarea
+          placeholder="Anything the CPA should know? e.g. 'Zelle to Francisco = contractor payments', 'Chase ···9517 is personal, only the one deposit in March is business'."
+          value={notes}
+          onChange={(e) => setNotes(e.target.value)}
+          rows={4}
+        />
+        {error && (
+          <Alert variant="destructive">
+            <AlertDescription className="text-sm">{error}</AlertDescription>
+          </Alert>
+        )}
+        <div className="flex items-center justify-between">
+          <span className="text-xs text-muted-foreground">
+            {savedAt ? `Saved at ${savedAt}` : null}
+          </span>
+          <div className="flex gap-2">
+            <Button variant="outline" size="sm" onClick={handleClose} disabled={isPending}>
+              Close session
+            </Button>
+            <Button size="sm" onClick={handleSave} disabled={isPending}>
+              {isPending ? "Saving…" : "Save notes"}
+            </Button>
+          </div>
+        </div>
+      </CardContent>
+    </Card>
+  )
+}
+
+// ── Contextual Prompts Dialog ────────────────────────────────────────────────
+
+function ContextualPromptsDialog({
+  year,
+  importId,
+  prompts,
+  onClose,
+}: {
+  year: number
+  importId: string
+  prompts: ContextualPrompt[]
+  onClose: () => void
+}) {
+  const [answers, setAnswers] = useState<Record<string, string>>({})
+  const [isPending, startTransition] = useTransition()
+  const [error, setError] = useState<string | null>(null)
+
+  function handleSubmit() {
+    setError(null)
+    startTransition(async () => {
+      const notes: Record<string, unknown> = {}
+      prompts.forEach((p, idx) => {
+        const key = `${p.kind}_${idx}`
+        const ans = answers[key]
+        if (ans && ans.trim()) {
+          notes[key] = { question: p.question, answer: ans.trim(), context: p.context }
+        }
+      })
+      const res = await saveImportNotes({ importId, year, notes })
+      if (res.ok) onClose()
+      else setError(res.error)
+    })
+  }
+
+  return (
+    <Dialog open={true} onOpenChange={(o) => { if (!o) onClose() }}>
+      <DialogContent className="sm:max-w-xl max-h-[80vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle>A few quick questions about this statement</DialogTitle>
+        </DialogHeader>
+        <div className="space-y-4 py-2">
+          <p className="text-xs text-muted-foreground">
+            Your answers become context for the AI classifier. Skip anything you're unsure about.
+          </p>
+          {prompts.map((p, idx) => {
+            const key = `${p.kind}_${idx}`
+            return (
+              <div key={key} className="space-y-1">
+                <Label className="text-sm font-medium">{p.question}</Label>
+                <Textarea
+                  value={answers[key] ?? ""}
+                  onChange={(e) => setAnswers((prev) => ({ ...prev, [key]: e.target.value }))}
+                  rows={2}
+                  placeholder="Your answer…"
+                />
+              </div>
+            )
+          })}
+          {error && (
+            <Alert variant="destructive">
+              <AlertDescription className="text-sm">{error}</AlertDescription>
+            </Alert>
+          )}
+        </div>
+        <DialogFooter>
+          <Button variant="outline" onClick={onClose} disabled={isPending}>Skip all</Button>
+          <Button onClick={handleSubmit} disabled={isPending}>
+            {isPending ? "Saving…" : "Save answers"}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   )
 }

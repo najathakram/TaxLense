@@ -102,6 +102,11 @@ export type FinancialAccount = Prisma.FinancialAccountModel
  */
 export type StatementImport = Prisma.StatementImportModel
 /**
+ * Model ImportSession
+ * 
+ */
+export type ImportSession = Prisma.ImportSessionModel
+/**
  * Model Transaction
  * 
  */

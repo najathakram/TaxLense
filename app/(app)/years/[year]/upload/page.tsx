@@ -56,6 +56,18 @@ export default async function UploadPage({ params }: Props) {
 
   if (!taxYear) notFound()
 
+  const currentSession = await prisma.importSession.findFirst({
+    where: { taxYearId: taxYear.id, status: "IN_PROGRESS" },
+    orderBy: { uploadedAt: "desc" },
+    select: {
+      id: true,
+      totalApiCalls: true,
+      apiCallLimit: true,
+      notes: true,
+      uploadedAt: true,
+    },
+  })
+
   // Serialise Decimals and Dates for client component
   const accounts = taxYear.financialAccounts.map((acct) => ({
     ...acct,
@@ -76,6 +88,17 @@ export default async function UploadPage({ params }: Props) {
       taxYearId={taxYear.id}
       taxYearStatus={taxYear.status}
       accounts={accounts}
+      session={
+        currentSession
+          ? {
+              id: currentSession.id,
+              totalApiCalls: currentSession.totalApiCalls,
+              apiCallLimit: currentSession.apiCallLimit,
+              notes: currentSession.notes,
+              uploadedAt: currentSession.uploadedAt.toISOString(),
+            }
+          : null
+      }
     />
   )
 }

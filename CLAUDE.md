@@ -62,6 +62,7 @@ These are the design rails. If a future change violates one of these, the change
 - [x] Prompt 5 — STOPs + Ledger Review
 - [x] Prompt 6 — Residual AI + Lock
 - [x] Prompt 7 — Output Artifacts
+- [x] Session 9 — Haiku PDF ingest + Analytics + Tax Package
 - [ ] Prompt 8 — Polish + E2E
 
 ---
@@ -289,3 +290,34 @@ These were discovered during Prompt 1 and must be respected in all future sessio
 - **Vitest mock gotcha**: `vi.mock` factory is hoisted above all `const` declarations — inline string literals directly in the factory; do NOT reference module-level variables.
 - **Tests**: 223 passing (193 original + 30 new across master-ledger / financial-statements / audit-packet / position-memo / report-route). `pnpm build` clean — 20 routes total (2 new: `/years/[year]/download`, `/api/years/[year]/download/[kind]`).
 - **Verify**: `pnpm test` (223 passing); `pnpm build` (clean); lock the fixture year, visit `/years/2025/download`, click "Generate & Download" for each artifact, open in Excel, confirm 5 sheets on each XLSX and valid ZIP.
+
+## Session 9 notes
+
+- **Migration**: `add_session9_fields` + `add_session_taxyear_relation` — new enums `ReportKind.TAX_PACKAGE`, `ExtractionPath` (CSV/OFX/PDF_PARSE/HAIKU_CLEANUP/VISION_DOC), `ImportSessionStatus`. New `ImportSession` model (cpaUserId, status, totalApiCalls, apiCallLimit, notes); relation added to TaxYear. `StatementImport` gains `sessionId`, `extractionPath`, `extractionConfidence`, `aiModel`, `aiTokensIn/Out`, `userNotes Json?`.
+- **Section A — Haiku-first PDF extraction** (`lib/parsers/`):
+  - `pdf-router.ts` — `scorePdfText` (charsPerPage, dateHits, dollarHits, alnumRatio) → `routePdf` returning HAIKU_CLEANUP vs VISION_DOC. Scanned/empty PDFs → VISION_DOC.
+  - `haiku-cleanup.ts` — text → RawTx via `claude-haiku-4-5`; retry once with `claude-sonnet-4-6` when confidence < 0.6. Zod-validated extraction schema; returns `ExtractorResult { parseResult, telemetry }`.
+  - `vision-doc.ts` — same output contract but sends the PDF as an Anthropic `document` content block (base64 media_type `application/pdf`).
+  - `lib/parsers/index.ts` — `parseStatement(buffer, filename, options)` grew `ExtendedParseResult` carrying `extractionPath`/`extractionTelemetry`, and `ParseStatementOptions { anthropicClient?, onAiCall? }`. PDF branch dispatches via router.
+- **Session + rate limit** (`lib/uploads/session.ts`): `openOrGetSession`, `chargeApiCall` (Prisma `$transaction` — atomic read→check→write), `closeSession`, `saveSessionNotes`, `RateLimitError`. Default `apiCallLimit = 50`. `uploadStatement` charges the session on every PDF AI call; on `RateLimitError` returns `{ ok:false, sessionId }`.
+- **Contextual prompts** (`lib/uploads/contextualPrompts.ts`): pure `buildContextualPrompts({imp, transactions, priorImportsForAccount, firstSightingOfAccount})` returning 4 kinds: `institution_confirmation` (confidence < 0.9), `account_purpose` (first sighting), `period_gap` (> 7 days), `unusual_deposit` (inflow ≥ max(1000, 2× median)). Answers persist on `StatementImport.userNotes`.
+- **Upload UI** (`app/(app)/years/[year]/upload/upload-client.tsx`): new session badge (`API calls: N/50`), `SessionNotesCard` (free-text persisted into `ImportSession.notes`), `ContextualPromptsDialog` (renders returned prompts after each upload and saves user answers). New actions: `saveImportNotes`, `saveUploadSessionNotes`, `closeUploadSession`.
+- **Merchant Intelligence context injection** (`lib/ai/merchantIntelligence.ts`): new `aggregateClientNotes(taxYearId)` stitches `ImportSession.notes` + all `StatementImport.userNotes` Q/A into a single block. `buildSystemPrompt` takes an optional `clientNotes` string that is inserted as `=== CLIENT-PROVIDED CONTEXT ===` right after the system-prompt preamble. Propagated through `classifyBatch` and `runMerchantIntelligence`.
+- **Section B — Analytics** (`lib/analytics/`):
+  - `irsBenchmarks.ts` — static NAICS-prefix-keyed benchmark tables (54 = PSTS, 71 = Arts, 48 = Transportation, default). `RED_FLAG_THRESHOLDS` constants for meals-ratio / vehicle-biz-pct / Line 27a share.
+  - `build.ts` — `buildAnalytics(taxYearId)` returns a 9-chart dataset (deduction mix vs industry, meals ratio line, vehicle gauge, deposits waterfall, evidence tier stack, monthly expense, top 10 merchants, account donut, trip spending). Filters `isSplit=false` + `Classification.isCurrent=true`. No AI calls. Also `buildFirmOverview(cpaUserId)` aggregating all clients of a CPA.
+- **Analytics API + pages**:
+  - `GET /api/analytics/[taxYearId]` — owner or CPA-with-relation authorized.
+  - `GET /api/analytics/firm` — CPA only.
+  - `/years/[year]/analytics/page.tsx` + `components/charts/analytics-dashboard.tsx` — Recharts-backed dashboard (BarChart, LineChart, PieChart, RadialBarChart). All charts wrapped in `ResponsiveContainer`.
+  - `/clients/analytics/page.tsx` — CPA firm overview table with portfolio KPIs.
+- **Section C — Tax Package**:
+  - `lib/reports/pdf/documents.tsx` — 5 PDF builders (`buildClientSummaryPdf`, `buildScheduleCWorksheetPdf`, `buildForm8829Pdf`, `buildDepreciationSchedulePdf`, `buildCpaHandoffPdf`) + `build1099NecCsv`. Uses `@react-pdf/renderer` v4.5.1 — Node-only, no headless browser. Shared `styles` StyleSheet, `PdfFooter` with page numbers + ledger-hash fingerprint, `loadContext` helper that computes Schedule C totals once.
+  - `lib/reports/taxPackage.ts` — `buildTaxPackage(taxYearId, { allowUnlocked? })` zips 6 PDFs/CSV + `master_ledger.xlsx` + `financial_statements.xlsx` + README. Refuses non-LOCKED years unless `allowUnlocked` (for tests).
+  - `/api/years/[year]/download/[kind]` extended with new `tax-package` slug → `TAX_PACKAGE` kind.
+  - `/years/[year]/download/page.tsx` grew a 4th card "Tax Package (CPA Handoff)".
+- **React 19 peer conflict**: `@react-pdf/renderer` upgraded from v3.4 to v4.5 for React 19 support.
+- **Prisma InputJsonValue spread**: `z.record(z.string(), z.unknown())` → spread result isn't assignable; cast the merged object with `as Prisma.InputJsonValue` before passing to Prisma.
+- **@react-pdf/renderer `toBuffer`**: returns `NodeJS.ReadableStream`. Cast to `AsyncIterable<Buffer | string>` in the helper — the strict TypeScript Uint8Array cast fails.
+- **Tests**: 246 passing (223 prior + 16 PDF router/haiku/vision + 4 analytics + 3 tax package). `pnpm build` clean — 24 routes total (4 new: `/api/analytics/[taxYearId]`, `/api/analytics/firm`, `/clients/analytics`, `/years/[year]/analytics`).
+- **Verify**: `pnpm test` (246 passing); `pnpm build` (clean); upload a PDF and observe session badge increment + prompts dialog; `/years/2025/analytics` renders all 9 charts; locked year → `/years/2025/download` 4 cards; click Tax Package → ZIP opens with PDFs.

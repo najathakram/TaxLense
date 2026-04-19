@@ -167,12 +167,16 @@ export function buildSystemPrompt(
   profile: ProfileContext,
   trips: Trip[],
   entities: KnownEntity[],
-  _ruleVersion: RuleVersion | null
+  _ruleVersion: RuleVersion | null,
+  clientNotes?: string,
 ): string {
   const vehicleInfo = formatVehicleConfig(profile.vehicleConfig)
   const hoConfig = profile.homeOfficeConfig as { has?: boolean; dedicated?: boolean; officeSqft?: number; homeSqft?: number } | null
+  const notesBlock = clientNotes && clientNotes.trim().length > 0
+    ? `\n\n=== CLIENT-PROVIDED CONTEXT (from upload sessions; treat as corroboration, not law) ===\n${clientNotes.trim()}`
+    : ""
 
-  return `You are the Merchant Intelligence Agent for TaxLens — an audit-defense bookkeeping tool for US self-employed taxpayers preparing Schedule C returns.
+  return `You are the Merchant Intelligence Agent for TaxLens — an audit-defense bookkeeping tool for US self-employed taxpayers preparing Schedule C returns.${notesBlock}
 
 Your job: classify a batch of unique merchants into deductible categories with IRC citations, given the owner's business profile.
 
@@ -316,7 +320,8 @@ export async function classifyBatch(
   trips: Trip[],
   entities: KnownEntity[],
   ruleVersion: RuleVersion | null,
-  anthropicClient?: Anthropic
+  anthropicClient?: Anthropic,
+  clientNotes?: string,
 ): Promise<MerchantRuleOutput[]> {
   const client = anthropicClient ?? new Anthropic({ apiKey: process.env["ANTHROPIC_API_KEY"] })
   const systemPrompt = buildSystemPrompt(
@@ -334,7 +339,8 @@ export async function classifyBatch(
     },
     trips,
     entities,
-    ruleVersion
+    ruleVersion,
+    clientNotes,
   )
   const userPrompt = buildUserPrompt(merchants)
 
@@ -443,6 +449,42 @@ export interface RunMerchantIntelligenceResult {
   stopsGenerated: number
 }
 
+export async function aggregateClientNotes(taxYearId: string): Promise<string> {
+  const sessions = await prisma.importSession.findMany({
+    where: { taxYearId, notes: { not: null } },
+    select: { notes: true, uploadedAt: true },
+    orderBy: { uploadedAt: "asc" },
+  })
+  const imports = await prisma.statementImport.findMany({
+    where: { taxYearId, userNotes: { not: { equals: null } } },
+    select: {
+      originalFilename: true,
+      institution: true,
+      periodStart: true,
+      userNotes: true,
+    },
+    orderBy: { uploadedAt: "asc" },
+  })
+
+  const parts: string[] = []
+  for (const s of sessions) {
+    if (s.notes && s.notes.trim().length > 0) {
+      parts.push(`[Session ${s.uploadedAt.toISOString().slice(0, 10)}] ${s.notes.trim()}`)
+    }
+  }
+  for (const imp of imports) {
+    const notes = imp.userNotes as Record<string, { question?: string; answer?: string }> | null
+    if (!notes) continue
+    for (const entry of Object.values(notes)) {
+      if (entry?.question && entry?.answer) {
+        const tag = `${imp.institution ?? imp.originalFilename}${imp.periodStart ? ` (${imp.periodStart.toISOString().slice(0, 10)})` : ""}`
+        parts.push(`- [${tag}] Q: ${entry.question} → A: ${entry.answer}`)
+      }
+    }
+  }
+  return parts.join("\n")
+}
+
 export async function runMerchantIntelligence(
   taxYearId: string,
   anthropicClient?: Anthropic
@@ -457,6 +499,8 @@ export async function runMerchantIntelligence(
     where: { taxYearId },
     include: { trips: true, knownEntities: true },
   })
+
+  const clientNotes = await aggregateClientNotes(taxYearId)
 
   // Pull distinct normalized merchants from transactions that still need classification
   const txGroups = await prisma.transaction.groupBy({
@@ -522,7 +566,8 @@ export async function runMerchantIntelligence(
       profile.trips,
       profile.knownEntities,
       taxYear.ruleVersion,
-      anthropicClient
+      anthropicClient,
+      clientNotes,
     )
 
     // Upsert MerchantRule rows

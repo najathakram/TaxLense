@@ -6,6 +6,7 @@ import { prisma } from "@/lib/db"
 export const CLIENT_CONTEXT_COOKIE = "taxlens_client_ctx"
 
 export interface ClientContext {
+  cpaId: string
   clientId: string
   clientName: string
   clientEmail: string
@@ -29,6 +30,7 @@ export const getClientContext = cache(async (): Promise<ClientContext | null> =>
   if (!rel) return null
 
   return {
+    cpaId,
     clientId: rel.clientUserId,
     clientName: rel.client.name ?? rel.client.email,
     clientEmail: rel.client.email,

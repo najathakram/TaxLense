@@ -53,6 +53,14 @@ export default async function DownloadPage({ params }: Props) {
       filename: `taxlens-${year}-audit-packet.zip`,
       contentType: "application/zip",
     },
+    {
+      kind: "TAX_PACKAGE" as const,
+      title: "Tax Package (CPA Handoff)",
+      description:
+        "ZIP containing PDF client summary, Schedule C worksheet, Form 8829, depreciation schedule, 1099-NEC recipients CSV, CPA handoff letter, plus the reused Financial Statements and Master Ledger XLSX files.",
+      filename: `taxlens-${year}-tax-package.zip`,
+      contentType: "application/zip",
+    },
   ]
 
   return (

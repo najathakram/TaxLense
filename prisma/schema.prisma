@@ -56,6 +56,21 @@ enum ReportKind {
   MASTER_LEDGER
   FINANCIAL_STATEMENTS
   AUDIT_PACKET
+  TAX_PACKAGE
+}
+
+enum ExtractionPath {
+  CSV
+  OFX
+  PDF_PARSE
+  HAIKU_CLEANUP
+  VISION_DOC
+}
+
+enum ImportSessionStatus {
+  IN_PROGRESS
+  COMPLETE
+  ABORTED
 }
 
 // All 9 classification codes + 2 supplementary (spec §3.1)
@@ -234,6 +249,7 @@ model TaxYear {
   merchantRules     MerchantRule[]
   stopItems         StopItem[]
   reports           Report[]
+  importSessions    ImportSession[]
 
   @@unique([userId, year])
 }
@@ -328,31 +344,58 @@ model FinancialAccount {
 // ---------------------------------------------------------------------------
 
 model StatementImport {
-  id                  String      @id @default(cuid())
-  accountId           String
-  taxYearId           String
-  filePath            String
-  originalFilename    String                           // Display name from upload
-  fileType            String                           // "csv" | "pdf" | "ofx" | "qfx"
-  institution         String?                          // Auto-detected: "chase-cc", "amex", etc.
-  periodStart         DateTime?                        // Null for FAILED imports
-  periodEnd           DateTime?                        // Null for FAILED imports
-  sourceHash          String                           // SHA-256 of file bytes
-  parseStatus         ParseStatus @default(PENDING)
-  parseConfidence     Float?
-  totalInflows        Decimal?    @db.Decimal(15, 2)  // abs sum of negative amountNormalized
-  totalOutflows       Decimal?    @db.Decimal(15, 2)  // sum of positive amountNormalized
-  transactionCount    Int         @default(0)          // Cached count
-  reconciliationOk    Boolean?                         // null=N/A (CSV); true/false for PDF
-  reconciliationDelta Decimal?    @db.Decimal(15, 2)  // |stated – computed|
-  parseError          String?                          // Error message for FAILED/PARTIAL
-  uploadedAt          DateTime    @default(now())
+  id                   String          @id @default(cuid())
+  accountId            String
+  taxYearId            String
+  sessionId            String?         // Session 9: groups uploads in one client session
+  filePath             String
+  originalFilename     String
+  fileType             String
+  institution          String?
+  periodStart          DateTime?
+  periodEnd            DateTime?
+  sourceHash           String
+  parseStatus          ParseStatus     @default(PENDING)
+  parseConfidence      Float?
+  totalInflows         Decimal?        @db.Decimal(15, 2)
+  totalOutflows        Decimal?        @db.Decimal(15, 2)
+  transactionCount     Int             @default(0)
+  reconciliationOk     Boolean?
+  reconciliationDelta  Decimal?        @db.Decimal(15, 2)
+  parseError           String?
+  extractionPath       ExtractionPath?
+  extractionConfidence Float?
+  aiModel              String?
+  aiTokensIn           Int?
+  aiTokensOut          Int?
+  userNotes            Json?           // { institutionConfirmed, accountPurpose, unusualDeposits, gapExplanation, freeText }
+  uploadedAt           DateTime        @default(now())
 
   account      FinancialAccount @relation(fields: [accountId], references: [id], onDelete: Cascade)
   taxYear      TaxYear          @relation(fields: [taxYearId], references: [id], onDelete: Cascade)
+  session      ImportSession?   @relation(fields: [sessionId], references: [id], onDelete: SetNull)
   transactions Transaction[]
 
   @@unique([accountId, sourceHash])
+}
+
+// ---------------------------------------------------------------------------
+// IMPORT SESSION (Session 9: groups a batch of uploads + client notes)
+// ---------------------------------------------------------------------------
+
+model ImportSession {
+  id             String              @id @default(cuid())
+  taxYearId      String
+  cpaUserId      String?             // CPA who initiated the session, if any
+  status         ImportSessionStatus @default(IN_PROGRESS)
+  totalApiCalls  Int                 @default(0)
+  apiCallLimit   Int                 @default(50)
+  notes          String?             // Free-text notes for this upload session
+  uploadedAt     DateTime            @default(now())
+  closedAt       DateTime?
+
+  taxYear TaxYear           @relation(fields: [taxYearId], references: [id], onDelete: Cascade)
+  imports StatementImport[]
 }
 
 // ---------------------------------------------------------------------------
