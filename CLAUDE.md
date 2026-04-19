@@ -57,7 +57,7 @@ These are the design rails. If a future change violates one of these, the change
 - [x] Prompt 0 — Environment verified, CLAUDE.md, .env.example in place
 - [x] Prompt 1 — Foundation (Next.js scaffold, Prisma schema, NextAuth, seed, route stubs, smoke tests)
 - [x] Prompt 2 — Profile Wizard
-- [ ] Prompt 3 — Ingestion
+- [x] Prompt 3 — Ingestion
 - [ ] Prompt 4 — Merchant Intelligence
 - [ ] Prompt 5 — STOPs + Ledger Review
 - [ ] Prompt 6 — Residual AI + Lock
@@ -176,3 +176,32 @@ These were discovered during Prompt 1 and must be respected in all future sessio
 - **Seed is idempotent** — cleans up FK-dependent rows (Classification → Transaction) before re-creating fixture IDs
 - **Smoke tests updated** to use `test@taxlens.local`; query via userId to avoid collision with old fixture rows; tx transfer pair now tx_019/tx_020; asserts 0 classifications (not 20)
 - **8/8 tests passing**; dev server 200 OK on `/login`
+
+## Prompt 3 notes
+
+- **Schema migration**: `add_ingestion_fields` — `StatementImport` gets `originalFilename`, `institution`, nullable `periodStart`/`periodEnd`, `totalInflows`, `totalOutflows`, `transactionCount`, `reconciliationOk`, `reconciliationDelta`, `parseError`; `sourceHash` uniqueness moved to `@@unique([accountId, sourceHash])`
+- **Parser layer** (`lib/parsers/`):
+  - `types.ts` — `RawTx`, `ReconciliationResult`, `ParseResult`
+  - `dedup.ts` — `fileHash()` (SHA-256 on bytes), `transactionKey()` (SHA-256 on accountId|date|cents|merchantRaw)
+  - `pdf-extractor.ts` — pdf-parse wrapper; `isUsableText()` heuristic (≥80 chars)
+  - `csv-extractor.ts` — papaparse wrapper; `parseDollar()`, `parseDateFlex()`
+  - `institutions/chase-cc.ts` — charges negative → flip; parseConfidence 0.95
+  - `institutions/chase-checking.ts` — debits negative → flip; parseConfidence 0.95
+  - `institutions/amex.ts` — charges positive, no flip; parseConfidence 0.95
+  - `institutions/costco-citi.ts` — Debit/Credit split columns or single Amount (Amex-style); parseConfidence 0.95
+  - `institutions/robinhood.ts` — withdrawals/purchases negative → flip; builds merchantRaw from Instrument+Description+TransCode
+  - `institutions/generic.ts` — header heuristic detection; confidence capped at 0.6
+  - `institutions/ofx-generic.ts` — SGML + XML OFX block extraction; TRNAMT flip; confidence 0.9
+  - `institutions/index.ts` — `detectInstitution()` + `dispatchCsvParse()` + `INSTITUTION_DISPLAY` map
+  - `index.ts` — `parseStatement(buffer, filename)` dispatcher; OFX/PDF/CSV routing; PDF returns structured failure in V1
+- **Upload UX** (`app/(app)/years/[year]/upload/`):
+  - `actions.ts` — `uploadStatement()`, `deleteImport()`, `createAccount()`, `reparseImport()`; file-level dedup on SHA-256; transaction-level dedup on idempotencyKey; bumps TaxYear status to INGESTION on first upload
+  - `page.tsx` — server component; serialises Decimals/Dates for client
+  - `upload-client.tsx` — account cards with drag-to-upload area, import history with status badges, reparse/remove actions
+- **Coverage grid** (`app/(app)/years/[year]/coverage/`):
+  - `page.tsx` — server component; computes txByMonth for each account; counts totalGaps
+  - `coverage-grid.tsx` — 12-column heat-map table (green/yellow/red/muted cells); gap alert; per-account detail cards
+- **Fixture CSVs** in `tests/fixtures/`: `chase-cc-sample.csv`, `chase-checking-sample.csv`, `amex-sample.csv`, `costco-citi-sample.csv`, `robinhood-sample.csv`
+- **Tests** (69 total, all passing): `parsers.test.ts` (sign normalisation for all 7 parsers), `dedup.test.ts`, `reconciliation.test.ts` (totals/periodStart/error handling), `coverage.test.ts` (gap detection logic)
+- **Build**: clean `pnpm build` — 12 routes; TypeScript strict; no errors
+- **Verify**: `pnpm test` (69 passing); `pnpm build` (clean); upload page at `/years/2025/upload`; coverage at `/years/2025/coverage`

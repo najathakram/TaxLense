@@ -1864,12 +1864,20 @@ export const StatementImportScalarFieldEnum = {
   accountId: 'accountId',
   taxYearId: 'taxYearId',
   filePath: 'filePath',
+  originalFilename: 'originalFilename',
   fileType: 'fileType',
+  institution: 'institution',
   periodStart: 'periodStart',
   periodEnd: 'periodEnd',
   sourceHash: 'sourceHash',
   parseStatus: 'parseStatus',
   parseConfidence: 'parseConfidence',
+  totalInflows: 'totalInflows',
+  totalOutflows: 'totalOutflows',
+  transactionCount: 'transactionCount',
+  reconciliationOk: 'reconciliationOk',
+  reconciliationDelta: 'reconciliationDelta',
+  parseError: 'parseError',
   uploadedAt: 'uploadedAt'
 } as const
 

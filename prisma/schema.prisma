@@ -304,17 +304,25 @@ model FinancialAccount {
 // ---------------------------------------------------------------------------
 
 model StatementImport {
-  id              String      @id @default(cuid())
-  accountId       String
-  taxYearId       String
-  filePath        String
-  fileType        String      // "csv" | "pdf" | "ofx" | "qfx"
-  periodStart     DateTime
-  periodEnd       DateTime
-  sourceHash      String      @unique // SHA-256 of file bytes; idempotency
-  parseStatus     ParseStatus @default(PENDING)
-  parseConfidence Float?
-  uploadedAt      DateTime    @default(now())
+  id                  String      @id @default(cuid())
+  accountId           String
+  taxYearId           String
+  filePath            String
+  originalFilename    String                           // Display name from upload
+  fileType            String                           // "csv" | "pdf" | "ofx" | "qfx"
+  institution         String?                          // Auto-detected: "chase-cc", "amex", etc.
+  periodStart         DateTime?                        // Null for FAILED imports
+  periodEnd           DateTime?                        // Null for FAILED imports
+  sourceHash          String                           // SHA-256 of file bytes
+  parseStatus         ParseStatus @default(PENDING)
+  parseConfidence     Float?
+  totalInflows        Decimal?    @db.Decimal(15, 2)  // abs sum of negative amountNormalized
+  totalOutflows       Decimal?    @db.Decimal(15, 2)  // sum of positive amountNormalized
+  transactionCount    Int         @default(0)          // Cached count
+  reconciliationOk    Boolean?                         // null=N/A (CSV); true/false for PDF
+  reconciliationDelta Decimal?    @db.Decimal(15, 2)  // |stated – computed|
+  parseError          String?                          // Error message for FAILED/PARTIAL
+  uploadedAt          DateTime    @default(now())
 
   account      FinancialAccount @relation(fields: [accountId], references: [id], onDelete: Cascade)
   taxYear      TaxYear          @relation(fields: [taxYearId], references: [id], onDelete: Cascade)
