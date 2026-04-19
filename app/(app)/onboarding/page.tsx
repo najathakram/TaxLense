@@ -18,16 +18,23 @@ export default async function OnboardingPage() {
     },
   })
 
-  // If all tax years are past CREATED, wizard is done — go to dashboard
+  // If the user has tax years but none are CREATED (all past wizard), the
+  // wizard is done — send them to the dashboard. A brand-new user with zero
+  // tax years falls through and sees Step 1, which creates the TaxYear row.
   if (!taxYear) {
-    redirect("/dashboard")
+    const anyTaxYear = await prisma.taxYear.findFirst({ where: { userId }, select: { id: true } })
+    if (anyTaxYear) redirect("/dashboard")
   }
 
-  const profile = taxYear.businessProfile
+  const profile = taxYear?.businessProfile ?? null
+
+  // Default new users to the most recent past tax year (the one currently
+  // being prepared). Users can still change it in Step 1 before it's saved.
+  const defaultYear = new Date().getFullYear() - 1
 
   // Map DB profile → WizardData for pre-filling the wizard
   const initialData: Partial<WizardData> = {
-    year: taxYear.year,
+    year: taxYear?.year ?? defaultYear,
     ...(profile
       ? {
           entityType: profile.entityType as WizardData["entityType"],
