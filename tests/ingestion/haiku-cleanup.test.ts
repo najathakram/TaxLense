@@ -4,12 +4,15 @@
 import { describe, expect, it, vi } from "vitest"
 import { extractViaHaikuCleanup } from "../../lib/parsers/haiku-cleanup"
 
-function mockAnthropic(responses: Array<{ text: string; in?: number; out?: number }>) {
+function mockAnthropic(
+  responses: Array<{ text: string; in?: number; out?: number; stop_reason?: string }>,
+) {
   const create = vi.fn()
   for (const r of responses) {
     create.mockResolvedValueOnce({
       content: [{ type: "text", text: r.text }],
       usage: { input_tokens: r.in ?? 100, output_tokens: r.out ?? 50 },
+      stop_reason: r.stop_reason ?? "end_turn",
     })
   }
   return { messages: { create } } as unknown as import("@anthropic-ai/sdk").default
@@ -84,6 +87,38 @@ describe("extractViaHaikuCleanup", () => {
     const client = mockAnthropic([{ text: fenced }])
     const { parseResult } = await extractViaHaikuCleanup("x", client)
     expect(parseResult.transactions).toHaveLength(2)
+  })
+
+  it("surfaces stop_reason=max_tokens explicitly and does not silently JSON.parse truncated output", async () => {
+    const truncated = JSON.stringify(validExtraction).slice(0, 120)
+    const client = mockAnthropic([
+      { text: truncated, stop_reason: "max_tokens", out: 16384 },
+      { text: truncated, stop_reason: "max_tokens", out: 16384 },
+    ])
+    const { parseResult, telemetry } = await extractViaHaikuCleanup("x", client)
+    expect(parseResult.ok).toBe(false)
+    expect(parseResult.error).toMatch(/stop_reason=max_tokens/)
+    expect(telemetry.apiCalls).toBe(2)
+  })
+
+  it("handles a large (140-tx) extraction at the raised max_tokens ceiling", async () => {
+    const many = Array.from({ length: 140 }, (_, i) => ({
+      postedDate: `2025-02-${String((i % 28) + 1).padStart(2, "0")}`,
+      transactionDate: null,
+      amount: 10 + i,
+      direction: i % 2 === 0 ? "outflow" : "inflow",
+      merchantRaw: `MERCHANT_${i}`,
+      description: null,
+    }))
+    const payload = { ...validExtraction, transactions: many, confidence: 0.88 }
+    const client = mockAnthropic([
+      { text: JSON.stringify(payload), out: 12000, stop_reason: "end_turn" },
+    ])
+    const { parseResult, telemetry } = await extractViaHaikuCleanup("x", client)
+    expect(parseResult.ok).toBe(true)
+    expect(parseResult.transactions).toHaveLength(140)
+    expect(telemetry.confidence).toBe(0.88)
+    expect(telemetry.apiCalls).toBe(1)
   })
 
   it("skips transactions with unparseable dates", async () => {

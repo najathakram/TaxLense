@@ -15,8 +15,9 @@ import type { ParseResult, RawTx } from "./types"
 
 const HAIKU_MODEL = "claude-haiku-4-5-20251001"
 const SONNET_MODEL = "claude-sonnet-4-6"
-const MAX_TOKENS = 4096
+const MAX_TOKENS = 16384
 const RETRY_CONFIDENCE_THRESHOLD = 0.6
+const TRUNCATION_MARKER = "OUTPUT_TRUNCATED"
 
 const TxSchema = z.object({
   postedDate: z.string(),
@@ -171,12 +172,20 @@ export async function extractViaVisionDoc(
       })
       tokensIn += res.usage.input_tokens
       tokensOut += res.usage.output_tokens
+      if (res.stop_reason === "max_tokens") {
+        throw new Error(
+          `${TRUNCATION_MARKER}: stop_reason=max_tokens, output_tokens=${res.usage.output_tokens}`,
+        )
+      }
       const block = res.content[0]
       if (!block || block.type !== "text") return null
       return ExtractionSchema.parse(JSON.parse(extractJSON(block.text)))
     } catch (err) {
       lastError = err
-      console.error(`[vision-doc] tryOnce(${model}) failed:`, err)
+      console.error(
+        `[vision-doc] tryOnce(${model}) failed (pdfBytes=${pdfBuffer.byteLength}):`,
+        err,
+      )
       return null
     }
   }
@@ -191,8 +200,15 @@ export async function extractViaVisionDoc(
   }
 
   if (!parsed) {
+    const rawMessage =
+      lastError instanceof Error
+        ? lastError.message
+        : String(lastError ?? "both Haiku and Sonnet returned null")
+    const userMessage = rawMessage.startsWith(TRUNCATION_MARKER)
+      ? `Statement too long for a single extraction — try splitting the PDF by month and re-uploading. (stop_reason=max_tokens)`
+      : `Vision extraction failed: ${rawMessage}`
     return {
-      parseResult: failedResult(`Vision extraction failed: ${lastError instanceof Error ? lastError.message : String(lastError ?? "both Haiku and Sonnet returned null")}`),
+      parseResult: failedResult(userMessage),
       telemetry: {
         model: modelUsed,
         tokensIn,
