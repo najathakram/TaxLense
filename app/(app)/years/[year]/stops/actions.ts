@@ -4,8 +4,9 @@ import { prisma } from "@/lib/db"
 import { getCurrentUserId } from "@/lib/auth"
 import { revalidatePath } from "next/cache"
 import { applyMerchantRules } from "@/lib/classification/apply"
-import type { Prisma } from "@/app/generated/prisma/client"
+import type { Prisma, ClassificationSource } from "@/app/generated/prisma/client"
 import { deriveFromAnswer, type StopAnswer } from "@/lib/stops/derive"
+import { classifyStopsWithAI, type StopForAI } from "@/lib/ai/autoResolveStops"
 export type { StopAnswer } from "@/lib/stops/derive"
 
 
@@ -139,6 +140,171 @@ async function getYearFor(stopId: string): Promise<number | null> {
     include: { taxYear: true },
   })
   return s?.taxYear.year ?? null
+}
+
+// ---------- AI auto-resolve ----------
+
+export interface AutoResolveResult {
+  resolved: number
+  skipped: number   // confidence < 0.85
+  errors: number
+  details: Array<{ merchantKey: string; code: string; confidence: number; status: "resolved" | "skipped" | "error" }>
+}
+
+const AUTO_RESOLVE_CONFIDENCE_THRESHOLD = 0.85
+
+export async function autoResolveStops(year: number): Promise<AutoResolveResult> {
+  const userId = await getCurrentUserId()
+
+  const taxYear = await prisma.taxYear.findUnique({
+    where: { userId_year: { userId, year } },
+    include: { businessProfile: true },
+  })
+  if (!taxYear) throw new Error("Tax year not found")
+
+  // Fetch all PENDING stops with their transaction data
+  const stops = await prisma.stopItem.findMany({
+    where: { taxYearId: taxYear.id, state: "PENDING" },
+    include: { merchantRule: true },
+  })
+  if (stops.length === 0) return { resolved: 0, skipped: 0, errors: 0, details: [] }
+
+  // Gather transaction details
+  const allIds = stops.flatMap((s) => s.transactionIds)
+  const txns = allIds.length
+    ? await prisma.transaction.findMany({
+        where: { id: { in: allIds } },
+        include: { account: true },
+      })
+    : []
+  const txById = new Map(txns.map((t) => [t.id, t]))
+
+  // Build StopForAI list
+  const stopsForAI: StopForAI[] = stops.map((s) => {
+    const affected = s.transactionIds.flatMap((id) => {
+      const t = txById.get(id)
+      if (!t) return []
+      return [{ date: t.postedDate.toISOString().slice(0, 10), account: t.account.nickname ?? "", raw: t.merchantRaw, amount: Number(t.amountNormalized.toString()) }]
+    })
+    const totalAmount = affected.reduce((sum, t) => sum + Math.abs(t.amount), 0)
+    return {
+      stopId: s.id,
+      merchantKey: s.merchantRule?.merchantKey ?? (affected[0]?.raw ?? "UNKNOWN"),
+      category: s.category,
+      totalAmount,
+      txnCount: affected.length,
+      samples: affected.slice(0, 5),
+    }
+  })
+
+  const businessContext = [
+    taxYear.businessProfile?.businessDescription ?? "",
+    `NAICS: ${taxYear.businessProfile?.naicsCode ?? ""}`,
+  ].filter(Boolean).join(". ")
+
+  // Call AI
+  const aiResults = await classifyStopsWithAI(stopsForAI, businessContext)
+  const resultMap = new Map(aiResults.map((r) => [r.stopId, r]))
+
+  let resolved = 0
+  let skipped = 0
+  let errors = 0
+  const details: AutoResolveResult["details"] = []
+
+  for (const stop of stops) {
+    const ai = resultMap.get(stop.id)
+    const mk = stop.merchantRule?.merchantKey ?? "UNKNOWN"
+
+    if (!ai) {
+      skipped++
+      details.push({ merchantKey: mk, code: "?", confidence: 0, status: "skipped" })
+      continue
+    }
+
+    if (ai.confidence < AUTO_RESOLVE_CONFIDENCE_THRESHOLD) {
+      skipped++
+      details.push({ merchantKey: mk, code: ai.code, confidence: ai.confidence, status: "skipped" })
+      continue
+    }
+
+    try {
+      await prisma.$transaction(async (tx) => {
+        // Flip + insert classification for every transaction in this stop
+        for (const txId of stop.transactionIds) {
+          await tx.classification.updateMany({
+            where: { transactionId: txId, isCurrent: true },
+            data: { isCurrent: false },
+          })
+          await tx.classification.create({
+            data: {
+              transactionId: txId,
+              code: ai.code,
+              scheduleCLine: ai.scheduleCLine,
+              businessPct: ai.businessPct,
+              ircCitations: ai.ircCitations,
+              confidence: ai.confidence,
+              evidenceTier: 3,
+              source: "AI" as ClassificationSource,
+              reasoning: `Auto-resolved: ${ai.reasoning}`,
+              isCurrent: true,
+              createdByUserId: userId,
+            },
+          })
+        }
+
+        // Update merchant rule if applyToSimilar
+        if (ai.applyToSimilar && stop.merchantRuleId) {
+          await tx.merchantRule.update({
+            where: { id: stop.merchantRuleId },
+            data: {
+              code: ai.code,
+              scheduleCLine: ai.scheduleCLine,
+              businessPctDefault: ai.businessPct,
+              ircCitations: ai.ircCitations,
+              requiresHumanInput: false,
+              isConfirmed: true,
+              confidence: ai.confidence,
+              reasoning: ai.reasoning,
+            },
+          })
+          if (stop.merchantRule?.merchantKey) {
+            await applyMerchantRules(stop.taxYearId, {
+              merchantKey: stop.merchantRule.merchantKey,
+              tx: tx as unknown as Prisma.TransactionClient,
+              force: false,
+            })
+          }
+        }
+
+        await tx.stopItem.update({
+          where: { id: stop.id },
+          data: { state: "ANSWERED", answeredAt: new Date(), userAnswer: { autoResolved: true, code: ai.code, confidence: ai.confidence } as unknown as Prisma.InputJsonValue },
+        })
+
+        await tx.auditEvent.create({
+          data: {
+            userId,
+            actorType: "AI",
+            eventType: "STOP_RESOLVED",
+            entityType: "StopItem",
+            entityId: stop.id,
+            afterState: { code: ai.code, businessPct: ai.businessPct, confidence: ai.confidence, autoResolved: true },
+            rationale: ai.reasoning,
+          },
+        })
+      }, { timeout: 30_000 })
+
+      resolved++
+      details.push({ merchantKey: mk, code: ai.code, confidence: ai.confidence, status: "resolved" })
+    } catch {
+      errors++
+      details.push({ merchantKey: mk, code: ai.code, confidence: ai.confidence, status: "error" })
+    }
+  }
+
+  revalidatePath(`/years/${year}/stops`)
+  revalidatePath(`/years/${year}/ledger`)
+  return { resolved, skipped, errors, details }
 }
 
 // ---------- deferStop ----------

@@ -12,7 +12,7 @@ import { Label } from "@/components/ui/label"
 import { Switch } from "@/components/ui/switch"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { SCHEDULE_C_LINES } from "@/lib/classification/constants"
-import { resolveStop, deferStop, type StopAnswer } from "./actions"
+import { resolveStop, deferStop, autoResolveStops, type StopAnswer, type AutoResolveResult } from "./actions"
 
 export interface SerializedAffected {
   id: string
@@ -42,7 +42,23 @@ const CATEGORIES: { key: StopCategory; label: string }[] = [
   { key: "PERIOD_GAP", label: "Period Gap" },
 ]
 
-export function StopsClient({ year: _year, stops }: { year: number; stops: SerializedStop[] }) {
+export function StopsClient({ year, stops }: { year: number; stops: SerializedStop[] }) {
+  const [autoResult, setAutoResult] = useState<AutoResolveResult | null>(null)
+  const [autoRunning, setAutoRunning] = useState(false)
+
+  const onAutoResolve = async () => {
+    setAutoRunning(true)
+    setAutoResult(null)
+    try {
+      const result = await autoResolveStops(year)
+      setAutoResult(result)
+    } catch (e) {
+      alert(e instanceof Error ? e.message : String(e))
+    } finally {
+      setAutoRunning(false)
+    }
+  }
+
   const byCat = new Map<StopCategory, SerializedStop[]>()
   for (const c of CATEGORIES) byCat.set(c.key, [])
   for (const s of stops) byCat.get(s.category)?.push(s)
@@ -51,7 +67,26 @@ export function StopsClient({ year: _year, stops }: { year: number; stops: Seria
   const pendingCount = (cat: StopCategory) =>
     byCat.get(cat)?.filter((s) => s.state === "PENDING").length ?? 0
 
+  const totalPending = CATEGORIES.reduce((n, c) => n + pendingCount(c.key), 0)
+
   return (
+    <div className="space-y-4">
+      {/* Auto-resolve banner */}
+      <div className="flex items-center justify-between gap-4 border rounded p-3 bg-muted/30">
+        <div className="text-sm">
+          <span className="font-medium">{totalPending} pending stops</span>
+          <span className="text-muted-foreground ml-2">— AI (Sonnet) will auto-resolve high-confidence items (≥85%)</span>
+        </div>
+        <Button size="sm" disabled={autoRunning || totalPending === 0} onClick={onAutoResolve}>
+          {autoRunning ? "Resolving…" : "Auto-resolve with AI"}
+        </Button>
+      </div>
+      {autoResult && (
+        <div className="border rounded p-3 text-sm space-y-1 bg-green-50 dark:bg-green-950/30">
+          <p className="font-medium">Auto-resolve complete: <span className="text-green-700 dark:text-green-400">{autoResult.resolved} resolved</span> · {autoResult.skipped} skipped (low confidence) · {autoResult.errors} errors</p>
+          <p className="text-muted-foreground text-xs">Reload the page to see updated counts. Skipped items need manual review.</p>
+        </div>
+      )}
     <Tabs defaultValue="MERCHANT" className="w-full">
       <TabsList className="grid w-full grid-cols-5">
         {CATEGORIES.map((c) => (
@@ -70,6 +105,7 @@ export function StopsClient({ year: _year, stops }: { year: number; stops: Seria
         </TabsContent>
       ))}
     </Tabs>
+    </div>
   )
 }
 
