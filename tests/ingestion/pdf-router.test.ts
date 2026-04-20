@@ -21,6 +21,20 @@ describe("scorePdfText", () => {
     expect(s.ratioAlnum).toBeGreaterThan(0.4)
   })
 
+  it("counts Chase-style MM/DD dates (no year)", () => {
+    const text = `
+      06/11 STRIPE DES:TRANSFER ID:ST-M1Q         $183.37
+      06/12 POCKETSFLOW INC DES:TRANSFER          $1,084.89
+      06/13 VENMO DES:ACCTVERIFY                  $0.19
+      06/13 WISE US INC DES:WIRE                  $2,137.63
+      06/16 POCKETSFLOW DES:TRANSFER              $8.91
+      06/17 STRIPE DES:TRANSFER ID:ST-T3S         $183.22
+    `
+    const s = scorePdfText(text, 2)
+    expect(s.dateHits).toBeGreaterThanOrEqual(5)
+    expect(s.dollarHits).toBeGreaterThanOrEqual(5)
+  })
+
   it("returns zeroed numbers on empty input", () => {
     const s = scorePdfText("", 0)
     expect(s.dateHits).toBe(0)

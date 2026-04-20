@@ -13,7 +13,7 @@ import Anthropic from "@anthropic-ai/sdk"
 import { z } from "zod"
 import type { ParseResult, RawTx } from "./types"
 
-const HAIKU_MODEL = "claude-haiku-4-5"
+const HAIKU_MODEL = "claude-haiku-4-5-20251001"
 const SONNET_MODEL = "claude-sonnet-4-6"
 const MAX_TOKENS = 4096
 const RETRY_CONFIDENCE_THRESHOLD = 0.6

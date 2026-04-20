@@ -21,7 +21,7 @@ export interface PdfScore {
   numpages: number
 }
 
-const DATE_RE = /\b(\d{1,2})[\/\-\.](\d{1,2})[\/\-\.](\d{2,4})\b/g
+const DATE_RE = /\b\d{1,2}[\/\-\.]\d{1,2}(?:[\/\-\.]\d{2,4})?\b/g
 const DOLLAR_RE = /(?:\$|USD\s*)?\d{1,3}(?:,\d{3})*\.\d{2}\b/g
 
 export function scorePdfText(text: string, numpages: number): PdfScore {

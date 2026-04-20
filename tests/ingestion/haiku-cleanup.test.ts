@@ -53,7 +53,7 @@ describe("extractViaHaikuCleanup", () => {
     expect(parseResult.totalOutflows).toBe(54.99)
     expect(telemetry.confidence).toBe(0.92)
     expect(telemetry.apiCalls).toBe(1)
-    expect(telemetry.model).toBe("claude-haiku-4-5")
+    expect(telemetry.model).toBe("claude-haiku-4-5-20251001")
   })
 
   it("retries on Sonnet when Haiku confidence < 0.6", async () => {

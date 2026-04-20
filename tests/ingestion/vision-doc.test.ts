@@ -40,7 +40,7 @@ describe("extractViaVisionDoc", () => {
 
     expect(parseResult.ok).toBe(true)
     expect(parseResult.transactions).toHaveLength(1)
-    expect(telemetry.model).toBe("claude-haiku-4-5")
+    expect(telemetry.model).toBe("claude-haiku-4-5-20251001")
     expect(telemetry.apiCalls).toBe(1)
 
     const createCall = (client.messages.create as ReturnType<typeof vi.fn>).mock.calls[0]![0]
