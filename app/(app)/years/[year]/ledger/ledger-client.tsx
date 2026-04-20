@@ -64,9 +64,17 @@ export function LedgerClient({ year, rows, accounts }: Props) {
 
   // ---- AI merchant categories ----
   const [categoryMap, setCategoryMap] = useState<Record<string, string>>({})
+  const [categoryError, setCategoryError] = useState<string | null>(null)
   useEffect(() => {
     const unique = Array.from(new Set(rows.map((r) => r.merchantNormalized ?? r.merchantRaw)))
-    fetchMerchantCategories(year, unique).then(setCategoryMap).catch(() => {})
+    fetchMerchantCategories(year, unique)
+      .then((map) => {
+        setCategoryMap(map)
+        setCategoryError(null)
+      })
+      .catch((e) => {
+        setCategoryError(e instanceof Error ? e.message : String(e))
+      })
   }, [year, rows])
 
   // ---- selection state ----
@@ -294,6 +302,11 @@ export function LedgerClient({ year, rows, accounts }: Props) {
             Clear
           </Button>
         </div>
+      )}
+
+      {/* Category load error */}
+      {categoryError && (
+        <p className="text-xs text-amber-600">Categories unavailable: {categoryError}</p>
       )}
 
       {/* Virtualized table */}

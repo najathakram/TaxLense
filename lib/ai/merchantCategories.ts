@@ -1,7 +1,7 @@
 import Anthropic from "@anthropic-ai/sdk"
 
 const SYSTEM_PROMPT = `You are a merchant categorization assistant for bank/credit card statements.
-Given a list of merchant names, return a JSON object mapping each merchant to a short human-readable category.
+Given a JSON array of merchant names, return a JSON array of short human-readable category strings — one per merchant, in the same order.
 
 Use concise category labels like:
 Fast Food, Coffee, Restaurant, Grocery, Gas & Fuel, Software, Streaming, Office Supplies,
@@ -9,7 +9,7 @@ Banking Fee, Payment Processing, Marketplace Sales, E-commerce, Travel, Hotel, R
 Fuel, Pharmacy, Medical, Books, Entertainment, Clothing, Personal Care, Tobacco,
 Telecom, Transfer, Utilities, Insurance, Auto, Shipping, Government, Charity
 
-Return ONLY valid JSON: {"MERCHANT_NAME": "Category", ...}
+Return ONLY a JSON array: ["Category1", "Category2", ...]
 No prose, no markdown, no explanation.`
 
 export async function batchCategorizeMerchants(
@@ -38,11 +38,18 @@ export async function batchCategorizeMerchants(
       const block = res.content[0]
       if (!block || block.type !== "text") continue
       const text = block.text
-      const s = text.indexOf("{")
-      const e = text.lastIndexOf("}")
+      const s = text.indexOf("[")
+      const e = text.lastIndexOf("]")
       if (s < 0 || e <= s) continue
-      const parsed = JSON.parse(text.slice(s, e + 1)) as Record<string, string>
-      Object.assign(result, parsed)
+      const parsed = JSON.parse(text.slice(s, e + 1)) as unknown[]
+      if (Array.isArray(parsed)) {
+        chunk.forEach((merchant, i) => {
+          const cat = parsed[i]
+          if (typeof cat === "string" && cat.trim()) {
+            result[merchant] = cat.trim()
+          }
+        })
+      }
     } catch {
       // partial failure is fine — unknowns just show empty
     }
