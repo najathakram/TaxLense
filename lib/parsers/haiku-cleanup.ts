@@ -165,6 +165,7 @@ export async function extractViaHaikuCleanup(
   let tokensIn = 0
   let tokensOut = 0
   let modelUsed = HAIKU_MODEL
+  let lastError: unknown = null
 
   const tryOnce = async (model: string): Promise<HaikuExtractionRaw | null> => {
     apiCalls++
@@ -181,7 +182,9 @@ export async function extractViaHaikuCleanup(
       const block = res.content[0]
       if (!block || block.type !== "text") return null
       return ExtractionSchema.parse(JSON.parse(extractJSON(block.text)))
-    } catch {
+    } catch (err) {
+      lastError = err
+      console.error(`[haiku-cleanup] tryOnce(${model}) failed:`, err)
       return null
     }
   }
@@ -197,7 +200,7 @@ export async function extractViaHaikuCleanup(
 
   if (!parsed) {
     return {
-      parseResult: failedResult("Haiku extraction failed after Sonnet retry"),
+      parseResult: failedResult(`Haiku extraction failed: ${lastError instanceof Error ? lastError.message : String(lastError ?? "both Haiku and Sonnet returned null")}`),
       telemetry: {
         model: modelUsed,
         tokensIn,

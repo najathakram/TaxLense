@@ -139,6 +139,7 @@ export async function extractViaVisionDoc(
   let tokensIn = 0
   let tokensOut = 0
   let modelUsed = HAIKU_MODEL
+  let lastError: unknown = null
 
   const tryOnce = async (model: string): Promise<Extraction | null> => {
     apiCalls++
@@ -173,7 +174,9 @@ export async function extractViaVisionDoc(
       const block = res.content[0]
       if (!block || block.type !== "text") return null
       return ExtractionSchema.parse(JSON.parse(extractJSON(block.text)))
-    } catch {
+    } catch (err) {
+      lastError = err
+      console.error(`[vision-doc] tryOnce(${model}) failed:`, err)
       return null
     }
   }
@@ -189,7 +192,7 @@ export async function extractViaVisionDoc(
 
   if (!parsed) {
     return {
-      parseResult: failedResult("Vision extraction failed after Sonnet retry"),
+      parseResult: failedResult(`Vision extraction failed: ${lastError instanceof Error ? lastError.message : String(lastError ?? "both Haiku and Sonnet returned null")}`),
       telemetry: {
         model: modelUsed,
         tokensIn,
