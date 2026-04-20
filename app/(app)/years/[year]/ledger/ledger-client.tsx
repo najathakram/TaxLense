@@ -30,6 +30,7 @@ export interface LedgerRow {
   accountNickname: string | null
   merchantRaw: string
   merchantNormalized: string | null
+  descriptionRaw: string | null
   amount: number
   code: TransactionCode
   scheduleCLine: string | null
@@ -78,7 +79,7 @@ export function LedgerClient({ year, rows, accounts }: Props) {
     return rows.filter((r) => {
       if (accountFilter.size > 0 && !accountFilter.has(r.accountId)) return false
       if (codeFilter.size > 0 && !codeFilter.has(r.code)) return false
-      if (q && !(r.merchantRaw.toLowerCase().includes(q) || (r.merchantNormalized ?? "").toLowerCase().includes(q))) return false
+      if (q && !(r.merchantRaw.toLowerCase().includes(q) || (r.merchantNormalized ?? "").toLowerCase().includes(q) || (r.descriptionRaw ?? "").toLowerCase().includes(q))) return false
       if (dateFrom && r.date < dateFrom) return false
       if (dateTo && r.date > dateTo) return false
       return true
@@ -90,7 +91,7 @@ export function LedgerClient({ year, rows, accounts }: Props) {
   const rowVirtualizer = useVirtualizer({
     count: filtered.length,
     getScrollElement: () => scrollRef.current,
-    estimateSize: () => 44,
+    estimateSize: () => 52,
     overscan: 12,
   })
 
@@ -319,8 +320,11 @@ export function LedgerClient({ year, rows, accounts }: Props) {
                   </div>
                   <div className="p-2">{r.date}</div>
                   <div className="p-2 truncate">{r.accountNickname}</div>
-                  <div className="p-2 truncate" title={r.merchantRaw}>
-                    {r.merchantNormalized ?? r.merchantRaw}
+                  <div className="p-2 min-w-0" title={r.merchantRaw}>
+                    <div className="truncate">{r.merchantNormalized ?? r.merchantRaw}</div>
+                    {r.descriptionRaw && r.descriptionRaw !== r.merchantRaw && (
+                      <div className="truncate text-[10px] text-muted-foreground">{r.descriptionRaw}</div>
+                    )}
                   </div>
                   <div className="p-2 text-right tabular-nums">${r.amount.toFixed(2)}</div>
                   <div className="p-2">

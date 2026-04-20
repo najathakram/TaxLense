@@ -41,6 +41,7 @@ export default async function LedgerPage({ params }: Props) {
       accountNickname: t.account.nickname,
       merchantRaw: t.merchantRaw,
       merchantNormalized: t.merchantNormalized,
+      descriptionRaw: t.descriptionRaw ?? null,
       amount,
       code: c?.code ?? "NEEDS_CONTEXT",
       scheduleCLine: c?.scheduleCLine ?? null,

@@ -204,6 +204,11 @@ Your job: classify a batch of unique merchants into deductible categories with I
 7. The app prefers the better-documented position over the bigger deduction.
    A defensible $30K beats a flimsy $40K. Err conservative.
 
+8. Use the "sample_descriptions" field (raw statement descriptions) alongside
+   the merchant key to refine classification. If the description contradicts or
+   adds ambiguity (e.g. "AMAZON.COM*HOUSEHOLD" vs a business merchant),
+   set requires_human_input=true and write a specific human_question.
+
 === BUSINESS PROFILE ===
 NAICS: ${profile.naicsCode ?? "unknown"} — ${profile.naicsDescription ?? "Independent Artist/Creator"}
 Business: ${profile.businessDescription ?? "Not specified"}
@@ -285,6 +290,7 @@ Return ONLY valid JSON in this exact shape — no prose, no markdown fences:
 export interface MerchantBatchInput {
   merchant_key: string
   sample_raw: string
+  sample_descriptions: string[]
   count: number
   total_amount: number
   sample_dates: string[]
@@ -540,9 +546,15 @@ export async function runMerchantIntelligence(
       orderBy: { postedDate: "desc" },
     })
 
+    const rawDescriptions = sampleTxns
+      .map((t) => t.descriptionRaw)
+      .filter((d): d is string => !!d && d.trim().length > 0)
+    const uniqueDescriptions = [...new Set(rawDescriptions)].slice(0, 3)
+
     merchantsToClassify.push({
       merchant_key: key,
       sample_raw: sampleTxns[0]?.merchantRaw ?? key,
+      sample_descriptions: uniqueDescriptions,
       count: group._count._all,
       total_amount: Number(group._sum.amountNormalized?.toString() ?? "0"),
       sample_dates: sampleTxns.map((t) => t.postedDate.toISOString().slice(0, 10)),

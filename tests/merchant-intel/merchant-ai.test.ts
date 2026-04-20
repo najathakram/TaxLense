@@ -84,6 +84,7 @@ const sampleMerchants: MerchantBatchInput[] = [
   {
     merchant_key: "ADOBE",
     sample_raw: "PAYPAL *ADOBE 402-9357733",
+    sample_descriptions: ["PAYPAL *ADOBE 4029357733 402-9357733"],
     count: 12,
     total_amount: 647.88,
     sample_dates: ["2025-02-15", "2025-03-15"],
@@ -92,6 +93,7 @@ const sampleMerchants: MerchantBatchInput[] = [
   {
     merchant_key: "BLUEWAVE CAR WASH",
     sample_raw: "BLUEWAVE CAR WASH #22 ANCHORAGE AK",
+    sample_descriptions: [],
     count: 6,
     total_amount: 143.00,
     sample_dates: ["2025-08-08", "2025-09-15"],
