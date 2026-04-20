@@ -228,38 +228,64 @@ function UploadCard({
   const [isPending, startTransition] = useTransition()
   const [uploadError, setUploadError] = useState<string | null>(null)
   const [uploadSuccess, setUploadSuccess] = useState<string | null>(null)
+  const [uploadProgress, setUploadProgress] = useState<{ done: number; total: number } | null>(null)
   const fileRef = useRef<HTMLInputElement>(null)
 
   function handleUpload(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0]
-    if (!file) return
+    const files = Array.from(e.target.files ?? [])
+    if (files.length === 0) return
 
     setUploadError(null)
     setUploadSuccess(null)
-
-    const formData = new FormData()
-    formData.append("file", file)
-    formData.append("accountId", account.id)
-    formData.append("year", year.toString())
+    setUploadProgress({ done: 0, total: files.length })
 
     startTransition(async () => {
-      const result = await uploadStatement(formData)
-      if (result.ok) {
-        const inst = result.institution ? ` (${result.institution})` : ""
-        const skipNote = result.skipped > 0 ? `, ${result.skipped} duplicate(s) skipped` : ""
-        setUploadSuccess(`${result.txCount} transactions imported${inst}${skipNote}`)
-        onSessionUpdate({
-          id: result.sessionId,
-          used: result.apiCallsUsed,
-          limit: result.apiCallLimit,
-        })
-        if (result.prompts && result.prompts.length > 0) {
-          onPrompts(result.importId, result.prompts as ContextualPrompt[])
+      let okCount = 0
+      let failCount = 0
+      let totalTx = 0
+      let totalSkipped = 0
+      const errors: string[] = []
+      let lastPrompts: { importId: string; prompts: ContextualPrompt[] } | null = null
+      let lastSession: { id: string; used: number; limit: number } | null = null
+
+      for (let i = 0; i < files.length; i++) {
+        const file = files[i]!
+        const formData = new FormData()
+        formData.append("file", file)
+        formData.append("accountId", account.id)
+        formData.append("year", year.toString())
+
+        const result = await uploadStatement(formData)
+        if (result.ok) {
+          okCount++
+          totalTx += result.txCount
+          totalSkipped += result.skipped
+          lastSession = {
+            id: result.sessionId,
+            used: result.apiCallsUsed,
+            limit: result.apiCallLimit,
+          }
+          if (result.prompts && result.prompts.length > 0) {
+            lastPrompts = { importId: result.importId, prompts: result.prompts as ContextualPrompt[] }
+          }
+        } else {
+          failCount++
+          errors.push(`${file.name}: ${result.error}`)
         }
-      } else {
-        setUploadError(result.error)
+        setUploadProgress({ done: i + 1, total: files.length })
       }
-      // Reset file input
+
+      if (lastSession) onSessionUpdate(lastSession)
+
+      const summary = files.length === 1
+        ? (okCount === 1 ? `${totalTx} transactions imported${totalSkipped > 0 ? `, ${totalSkipped} duplicate(s) skipped` : ""}` : null)
+        : `${okCount}/${files.length} files imported · ${totalTx} transactions${totalSkipped > 0 ? ` · ${totalSkipped} duplicates skipped` : ""}`
+      if (summary) setUploadSuccess(summary)
+      if (errors.length > 0) setUploadError(errors.join("\n"))
+
+      if (files.length === 1 && lastPrompts) onPrompts(lastPrompts.importId, lastPrompts.prompts)
+
+      setUploadProgress(null)
       if (fileRef.current) fileRef.current.value = ""
     })
   }
@@ -294,7 +320,7 @@ function UploadCard({
         {/* Upload zone */}
         <div className="border-2 border-dashed border-border rounded-lg p-4 text-center">
           <p className="text-sm text-muted-foreground mb-2">
-            Upload CSV, OFX, QFX, or PDF statement
+            Upload CSV, OFX, QFX, or PDF statement (multiple files OK)
           </p>
           <Label htmlFor={`file-${account.id}`} className="cursor-pointer">
             <Button
@@ -303,7 +329,13 @@ function UploadCard({
               disabled={isPending}
               asChild
             >
-              <span>{isPending ? "Uploading…" : "Choose File"}</span>
+              <span>
+                {isPending
+                  ? uploadProgress
+                    ? `Uploading ${uploadProgress.done}/${uploadProgress.total}…`
+                    : "Uploading…"
+                  : "Choose Files"}
+              </span>
             </Button>
           </Label>
           <input
@@ -311,6 +343,7 @@ function UploadCard({
             id={`file-${account.id}`}
             type="file"
             accept=".csv,.ofx,.qfx,.pdf"
+            multiple
             className="hidden"
             onChange={handleUpload}
             disabled={isPending}
