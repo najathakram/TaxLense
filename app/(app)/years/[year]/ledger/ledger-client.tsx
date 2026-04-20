@@ -1,6 +1,6 @@
 "use client"
 
-import { useMemo, useRef, useState, useTransition } from "react"
+import { useEffect, useMemo, useRef, useState, useTransition } from "react"
 import { useVirtualizer } from "@tanstack/react-virtual"
 import type { TransactionCode } from "@/app/generated/prisma/client"
 import { Button } from "@/components/ui/button"
@@ -11,13 +11,14 @@ import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover
 import { Textarea } from "@/components/ui/textarea"
 import { Label } from "@/components/ui/label"
 import { Checkbox } from "@/components/ui/checkbox"
-import { TRANSACTION_CODES, SCHEDULE_C_LINES, codeColorClass, codeToCategory } from "@/lib/classification/constants"
+import { TRANSACTION_CODES, SCHEDULE_C_LINES, codeColorClass } from "@/lib/classification/constants"
 import { AMAZON_MERCHANT_PATTERN, AMAZON_SPLIT_THRESHOLD } from "@/lib/splits/config"
 import {
   editClassification,
   bulkReclassify,
   splitTransaction,
   applyReclassification,
+  fetchMerchantCategories,
   type SplitInput,
   type NLMatch,
   type NLRuleUpdate,
@@ -57,6 +58,17 @@ export function LedgerClient({ year, rows, accounts }: Props) {
   const [dateFrom, setDateFrom] = useState("")
   const [dateTo, setDateTo] = useState("")
 
+  // ---- sort state ----
+  const [sortKey, setSortKey] = useState<"date" | "account" | "amount">("date")
+  const [sortDir, setSortDir] = useState<"asc" | "desc">("asc")
+
+  // ---- AI merchant categories ----
+  const [categoryMap, setCategoryMap] = useState<Record<string, string>>({})
+  useEffect(() => {
+    const unique = Array.from(new Set(rows.map((r) => r.merchantNormalized ?? r.merchantRaw)))
+    fetchMerchantCategories(year, unique).then(setCategoryMap).catch(() => {})
+  }, [year, rows])
+
   // ---- selection state ----
   const [selected, setSelected] = useState<Set<string>>(new Set())
 
@@ -76,7 +88,7 @@ export function LedgerClient({ year, rows, accounts }: Props) {
 
   const filtered = useMemo(() => {
     const q = merchantSearch.trim().toLowerCase()
-    return rows.filter((r) => {
+    const list = rows.filter((r) => {
       if (accountFilter.size > 0 && !accountFilter.has(r.accountId)) return false
       if (codeFilter.size > 0 && !codeFilter.has(r.code)) return false
       if (q && !(r.merchantRaw.toLowerCase().includes(q) || (r.merchantNormalized ?? "").toLowerCase().includes(q) || (r.descriptionRaw ?? "").toLowerCase().includes(q))) return false
@@ -84,7 +96,14 @@ export function LedgerClient({ year, rows, accounts }: Props) {
       if (dateTo && r.date > dateTo) return false
       return true
     })
-  }, [rows, accountFilter, codeFilter, merchantSearch, dateFrom, dateTo])
+    const dir = sortDir === "asc" ? 1 : -1
+    return [...list].sort((a, b) => {
+      if (sortKey === "date") return dir * a.date.localeCompare(b.date)
+      if (sortKey === "account") return dir * (a.accountNickname ?? "").localeCompare(b.accountNickname ?? "")
+      if (sortKey === "amount") return dir * (a.amount - b.amount)
+      return 0
+    })
+  }, [rows, accountFilter, codeFilter, merchantSearch, dateFrom, dateTo, sortKey, sortDir])
 
   // ---- virtualizer ----
   const scrollRef = useRef<HTMLDivElement>(null)
@@ -94,6 +113,12 @@ export function LedgerClient({ year, rows, accounts }: Props) {
     estimateSize: () => 52,
     overscan: 12,
   })
+
+  const toggleSort = (key: typeof sortKey) => {
+    if (sortKey === key) setSortDir((d) => d === "asc" ? "desc" : "asc")
+    else { setSortKey(key); setSortDir("asc") }
+  }
+  const sortArrow = (key: typeof sortKey) => sortKey === key ? (sortDir === "asc" ? " ↑" : " ↓") : ""
 
   const toggleSet = <T,>(set: Set<T>, value: T): Set<T> => {
     const next = new Set(set)
@@ -275,11 +300,11 @@ export function LedgerClient({ year, rows, accounts }: Props) {
       <div className="border rounded">
         <div className="grid grid-cols-[40px_90px_120px_1fr_120px_100px_150px_120px_70px_110px_70px_70px_70px] bg-muted/50 text-xs font-semibold border-b">
           <div className="p-2"></div>
-          <div className="p-2">Date</div>
-          <div className="p-2">Account</div>
+          <button className="p-2 text-left hover:text-primary" onClick={() => toggleSort("date")}>Date{sortArrow("date")}</button>
+          <button className="p-2 text-left hover:text-primary" onClick={() => toggleSort("account")}>Account{sortArrow("account")}</button>
           <div className="p-2">Merchant</div>
           <div className="p-2">Category</div>
-          <div className="p-2 text-right">Amount</div>
+          <button className="p-2 text-right w-full hover:text-primary" onClick={() => toggleSort("amount")}>Amount{sortArrow("amount")}</button>
           <div className="p-2">Code</div>
           <div className="p-2">Sch C Line</div>
           <div className="p-2 text-right">Biz %</div>
@@ -328,9 +353,11 @@ export function LedgerClient({ year, rows, accounts }: Props) {
                     )}
                   </div>
                   <div className="p-2 truncate text-muted-foreground text-[11px]">
-                    {codeToCategory(r.code, r.scheduleCLine)}
+                    {categoryMap[r.merchantNormalized ?? r.merchantRaw] ?? ""}
                   </div>
-                  <div className="p-2 text-right tabular-nums">${r.amount.toFixed(2)}</div>
+                  <div className={`p-2 text-right tabular-nums ${r.amount > 0 ? "text-red-600 dark:text-red-400" : "text-green-600 dark:text-green-400"}`}>
+                    {r.amount > 0 ? "-" : "+"}${Math.abs(r.amount).toFixed(2)}
+                  </div>
                   <div className="p-2">
                     <select
                       className="w-full bg-transparent border rounded p-0.5"

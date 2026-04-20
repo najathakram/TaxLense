@@ -5,6 +5,19 @@ import { getCurrentUserId } from "@/lib/auth"
 import { revalidatePath } from "next/cache"
 import type { TransactionCode, ClassificationSource } from "@/app/generated/prisma/client"
 import { MAX_SPLITS_PER_TRANSACTION } from "@/lib/splits/config"
+import { batchCategorizeMerchants } from "@/lib/ai/merchantCategories"
+
+export async function fetchMerchantCategories(
+  year: number,
+  merchants: string[],
+): Promise<Record<string, string>> {
+  const userId = await getCurrentUserId()
+  const taxYear = await prisma.taxYear.findUnique({
+    where: { userId_year: { userId, year } },
+  })
+  if (!taxYear) return {}
+  return batchCategorizeMerchants(merchants)
+}
 
 // ---------- inline reclassify for a single row ----------
 
