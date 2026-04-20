@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useRef, useTransition, useEffect, useCallback } from "react"
+import { useRouter } from "next/navigation"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -225,15 +226,15 @@ function UploadCard({
   year: number
   onSessionUpdate: (snap: { id: string; used: number; limit: number }) => void
 }) {
+  const router = useRouter()
   const [isPending, startTransition] = useTransition()
   const [uploadError, setUploadError] = useState<string | null>(null)
   const [uploadSuccess, setUploadSuccess] = useState<string | null>(null)
   const [stagingProgress, setStagingProgress] = useState<{ done: number; total: number } | null>(null)
-  // importId → polling state for files staged this session
   const [polled, setPolled] = useState<Record<string, PollState>>({})
+  const [historyOpen, setHistoryOpen] = useState(false)
   const fileRef = useRef<HTMLInputElement>(null)
 
-  // Poll every 2 s until all watched ids resolve
   const pendingIds = Object.entries(polled)
     .filter(([, s]) => s.status === "PENDING")
     .map(([id]) => id)
@@ -248,6 +249,16 @@ function UploadCard({
       for (const id of pendingIds) {
         try {
           const res = await fetch(`/api/imports/${id}/status`)
+          if (res.status === 404) {
+            // Import was auto-deleted (missing file). Remove from poll and refresh.
+            setPolled((prev) => {
+              const next = { ...prev }
+              delete next[id]
+              return next
+            })
+            router.refresh()
+            continue
+          }
           if (!res.ok) continue
           const data = await res.json()
           if (data.parseStatus !== "PENDING") {
@@ -259,12 +270,13 @@ function UploadCard({
             if (data.sessionId) {
               onSessionUpdate({ id: data.sessionId, used: data.apiCallsUsed, limit: data.apiCallLimit })
             }
+            router.refresh()
           }
         } catch { /* network blip — retry next tick */ }
       }
     }, 2000)
     return () => clearInterval(handle)
-  }, [pendingIds.join(","), updatePoll, onSessionUpdate])
+  }, [pendingIds.join(","), updatePoll, onSessionUpdate, router])
 
   // Derive summary once all polled ids have resolved
   useEffect(() => {
@@ -410,19 +422,26 @@ function UploadCard({
           </Alert>
         )}
 
-        {/* Import history */}
+        {/* Import history — collapsible */}
         {account.statementImports.length > 0 && (
           <div className="space-y-2">
-            <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
-              Import History
-            </p>
-            {account.statementImports.map((imp) => {
+            <button
+              onClick={() => setHistoryOpen((o) => !o)}
+              className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground hover:text-foreground transition-colors w-full text-left"
+            >
+              <span className={`transition-transform ${historyOpen ? "rotate-90" : ""}`}>▶</span>
+              {account.statementImports.length} statement{account.statementImports.length !== 1 ? "s" : ""} imported
+              <span className="ml-1 text-[10px]">
+                ({account.statementImports.filter((i) => i.parseStatus === "SUCCESS").length} ok
+                {account.statementImports.filter((i) => i.parseStatus === "FAILED").length > 0 &&
+                  `, ${account.statementImports.filter((i) => i.parseStatus === "FAILED").length} failed`})
+              </span>
+            </button>
+
+            {historyOpen && account.statementImports.map((imp) => {
               const status = PARSE_STATUS_BADGE[imp.parseStatus]
               return (
-                <div
-                  key={imp.id}
-                  className="rounded-md border p-3 text-xs space-y-1"
-                >
+                <div key={imp.id} className="rounded-md border p-3 text-xs space-y-1">
                   <div className="flex items-center justify-between">
                     <span className="font-medium truncate max-w-[200px]" title={imp.originalFilename}>
                       {imp.originalFilename}
@@ -433,16 +452,10 @@ function UploadCard({
                     {imp.institution && <span>Institution: {imp.institution}</span>}
                     <span>Transactions: {imp.transactionCount}</span>
                     {imp.periodStart && (
-                      <span>
-                        Period: {fmtDate(imp.periodStart)} – {fmtDate(imp.periodEnd)}
-                      </span>
+                      <span>Period: {fmtDate(imp.periodStart)} – {fmtDate(imp.periodEnd)}</span>
                     )}
-                    {imp.totalOutflows !== null && (
-                      <span>Outflows: {fmtMoney(imp.totalOutflows)}</span>
-                    )}
-                    {imp.totalInflows !== null && (
-                      <span>Inflows: {fmtMoney(imp.totalInflows)}</span>
-                    )}
+                    {imp.totalOutflows !== null && <span>Outflows: {fmtMoney(imp.totalOutflows)}</span>}
+                    {imp.totalInflows !== null && <span>Inflows: {fmtMoney(imp.totalInflows)}</span>}
                     <span>Confidence: {confidencePct(imp.parseConfidence)}</span>
                     <span>Uploaded: {fmtDate(imp.uploadedAt)}</span>
                   </div>

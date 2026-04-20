@@ -98,7 +98,14 @@ export async function uploadStatement(formData: FormData): Promise<UploadResult>
     where: { accountId_sourceHash: { accountId, sourceHash: hash } },
   })
   if (existing) {
-    return { ok: false, error: `This file has already been imported (import ID: ${existing.id})` }
+    // A FAILED/PENDING row with no transactions is a stale staging artifact — clear it
+    // so the file can be re-uploaded cleanly (e.g. after a missing-file redeploy).
+    const txCount = await prisma.transaction.count({ where: { statementImportId: existing.id } })
+    if (txCount === 0 && (existing.parseStatus === "FAILED" || existing.parseStatus === "PENDING")) {
+      await prisma.statementImport.delete({ where: { id: existing.id } })
+    } else {
+      return { ok: false, error: `This file has already been imported (import ID: ${existing.id})` }
+    }
   }
 
   const dir = await uploadDir(taxYearId)
@@ -208,7 +215,15 @@ async function _doParseImport(importId: string, year: number): Promise<ParseImpo
   try {
     buffer = await readFile(imp.filePath)
   } catch {
-    return { ok: false, error: "Original file not found on disk — cannot parse" }
+    // File is gone (pre-volume deploy). Auto-delete the row if no transactions
+    // have been extracted — it's an orphaned staging artifact with no audit value.
+    const txCount = await prisma.transaction.count({ where: { statementImportId: importId } })
+    if (txCount === 0) {
+      await prisma.statementImport.delete({ where: { id: importId } })
+      revalidatePath(`/years/${year}/upload`)
+      return { ok: false, error: "FILE_DELETED" }
+    }
+    return { ok: false, error: "Original file not found — cannot reparse" }
   }
 
   const session = imp.sessionId
@@ -439,7 +454,8 @@ export async function closeUploadSession(
 }
 
 // ── deleteImport ─────────────────────────────────────────────────────────────
-// Spec §4 append-only: we don't hard-delete. We mark as FAILED with a note.
+// Rows with transactions: mark FAILED (append-only — audit trail preserved).
+// Rows with 0 transactions: hard-delete — frees the sourceHash slot for re-upload.
 
 export type DeleteImportResult = { ok: true } | { ok: false; error: string }
 
@@ -453,13 +469,15 @@ export async function deleteImport(importId: string, year: number): Promise<Dele
 
   if (!imp) return { ok: false, error: "Import not found" }
 
-  await prisma.statementImport.update({
-    where: { id: importId },
-    data: {
-      parseStatus: "FAILED",
-      parseError: "Cancelled by user",
-    },
-  })
+  const txCount = await prisma.transaction.count({ where: { statementImportId: importId } })
+  if (txCount === 0) {
+    await prisma.statementImport.delete({ where: { id: importId } })
+  } else {
+    await prisma.statementImport.update({
+      where: { id: importId },
+      data: { parseStatus: "FAILED", parseError: "Cancelled by user" },
+    })
+  }
 
   revalidatePath(`/years/${year}/upload`)
   revalidatePath(`/years/${year}/coverage`)
