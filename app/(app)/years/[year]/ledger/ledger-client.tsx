@@ -64,8 +64,10 @@ export function LedgerClient({ year, rows, accounts }: Props) {
 
   // ---- AI merchant categories ----
   const [categoryMap, setCategoryMap] = useState<Record<string, string>>({})
+  const [categoryLoading, setCategoryLoading] = useState(true)
   const [categoryError, setCategoryError] = useState<string | null>(null)
   useEffect(() => {
+    setCategoryLoading(true)
     const unique = Array.from(new Set(rows.map((r) => r.merchantNormalized ?? r.merchantRaw)))
     fetchMerchantCategories(year, unique)
       .then((map) => {
@@ -75,6 +77,7 @@ export function LedgerClient({ year, rows, accounts }: Props) {
       .catch((e) => {
         setCategoryError(e instanceof Error ? e.message : String(e))
       })
+      .finally(() => setCategoryLoading(false))
   }, [year, rows])
 
   // ---- selection state ----
@@ -316,7 +319,7 @@ export function LedgerClient({ year, rows, accounts }: Props) {
           <button className="p-2 text-left hover:text-primary" onClick={() => toggleSort("date")}>Date{sortArrow("date")}</button>
           <button className="p-2 text-left hover:text-primary" onClick={() => toggleSort("account")}>Account{sortArrow("account")}</button>
           <div className="p-2">Merchant</div>
-          <div className="p-2">Category</div>
+          <div className="p-2">Category{categoryLoading ? " ⏳" : ""}</div>
           <button className="p-2 text-right w-full hover:text-primary" onClick={() => toggleSort("amount")}>Amount{sortArrow("amount")}</button>
           <div className="p-2">Code</div>
           <div className="p-2">Sch C Line</div>
@@ -366,7 +369,7 @@ export function LedgerClient({ year, rows, accounts }: Props) {
                     )}
                   </div>
                   <div className="p-2 truncate text-muted-foreground text-[11px]">
-                    {categoryMap[r.merchantNormalized ?? r.merchantRaw] ?? ""}
+                    {categoryLoading ? <span className="opacity-30">…</span> : (categoryMap[r.merchantNormalized ?? r.merchantRaw] ?? "")}
                   </div>
                   <div className={`p-2 text-right tabular-nums ${r.amount > 0 ? "text-red-600 dark:text-red-400" : "text-green-600 dark:text-green-400"}`}>
                     {r.amount > 0 ? "-" : "+"}${Math.abs(r.amount).toFixed(2)}
