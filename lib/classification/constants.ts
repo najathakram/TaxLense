@@ -36,6 +36,29 @@ export const SCHEDULE_C_LINES: string[] = [
   "N/A",
 ]
 
+export function codeToCategory(code: TransactionCode, scheduleCLine: string | null): string {
+  switch (code) {
+    case "PERSONAL": return "Personal"
+    case "TRANSFER": return "Transfer"
+    case "PAYMENT": return "Payment"
+    case "BIZ_INCOME": return "Business Income"
+    case "NEEDS_CONTEXT": return "Needs Review"
+    case "GRAY": return "Unclear"
+    case "MEALS_50": return "Meals (50%)"
+    case "MEALS_100": return "Meals (100%)"
+    case "WRITE_OFF_TRAVEL": return "Travel"
+    case "WRITE_OFF_COGS": return "Cost of Goods"
+    case "WRITE_OFF": {
+      if (scheduleCLine && scheduleCLine !== "N/A") {
+        // Strip "Line XX " prefix → "Office Expense", "Car & Truck", etc.
+        return scheduleCLine.replace(/^Line\s+\d+[a-z]?\s+/i, "").replace(/^Part\s+\w+\s+/i, "")
+      }
+      return "Business Expense"
+    }
+    default: return ""
+  }
+}
+
 // §10.1 color coding
 export function codeColorClass(code: TransactionCode): string {
   switch (code) {

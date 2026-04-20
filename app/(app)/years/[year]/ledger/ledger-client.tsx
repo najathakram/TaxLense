@@ -11,7 +11,7 @@ import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover
 import { Textarea } from "@/components/ui/textarea"
 import { Label } from "@/components/ui/label"
 import { Checkbox } from "@/components/ui/checkbox"
-import { TRANSACTION_CODES, SCHEDULE_C_LINES, codeColorClass } from "@/lib/classification/constants"
+import { TRANSACTION_CODES, SCHEDULE_C_LINES, codeColorClass, codeToCategory } from "@/lib/classification/constants"
 import { AMAZON_MERCHANT_PATTERN, AMAZON_SPLIT_THRESHOLD } from "@/lib/splits/config"
 import {
   editClassification,
@@ -273,11 +273,12 @@ export function LedgerClient({ year, rows, accounts }: Props) {
 
       {/* Virtualized table */}
       <div className="border rounded">
-        <div className="grid grid-cols-[40px_90px_120px_1fr_100px_150px_120px_70px_110px_70px_70px_70px] bg-muted/50 text-xs font-semibold border-b">
+        <div className="grid grid-cols-[40px_90px_120px_1fr_120px_100px_150px_120px_70px_110px_70px_70px_70px] bg-muted/50 text-xs font-semibold border-b">
           <div className="p-2"></div>
           <div className="p-2">Date</div>
           <div className="p-2">Account</div>
           <div className="p-2">Merchant</div>
+          <div className="p-2">Category</div>
           <div className="p-2 text-right">Amount</div>
           <div className="p-2">Code</div>
           <div className="p-2">Sch C Line</div>
@@ -310,7 +311,7 @@ export function LedgerClient({ year, rows, accounts }: Props) {
                     height: `${v.size}px`,
                     transform: `translateY(${v.start}px)`,
                   }}
-                  className={`grid grid-cols-[40px_90px_120px_1fr_100px_150px_120px_70px_110px_70px_70px_70px] text-xs border-b hover:bg-accent/20 ${codeColorClass(r.code)} ${r.evidenceTier >= 3 ? "italic text-muted-foreground" : ""} ${isSplitChild ? "pl-4" : ""}`}
+                  className={`grid grid-cols-[40px_90px_120px_1fr_120px_100px_150px_120px_70px_110px_70px_70px_70px] text-xs border-b hover:bg-accent/20 ${codeColorClass(r.code)} ${r.evidenceTier >= 3 ? "italic text-muted-foreground" : ""} ${isSplitChild ? "pl-4" : ""}`}
                 >
                   <div className="p-2">
                     <Checkbox
@@ -325,6 +326,9 @@ export function LedgerClient({ year, rows, accounts }: Props) {
                     {r.descriptionRaw && r.descriptionRaw !== r.merchantRaw && (
                       <div className="truncate text-[10px] text-muted-foreground">{r.descriptionRaw}</div>
                     )}
+                  </div>
+                  <div className="p-2 truncate text-muted-foreground text-[11px]">
+                    {codeToCategory(r.code, r.scheduleCLine)}
                   </div>
                   <div className="p-2 text-right tabular-nums">${r.amount.toFixed(2)}</div>
                   <div className="p-2">
