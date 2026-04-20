@@ -48,7 +48,7 @@ export default async function UploadPage({ params }: Props) {
               periodStart: true,
               periodEnd: true,
             },
-            orderBy: { uploadedAt: "desc" },
+            orderBy: { periodStart: { sort: "asc", nulls: "last" } },
           },
         },
         orderBy: { institution: "asc" },
