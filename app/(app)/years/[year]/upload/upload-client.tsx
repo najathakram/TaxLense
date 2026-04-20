@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useRef, useTransition } from "react"
+import { useState, useRef, useTransition, useEffect, useCallback } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -12,9 +12,9 @@ import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Textarea } from "@/components/ui/textarea"
 import {
   uploadStatement,
+  parseImport,
   deleteImport,
   createAccount,
-  reparseImport,
   saveImportNotes,
   saveUploadSessionNotes,
   closeUploadSession,
@@ -214,22 +214,77 @@ function AddAccountDialog({
 
 // ── Upload Card (per account) ─────────────────────────────────────────────────
 
+type PollState = { status: "PENDING" | "SUCCESS" | "FAILED" | "PARTIAL"; txCount: number; error: string | null }
+
 function UploadCard({
   account,
   year,
-  onPrompts,
   onSessionUpdate,
 }: {
   account: AccountRow
   year: number
-  onPrompts: (importId: string, prompts: ContextualPrompt[]) => void
   onSessionUpdate: (snap: { id: string; used: number; limit: number }) => void
 }) {
   const [isPending, startTransition] = useTransition()
   const [uploadError, setUploadError] = useState<string | null>(null)
   const [uploadSuccess, setUploadSuccess] = useState<string | null>(null)
-  const [uploadProgress, setUploadProgress] = useState<{ done: number; total: number } | null>(null)
+  const [stagingProgress, setStagingProgress] = useState<{ done: number; total: number } | null>(null)
+  // importId → polling state for files staged this session
+  const [polled, setPolled] = useState<Record<string, PollState>>({})
   const fileRef = useRef<HTMLInputElement>(null)
+
+  // Poll every 2 s until all watched ids resolve
+  const pendingIds = Object.entries(polled)
+    .filter(([, s]) => s.status === "PENDING")
+    .map(([id]) => id)
+
+  const updatePoll = useCallback((id: string, state: PollState) => {
+    setPolled((prev) => ({ ...prev, [id]: state }))
+  }, [])
+
+  useEffect(() => {
+    if (pendingIds.length === 0) return
+    const handle = setInterval(async () => {
+      for (const id of pendingIds) {
+        try {
+          const res = await fetch(`/api/imports/${id}/status`)
+          if (!res.ok) continue
+          const data = await res.json()
+          if (data.parseStatus !== "PENDING") {
+            updatePoll(id, {
+              status: data.parseStatus,
+              txCount: data.transactionCount ?? 0,
+              error: data.parseError ?? null,
+            })
+            if (data.sessionId) {
+              onSessionUpdate({ id: data.sessionId, used: data.apiCallsUsed, limit: data.apiCallLimit })
+            }
+          }
+        } catch { /* network blip — retry next tick */ }
+      }
+    }, 2000)
+    return () => clearInterval(handle)
+  }, [pendingIds.join(","), updatePoll, onSessionUpdate])
+
+  // Derive summary once all polled ids have resolved
+  useEffect(() => {
+    const entries = Object.values(polled)
+    if (entries.length === 0) return
+    if (entries.some((s) => s.status === "PENDING")) return // still waiting
+    const ok = entries.filter((s) => s.status === "SUCCESS" || s.status === "PARTIAL")
+    const failed = entries.filter((s) => s.status === "FAILED")
+    const totalTx = ok.reduce((s, e) => s + e.txCount, 0)
+    if (ok.length > 0) {
+      setUploadSuccess(
+        ok.length === 1
+          ? `${totalTx} transactions extracted`
+          : `${ok.length}/${entries.length} files parsed · ${totalTx} transactions`,
+      )
+    }
+    if (failed.length > 0) {
+      setUploadError(failed.map((e) => e.error ?? "Parse failed").join("\n"))
+    }
+  }, [polled])
 
   function handleUpload(e: React.ChangeEvent<HTMLInputElement>) {
     const files = Array.from(e.target.files ?? [])
@@ -237,15 +292,10 @@ function UploadCard({
 
     setUploadError(null)
     setUploadSuccess(null)
-    setUploadProgress({ done: 0, total: files.length })
+    setStagingProgress({ done: 0, total: files.length })
 
     startTransition(async () => {
-      let okCount = 0
-      let failCount = 0
-      let totalTx = 0
-      let totalSkipped = 0
       const errors: string[] = []
-      let lastPrompts: { importId: string; prompts: ContextualPrompt[] } | null = null
       let lastSession: { id: string; used: number; limit: number } | null = null
 
       for (let i = 0; i < files.length; i++) {
@@ -257,43 +307,42 @@ function UploadCard({
 
         const result = await uploadStatement(formData)
         if (result.ok) {
-          okCount++
-          totalTx += result.txCount
-          totalSkipped += result.skipped
+          // Register as PENDING; polling effect picks it up
+          setPolled((prev) => ({
+            ...prev,
+            [result.importId]: { status: "PENDING", txCount: 0, error: null },
+          }))
           lastSession = {
             id: result.sessionId,
             used: result.apiCallsUsed,
             limit: result.apiCallLimit,
           }
-          if (result.prompts && result.prompts.length > 0) {
-            lastPrompts = { importId: result.importId, prompts: result.prompts as ContextualPrompt[] }
-          }
         } else {
-          failCount++
           errors.push(`${file.name}: ${result.error}`)
         }
-        setUploadProgress({ done: i + 1, total: files.length })
+        setStagingProgress({ done: i + 1, total: files.length })
       }
 
       if (lastSession) onSessionUpdate(lastSession)
-
-      const summary = files.length === 1
-        ? (okCount === 1 ? `${totalTx} transactions imported${totalSkipped > 0 ? `, ${totalSkipped} duplicate(s) skipped` : ""}` : null)
-        : `${okCount}/${files.length} files imported · ${totalTx} transactions${totalSkipped > 0 ? ` · ${totalSkipped} duplicates skipped` : ""}`
-      if (summary) setUploadSuccess(summary)
       if (errors.length > 0) setUploadError(errors.join("\n"))
-
-      if (files.length === 1 && lastPrompts) onPrompts(lastPrompts.importId, lastPrompts.prompts)
-
-      setUploadProgress(null)
+      setStagingProgress(null)
       if (fileRef.current) fileRef.current.value = ""
     })
   }
 
   function handleReparse(importId: string) {
+    setUploadError(null)
+    setUploadSuccess(null)
+    // Re-stage as PENDING so the polling effect picks it up
+    setPolled((prev) => ({ ...prev, [importId]: { status: "PENDING", txCount: 0, error: null } }))
     startTransition(async () => {
-      const result = await reparseImport(importId, year)
-      if (!result.ok) setUploadError(result.error)
+      const result = await parseImport(importId, year)
+      if (!result.ok) {
+        setPolled((prev) => ({
+          ...prev,
+          [importId]: { status: "FAILED", txCount: 0, error: result.error },
+        }))
+      }
     })
   }
 
@@ -330,11 +379,11 @@ function UploadCard({
               asChild
             >
               <span>
-                {isPending
-                  ? uploadProgress
-                    ? `Uploading ${uploadProgress.done}/${uploadProgress.total}…`
-                    : "Uploading…"
-                  : "Choose Files"}
+                {isPending && stagingProgress
+                  ? `Staging ${stagingProgress.done}/${stagingProgress.total}…`
+                  : pendingIds.length > 0
+                    ? `Parsing ${pendingIds.length} file${pendingIds.length > 1 ? "s" : ""}…`
+                    : "Choose Files"}
               </span>
             </Button>
           </Label>
@@ -435,7 +484,6 @@ export function UploadClient({ year, taxYearStatus, accounts, session }: Props) 
   const [sessionState, setSessionState] = useState(
     session ? { id: session.id, used: session.totalApiCalls, limit: session.apiCallLimit } : null,
   )
-  const [promptQueue, setPromptQueue] = useState<{ importId: string; prompts: ContextualPrompt[] } | null>(null)
   const isLocked = taxYearStatus === "LOCKED"
 
   return (
@@ -488,7 +536,6 @@ export function UploadClient({ year, taxYearStatus, accounts, session }: Props) 
               key={acct.id}
               account={acct}
               year={year}
-              onPrompts={(importId, prompts) => setPromptQueue({ importId, prompts })}
               onSessionUpdate={(snap) => setSessionState(snap)}
             />
           ))}
@@ -508,15 +555,6 @@ export function UploadClient({ year, taxYearStatus, accounts, session }: Props) 
         open={showAddAccount}
         onClose={() => setShowAddAccount(false)}
       />
-
-      {promptQueue && (
-        <ContextualPromptsDialog
-          year={year}
-          importId={promptQueue.importId}
-          prompts={promptQueue.prompts}
-          onClose={() => setPromptQueue(null)}
-        />
-      )}
     </div>
   )
 }

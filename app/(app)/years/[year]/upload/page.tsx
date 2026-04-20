@@ -1,7 +1,9 @@
 import { getCurrentUserId } from "@/lib/auth"
 import { prisma } from "@/lib/db"
 import { notFound } from "next/navigation"
+import { after } from "next/server"
 import { UploadClient } from "./upload-client"
+import { parseImport } from "./actions"
 
 interface Props {
   params: Promise<{ year: string }>
@@ -55,6 +57,18 @@ export default async function UploadPage({ params }: Props) {
   })
 
   if (!taxYear) notFound()
+
+  // Auto-resume any PENDING imports left by a prior after() that was cut off
+  const orphanedPending = taxYear.financialAccounts
+    .flatMap((a) => a.statementImports)
+    .filter((imp) => imp.parseStatus === "PENDING")
+  if (orphanedPending.length > 0) {
+    after(async () => {
+      for (const imp of orphanedPending) {
+        await parseImport(imp.id, year)
+      }
+    })
+  }
 
   const currentSession = await prisma.importSession.findFirst({
     where: { taxYearId: taxYear.id, status: "IN_PROGRESS" },

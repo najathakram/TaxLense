@@ -10,6 +10,7 @@
  */
 
 import { revalidatePath } from "next/cache"
+import { after } from "next/server"
 import { getCurrentUserId } from "@/lib/auth"
 import { getClientContext } from "@/lib/cpa/clientContext"
 import { prisma } from "@/lib/db"
@@ -21,20 +22,16 @@ import {
   saveSessionNotes,
   RateLimitError,
 } from "@/lib/uploads/session"
+import { uploadDir } from "@/lib/uploads/storage"
 import { buildContextualPrompts } from "@/lib/uploads/contextualPrompts"
-import { writeFile, mkdir, readFile } from "node:fs/promises"
+import { writeFile, readFile } from "node:fs/promises"
 import { join } from "node:path"
 import { z } from "zod"
 import type { AccountType, Prisma } from "@/app/generated/prisma/client"
 
-// ── Helpers ──────────────────────────────────────────────────────────────────
-
-/** Resolve upload dir; creates it if missing */
-async function uploadDir(taxYearId: string): Promise<string> {
-  const dir = join(process.cwd(), "data", "uploads", taxYearId)
-  await mkdir(dir, { recursive: true })
-  return dir
-}
+// Module-level lock: prevents two concurrent parses of the same import (e.g.
+// auto-resume on page load firing while after() parse is still running).
+const _parseInProgress = new Set<string>()
 
 /** Map file extension to fileType string */
 function fileTypeFromName(filename: string): string {
@@ -46,18 +43,25 @@ function fileTypeFromName(filename: string): string {
 }
 
 // ── uploadStatement ──────────────────────────────────────────────────────────
+//
+// Two-phase upload:
+//   Phase 1 (this action) — save file to disk + create PENDING StatementImport.
+//     Fast. Synchronous file I/O only. No AI calls.
+//   Phase 2 (parseImport)  — read file, run parseStatement (Haiku/Sonnet for
+//     PDFs), insert transactions. Slow. Retryable without re-upload.
+//
+// This split means: a client batch-uploading 12 files sees them land within
+// a second or two, then parses each one independently. If Anthropic errors
+// on file 7, files 1-6 stay SUCCESS, file 7 stays PENDING with the buffer
+// on disk, and the user can retry via the Reparse button.
 
 export type UploadResult =
   | {
       ok: true
       importId: string
-      txCount: number
-      skipped: number
-      institution: string | null
       sessionId: string
       apiCallsUsed: number
       apiCallLimit: number
-      prompts: Awaited<ReturnType<typeof buildContextualPrompts>>
     }
   | { ok: false; error: string; sessionId?: string }
 
@@ -75,7 +79,6 @@ export async function uploadStatement(formData: FormData): Promise<UploadResult>
   const year = parseInt(yearParam, 10)
   if (isNaN(year)) return { ok: false, error: "Invalid year" }
 
-  // Verify the account belongs to this user's tax year
   const account = await prisma.financialAccount.findFirst({
     where: { id: accountId, userId },
     include: { taxYear: { select: { id: true, year: true, status: true } } },
@@ -87,12 +90,10 @@ export async function uploadStatement(formData: FormData): Promise<UploadResult>
 
   const taxYearId = account.taxYear.id
 
-  // Read file bytes
   const bytes = await file.arrayBuffer()
   const buffer = Buffer.from(bytes)
   const hash = fileHash(buffer)
 
-  // File-level dedup: reject exact duplicates
   const existing = await prisma.statementImport.findUnique({
     where: { accountId_sourceHash: { accountId, sourceHash: hash } },
   })
@@ -100,20 +101,123 @@ export async function uploadStatement(formData: FormData): Promise<UploadResult>
     return { ok: false, error: `This file has already been imported (import ID: ${existing.id})` }
   }
 
-  // Save file to disk
   const dir = await uploadDir(taxYearId)
   const safeName = `${Date.now()}-${file.name.replace(/[^a-zA-Z0-9._-]/g, "_")}`
   const filePath = join(dir, safeName)
   await writeFile(filePath, buffer)
 
-  // Open or reuse the current upload session
   const ctx = await getClientContext()
   const session = await openOrGetSession(taxYearId, ctx?.cpaId ?? null)
 
-  // Parse — PDFs may call the AI; charge each call against the session limit.
+  const fileType = fileTypeFromName(file.name)
+
+  const statementImport = await prisma.statementImport.create({
+    data: {
+      accountId,
+      taxYearId,
+      sessionId: session.id,
+      filePath,
+      originalFilename: file.name,
+      fileType,
+      sourceHash: hash,
+      parseStatus: "PENDING",
+      parseConfidence: 0,
+      totalInflows: 0,
+      totalOutflows: 0,
+      transactionCount: 0,
+    },
+  })
+
+  if (account.taxYear.status === "CREATED") {
+    await prisma.taxYear.update({
+      where: { id: taxYearId },
+      data: { status: "INGESTION" },
+    })
+  }
+
+  const sessionAfter = await prisma.importSession.findUniqueOrThrow({
+    where: { id: session.id },
+    select: { totalApiCalls: true, apiCallLimit: true },
+  })
+
+  // Kick parsing in the background — client polls /api/imports/[id]/status
+  const importIdForAfter = statementImport.id
+  after(async () => {
+    await parseImport(importIdForAfter, year)
+  })
+
+  revalidatePath(`/years/${year}/upload`)
+
+  return {
+    ok: true,
+    importId: statementImport.id,
+    sessionId: session.id,
+    apiCallsUsed: sessionAfter.totalApiCalls,
+    apiCallLimit: sessionAfter.apiCallLimit,
+  }
+}
+
+// ── parseImport ──────────────────────────────────────────────────────────────
+//
+// Phase 2: read the persisted file, run the parser (including AI for PDFs),
+// update the StatementImport row, and insert transactions. Safe to re-run on
+// any PENDING / FAILED / PARTIAL import — it's effectively the same code path
+// as reparseImport but with session rate-limiting engaged for PDFs.
+
+export type ParseImportResult =
+  | {
+      ok: true
+      importId: string
+      txCount: number
+      skipped: number
+      institution: string | null
+      sessionId: string
+      apiCallsUsed: number
+      apiCallLimit: number
+      prompts: Awaited<ReturnType<typeof buildContextualPrompts>>
+    }
+  | { ok: false; error: string; sessionId?: string }
+
+export async function parseImport(importId: string, year: number): Promise<ParseImportResult> {
+  // Prevent concurrent parses of the same import (e.g. after() + auto-resume)
+  if (_parseInProgress.has(importId)) return { ok: false, error: "Already parsing" }
+  _parseInProgress.add(importId)
+
+  try {
+    return await _doParseImport(importId, year)
+  } finally {
+    _parseInProgress.delete(importId)
+  }
+}
+
+async function _doParseImport(importId: string, year: number): Promise<ParseImportResult> {
+  const userId = await getCurrentUserId()
+
+  const imp = await prisma.statementImport.findFirst({
+    where: { id: importId, account: { userId } },
+    include: {
+      account: { select: { id: true } },
+      taxYear: { select: { id: true, year: true, status: true } },
+    },
+  })
+
+  if (!imp) return { ok: false, error: "Import not found" }
+  if (imp.taxYear.status === "LOCKED") return { ok: false, error: "Tax year is locked" }
+
+  let buffer: Buffer
+  try {
+    buffer = await readFile(imp.filePath)
+  } catch {
+    return { ok: false, error: "Original file not found on disk — cannot parse" }
+  }
+
+  const session = imp.sessionId
+    ? { id: imp.sessionId }
+    : await openOrGetSession(imp.taxYearId, null)
+
   let parseResult
   try {
-    parseResult = await parseStatement(buffer, file.name, {
+    parseResult = await parseStatement(buffer, imp.originalFilename, {
       onAiCall: async () => {
         await chargeApiCall(session.id)
       },
@@ -122,16 +226,21 @@ export async function uploadStatement(formData: FormData): Promise<UploadResult>
     if (err instanceof RateLimitError) {
       return {
         ok: false,
-        error: `Upload session API limit reached (${err.limit} calls). Close this session or ask the CPA to raise the limit.`,
+        error: `Upload session API limit reached (${err.limit} calls). Ask the CPA to raise the limit.`,
         sessionId: session.id,
       }
     }
-    throw err
+    const message = err instanceof Error ? err.message : String(err)
+    await prisma.statementImport.update({
+      where: { id: importId },
+      data: {
+        parseStatus: "FAILED",
+        parseError: message.slice(0, 500),
+      },
+    })
+    return { ok: false, error: `Parse error: ${message}`, sessionId: session.id }
   }
 
-  const fileType = fileTypeFromName(file.name)
-
-  // Determine parse status
   let parseStatus: "SUCCESS" | "FAILED" | "PARTIAL"
   if (!parseResult.ok || parseResult.transactions.length === 0) {
     parseStatus = "FAILED"
@@ -141,25 +250,17 @@ export async function uploadStatement(formData: FormData): Promise<UploadResult>
     parseStatus = "SUCCESS"
   }
 
-  // Write StatementImport
   const tel = parseResult.extractionTelemetry
-  const statementImport = await prisma.statementImport.create({
+  await prisma.statementImport.update({
+    where: { id: importId },
     data: {
-      accountId,
-      taxYearId,
-      sessionId: session.id,
-      filePath,
-      originalFilename: file.name,
-      fileType,
       institution: parseResult.institution ?? null,
       periodStart: parseResult.periodStart ?? null,
       periodEnd: parseResult.periodEnd ?? null,
-      sourceHash: hash,
       parseStatus,
       parseConfidence: parseResult.parseConfidence,
       totalInflows: parseResult.totalInflows,
       totalOutflows: parseResult.totalOutflows,
-      transactionCount: parseResult.transactions.length,
       reconciliationOk: parseResult.reconciliation?.ok ?? null,
       reconciliationDelta: parseResult.reconciliation?.delta ?? null,
       parseError: parseResult.error ?? null,
@@ -172,27 +273,30 @@ export async function uploadStatement(formData: FormData): Promise<UploadResult>
   })
 
   if (parseStatus === "FAILED") {
+    const sessionAfter = await prisma.importSession.findUniqueOrThrow({
+      where: { id: session.id },
+      select: { totalApiCalls: true, apiCallLimit: true },
+    })
     return {
       ok: false,
       error: parseResult.error ?? "Parse failed — check the file format",
-    }
+      sessionId: session.id,
+    } as ParseImportResult
   }
 
-  // Insert transactions (skip duplicates via idempotencyKey)
   let inserted = 0
   let skipped = 0
 
   for (const tx of parseResult.transactions) {
-    const iKey = transactionKey(accountId, tx.postedDate, tx.amountNormalized, tx.merchantRaw)
-
+    const iKey = transactionKey(imp.accountId, tx.postedDate, tx.amountNormalized, tx.merchantRaw)
     const exists = await prisma.transaction.findUnique({ where: { idempotencyKey: iKey } })
     if (exists) { skipped++; continue }
 
     await prisma.transaction.create({
       data: {
-        statementImportId: statementImport.id,
-        accountId,
-        taxYearId,
+        statementImportId: imp.id,
+        accountId: imp.accountId,
+        taxYearId: imp.taxYearId,
         postedDate: tx.postedDate,
         transactionDate: tx.transactionDate ?? null,
         amountOriginal: tx.amountOriginal,
@@ -205,31 +309,28 @@ export async function uploadStatement(formData: FormData): Promise<UploadResult>
     inserted++
   }
 
-  // Update transactionCount with actual inserted (not skipped dupes)
   await prisma.statementImport.update({
-    where: { id: statementImport.id },
+    where: { id: importId },
     data: { transactionCount: inserted },
   })
 
-  // Bump tax year status to INGESTION if it was CREATED
-  if (account.taxYear.status === "CREATED") {
-    await prisma.taxYear.update({
-      where: { id: taxYearId },
-      data: { status: "INGESTION" },
-    })
-  }
-
-  // Build contextual prompts for the user (institution, account purpose, gaps, unusual deposits)
   const priorImports = await prisma.statementImport.findMany({
-    where: { accountId, parseStatus: "SUCCESS", id: { not: statementImport.id } },
+    where: { accountId: imp.accountId, parseStatus: "SUCCESS", id: { not: imp.id } },
     select: { periodStart: true, periodEnd: true },
   })
   const firstSighting =
     (await prisma.statementImport.count({
-      where: { sessionId: session.id, accountId },
-    })) === 1 // this one we just inserted
+      where: { sessionId: session.id, accountId: imp.accountId },
+    })) === 1
   const prompts = buildContextualPrompts({
-    imp: statementImport,
+    imp: {
+      id: imp.id,
+      accountId: imp.accountId,
+      parseConfidence: parseResult.parseConfidence,
+      institution: parseResult.institution ?? null,
+      periodStart: parseResult.periodStart ?? null,
+      periodEnd: parseResult.periodEnd ?? null,
+    },
     transactions: parseResult.transactions.map((t) => ({
       postedDate: t.postedDate,
       amountNormalized: t.amountNormalized as unknown as import("@/app/generated/prisma/client").Prisma.Decimal,
@@ -250,7 +351,7 @@ export async function uploadStatement(formData: FormData): Promise<UploadResult>
 
   return {
     ok: true,
-    importId: statementImport.id,
+    importId: imp.id,
     txCount: inserted,
     skipped,
     institution: parseResult.institution ?? null,
