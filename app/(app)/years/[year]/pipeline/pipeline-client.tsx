@@ -11,6 +11,9 @@ import {
   runMatchRefunds,
   runMerchantAI,
   runApplyRules,
+  runResidualAI,
+  runBulkClassify,
+  runAutoResolveStops,
 } from "./actions"
 
 interface PipelineStats {
@@ -39,6 +42,7 @@ export function PipelineClient({ year, initial }: PipelineClientProps) {
   const [stats, setStats] = useState(initial)
   const [results, setResults] = useState<StepResult[]>([])
   const [isPending, startTransition] = useTransition()
+  const [fullAutoRunning, setFullAutoRunning] = useState(false)
 
   function addResult(label: string, detail: string, ok: boolean) {
     setResults((prev) => [...prev, { label, detail, ok }])
@@ -55,6 +59,26 @@ export function PipelineClient({ year, initial }: PipelineClientProps) {
         addResult(label, String(err), false)
       }
     })
+  }
+
+  async function runFullAutoClassify() {
+    setFullAutoRunning(true)
+    const steps789 = [
+      { fn: () => runResidualAI(year), label: "7. Residual AI Pass" },
+      { fn: () => runBulkClassify(year), label: "8. CPA Bulk Classify" },
+      { fn: () => runAutoResolveStops(year), label: "9. Auto-Resolve Stops" },
+    ]
+    for (const step of steps789) {
+      try {
+        const result = await step.fn()
+        addResult(step.label, JSON.stringify(result, null, 0), true)
+      } catch (err) {
+        addResult(step.label, String(err), false)
+        break
+      }
+    }
+    setFullAutoRunning(false)
+    window.location.reload()
   }
 
   const steps = [
@@ -102,6 +126,30 @@ export function PipelineClient({ year, initial }: PipelineClientProps) {
     },
   ]
 
+  const aiSteps = [
+    {
+      id: "residual",
+      label: "7. Residual AI Pass",
+      description: "Classifies GRAY / outlier / trip-ambiguous transactions with per-transaction reasoning",
+      action: () => runResidualAI(year),
+      stat: "GRAY + outliers",
+    },
+    {
+      id: "bulk",
+      label: "8. CPA Bulk Classify",
+      description: "Senior CPA (Sonnet 4.6) classifies remaining NEEDS_CONTEXT — auto-applies ≥78% confidence",
+      action: () => runBulkClassify(year),
+      stat: `${stats.stops} stops pending`,
+    },
+    {
+      id: "autostops",
+      label: "9. Auto-Resolve Stops",
+      description: "Sonnet resolves PENDING stops at ≥85% confidence — no user input needed",
+      action: () => runAutoResolveStops(year),
+      stat: `${stats.stops} stops pending`,
+    },
+  ]
+
   return (
     <div className="space-y-6">
       {/* Stats overview */}
@@ -112,7 +160,7 @@ export function PipelineClient({ year, initial }: PipelineClientProps) {
         <StatCard label="STOPs pending" value={stats.stops} />
       </div>
 
-      {/* Step buttons */}
+      {/* Step buttons 1–6 */}
       <div className="space-y-3">
         {steps.map((step) => (
           <Card key={step.id}>
@@ -127,7 +175,48 @@ export function PipelineClient({ year, initial }: PipelineClientProps) {
               <Button
                 size="sm"
                 variant="outline"
-                disabled={isPending}
+                disabled={isPending || fullAutoRunning}
+                onClick={() => run(step.action, step.label)}
+              >
+                {isPending ? "Running…" : "Run"}
+              </Button>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+
+      {/* AI auto-classify section */}
+      <div className="space-y-3">
+        <div className="flex items-center justify-between">
+          <div>
+            <h3 className="text-sm font-semibold">AI Auto-Classification</h3>
+            <p className="text-xs text-muted-foreground">
+              Steps 7–9 cover 90–95% of remaining transactions automatically
+            </p>
+          </div>
+          <Button
+            size="sm"
+            disabled={isPending || fullAutoRunning}
+            onClick={runFullAutoClassify}
+            className="shrink-0"
+          >
+            {fullAutoRunning ? "Running 7→9…" : "Run Full Auto-Classify (7→9)"}
+          </Button>
+        </div>
+        {aiSteps.map((step) => (
+          <Card key={step.id}>
+            <CardContent className="flex items-center justify-between py-4 gap-4">
+              <div className="flex-1 min-w-0">
+                <p className="font-medium text-sm">{step.label}</p>
+                <p className="text-xs text-muted-foreground">{step.description}</p>
+              </div>
+              <Badge variant="outline" className="text-xs shrink-0">
+                {step.stat}
+              </Badge>
+              <Button
+                size="sm"
+                variant="outline"
+                disabled={isPending || fullAutoRunning}
                 onClick={() => run(step.action, step.label)}
               >
                 {isPending ? "Running…" : "Run"}
