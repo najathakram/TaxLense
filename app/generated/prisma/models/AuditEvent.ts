@@ -27,6 +27,8 @@ export type AggregateAuditEvent = {
 export type AuditEventMinAggregateOutputType = {
   id: string | null
   userId: string | null
+  actorCpaUserId: string | null
+  actorAdminUserId: string | null
   actorType: $Enums.ActorType | null
   eventType: string | null
   entityType: string | null
@@ -38,6 +40,8 @@ export type AuditEventMinAggregateOutputType = {
 export type AuditEventMaxAggregateOutputType = {
   id: string | null
   userId: string | null
+  actorCpaUserId: string | null
+  actorAdminUserId: string | null
   actorType: $Enums.ActorType | null
   eventType: string | null
   entityType: string | null
@@ -49,6 +53,8 @@ export type AuditEventMaxAggregateOutputType = {
 export type AuditEventCountAggregateOutputType = {
   id: number
   userId: number
+  actorCpaUserId: number
+  actorAdminUserId: number
   actorType: number
   eventType: number
   entityType: number
@@ -64,6 +70,8 @@ export type AuditEventCountAggregateOutputType = {
 export type AuditEventMinAggregateInputType = {
   id?: true
   userId?: true
+  actorCpaUserId?: true
+  actorAdminUserId?: true
   actorType?: true
   eventType?: true
   entityType?: true
@@ -75,6 +83,8 @@ export type AuditEventMinAggregateInputType = {
 export type AuditEventMaxAggregateInputType = {
   id?: true
   userId?: true
+  actorCpaUserId?: true
+  actorAdminUserId?: true
   actorType?: true
   eventType?: true
   entityType?: true
@@ -86,6 +96,8 @@ export type AuditEventMaxAggregateInputType = {
 export type AuditEventCountAggregateInputType = {
   id?: true
   userId?: true
+  actorCpaUserId?: true
+  actorAdminUserId?: true
   actorType?: true
   eventType?: true
   entityType?: true
@@ -172,6 +184,8 @@ export type AuditEventGroupByArgs<ExtArgs extends runtime.Types.Extensions.Inter
 export type AuditEventGroupByOutputType = {
   id: string
   userId: string | null
+  actorCpaUserId: string | null
+  actorAdminUserId: string | null
   actorType: $Enums.ActorType
   eventType: string
   entityType: string
@@ -206,6 +220,8 @@ export type AuditEventWhereInput = {
   NOT?: Prisma.AuditEventWhereInput | Prisma.AuditEventWhereInput[]
   id?: Prisma.StringFilter<"AuditEvent"> | string
   userId?: Prisma.StringNullableFilter<"AuditEvent"> | string | null
+  actorCpaUserId?: Prisma.StringNullableFilter<"AuditEvent"> | string | null
+  actorAdminUserId?: Prisma.StringNullableFilter<"AuditEvent"> | string | null
   actorType?: Prisma.EnumActorTypeFilter<"AuditEvent"> | $Enums.ActorType
   eventType?: Prisma.StringFilter<"AuditEvent"> | string
   entityType?: Prisma.StringFilter<"AuditEvent"> | string
@@ -215,11 +231,15 @@ export type AuditEventWhereInput = {
   rationale?: Prisma.StringNullableFilter<"AuditEvent"> | string | null
   occurredAt?: Prisma.DateTimeFilter<"AuditEvent"> | Date | string
   user?: Prisma.XOR<Prisma.UserNullableScalarRelationFilter, Prisma.UserWhereInput> | null
+  actorCpa?: Prisma.XOR<Prisma.UserNullableScalarRelationFilter, Prisma.UserWhereInput> | null
+  actorAdmin?: Prisma.XOR<Prisma.UserNullableScalarRelationFilter, Prisma.UserWhereInput> | null
 }
 
 export type AuditEventOrderByWithRelationInput = {
   id?: Prisma.SortOrder
   userId?: Prisma.SortOrderInput | Prisma.SortOrder
+  actorCpaUserId?: Prisma.SortOrderInput | Prisma.SortOrder
+  actorAdminUserId?: Prisma.SortOrderInput | Prisma.SortOrder
   actorType?: Prisma.SortOrder
   eventType?: Prisma.SortOrder
   entityType?: Prisma.SortOrder
@@ -229,6 +249,8 @@ export type AuditEventOrderByWithRelationInput = {
   rationale?: Prisma.SortOrderInput | Prisma.SortOrder
   occurredAt?: Prisma.SortOrder
   user?: Prisma.UserOrderByWithRelationInput
+  actorCpa?: Prisma.UserOrderByWithRelationInput
+  actorAdmin?: Prisma.UserOrderByWithRelationInput
 }
 
 export type AuditEventWhereUniqueInput = Prisma.AtLeast<{
@@ -237,6 +259,8 @@ export type AuditEventWhereUniqueInput = Prisma.AtLeast<{
   OR?: Prisma.AuditEventWhereInput[]
   NOT?: Prisma.AuditEventWhereInput | Prisma.AuditEventWhereInput[]
   userId?: Prisma.StringNullableFilter<"AuditEvent"> | string | null
+  actorCpaUserId?: Prisma.StringNullableFilter<"AuditEvent"> | string | null
+  actorAdminUserId?: Prisma.StringNullableFilter<"AuditEvent"> | string | null
   actorType?: Prisma.EnumActorTypeFilter<"AuditEvent"> | $Enums.ActorType
   eventType?: Prisma.StringFilter<"AuditEvent"> | string
   entityType?: Prisma.StringFilter<"AuditEvent"> | string
@@ -246,11 +270,15 @@ export type AuditEventWhereUniqueInput = Prisma.AtLeast<{
   rationale?: Prisma.StringNullableFilter<"AuditEvent"> | string | null
   occurredAt?: Prisma.DateTimeFilter<"AuditEvent"> | Date | string
   user?: Prisma.XOR<Prisma.UserNullableScalarRelationFilter, Prisma.UserWhereInput> | null
+  actorCpa?: Prisma.XOR<Prisma.UserNullableScalarRelationFilter, Prisma.UserWhereInput> | null
+  actorAdmin?: Prisma.XOR<Prisma.UserNullableScalarRelationFilter, Prisma.UserWhereInput> | null
 }, "id">
 
 export type AuditEventOrderByWithAggregationInput = {
   id?: Prisma.SortOrder
   userId?: Prisma.SortOrderInput | Prisma.SortOrder
+  actorCpaUserId?: Prisma.SortOrderInput | Prisma.SortOrder
+  actorAdminUserId?: Prisma.SortOrderInput | Prisma.SortOrder
   actorType?: Prisma.SortOrder
   eventType?: Prisma.SortOrder
   entityType?: Prisma.SortOrder
@@ -270,6 +298,8 @@ export type AuditEventScalarWhereWithAggregatesInput = {
   NOT?: Prisma.AuditEventScalarWhereWithAggregatesInput | Prisma.AuditEventScalarWhereWithAggregatesInput[]
   id?: Prisma.StringWithAggregatesFilter<"AuditEvent"> | string
   userId?: Prisma.StringNullableWithAggregatesFilter<"AuditEvent"> | string | null
+  actorCpaUserId?: Prisma.StringNullableWithAggregatesFilter<"AuditEvent"> | string | null
+  actorAdminUserId?: Prisma.StringNullableWithAggregatesFilter<"AuditEvent"> | string | null
   actorType?: Prisma.EnumActorTypeWithAggregatesFilter<"AuditEvent"> | $Enums.ActorType
   eventType?: Prisma.StringWithAggregatesFilter<"AuditEvent"> | string
   entityType?: Prisma.StringWithAggregatesFilter<"AuditEvent"> | string
@@ -291,11 +321,15 @@ export type AuditEventCreateInput = {
   rationale?: string | null
   occurredAt?: Date | string
   user?: Prisma.UserCreateNestedOneWithoutAuditEventsInput
+  actorCpa?: Prisma.UserCreateNestedOneWithoutAuditEventsAsCpaInput
+  actorAdmin?: Prisma.UserCreateNestedOneWithoutAuditEventsAsAdminInput
 }
 
 export type AuditEventUncheckedCreateInput = {
   id?: string
   userId?: string | null
+  actorCpaUserId?: string | null
+  actorAdminUserId?: string | null
   actorType: $Enums.ActorType
   eventType: string
   entityType: string
@@ -317,11 +351,15 @@ export type AuditEventUpdateInput = {
   rationale?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   occurredAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   user?: Prisma.UserUpdateOneWithoutAuditEventsNestedInput
+  actorCpa?: Prisma.UserUpdateOneWithoutAuditEventsAsCpaNestedInput
+  actorAdmin?: Prisma.UserUpdateOneWithoutAuditEventsAsAdminNestedInput
 }
 
 export type AuditEventUncheckedUpdateInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   userId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  actorCpaUserId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  actorAdminUserId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   actorType?: Prisma.EnumActorTypeFieldUpdateOperationsInput | $Enums.ActorType
   eventType?: Prisma.StringFieldUpdateOperationsInput | string
   entityType?: Prisma.StringFieldUpdateOperationsInput | string
@@ -335,6 +373,8 @@ export type AuditEventUncheckedUpdateInput = {
 export type AuditEventCreateManyInput = {
   id?: string
   userId?: string | null
+  actorCpaUserId?: string | null
+  actorAdminUserId?: string | null
   actorType: $Enums.ActorType
   eventType: string
   entityType: string
@@ -360,6 +400,8 @@ export type AuditEventUpdateManyMutationInput = {
 export type AuditEventUncheckedUpdateManyInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   userId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  actorCpaUserId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  actorAdminUserId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   actorType?: Prisma.EnumActorTypeFieldUpdateOperationsInput | $Enums.ActorType
   eventType?: Prisma.StringFieldUpdateOperationsInput | string
   entityType?: Prisma.StringFieldUpdateOperationsInput | string
@@ -383,6 +425,8 @@ export type AuditEventOrderByRelationAggregateInput = {
 export type AuditEventCountOrderByAggregateInput = {
   id?: Prisma.SortOrder
   userId?: Prisma.SortOrder
+  actorCpaUserId?: Prisma.SortOrder
+  actorAdminUserId?: Prisma.SortOrder
   actorType?: Prisma.SortOrder
   eventType?: Prisma.SortOrder
   entityType?: Prisma.SortOrder
@@ -396,6 +440,8 @@ export type AuditEventCountOrderByAggregateInput = {
 export type AuditEventMaxOrderByAggregateInput = {
   id?: Prisma.SortOrder
   userId?: Prisma.SortOrder
+  actorCpaUserId?: Prisma.SortOrder
+  actorAdminUserId?: Prisma.SortOrder
   actorType?: Prisma.SortOrder
   eventType?: Prisma.SortOrder
   entityType?: Prisma.SortOrder
@@ -407,6 +453,8 @@ export type AuditEventMaxOrderByAggregateInput = {
 export type AuditEventMinOrderByAggregateInput = {
   id?: Prisma.SortOrder
   userId?: Prisma.SortOrder
+  actorCpaUserId?: Prisma.SortOrder
+  actorAdminUserId?: Prisma.SortOrder
   actorType?: Prisma.SortOrder
   eventType?: Prisma.SortOrder
   entityType?: Prisma.SortOrder
@@ -422,10 +470,38 @@ export type AuditEventCreateNestedManyWithoutUserInput = {
   connect?: Prisma.AuditEventWhereUniqueInput | Prisma.AuditEventWhereUniqueInput[]
 }
 
+export type AuditEventCreateNestedManyWithoutActorCpaInput = {
+  create?: Prisma.XOR<Prisma.AuditEventCreateWithoutActorCpaInput, Prisma.AuditEventUncheckedCreateWithoutActorCpaInput> | Prisma.AuditEventCreateWithoutActorCpaInput[] | Prisma.AuditEventUncheckedCreateWithoutActorCpaInput[]
+  connectOrCreate?: Prisma.AuditEventCreateOrConnectWithoutActorCpaInput | Prisma.AuditEventCreateOrConnectWithoutActorCpaInput[]
+  createMany?: Prisma.AuditEventCreateManyActorCpaInputEnvelope
+  connect?: Prisma.AuditEventWhereUniqueInput | Prisma.AuditEventWhereUniqueInput[]
+}
+
+export type AuditEventCreateNestedManyWithoutActorAdminInput = {
+  create?: Prisma.XOR<Prisma.AuditEventCreateWithoutActorAdminInput, Prisma.AuditEventUncheckedCreateWithoutActorAdminInput> | Prisma.AuditEventCreateWithoutActorAdminInput[] | Prisma.AuditEventUncheckedCreateWithoutActorAdminInput[]
+  connectOrCreate?: Prisma.AuditEventCreateOrConnectWithoutActorAdminInput | Prisma.AuditEventCreateOrConnectWithoutActorAdminInput[]
+  createMany?: Prisma.AuditEventCreateManyActorAdminInputEnvelope
+  connect?: Prisma.AuditEventWhereUniqueInput | Prisma.AuditEventWhereUniqueInput[]
+}
+
 export type AuditEventUncheckedCreateNestedManyWithoutUserInput = {
   create?: Prisma.XOR<Prisma.AuditEventCreateWithoutUserInput, Prisma.AuditEventUncheckedCreateWithoutUserInput> | Prisma.AuditEventCreateWithoutUserInput[] | Prisma.AuditEventUncheckedCreateWithoutUserInput[]
   connectOrCreate?: Prisma.AuditEventCreateOrConnectWithoutUserInput | Prisma.AuditEventCreateOrConnectWithoutUserInput[]
   createMany?: Prisma.AuditEventCreateManyUserInputEnvelope
+  connect?: Prisma.AuditEventWhereUniqueInput | Prisma.AuditEventWhereUniqueInput[]
+}
+
+export type AuditEventUncheckedCreateNestedManyWithoutActorCpaInput = {
+  create?: Prisma.XOR<Prisma.AuditEventCreateWithoutActorCpaInput, Prisma.AuditEventUncheckedCreateWithoutActorCpaInput> | Prisma.AuditEventCreateWithoutActorCpaInput[] | Prisma.AuditEventUncheckedCreateWithoutActorCpaInput[]
+  connectOrCreate?: Prisma.AuditEventCreateOrConnectWithoutActorCpaInput | Prisma.AuditEventCreateOrConnectWithoutActorCpaInput[]
+  createMany?: Prisma.AuditEventCreateManyActorCpaInputEnvelope
+  connect?: Prisma.AuditEventWhereUniqueInput | Prisma.AuditEventWhereUniqueInput[]
+}
+
+export type AuditEventUncheckedCreateNestedManyWithoutActorAdminInput = {
+  create?: Prisma.XOR<Prisma.AuditEventCreateWithoutActorAdminInput, Prisma.AuditEventUncheckedCreateWithoutActorAdminInput> | Prisma.AuditEventCreateWithoutActorAdminInput[] | Prisma.AuditEventUncheckedCreateWithoutActorAdminInput[]
+  connectOrCreate?: Prisma.AuditEventCreateOrConnectWithoutActorAdminInput | Prisma.AuditEventCreateOrConnectWithoutActorAdminInput[]
+  createMany?: Prisma.AuditEventCreateManyActorAdminInputEnvelope
   connect?: Prisma.AuditEventWhereUniqueInput | Prisma.AuditEventWhereUniqueInput[]
 }
 
@@ -443,6 +519,34 @@ export type AuditEventUpdateManyWithoutUserNestedInput = {
   deleteMany?: Prisma.AuditEventScalarWhereInput | Prisma.AuditEventScalarWhereInput[]
 }
 
+export type AuditEventUpdateManyWithoutActorCpaNestedInput = {
+  create?: Prisma.XOR<Prisma.AuditEventCreateWithoutActorCpaInput, Prisma.AuditEventUncheckedCreateWithoutActorCpaInput> | Prisma.AuditEventCreateWithoutActorCpaInput[] | Prisma.AuditEventUncheckedCreateWithoutActorCpaInput[]
+  connectOrCreate?: Prisma.AuditEventCreateOrConnectWithoutActorCpaInput | Prisma.AuditEventCreateOrConnectWithoutActorCpaInput[]
+  upsert?: Prisma.AuditEventUpsertWithWhereUniqueWithoutActorCpaInput | Prisma.AuditEventUpsertWithWhereUniqueWithoutActorCpaInput[]
+  createMany?: Prisma.AuditEventCreateManyActorCpaInputEnvelope
+  set?: Prisma.AuditEventWhereUniqueInput | Prisma.AuditEventWhereUniqueInput[]
+  disconnect?: Prisma.AuditEventWhereUniqueInput | Prisma.AuditEventWhereUniqueInput[]
+  delete?: Prisma.AuditEventWhereUniqueInput | Prisma.AuditEventWhereUniqueInput[]
+  connect?: Prisma.AuditEventWhereUniqueInput | Prisma.AuditEventWhereUniqueInput[]
+  update?: Prisma.AuditEventUpdateWithWhereUniqueWithoutActorCpaInput | Prisma.AuditEventUpdateWithWhereUniqueWithoutActorCpaInput[]
+  updateMany?: Prisma.AuditEventUpdateManyWithWhereWithoutActorCpaInput | Prisma.AuditEventUpdateManyWithWhereWithoutActorCpaInput[]
+  deleteMany?: Prisma.AuditEventScalarWhereInput | Prisma.AuditEventScalarWhereInput[]
+}
+
+export type AuditEventUpdateManyWithoutActorAdminNestedInput = {
+  create?: Prisma.XOR<Prisma.AuditEventCreateWithoutActorAdminInput, Prisma.AuditEventUncheckedCreateWithoutActorAdminInput> | Prisma.AuditEventCreateWithoutActorAdminInput[] | Prisma.AuditEventUncheckedCreateWithoutActorAdminInput[]
+  connectOrCreate?: Prisma.AuditEventCreateOrConnectWithoutActorAdminInput | Prisma.AuditEventCreateOrConnectWithoutActorAdminInput[]
+  upsert?: Prisma.AuditEventUpsertWithWhereUniqueWithoutActorAdminInput | Prisma.AuditEventUpsertWithWhereUniqueWithoutActorAdminInput[]
+  createMany?: Prisma.AuditEventCreateManyActorAdminInputEnvelope
+  set?: Prisma.AuditEventWhereUniqueInput | Prisma.AuditEventWhereUniqueInput[]
+  disconnect?: Prisma.AuditEventWhereUniqueInput | Prisma.AuditEventWhereUniqueInput[]
+  delete?: Prisma.AuditEventWhereUniqueInput | Prisma.AuditEventWhereUniqueInput[]
+  connect?: Prisma.AuditEventWhereUniqueInput | Prisma.AuditEventWhereUniqueInput[]
+  update?: Prisma.AuditEventUpdateWithWhereUniqueWithoutActorAdminInput | Prisma.AuditEventUpdateWithWhereUniqueWithoutActorAdminInput[]
+  updateMany?: Prisma.AuditEventUpdateManyWithWhereWithoutActorAdminInput | Prisma.AuditEventUpdateManyWithWhereWithoutActorAdminInput[]
+  deleteMany?: Prisma.AuditEventScalarWhereInput | Prisma.AuditEventScalarWhereInput[]
+}
+
 export type AuditEventUncheckedUpdateManyWithoutUserNestedInput = {
   create?: Prisma.XOR<Prisma.AuditEventCreateWithoutUserInput, Prisma.AuditEventUncheckedCreateWithoutUserInput> | Prisma.AuditEventCreateWithoutUserInput[] | Prisma.AuditEventUncheckedCreateWithoutUserInput[]
   connectOrCreate?: Prisma.AuditEventCreateOrConnectWithoutUserInput | Prisma.AuditEventCreateOrConnectWithoutUserInput[]
@@ -454,6 +558,34 @@ export type AuditEventUncheckedUpdateManyWithoutUserNestedInput = {
   connect?: Prisma.AuditEventWhereUniqueInput | Prisma.AuditEventWhereUniqueInput[]
   update?: Prisma.AuditEventUpdateWithWhereUniqueWithoutUserInput | Prisma.AuditEventUpdateWithWhereUniqueWithoutUserInput[]
   updateMany?: Prisma.AuditEventUpdateManyWithWhereWithoutUserInput | Prisma.AuditEventUpdateManyWithWhereWithoutUserInput[]
+  deleteMany?: Prisma.AuditEventScalarWhereInput | Prisma.AuditEventScalarWhereInput[]
+}
+
+export type AuditEventUncheckedUpdateManyWithoutActorCpaNestedInput = {
+  create?: Prisma.XOR<Prisma.AuditEventCreateWithoutActorCpaInput, Prisma.AuditEventUncheckedCreateWithoutActorCpaInput> | Prisma.AuditEventCreateWithoutActorCpaInput[] | Prisma.AuditEventUncheckedCreateWithoutActorCpaInput[]
+  connectOrCreate?: Prisma.AuditEventCreateOrConnectWithoutActorCpaInput | Prisma.AuditEventCreateOrConnectWithoutActorCpaInput[]
+  upsert?: Prisma.AuditEventUpsertWithWhereUniqueWithoutActorCpaInput | Prisma.AuditEventUpsertWithWhereUniqueWithoutActorCpaInput[]
+  createMany?: Prisma.AuditEventCreateManyActorCpaInputEnvelope
+  set?: Prisma.AuditEventWhereUniqueInput | Prisma.AuditEventWhereUniqueInput[]
+  disconnect?: Prisma.AuditEventWhereUniqueInput | Prisma.AuditEventWhereUniqueInput[]
+  delete?: Prisma.AuditEventWhereUniqueInput | Prisma.AuditEventWhereUniqueInput[]
+  connect?: Prisma.AuditEventWhereUniqueInput | Prisma.AuditEventWhereUniqueInput[]
+  update?: Prisma.AuditEventUpdateWithWhereUniqueWithoutActorCpaInput | Prisma.AuditEventUpdateWithWhereUniqueWithoutActorCpaInput[]
+  updateMany?: Prisma.AuditEventUpdateManyWithWhereWithoutActorCpaInput | Prisma.AuditEventUpdateManyWithWhereWithoutActorCpaInput[]
+  deleteMany?: Prisma.AuditEventScalarWhereInput | Prisma.AuditEventScalarWhereInput[]
+}
+
+export type AuditEventUncheckedUpdateManyWithoutActorAdminNestedInput = {
+  create?: Prisma.XOR<Prisma.AuditEventCreateWithoutActorAdminInput, Prisma.AuditEventUncheckedCreateWithoutActorAdminInput> | Prisma.AuditEventCreateWithoutActorAdminInput[] | Prisma.AuditEventUncheckedCreateWithoutActorAdminInput[]
+  connectOrCreate?: Prisma.AuditEventCreateOrConnectWithoutActorAdminInput | Prisma.AuditEventCreateOrConnectWithoutActorAdminInput[]
+  upsert?: Prisma.AuditEventUpsertWithWhereUniqueWithoutActorAdminInput | Prisma.AuditEventUpsertWithWhereUniqueWithoutActorAdminInput[]
+  createMany?: Prisma.AuditEventCreateManyActorAdminInputEnvelope
+  set?: Prisma.AuditEventWhereUniqueInput | Prisma.AuditEventWhereUniqueInput[]
+  disconnect?: Prisma.AuditEventWhereUniqueInput | Prisma.AuditEventWhereUniqueInput[]
+  delete?: Prisma.AuditEventWhereUniqueInput | Prisma.AuditEventWhereUniqueInput[]
+  connect?: Prisma.AuditEventWhereUniqueInput | Prisma.AuditEventWhereUniqueInput[]
+  update?: Prisma.AuditEventUpdateWithWhereUniqueWithoutActorAdminInput | Prisma.AuditEventUpdateWithWhereUniqueWithoutActorAdminInput[]
+  updateMany?: Prisma.AuditEventUpdateManyWithWhereWithoutActorAdminInput | Prisma.AuditEventUpdateManyWithWhereWithoutActorAdminInput[]
   deleteMany?: Prisma.AuditEventScalarWhereInput | Prisma.AuditEventScalarWhereInput[]
 }
 
@@ -471,10 +603,14 @@ export type AuditEventCreateWithoutUserInput = {
   afterState?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   rationale?: string | null
   occurredAt?: Date | string
+  actorCpa?: Prisma.UserCreateNestedOneWithoutAuditEventsAsCpaInput
+  actorAdmin?: Prisma.UserCreateNestedOneWithoutAuditEventsAsAdminInput
 }
 
 export type AuditEventUncheckedCreateWithoutUserInput = {
   id?: string
+  actorCpaUserId?: string | null
+  actorAdminUserId?: string | null
   actorType: $Enums.ActorType
   eventType: string
   entityType: string
@@ -492,6 +628,82 @@ export type AuditEventCreateOrConnectWithoutUserInput = {
 
 export type AuditEventCreateManyUserInputEnvelope = {
   data: Prisma.AuditEventCreateManyUserInput | Prisma.AuditEventCreateManyUserInput[]
+  skipDuplicates?: boolean
+}
+
+export type AuditEventCreateWithoutActorCpaInput = {
+  id?: string
+  actorType: $Enums.ActorType
+  eventType: string
+  entityType: string
+  entityId?: string | null
+  beforeState?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  afterState?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  rationale?: string | null
+  occurredAt?: Date | string
+  user?: Prisma.UserCreateNestedOneWithoutAuditEventsInput
+  actorAdmin?: Prisma.UserCreateNestedOneWithoutAuditEventsAsAdminInput
+}
+
+export type AuditEventUncheckedCreateWithoutActorCpaInput = {
+  id?: string
+  userId?: string | null
+  actorAdminUserId?: string | null
+  actorType: $Enums.ActorType
+  eventType: string
+  entityType: string
+  entityId?: string | null
+  beforeState?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  afterState?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  rationale?: string | null
+  occurredAt?: Date | string
+}
+
+export type AuditEventCreateOrConnectWithoutActorCpaInput = {
+  where: Prisma.AuditEventWhereUniqueInput
+  create: Prisma.XOR<Prisma.AuditEventCreateWithoutActorCpaInput, Prisma.AuditEventUncheckedCreateWithoutActorCpaInput>
+}
+
+export type AuditEventCreateManyActorCpaInputEnvelope = {
+  data: Prisma.AuditEventCreateManyActorCpaInput | Prisma.AuditEventCreateManyActorCpaInput[]
+  skipDuplicates?: boolean
+}
+
+export type AuditEventCreateWithoutActorAdminInput = {
+  id?: string
+  actorType: $Enums.ActorType
+  eventType: string
+  entityType: string
+  entityId?: string | null
+  beforeState?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  afterState?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  rationale?: string | null
+  occurredAt?: Date | string
+  user?: Prisma.UserCreateNestedOneWithoutAuditEventsInput
+  actorCpa?: Prisma.UserCreateNestedOneWithoutAuditEventsAsCpaInput
+}
+
+export type AuditEventUncheckedCreateWithoutActorAdminInput = {
+  id?: string
+  userId?: string | null
+  actorCpaUserId?: string | null
+  actorType: $Enums.ActorType
+  eventType: string
+  entityType: string
+  entityId?: string | null
+  beforeState?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  afterState?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  rationale?: string | null
+  occurredAt?: Date | string
+}
+
+export type AuditEventCreateOrConnectWithoutActorAdminInput = {
+  where: Prisma.AuditEventWhereUniqueInput
+  create: Prisma.XOR<Prisma.AuditEventCreateWithoutActorAdminInput, Prisma.AuditEventUncheckedCreateWithoutActorAdminInput>
+}
+
+export type AuditEventCreateManyActorAdminInputEnvelope = {
+  data: Prisma.AuditEventCreateManyActorAdminInput | Prisma.AuditEventCreateManyActorAdminInput[]
   skipDuplicates?: boolean
 }
 
@@ -517,6 +729,8 @@ export type AuditEventScalarWhereInput = {
   NOT?: Prisma.AuditEventScalarWhereInput | Prisma.AuditEventScalarWhereInput[]
   id?: Prisma.StringFilter<"AuditEvent"> | string
   userId?: Prisma.StringNullableFilter<"AuditEvent"> | string | null
+  actorCpaUserId?: Prisma.StringNullableFilter<"AuditEvent"> | string | null
+  actorAdminUserId?: Prisma.StringNullableFilter<"AuditEvent"> | string | null
   actorType?: Prisma.EnumActorTypeFilter<"AuditEvent"> | $Enums.ActorType
   eventType?: Prisma.StringFilter<"AuditEvent"> | string
   entityType?: Prisma.StringFilter<"AuditEvent"> | string
@@ -527,8 +741,70 @@ export type AuditEventScalarWhereInput = {
   occurredAt?: Prisma.DateTimeFilter<"AuditEvent"> | Date | string
 }
 
+export type AuditEventUpsertWithWhereUniqueWithoutActorCpaInput = {
+  where: Prisma.AuditEventWhereUniqueInput
+  update: Prisma.XOR<Prisma.AuditEventUpdateWithoutActorCpaInput, Prisma.AuditEventUncheckedUpdateWithoutActorCpaInput>
+  create: Prisma.XOR<Prisma.AuditEventCreateWithoutActorCpaInput, Prisma.AuditEventUncheckedCreateWithoutActorCpaInput>
+}
+
+export type AuditEventUpdateWithWhereUniqueWithoutActorCpaInput = {
+  where: Prisma.AuditEventWhereUniqueInput
+  data: Prisma.XOR<Prisma.AuditEventUpdateWithoutActorCpaInput, Prisma.AuditEventUncheckedUpdateWithoutActorCpaInput>
+}
+
+export type AuditEventUpdateManyWithWhereWithoutActorCpaInput = {
+  where: Prisma.AuditEventScalarWhereInput
+  data: Prisma.XOR<Prisma.AuditEventUpdateManyMutationInput, Prisma.AuditEventUncheckedUpdateManyWithoutActorCpaInput>
+}
+
+export type AuditEventUpsertWithWhereUniqueWithoutActorAdminInput = {
+  where: Prisma.AuditEventWhereUniqueInput
+  update: Prisma.XOR<Prisma.AuditEventUpdateWithoutActorAdminInput, Prisma.AuditEventUncheckedUpdateWithoutActorAdminInput>
+  create: Prisma.XOR<Prisma.AuditEventCreateWithoutActorAdminInput, Prisma.AuditEventUncheckedCreateWithoutActorAdminInput>
+}
+
+export type AuditEventUpdateWithWhereUniqueWithoutActorAdminInput = {
+  where: Prisma.AuditEventWhereUniqueInput
+  data: Prisma.XOR<Prisma.AuditEventUpdateWithoutActorAdminInput, Prisma.AuditEventUncheckedUpdateWithoutActorAdminInput>
+}
+
+export type AuditEventUpdateManyWithWhereWithoutActorAdminInput = {
+  where: Prisma.AuditEventScalarWhereInput
+  data: Prisma.XOR<Prisma.AuditEventUpdateManyMutationInput, Prisma.AuditEventUncheckedUpdateManyWithoutActorAdminInput>
+}
+
 export type AuditEventCreateManyUserInput = {
   id?: string
+  actorCpaUserId?: string | null
+  actorAdminUserId?: string | null
+  actorType: $Enums.ActorType
+  eventType: string
+  entityType: string
+  entityId?: string | null
+  beforeState?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  afterState?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  rationale?: string | null
+  occurredAt?: Date | string
+}
+
+export type AuditEventCreateManyActorCpaInput = {
+  id?: string
+  userId?: string | null
+  actorAdminUserId?: string | null
+  actorType: $Enums.ActorType
+  eventType: string
+  entityType: string
+  entityId?: string | null
+  beforeState?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  afterState?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  rationale?: string | null
+  occurredAt?: Date | string
+}
+
+export type AuditEventCreateManyActorAdminInput = {
+  id?: string
+  userId?: string | null
+  actorCpaUserId?: string | null
   actorType: $Enums.ActorType
   eventType: string
   entityType: string
@@ -549,10 +825,14 @@ export type AuditEventUpdateWithoutUserInput = {
   afterState?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   rationale?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   occurredAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  actorCpa?: Prisma.UserUpdateOneWithoutAuditEventsAsCpaNestedInput
+  actorAdmin?: Prisma.UserUpdateOneWithoutAuditEventsAsAdminNestedInput
 }
 
 export type AuditEventUncheckedUpdateWithoutUserInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
+  actorCpaUserId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  actorAdminUserId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   actorType?: Prisma.EnumActorTypeFieldUpdateOperationsInput | $Enums.ActorType
   eventType?: Prisma.StringFieldUpdateOperationsInput | string
   entityType?: Prisma.StringFieldUpdateOperationsInput | string
@@ -565,6 +845,92 @@ export type AuditEventUncheckedUpdateWithoutUserInput = {
 
 export type AuditEventUncheckedUpdateManyWithoutUserInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
+  actorCpaUserId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  actorAdminUserId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  actorType?: Prisma.EnumActorTypeFieldUpdateOperationsInput | $Enums.ActorType
+  eventType?: Prisma.StringFieldUpdateOperationsInput | string
+  entityType?: Prisma.StringFieldUpdateOperationsInput | string
+  entityId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  beforeState?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  afterState?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  rationale?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  occurredAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+}
+
+export type AuditEventUpdateWithoutActorCpaInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  actorType?: Prisma.EnumActorTypeFieldUpdateOperationsInput | $Enums.ActorType
+  eventType?: Prisma.StringFieldUpdateOperationsInput | string
+  entityType?: Prisma.StringFieldUpdateOperationsInput | string
+  entityId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  beforeState?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  afterState?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  rationale?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  occurredAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  user?: Prisma.UserUpdateOneWithoutAuditEventsNestedInput
+  actorAdmin?: Prisma.UserUpdateOneWithoutAuditEventsAsAdminNestedInput
+}
+
+export type AuditEventUncheckedUpdateWithoutActorCpaInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  userId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  actorAdminUserId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  actorType?: Prisma.EnumActorTypeFieldUpdateOperationsInput | $Enums.ActorType
+  eventType?: Prisma.StringFieldUpdateOperationsInput | string
+  entityType?: Prisma.StringFieldUpdateOperationsInput | string
+  entityId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  beforeState?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  afterState?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  rationale?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  occurredAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+}
+
+export type AuditEventUncheckedUpdateManyWithoutActorCpaInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  userId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  actorAdminUserId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  actorType?: Prisma.EnumActorTypeFieldUpdateOperationsInput | $Enums.ActorType
+  eventType?: Prisma.StringFieldUpdateOperationsInput | string
+  entityType?: Prisma.StringFieldUpdateOperationsInput | string
+  entityId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  beforeState?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  afterState?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  rationale?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  occurredAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+}
+
+export type AuditEventUpdateWithoutActorAdminInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  actorType?: Prisma.EnumActorTypeFieldUpdateOperationsInput | $Enums.ActorType
+  eventType?: Prisma.StringFieldUpdateOperationsInput | string
+  entityType?: Prisma.StringFieldUpdateOperationsInput | string
+  entityId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  beforeState?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  afterState?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  rationale?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  occurredAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  user?: Prisma.UserUpdateOneWithoutAuditEventsNestedInput
+  actorCpa?: Prisma.UserUpdateOneWithoutAuditEventsAsCpaNestedInput
+}
+
+export type AuditEventUncheckedUpdateWithoutActorAdminInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  userId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  actorCpaUserId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  actorType?: Prisma.EnumActorTypeFieldUpdateOperationsInput | $Enums.ActorType
+  eventType?: Prisma.StringFieldUpdateOperationsInput | string
+  entityType?: Prisma.StringFieldUpdateOperationsInput | string
+  entityId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  beforeState?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  afterState?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  rationale?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  occurredAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+}
+
+export type AuditEventUncheckedUpdateManyWithoutActorAdminInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  userId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  actorCpaUserId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   actorType?: Prisma.EnumActorTypeFieldUpdateOperationsInput | $Enums.ActorType
   eventType?: Prisma.StringFieldUpdateOperationsInput | string
   entityType?: Prisma.StringFieldUpdateOperationsInput | string
@@ -580,6 +946,8 @@ export type AuditEventUncheckedUpdateManyWithoutUserInput = {
 export type AuditEventSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   id?: boolean
   userId?: boolean
+  actorCpaUserId?: boolean
+  actorAdminUserId?: boolean
   actorType?: boolean
   eventType?: boolean
   entityType?: boolean
@@ -589,11 +957,15 @@ export type AuditEventSelect<ExtArgs extends runtime.Types.Extensions.InternalAr
   rationale?: boolean
   occurredAt?: boolean
   user?: boolean | Prisma.AuditEvent$userArgs<ExtArgs>
+  actorCpa?: boolean | Prisma.AuditEvent$actorCpaArgs<ExtArgs>
+  actorAdmin?: boolean | Prisma.AuditEvent$actorAdminArgs<ExtArgs>
 }, ExtArgs["result"]["auditEvent"]>
 
 export type AuditEventSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   id?: boolean
   userId?: boolean
+  actorCpaUserId?: boolean
+  actorAdminUserId?: boolean
   actorType?: boolean
   eventType?: boolean
   entityType?: boolean
@@ -603,11 +975,15 @@ export type AuditEventSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Ex
   rationale?: boolean
   occurredAt?: boolean
   user?: boolean | Prisma.AuditEvent$userArgs<ExtArgs>
+  actorCpa?: boolean | Prisma.AuditEvent$actorCpaArgs<ExtArgs>
+  actorAdmin?: boolean | Prisma.AuditEvent$actorAdminArgs<ExtArgs>
 }, ExtArgs["result"]["auditEvent"]>
 
 export type AuditEventSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   id?: boolean
   userId?: boolean
+  actorCpaUserId?: boolean
+  actorAdminUserId?: boolean
   actorType?: boolean
   eventType?: boolean
   entityType?: boolean
@@ -617,11 +993,15 @@ export type AuditEventSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Ex
   rationale?: boolean
   occurredAt?: boolean
   user?: boolean | Prisma.AuditEvent$userArgs<ExtArgs>
+  actorCpa?: boolean | Prisma.AuditEvent$actorCpaArgs<ExtArgs>
+  actorAdmin?: boolean | Prisma.AuditEvent$actorAdminArgs<ExtArgs>
 }, ExtArgs["result"]["auditEvent"]>
 
 export type AuditEventSelectScalar = {
   id?: boolean
   userId?: boolean
+  actorCpaUserId?: boolean
+  actorAdminUserId?: boolean
   actorType?: boolean
   eventType?: boolean
   entityType?: boolean
@@ -632,25 +1012,35 @@ export type AuditEventSelectScalar = {
   occurredAt?: boolean
 }
 
-export type AuditEventOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "userId" | "actorType" | "eventType" | "entityType" | "entityId" | "beforeState" | "afterState" | "rationale" | "occurredAt", ExtArgs["result"]["auditEvent"]>
+export type AuditEventOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "userId" | "actorCpaUserId" | "actorAdminUserId" | "actorType" | "eventType" | "entityType" | "entityId" | "beforeState" | "afterState" | "rationale" | "occurredAt", ExtArgs["result"]["auditEvent"]>
 export type AuditEventInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   user?: boolean | Prisma.AuditEvent$userArgs<ExtArgs>
+  actorCpa?: boolean | Prisma.AuditEvent$actorCpaArgs<ExtArgs>
+  actorAdmin?: boolean | Prisma.AuditEvent$actorAdminArgs<ExtArgs>
 }
 export type AuditEventIncludeCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   user?: boolean | Prisma.AuditEvent$userArgs<ExtArgs>
+  actorCpa?: boolean | Prisma.AuditEvent$actorCpaArgs<ExtArgs>
+  actorAdmin?: boolean | Prisma.AuditEvent$actorAdminArgs<ExtArgs>
 }
 export type AuditEventIncludeUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   user?: boolean | Prisma.AuditEvent$userArgs<ExtArgs>
+  actorCpa?: boolean | Prisma.AuditEvent$actorCpaArgs<ExtArgs>
+  actorAdmin?: boolean | Prisma.AuditEvent$actorAdminArgs<ExtArgs>
 }
 
 export type $AuditEventPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   name: "AuditEvent"
   objects: {
     user: Prisma.$UserPayload<ExtArgs> | null
+    actorCpa: Prisma.$UserPayload<ExtArgs> | null
+    actorAdmin: Prisma.$UserPayload<ExtArgs> | null
   }
   scalars: runtime.Types.Extensions.GetPayloadResult<{
     id: string
     userId: string | null
+    actorCpaUserId: string | null
+    actorAdminUserId: string | null
     actorType: $Enums.ActorType
     eventType: string
     entityType: string
@@ -1054,6 +1444,8 @@ readonly fields: AuditEventFieldRefs;
 export interface Prisma__AuditEventClient<T, Null = never, ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
   readonly [Symbol.toStringTag]: "PrismaPromise"
   user<T extends Prisma.AuditEvent$userArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.AuditEvent$userArgs<ExtArgs>>): Prisma.Prisma__UserClient<runtime.Types.Result.GetResult<Prisma.$UserPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+  actorCpa<T extends Prisma.AuditEvent$actorCpaArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.AuditEvent$actorCpaArgs<ExtArgs>>): Prisma.Prisma__UserClient<runtime.Types.Result.GetResult<Prisma.$UserPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+  actorAdmin<T extends Prisma.AuditEvent$actorAdminArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.AuditEvent$actorAdminArgs<ExtArgs>>): Prisma.Prisma__UserClient<runtime.Types.Result.GetResult<Prisma.$UserPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
   /**
    * Attaches callbacks for the resolution and/or rejection of the Promise.
    * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -1085,6 +1477,8 @@ export interface Prisma__AuditEventClient<T, Null = never, ExtArgs extends runti
 export interface AuditEventFieldRefs {
   readonly id: Prisma.FieldRef<"AuditEvent", 'String'>
   readonly userId: Prisma.FieldRef<"AuditEvent", 'String'>
+  readonly actorCpaUserId: Prisma.FieldRef<"AuditEvent", 'String'>
+  readonly actorAdminUserId: Prisma.FieldRef<"AuditEvent", 'String'>
   readonly actorType: Prisma.FieldRef<"AuditEvent", 'ActorType'>
   readonly eventType: Prisma.FieldRef<"AuditEvent", 'String'>
   readonly entityType: Prisma.FieldRef<"AuditEvent", 'String'>
@@ -1497,6 +1891,44 @@ export type AuditEventDeleteManyArgs<ExtArgs extends runtime.Types.Extensions.In
  * AuditEvent.user
  */
 export type AuditEvent$userArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the User
+   */
+  select?: Prisma.UserSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the User
+   */
+  omit?: Prisma.UserOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.UserInclude<ExtArgs> | null
+  where?: Prisma.UserWhereInput
+}
+
+/**
+ * AuditEvent.actorCpa
+ */
+export type AuditEvent$actorCpaArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the User
+   */
+  select?: Prisma.UserSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the User
+   */
+  omit?: Prisma.UserOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.UserInclude<ExtArgs> | null
+  where?: Prisma.UserWhereInput
+}
+
+/**
+ * AuditEvent.actorAdmin
+ */
+export type AuditEvent$actorAdminArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   /**
    * Select specific fields to fetch from the User
    */
