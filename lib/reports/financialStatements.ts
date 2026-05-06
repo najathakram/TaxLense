@@ -17,6 +17,7 @@ import {
   DEDUCTIBLE_CODES as SHARED_DEDUCTIBLE_CODES,
   computeDeductibleAmt,
 } from "@/lib/classification/deductible"
+import { inYearWindow } from "@/lib/queries/yearWindow"
 
 const DEDUCTIBLE_CODES = SHARED_DEDUCTIBLE_CODES as readonly TransactionCode[]
 
@@ -63,8 +64,10 @@ type ClassifiedTx = {
 }
 
 async function loadClassifiedTxns(taxYearId: string): Promise<ClassifiedTx[]> {
+  const ty = await prisma.taxYear.findUnique({ where: { id: taxYearId }, select: { year: true } })
+  if (!ty) return []
   const rows = await prisma.transaction.findMany({
-    where: { taxYearId, isSplit: false },
+    where: { taxYearId, isSplit: false, ...inYearWindow(ty.year) },
     orderBy: [{ postedDate: "asc" }, { id: "asc" }],
     include: {
       classifications: { where: { isCurrent: true }, take: 1 },

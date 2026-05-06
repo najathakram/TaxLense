@@ -13,6 +13,7 @@ import {
   DEDUCTIBLE_CODES as SHARED_DEDUCTIBLE_CODES,
   computeDeductibleAmt,
 } from "@/lib/classification/deductible"
+import { inYearWindow } from "@/lib/queries/yearWindow"
 
 export type RiskSeverity = "CRITICAL" | "HIGH" | "MEDIUM" | "LOW"
 
@@ -52,15 +53,17 @@ function band(score: number): RiskReport["band"] {
 }
 
 export async function computeRiskScore(taxYearId: string): Promise<RiskReport> {
+  const ty = await prisma.taxYear.findUnique({ where: { id: taxYearId }, select: { year: true, userId: true } })
+  const yearWindow = ty ? inYearWindow(ty.year) : {}
   const [ledger, profile, pendingStops, lossHistory] = await Promise.all([
     prisma.transaction.findMany({
-      where: { taxYearId, isSplit: false },
+      where: { taxYearId, isSplit: false, ...yearWindow },
       include: { classifications: { where: { isCurrent: true }, take: 1 } },
     }),
     prisma.businessProfile.findUnique({ where: { taxYearId } }),
     prisma.stopItem.count({ where: { taxYearId, state: "PENDING" } }),
     prisma.taxYear.findMany({
-      where: { userId: (await prisma.taxYear.findUnique({ where: { id: taxYearId } }))?.userId },
+      where: { userId: ty?.userId },
       orderBy: { year: "desc" },
       take: 3,
     }),
@@ -149,7 +152,7 @@ export async function computeRiskScore(taxYearId: string): Promise<RiskReport> {
   let lossYearN = 0
   for (const ty of lossHistory) {
     const txns = await prisma.transaction.findMany({
-      where: { taxYearId: ty.id, isSplit: false },
+      where: { taxYearId: ty.id, isSplit: false, ...inYearWindow(ty.year) },
       include: { classifications: { where: { isCurrent: true }, take: 1 } },
     })
     let inc = 0

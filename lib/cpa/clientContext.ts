@@ -3,6 +3,7 @@ import { cookies } from "next/headers"
 import { auth } from "@/auth"
 import { prisma } from "@/lib/db"
 import { getAdminCpaContext } from "@/lib/admin/adminContext"
+import { inYearWindow } from "@/lib/queries/yearWindow"
 
 export const CLIENT_CONTEXT_COOKIE = "taxlens_client_ctx"
 export const RECENT_CLIENTS_COOKIE = "taxlens_recent_clients"
@@ -188,7 +189,7 @@ export async function getClientYearStrip(clientId: string): Promise<YearStripEnt
   const result: YearStripEntry[] = []
   for (const ty of taxYears) {
     const txns = await prisma.transaction.findMany({
-      where: { taxYearId: ty.id, isSplit: false },
+      where: { taxYearId: ty.id, isSplit: false, ...inYearWindow(ty.year) },
       select: {
         amountNormalized: true,
         classifications: {

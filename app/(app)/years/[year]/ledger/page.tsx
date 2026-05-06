@@ -2,6 +2,7 @@ import { getCurrentUserId } from "@/lib/auth"
 import { prisma } from "@/lib/db"
 import { notFound } from "next/navigation"
 import { computeDeductibleAmt } from "@/lib/classification/deductible"
+import { inYearWindow } from "@/lib/queries/yearWindow"
 import { LedgerClient, type LedgerRow } from "./ledger-client"
 
 interface Props {
@@ -24,6 +25,7 @@ export default async function LedgerPage({ params }: Props) {
       taxYearId: taxYear.id,
       isSplit: false,
       isDuplicateOf: null,
+      ...inYearWindow(taxYear.year),
     },
     include: {
       account: true,
