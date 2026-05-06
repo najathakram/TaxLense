@@ -4,9 +4,17 @@ import { requireAuth } from "@/lib/auth"
 import { prisma } from "@/lib/db"
 import { getCurrentCpaContext, getClientYearStrip } from "@/lib/cpa/clientContext"
 import { getAdminCpaContext } from "@/lib/admin/adminContext"
+import { enterClientSession } from "@/lib/cpa/actions"
 import { Section, Card, Btn, Pill, Avi, Tag, ProgressArc, Risk } from "@/components/v2/primitives"
 import { fmtUSD, fmtDate, statusKey } from "@/components/v2/format"
 import { EnterClientButton } from "./enter-client-button"
+
+async function enterAndGo(formData: FormData) {
+  "use server"
+  const clientId = formData.get("clientId") as string
+  const redirectTo = formData.get("redirectTo") as string
+  await enterClientSession(clientId, redirectTo)
+}
 
 interface Props {
   params: Promise<{ clientId: string }>
@@ -93,9 +101,20 @@ export default async function ClientHomePage({ params }: Props) {
         <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 12 }}>
           {allYears.map((y) => {
             const d = yearStrip.find((s) => s.year === y)
-            const linkHref = d ? `/years/${y}` : "/onboarding"
+            const redirectTo = d ? `/years/${y}` : "/onboarding"
             return (
-              <Link key={y} href={linkHref} style={{ textDecoration: "none", color: "inherit" }}>
+              <form key={y} action={enterAndGo} style={{ display: "contents" }}>
+                <input type="hidden" name="clientId" value={rel.client.id} />
+                <input type="hidden" name="redirectTo" value={redirectTo} />
+                <button
+                  type="submit"
+                  style={{
+                    all: "unset",
+                    cursor: "pointer",
+                    color: "inherit",
+                    display: "block",
+                  }}
+                >
                 <Card pad={16} hoverable>
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
                     <div className="num" style={{ fontSize: 28, fontWeight: 800, letterSpacing: -0.5 }}>
@@ -173,7 +192,8 @@ export default async function ClientHomePage({ params }: Props) {
                     <div style={{ marginTop: 26, color: "var(--fg-3)", fontSize: 12 }}>+ create tax year</div>
                   )}
                 </Card>
-              </Link>
+                </button>
+              </form>
             )
           })}
         </div>
