@@ -4,9 +4,10 @@ import { exitClientSession } from "@/lib/cpa/actions"
 import { getCurrentAdminContext, getAdminCpaContext } from "@/lib/admin/adminContext"
 import { exitCpaSession } from "@/lib/admin/actions"
 import { prisma } from "@/lib/db"
-import Link from "next/link"
+import { TopBar, Sidebar, type SidebarGroup, type SidebarItem } from "@/components/v2/shell"
+import { Banner } from "@/components/v2/primitives"
 import { signOut } from "@/auth"
-import { Button } from "@/components/ui/button"
+import Link from "next/link"
 
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
   const session = await requireAuth()
@@ -17,157 +18,238 @@ export default async function AppLayout({ children }: { children: React.ReactNod
     getAdminCpaContext(),
   ])
   const userId = await getCurrentUserId()
+
+  // Pull "active client" + "active year" — when a CPA (or admin-as-CPA) is
+  // working in a client workspace, we use the deepest context (clientId).
+  // Otherwise it's the user's own data.
+  const activeClient = clientCtx
+    ? { id: clientCtx.clientId, name: clientCtx.clientName, email: clientCtx.clientEmail }
+    : null
+
+  // Year selector — most recent year for the active user.
   const activeYear = await prisma.taxYear.findFirst({
     where: { userId },
     orderBy: { year: "desc" },
     select: { year: true, status: true },
   })
 
+  const tier = adminCtx ? "ADMIN" : cpaCtx ? "CPA" : "CLIENT"
+  const userName = session.user?.name ?? session.user?.email ?? "User"
+  const userEmail = session.user?.email ?? ""
+
+  // CPA's clients (for sidebar quick-pick)
+  const cpaUserId = adminCpaCtx?.cpaId ?? cpaCtx?.cpaId ?? null
+  const myClients = cpaUserId
+    ? await prisma.cpaClient.findMany({
+        where: { cpaUserId },
+        select: {
+          clientUserId: true,
+          displayName: true,
+          client: { select: { id: true, name: true, email: true } },
+        },
+        take: 6,
+        orderBy: { createdAt: "desc" },
+      })
+    : []
+
+  // Pending stops on active client + year (used as a sidebar badge)
+  const pendingStopsCount = activeYear
+    ? await prisma.stopItem.count({
+        where: { taxYear: { userId, year: activeYear.year }, state: "PENDING" },
+      })
+    : 0
+
+  // Build sidebar groups depending on tier
+  const groups: SidebarGroup[] = []
+
+  if (tier === "ADMIN" && !adminCpaCtx) {
+    // Pure admin view (not impersonating)
+    groups.push({
+      label: "Admin",
+      items: [
+        { label: "Dashboard", href: "/admin", accent: "var(--tl-purple)" },
+        { label: "CPAs",      href: "/admin/cpas", accent: "var(--tl-purple)" },
+        { label: "Audit log", href: "/admin/audit", accent: "var(--tl-purple)" },
+        { label: "Settings",  href: "/admin/settings", accent: "var(--tl-purple)" },
+      ],
+    })
+  } else {
+    // CPA-tier or admin-impersonating-CPA — show the CPA workspace
+    groups.push({
+      label: "Workspace",
+      items: [
+        { label: "Inbox",         href: "/workspace", accent: "var(--tl-accent)" },
+        { label: "Firm overview", href: "/workspace/firm", accent: "var(--tl-accent)" },
+        { label: "Calendar",      href: "/workspace/calendar", accent: "var(--tl-accent)" },
+      ],
+    })
+
+    if (myClients.length > 0 || cpaUserId) {
+      const clientItems: SidebarItem[] = [
+        { label: "All clients", href: "/clients" },
+        ...myClients.map((c) => ({
+          label: c.displayName ?? c.client.name ?? c.client.email,
+          href: `/clients/${c.client.id}`,
+        })),
+      ]
+      groups.push({ label: `Clients · ${myClients.length}`, items: clientItems })
+    }
+
+    if (activeClient && activeYear) {
+      const yearBase = `/years/${activeYear.year}`
+      // Stage-grouped year items (Ingest / Process / Review / Deliver)
+      const stages: Array<{ label: string; items: SidebarItem[] }> = [
+        {
+          label: "INGEST",
+          items: [
+            { label: "Upload",   href: `${yearBase}/upload`,   indent: 1 },
+            { label: "Coverage", href: `${yearBase}/coverage`, indent: 1 },
+          ],
+        },
+        {
+          label: "PROCESS",
+          items: [
+            { label: "Pipeline", href: `${yearBase}/pipeline`, indent: 1 },
+            {
+              label: "STOPs",
+              href: `${yearBase}/stops`,
+              indent: 1,
+              ...(pendingStopsCount > 0
+                ? { badge: { text: pendingStopsCount, color: "var(--tl-amber)", bg: "rgba(244,196,81,0.14)" } }
+                : {}),
+            },
+          ],
+        },
+        {
+          label: "REVIEW",
+          items: [
+            { label: "Ledger",    href: `${yearBase}/ledger`,    indent: 1 },
+            { label: "Risk",      href: `${yearBase}/risk`,      indent: 1 },
+            { label: "Analytics", href: `${yearBase}/analytics`, indent: 1 },
+          ],
+        },
+        {
+          label: "DELIVER",
+          items: [
+            { label: "Lock",     href: `${yearBase}/lock`,     indent: 1 },
+            { label: "Download", href: `${yearBase}/download`, indent: 1 },
+          ],
+        },
+      ]
+
+      groups.push({
+        label: `${activeClient.name.split(" ")[0]} / ${activeYear.year}`,
+        items: [
+          { label: "Year overview", href: yearBase },
+          { label: "Documents",     href: `/clients/${activeClient.id}/documents` },
+        ],
+      })
+
+      // Append each stage as a separate "group" with its own header
+      for (const s of stages) {
+        groups.push({ label: s.label, items: s.items })
+      }
+    } else if (activeClient) {
+      groups.push({
+        label: activeClient.name,
+        items: [{ label: "Pick a year to expand →", href: `/clients/${activeClient.id}`, accent: "var(--fg-3)" }],
+      })
+    }
+  }
+
   return (
-    <div className="flex min-h-screen bg-background">
-      {/* Sidebar */}
-      <aside className="w-56 border-r flex flex-col bg-card">
-        <div className="p-4 border-b">
-          <span className="font-bold text-lg text-foreground">TaxLens</span>
-          {adminCtx && (
-            <span
-              className="ml-2 text-[10px] font-medium bg-purple-100 text-purple-700 px-1.5 py-0.5 rounded"
-              title={`Logged in as platform admin ${adminCtx.adminName} (${adminCtx.adminEmail})`}
-            >
-              ADMIN
-            </span>
+    <div className="flex flex-col" style={{ minHeight: "100vh" }}>
+      <TopBar
+        userName={userName}
+        userEmail={userEmail}
+        tier={tier as "ADMIN" | "CPA" | "CLIENT"}
+        impersonatingCpa={!!adminCpaCtx}
+        logoHref={adminCtx && !adminCpaCtx ? "/admin" : "/workspace"}
+      />
+
+      {/* Stacked impersonation banners: admin row above CPA row */}
+      {adminCpaCtx && (
+        <Banner
+          tone="admin"
+          exitAction={exitCpaSession}
+          exitLabel="Exit admin ✕"
+        >
+          <span style={{ color: "var(--fg-1)" }}>{adminCtx?.adminName ?? "Admin"}</span>
+          <span style={{ margin: "0 8px", color: "var(--fg-3)" }}>→</span>
+          <span style={{ fontWeight: 700 }}>acting as CPA · {adminCpaCtx.cpaName}</span>
+        </Banner>
+      )}
+      {clientCtx && (
+        <Banner
+          tone="cpa"
+          exitAction={exitClientSession}
+          exitLabel="Exit client ✕"
+        >
+          {cpaCtx && (
+            <>
+              <span style={{ fontWeight: 700 }}>{cpaCtx.cpaName}</span>
+              <span style={{ margin: "0 6px", color: "var(--fg-3)" }}>on behalf of</span>
+            </>
           )}
-          {!adminCtx && cpaCtx && (
-            <span
-              className="ml-2 text-[10px] font-medium bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded"
-              title={`Logged in as ${cpaCtx.cpaName} (${cpaCtx.cpaEmail})`}
+          <span style={{ fontWeight: 700 }}>{clientCtx.clientName}</span>
+          <span style={{ margin: "0 6px", color: "var(--fg-3)" }}>·</span>
+          <span style={{ color: "var(--fg-2)" }}>{clientCtx.clientEmail}</span>
+        </Banner>
+      )}
+
+      <div style={{ display: "flex", flex: 1, minHeight: 0 }}>
+        <Sidebar
+          groups={groups}
+          footerEmail={userEmail}
+          signOutAction={async () => {
+            "use server"
+            await signOut({ redirectTo: "/login" })
+          }}
+        />
+        <main style={{ flex: 1, minWidth: 0, overflow: "auto", display: "flex", flexDirection: "column" }}>
+          {/* Optional context bar (client + year breadcrumb) */}
+          {activeClient && activeYear && (
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: 10,
+                padding: "12px 28px",
+                borderBottom: "1px solid var(--hairline)",
+                background: "rgba(11,13,18,0.4)",
+                backdropFilter: "blur(10px)",
+                WebkitBackdropFilter: "blur(10px)",
+              }}
             >
-              CPA
-            </span>
-          )}
-        </div>
-        <nav className="flex-1 p-3 space-y-1">
-          {clientCtx && (
-            <Link
-              href="/clients"
-              className="flex items-center px-3 py-2 rounded-md text-sm font-medium text-blue-600 hover:bg-accent transition-colors"
-              onClick={undefined}
-            >
-              ← All Clients
-            </Link>
-          )}
-          <Link
-            href="/dashboard"
-            className="flex items-center px-3 py-2 rounded-md text-sm font-medium text-foreground hover:bg-accent hover:text-accent-foreground transition-colors"
-          >
-            Dashboard
-          </Link>
-          <Link
-            href="/onboarding"
-            className="flex items-center px-3 py-2 rounded-md text-sm font-medium text-foreground hover:bg-accent hover:text-accent-foreground transition-colors"
-          >
-            Profile Wizard
-          </Link>
-          <Link
-            href="/profile"
-            className="flex items-center px-3 py-2 rounded-md text-sm font-medium text-foreground hover:bg-accent hover:text-accent-foreground transition-colors"
-          >
-            Business Profile
-          </Link>
-          {activeYear && (
-            <div className="pt-3 mt-3 border-t space-y-1">
+              <Link
+                href={`/clients/${activeClient.id}`}
+                className="glass"
+                style={{ padding: "4px 12px", borderRadius: 999, fontSize: 13, fontWeight: 600, textDecoration: "none", color: "inherit" }}
+              >
+                {activeClient.name} ▾
+              </Link>
+              <span style={{ color: "var(--fg-3)" }}>›</span>
               <Link
                 href={`/years/${activeYear.year}`}
-                className="flex items-center justify-between px-3 py-2 rounded-md text-sm font-semibold text-foreground hover:bg-accent hover:text-accent-foreground transition-colors"
+                className="glass"
+                style={{ padding: "4px 14px", borderRadius: 999, fontWeight: 700, fontSize: 13, fontFamily: "var(--mono)", textDecoration: "none", color: "inherit" }}
               >
-                <span>Tax Year {activeYear.year}</span>
-                <span className="text-[10px] text-muted-foreground">{activeYear.status}</span>
+                {activeYear.year} ▾
               </Link>
-              {[
-                { href: `/years/${activeYear.year}/upload`, label: "Upload Statements" },
-                { href: `/years/${activeYear.year}/coverage`, label: "Coverage" },
-                { href: `/years/${activeYear.year}/pipeline`, label: "Pipeline" },
-                { href: `/years/${activeYear.year}/stops`, label: "Stops" },
-                { href: `/years/${activeYear.year}/ledger`, label: "Ledger" },
-                { href: `/years/${activeYear.year}/risk`, label: "Risk" },
-                { href: `/years/${activeYear.year}/analytics`, label: "Analytics" },
-                { href: `/years/${activeYear.year}/lock`, label: "Lock" },
-                { href: `/years/${activeYear.year}/download`, label: "Download" },
-              ].map((item) => (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  className="flex items-center pl-6 pr-3 py-1.5 rounded-md text-sm text-muted-foreground hover:bg-accent hover:text-accent-foreground transition-colors"
-                >
-                  {item.label}
-                </Link>
-              ))}
+              <span
+                className="tl-pill"
+                style={{
+                  background: "rgba(122,166,255,0.16)",
+                  color: "var(--tl-blue)",
+                  border: "1px solid rgba(122,166,255,0.32)",
+                }}
+              >
+                {activeYear.status}
+              </span>
             </div>
           )}
-        </nav>
-        <div className="p-3 border-t">
-          <p className="text-xs text-muted-foreground truncate mb-2">{session.user?.email}</p>
-          <form
-            action={async () => {
-              "use server"
-              await signOut({ redirectTo: "/login" })
-            }}
-          >
-            <Button variant="ghost" size="sm" type="submit" className="w-full justify-start">
-              Sign out
-            </Button>
-          </form>
-        </div>
-      </aside>
-
-      {/* Main content */}
-      <div className="flex-1 flex flex-col min-w-0">
-        {/* Admin → CPA impersonation banner (purple, top of stack) */}
-        {adminCpaCtx && (
-          <div className="bg-purple-50 border-b border-purple-200 px-4 py-2 flex items-center justify-between text-sm shrink-0">
-            <span className="text-purple-900">
-              <strong>ADMIN: {adminCtx?.adminName ?? adminCpaCtx.adminId}</strong>
-              <span className="text-purple-700 mx-1.5">→</span>
-              acting as CPA: <strong>{adminCpaCtx.cpaName}</strong>
-              <span className="text-purple-700 ml-2 font-normal">({adminCpaCtx.cpaEmail})</span>
-            </span>
-            <form action={exitCpaSession}>
-              <Button
-                type="submit"
-                variant="ghost"
-                size="sm"
-                className="h-7 text-purple-800 hover:bg-purple-100 hover:text-purple-900"
-              >
-                Exit admin impersonation →
-              </Button>
-            </form>
-          </div>
-        )}
-        {/* CPA → client impersonation banner (amber, second in stack) */}
-        {clientCtx && (
-          <div className="bg-amber-50 border-b border-amber-200 px-4 py-2 flex items-center justify-between text-sm shrink-0">
-            <span className="text-amber-900">
-              {cpaCtx && (
-                <span className="text-amber-700 mr-1">
-                  {cpaCtx.cpaName} on behalf of
-                </span>
-              )}
-              <strong>{clientCtx.clientName}</strong>
-              <span className="text-amber-700 ml-2 font-normal">({clientCtx.clientEmail})</span>
-            </span>
-            <form action={exitClientSession}>
-              <Button
-                type="submit"
-                variant="ghost"
-                size="sm"
-                className="h-7 text-amber-800 hover:bg-amber-100 hover:text-amber-900"
-              >
-                Exit client workspace →
-              </Button>
-            </form>
-          </div>
-        )}
-        <main className="flex-1 flex flex-col min-w-0">{children}</main>
+          <div style={{ flex: 1, minHeight: 0 }}>{children}</div>
+        </main>
       </div>
     </div>
   )
