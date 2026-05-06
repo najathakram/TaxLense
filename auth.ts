@@ -21,6 +21,21 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     Google({
       clientId: process.env.AUTH_GOOGLE_ID,
       clientSecret: process.env.AUTH_GOOGLE_SECRET,
+      // Allow Google sign-in to link to a pre-existing User row by email.
+      //
+      // Why this is safe in our model:
+      //   1. New User rows are NEVER created by untrusted input. They come
+      //      from the SUPER_ADMIN-only bootstrap script or an authenticated
+      //      CPA's createClientAccount/createCpaAccount server action.
+      //   2. Google sets email_verified=true on every OIDC profile, so a
+      //      successful Google sign-in proves the user owns the email.
+      //   3. Without this flag, NextAuth refuses to link a Google sign-in
+      //      to an existing User-by-email and returns OAuthAccountNotLinked,
+      //      breaking the bootstrap-pre-create-then-sign-in flow.
+      //
+      // The "dangerous" name is for apps that allow unverified email signups;
+      // we don't.
+      allowDangerousEmailAccountLinking: true,
     }),
     Credentials({
       credentials: {
