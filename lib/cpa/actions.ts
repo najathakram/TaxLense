@@ -10,7 +10,7 @@ import { writeAuditEvent } from "@/lib/audit"
 import { getAdminCpaContext } from "@/lib/admin/adminContext"
 import { CLIENT_CONTEXT_COOKIE } from "./clientContext"
 
-export async function enterClientSession(clientId: string) {
+export async function enterClientSession(clientId: string, redirectTo: string = "/dashboard") {
   const session = await requireAuth()
   const cpaId = session.user!.id!
 
@@ -27,7 +27,9 @@ export async function enterClientSession(clientId: string) {
     maxAge: 60 * 60 * 8,
   })
 
-  redirect("/dashboard")
+  // Only allow same-origin paths to prevent open-redirect via redirectTo.
+  const safe = redirectTo.startsWith("/") && !redirectTo.startsWith("//") ? redirectTo : "/dashboard"
+  redirect(safe)
 }
 
 export async function exitClientSession() {
