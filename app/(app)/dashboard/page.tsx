@@ -4,7 +4,8 @@ import { getAdminCpaContext } from "@/lib/admin/adminContext"
 import { prisma } from "@/lib/db"
 import { redirect } from "next/navigation"
 import Link from "next/link"
-import { Section, Card, Btn, Pill, statusKey } from "@/components/v2/primitives"
+import { Section, Card, Btn, Pill } from "@/components/v2/primitives"
+import { statusKey } from "@/components/v2/format"
 
 export default async function DashboardPage() {
   const session = await requireAuth()

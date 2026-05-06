@@ -1,7 +1,8 @@
 import { redirect } from "next/navigation"
 import Link from "next/link"
 import { getCurrentAdminContext, listAllCpas } from "@/lib/admin/adminContext"
-import { Section, Card, Btn, Pill, Avi, fmtUSD, relTime } from "@/components/v2/primitives"
+import { Section, Card, Btn, Pill, Avi } from "@/components/v2/primitives"
+import { fmtUSD, relTime } from "@/components/v2/format"
 import { ImpersonateButton } from "./impersonate-button"
 
 export default async function AdminCpasPage() {

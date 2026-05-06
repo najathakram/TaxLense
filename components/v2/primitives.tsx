@@ -7,16 +7,8 @@
  */
 "use client"
 
-import { type CSSProperties, type ReactNode, useMemo } from "react"
-
-// ───────── Status pills ──────────────────────────────────────────────
-
-type StatusKey =
-  | "CREATED" | "INGESTION" | "REVIEW" | "LOCKED" | "ARCHIVED"
-  | "BLOCKER" | "PENDING" | "READY" | "DEADLINE"
-  | "OPEN" | "ANSWERED" | "RESOLVED" | "DEFERRED"
-  | "active" | "inactive"
-  | "LOW" | "MODERATE" | "HIGH" | "CRITICAL"
+import type { CSSProperties, ReactNode } from "react"
+import { avatarHue, initials, type StatusKey } from "./format"
 
 const STATUS_MAP: Record<string, { label: string; color: string; bg: string; dot: string }> = {
   CREATED:   { label: "CREATED",   color: "var(--fg-3)",      bg: "rgba(91,98,113,0.18)",   dot: "○" },
@@ -70,20 +62,6 @@ export function Risk({ score }: { score: number | null | undefined }) {
 }
 
 // ───────── Avatar ────────────────────────────────────────────────────
-
-function avatarHue(s: string): number {
-  let h = 0
-  for (const c of s) h = (h * 31 + c.charCodeAt(0)) >>> 0
-  return h % 360
-}
-function initials(name: string): string {
-  return name
-    .split(/\s+/)
-    .slice(0, 2)
-    .map((p) => p[0])
-    .join("")
-    .toUpperCase()
-}
 
 export function Avi({ name, email, size = 28 }: { name: string; email?: string; size?: number }) {
   const hue = avatarHue(email ?? name)
@@ -393,48 +371,6 @@ export function ProgressArc({ pct, size = 56, label }: { pct: number; size?: num
   )
 }
 
-// ───────── Format helpers ────────────────────────────────────────────
-
-export function fmtUSD(n: number | null | undefined, opts: { cents?: boolean } = {}): string {
-  if (n == null || isNaN(n)) return "—"
-  const sign = n < 0 ? "-" : ""
-  const abs = Math.abs(n)
-  const s = abs.toLocaleString("en-US", {
-    minimumFractionDigits: opts.cents ? 2 : 0,
-    maximumFractionDigits: opts.cents ? 2 : 0,
-  })
-  return `${sign}$${s}`
-}
-
-export function fmtNum(n: number | null | undefined): string {
-  return n == null ? "—" : n.toLocaleString("en-US")
-}
-
-export function fmtDate(d: Date | string | null | undefined): string {
-  if (!d) return "—"
-  const dt = typeof d === "string" ? new Date(d) : d
-  return dt.toLocaleDateString("en-US", { month: "short", day: "2-digit", year: "numeric" })
-}
-
-export function fmtDateTime(d: Date | string | null | undefined): string {
-  if (!d) return "—"
-  const dt = typeof d === "string" ? new Date(d) : d
-  return dt.toLocaleString("en-US", { month: "short", day: "2-digit", hour: "2-digit", minute: "2-digit", hour12: false })
-}
-
-export function relTime(d: Date | string | null | undefined): string {
-  if (!d) return "—"
-  const ms = Date.now() - new Date(d).getTime()
-  const m = Math.floor(ms / 60000)
-  const h = Math.floor(ms / 3600000)
-  const days = Math.floor(ms / 86400000)
-  if (m < 1) return "just now"
-  if (m < 60) return `${m}m ago`
-  if (h < 24) return `${h}h ago`
-  if (days < 30) return `${days}d ago`
-  return fmtDate(d)
-}
-
 // ───────── Drawer ────────────────────────────────────────────────────
 
 export function Drawer({
@@ -617,30 +553,7 @@ function BannerExit({
   )
 }
 
-// ───────── Misc helpers ──────────────────────────────────────────────
-
-export { initials, avatarHue }
-
-/** Map a TaxYear status to a Pill key. */
-export function statusKey(status: string): StatusKey {
-  if (status === "CREATED" || status === "INGESTION" || status === "REVIEW" || status === "LOCKED" || status === "ARCHIVED") {
-    return status as StatusKey
-  }
-  return "CREATED"
-}
-
-/** Compute the stage progress for a TaxYear given its status. */
-export function stageProgress(status: string): { ingest: number; process: number; review: number; deliver: number } {
-  switch (status) {
-    case "LOCKED":   return { ingest: 100, process: 100, review: 100, deliver: 100 }
-    case "REVIEW":   return { ingest: 100, process: 100, review:  60, deliver:   0 }
-    case "INGESTION":return { ingest:  60, process:  20, review:   0, deliver:   0 }
-    default:         return { ingest:  10, process:   0, review:   0, deliver:   0 }
-  }
-}
-
-// Tiny no-op so `useMemo` import isn't dropped — it'll be useful for downstream files.
-export function _voidUseMemo() {
-  // eslint-disable-next-line react-hooks/rules-of-hooks
-  return useMemo(() => null, [])
-}
+// Pure helpers (statusKey, stageProgress, fmtUSD/fmtDate/fmtDateTime/relTime,
+// initials, avatarHue) live in ./format.ts so server components can call them.
+// Don't add server-callable functions to this file — `"use client"` at the top
+// turns every export here into a client-only artifact.

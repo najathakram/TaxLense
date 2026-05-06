@@ -3,7 +3,8 @@ import { requireAuth } from "@/lib/auth"
 import { prisma } from "@/lib/db"
 import { getCurrentCpaContext } from "@/lib/cpa/clientContext"
 import { getAdminCpaContext } from "@/lib/admin/adminContext"
-import { Section, Card, Btn, Tag, fmtDate } from "@/components/v2/primitives"
+import { Section, Card, Btn, Tag } from "@/components/v2/primitives"
+import { fmtDate } from "@/components/v2/format"
 
 interface Props {
   params: Promise<{ clientId: string }>

@@ -1,7 +1,8 @@
 import { redirect } from "next/navigation"
 import { prisma } from "@/lib/db"
 import { getCurrentAdminContext } from "@/lib/admin/adminContext"
-import { Section, Card, Btn, Tag, fmtDateTime } from "@/components/v2/primitives"
+import { Section, Card, Btn, Tag } from "@/components/v2/primitives"
+import { fmtDateTime } from "@/components/v2/format"
 
 export default async function AdminAuditPage() {
   const admin = await getCurrentAdminContext()
