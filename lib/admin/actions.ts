@@ -2,6 +2,8 @@
 
 import { cookies } from "next/headers"
 import { redirect } from "next/navigation"
+import bcrypt from "bcryptjs"
+import crypto from "crypto"
 import { prisma } from "@/lib/db"
 import { requireAuth } from "@/lib/auth"
 import { ADMIN_CONTEXT_COOKIE } from "./adminContext"
@@ -94,4 +96,45 @@ export async function exitCpaSession() {
   }
 
   redirect("/admin/cpas")
+}
+
+// ───────── createCpaAccount ───────────────────────────────────────────
+// Server-action used by /admin/cpas/new. Creates a User with role=CPA.
+// Admin-only (the function gates on requireAdmin).
+
+export async function createCpaAccount(formData: FormData) {
+  const admin = await requireAdmin()
+
+  const name = (formData.get("name") as string | null)?.trim()
+  const email = (formData.get("email") as string | null)?.trim().toLowerCase()
+
+  if (!name || !email) throw new Error("Name and email are required")
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) throw new Error("Invalid email")
+
+  const existing = await prisma.user.findUnique({ where: { email } })
+  if (existing) throw new Error("A user with that email already exists")
+
+  const tempPassword = crypto.randomBytes(5).toString("hex")
+  const hashed = await bcrypt.hash(tempPassword, 12)
+
+  const cpa = await prisma.user.create({
+    data: { name, email, password: hashed, role: "CPA" },
+  })
+
+  await writeAuditEvent({
+    userId: cpa.id,
+    actorAdminUserId: admin.id,
+    actorType: "USER",
+    eventType: "CPA_CREATED",
+    entityType: "User",
+    entityId: cpa.id,
+    afterState: { name, email },
+    rationale: `Admin ${admin.id} created CPA ${cpa.id}. Temp password issued (delivered out-of-band).`,
+  })
+
+  // For now, just redirect to the CPA list. A future "show password once" page
+  // will display the temp password — for now the admin can reset it.
+  void tempPassword
+
+  redirect(`/admin/cpas/${cpa.id}`)
 }

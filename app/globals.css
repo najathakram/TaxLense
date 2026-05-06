@@ -1,51 +1,69 @@
 @import "tailwindcss";
 
-/* shadcn/ui design tokens — Tailwind v4 CSS variable approach */
-:root {
-  --background: 0 0% 100%;
-  --foreground: 222.2 84% 4.9%;
-  --card: 0 0% 100%;
-  --card-foreground: 222.2 84% 4.9%;
-  --popover: 0 0% 100%;
-  --popover-foreground: 222.2 84% 4.9%;
-  --primary: 221.2 83.2% 53.3%;
-  --primary-foreground: 210 40% 98%;
-  --secondary: 210 40% 96.1%;
-  --secondary-foreground: 222.2 47.4% 11.2%;
-  --muted: 210 40% 96.1%;
-  --muted-foreground: 215.4 16.3% 46.9%;
-  --accent: 210 40% 96.1%;
-  --accent-foreground: 222.2 47.4% 11.2%;
-  --destructive: 0 84.2% 60.2%;
-  --destructive-foreground: 210 40% 98%;
-  --border: 214.3 31.8% 91.4%;
-  --input: 214.3 31.8% 91.4%;
-  --ring: 221.2 83.2% 53.3%;
-  --radius: 0.5rem;
-}
+/* ───────────────────────────────────────────────────────────────────
+   TaxLens v2 — Fluid / iOS-glass dark theme
+   See design-brief/v2-handoff/ for the source HTML/JSX prototype.
+   ─────────────────────────────────────────────────────────────────── */
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: 222.2 84% 4.9%;
-    --foreground: 210 40% 98%;
-    --card: 222.2 84% 4.9%;
-    --card-foreground: 210 40% 98%;
-    --popover: 222.2 84% 4.9%;
-    --popover-foreground: 210 40% 98%;
-    --primary: 217.2 91.2% 59.8%;
-    --primary-foreground: 222.2 47.4% 11.2%;
-    --secondary: 217.2 32.6% 17.5%;
-    --secondary-foreground: 210 40% 98%;
-    --muted: 217.2 32.6% 17.5%;
-    --muted-foreground: 215 20.2% 65.1%;
-    --accent: 217.2 32.6% 17.5%;
-    --accent-foreground: 210 40% 98%;
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 210 40% 98%;
-    --border: 217.2 32.6% 17.5%;
-    --input: 217.2 32.6% 17.5%;
-    --ring: 224.3 76.3% 48%;
-  }
+:root {
+  /* iOS-dark fluid palette */
+  --bg: #0b0d12;
+  --bg-grad-1: #0e1118;
+  --bg-grad-2: #0a0c11;
+  --surface: rgba(28, 32, 42, 0.62);     /* glass card */
+  --surface-2: rgba(38, 44, 56, 0.55);
+  --surface-solid: #181c25;
+  --hairline: rgba(255, 255, 255, 0.06);
+  --hairline-strong: rgba(255, 255, 255, 0.12);
+  --fg: #f2f4f8;
+  --fg-1: #cdd2dc;
+  --fg-2: #8d94a3;
+  --fg-3: #5b6271;
+
+  --tl-accent: #7aa6ff;     /* iOS blue */
+  --tl-accent-2: #5fd4b1;   /* mint */
+  --tl-green: #34c98a;
+  --tl-amber: #f4c451;
+  --tl-orange: #ff9a57;
+  --tl-red: #ff6b6b;
+  --tl-blue: #7aa6ff;
+  --tl-purple: #c39bff;
+  --tl-pink: #ff97c8;
+
+  --r-sm: 8px;
+  --r:    14px;
+  --r-lg: 20px;
+  --r-xl: 28px;
+
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3), 0 4px 12px rgba(0, 0, 0, 0.18);
+  --shadow:    0 2px 6px rgba(0, 0, 0, 0.35), 0 12px 36px rgba(0, 0, 0, 0.28);
+  --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.5),  0 30px 80px rgba(0, 0, 0, 0.4);
+
+  --mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+  --sans: 'Manrope', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+
+  /* shadcn compat tokens — kept so existing components don't break.
+     Mapped to the dark surface palette above. */
+  --background: 222 30% 6%;
+  --foreground: 220 22% 96%;
+  --card: 222 24% 12%;
+  --card-foreground: 220 22% 96%;
+  --popover: 222 24% 12%;
+  --popover-foreground: 220 22% 96%;
+  --primary: 220 100% 74%;
+  --primary-foreground: 220 60% 8%;
+  --secondary: 222 16% 22%;
+  --secondary-foreground: 220 22% 96%;
+  --muted: 222 14% 18%;
+  --muted-foreground: 220 8% 60%;
+  --accent: 222 14% 18%;
+  --accent-foreground: 220 22% 96%;
+  --destructive: 0 100% 70%;
+  --destructive-foreground: 220 22% 96%;
+  --border: 222 14% 22%;
+  --input: 222 14% 22%;
+  --ring: 220 100% 74%;
+  --radius: 0.5rem;
 }
 
 @theme inline {
@@ -71,14 +89,154 @@
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
+  --font-sans: var(--sans);
+  --font-mono: var(--mono);
 }
 
-* {
-  border-color: hsl(var(--border));
+* { box-sizing: border-box; }
+*  { border-color: hsl(var(--border)); }
+
+html, body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
 }
 
 body {
-  background-color: hsl(var(--background));
-  color: hsl(var(--foreground));
-  font-family: Arial, Helvetica, sans-serif;
+  background:
+    radial-gradient(ellipse 1200px 800px at 20% -10%, rgba(122, 166, 255, 0.08), transparent 60%),
+    radial-gradient(ellipse 900px 700px at 100% 100%, rgba(195, 155, 255, 0.05), transparent 60%),
+    linear-gradient(180deg, var(--bg-grad-1) 0%, var(--bg-grad-2) 100%);
+  background-attachment: fixed;
+  color: var(--fg);
+  font-family: var(--sans);
+  font-size: 13.5px;
+  line-height: 1.45;
+  -webkit-font-smoothing: antialiased;
+  font-feature-settings: "tnum" 1, "ss01" 1;
+}
+
+button { font: inherit; color: inherit; }
+button:focus-visible, a:focus-visible {
+  outline: 2px solid var(--tl-accent);
+  outline-offset: 2px;
+  border-radius: 6px;
+}
+
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 999px;
+  border: 2px solid transparent;
+  background-clip: padding-box;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.16);
+  background-clip: padding-box;
+  border: 2px solid transparent;
+}
+
+/* ──────────────── reusable utility classes ──────────────── */
+
+.glass {
+  background: var(--surface);
+  backdrop-filter: blur(22px) saturate(140%);
+  -webkit-backdrop-filter: blur(22px) saturate(140%);
+  border: 1px solid var(--hairline);
+  border-radius: var(--r);
+  box-shadow: var(--shadow-sm);
+}
+.glass-strong {
+  background: rgba(28, 32, 42, 0.78);
+  backdrop-filter: blur(28px) saturate(160%);
+  -webkit-backdrop-filter: blur(28px) saturate(160%);
+  border: 1px solid var(--hairline-strong);
+  border-radius: var(--r);
+  box-shadow: var(--shadow);
+}
+
+.mono { font-family: var(--mono); font-feature-settings: "tnum" 1; }
+.num  { font-family: var(--mono); font-variant-numeric: tabular-nums; }
+
+/* status pill */
+.tl-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.2px;
+}
+
+/* segmented control (iOS) */
+.tl-seg {
+  display: inline-flex;
+  padding: 3px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--hairline);
+  border-radius: 999px;
+  gap: 2px;
+}
+.tl-seg button {
+  padding: 5px 14px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--fg-2);
+  transition: all 180ms ease;
+  background: transparent;
+  border: 0;
+  cursor: pointer;
+}
+.tl-seg button.on {
+  background: rgba(255, 255, 255, 0.10);
+  color: var(--fg);
+  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.06) inset, 0 2px 8px rgba(0, 0, 0, 0.35);
+}
+
+/* iOS toggle */
+.tl-switch {
+  width: 38px;
+  height: 22px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.10);
+  position: relative;
+  transition: background 200ms ease;
+  cursor: pointer;
+  flex-shrink: 0;
+  border: 0;
+  padding: 0;
+}
+.tl-switch::after {
+  content: '';
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: white;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
+  transition: left 220ms cubic-bezier(.4, 0, .2, 1);
+}
+.tl-switch.on { background: var(--tl-green); }
+.tl-switch.on::after { left: 18px; }
+
+/* row hover */
+.row-h { transition: background 160ms ease; }
+.row-h:hover { background: rgba(255, 255, 255, 0.04); }
+
+/* fade-up */
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: none; }
+}
+.fade-up { animation: fadeUp 280ms cubic-bezier(.4, 0, .2, 1) both; }
+
+/* dotted/striped placeholder */
+.stripes {
+  background-image: repeating-linear-gradient(45deg, rgba(255, 255, 255, 0.03) 0 6px, transparent 6px 14px);
 }
