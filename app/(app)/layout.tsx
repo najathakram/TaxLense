@@ -1,5 +1,5 @@
 import { requireAuth, getCurrentUserId } from "@/lib/auth"
-import { getClientContext } from "@/lib/cpa/clientContext"
+import { getClientContext, getCurrentCpaContext } from "@/lib/cpa/clientContext"
 import { exitClientSession } from "@/lib/cpa/actions"
 import { prisma } from "@/lib/db"
 import Link from "next/link"
@@ -8,7 +8,10 @@ import { Button } from "@/components/ui/button"
 
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
   const session = await requireAuth()
-  const clientCtx = await getClientContext()
+  const [clientCtx, cpaCtx] = await Promise.all([
+    getClientContext(),
+    getCurrentCpaContext(),
+  ])
   const userId = await getCurrentUserId()
   const activeYear = await prisma.taxYear.findFirst({
     where: { userId },
@@ -22,6 +25,14 @@ export default async function AppLayout({ children }: { children: React.ReactNod
       <aside className="w-56 border-r flex flex-col bg-card">
         <div className="p-4 border-b">
           <span className="font-bold text-lg text-foreground">TaxLens</span>
+          {cpaCtx && (
+            <span
+              className="ml-2 text-[10px] font-medium bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded"
+              title={`Logged in as ${cpaCtx.cpaName} (${cpaCtx.cpaEmail})`}
+            >
+              CPA
+            </span>
+          )}
         </div>
         <nav className="flex-1 p-3 space-y-1">
           {clientCtx && (
@@ -103,7 +114,12 @@ export default async function AppLayout({ children }: { children: React.ReactNod
         {clientCtx && (
           <div className="bg-amber-50 border-b border-amber-200 px-4 py-2 flex items-center justify-between text-sm shrink-0">
             <span className="text-amber-900">
-              Working on: <strong>{clientCtx.clientName}</strong>
+              {cpaCtx && (
+                <span className="text-amber-700 mr-1">
+                  {cpaCtx.cpaName} on behalf of
+                </span>
+              )}
+              <strong>{clientCtx.clientName}</strong>
               <span className="text-amber-700 ml-2 font-normal">({clientCtx.clientEmail})</span>
             </span>
             <form action={exitClientSession}>

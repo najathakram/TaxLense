@@ -127,6 +127,19 @@ enum UserRole {
   CLIENT
 }
 
+// Document categories per the redesign brief §4.4. STATEMENT is reserved for
+// rare hand-uploaded raw statements that don't go through the parser pipeline;
+// the canonical statement record is StatementImport.
+enum DocumentCategory {
+  STATEMENT
+  TAX_FORM_RECEIVED
+  TAX_FORM_ISSUED
+  ENGAGEMENT_LEGAL
+  IRS_CORRESPONDENCE
+  RECEIPT
+  OTHER
+}
+
 // ---------------------------------------------------------------------------
 // NEXTAUTH V5 MODELS (required by PrismaAdapter)
 // "Account" here = OAuth account; financial accounts = FinancialAccount
@@ -152,6 +165,12 @@ model User {
   financialAccounts FinancialAccount[]
   businessProfiles  BusinessProfile[]
   auditEvents       AuditEvent[]
+  // Audit events where THIS user is the CPA actor (impersonating someone else).
+  // The taxpayer owner of the changed data is captured by AuditEvent.userId;
+  // this relation gives us "every action Najath has taken on any client".
+  auditEventsAsCpa  AuditEvent[]       @relation("AuditActorCpa")
+  documents         Document[]         @relation("DocumentOwner")
+  documentsUploaded Document[]         @relation("DocumentUploader")
 
   // CPA relations
   cpaClients  CpaClient[] @relation("CpaRelation")
@@ -250,6 +269,7 @@ model TaxYear {
   stopItems         StopItem[]
   reports           Report[]
   importSessions    ImportSession[]
+  documents         Document[]
 
   @@unique([userId, year])
 }
@@ -530,6 +550,11 @@ model StopItem {
 model AuditEvent {
   id          String    @id @default(cuid())
   userId      String?
+  // When set, the CPA who acted on behalf of `user` (the impersonated client).
+  // `userId` remains the taxpayer-owner of the changed data so existing queries
+  // and assertions don't change shape; `actorCpaUserId` ADDS the "who actually
+  // clicked the button" dimension that the redesigned audit-trail view needs.
+  actorCpaUserId String?
   actorType   ActorType
   eventType   String
   entityType  String
@@ -540,9 +565,11 @@ model AuditEvent {
   occurredAt  DateTime  @default(now())
   // NO updatedAt — insert-only by design
 
-  user User? @relation(fields: [userId], references: [id])
+  user     User? @relation(fields: [userId],         references: [id])
+  actorCpa User? @relation("AuditActorCpa", fields: [actorCpaUserId], references: [id])
 
   @@index([userId, occurredAt(sort: Desc)])
+  @@index([actorCpaUserId, occurredAt(sort: Desc)])
 }
 
 // ---------------------------------------------------------------------------
@@ -561,4 +588,41 @@ model Report {
 
   taxYear     TaxYear      @relation(fields: [taxYearId],     references: [id], onDelete: Cascade)
   ruleVersion RuleVersion? @relation(fields: [ruleVersionId], references: [id])
+}
+
+// ---------------------------------------------------------------------------
+// DOCUMENT — non-statement files attached to a client (and optionally a year)
+// Spec: design-brief/redesign-cpa-2026.md §4.4
+//
+// StatementImport remains the canonical record for parsed bank/card statements
+// (it carries reconciliation + extraction telemetry). Document covers everything
+// else a CPA accumulates: 1099s in/out, engagement letter, IRS notices, receipts.
+// ---------------------------------------------------------------------------
+
+model Document {
+  id               String           @id @default(cuid())
+  userId           String           // taxpayer (client) the document belongs to
+  taxYearId        String?          // optional — null means "applies across years"
+  category         DocumentCategory
+  title            String
+  description      String?
+  filePath         String
+  originalFilename String
+  mimeType         String?
+  sizeBytes        Int?
+  tags             String[]         @default([])
+  // Who actually uploaded — could be the CPA or the client themselves.
+  uploadedByUserId String?
+  uploadedAt       DateTime         @default(now())
+  // For RECEIPT documents: link to the transaction(s) this receipt substantiates.
+  // Used by the redesigned ledger to show "✓ Receipt attached" and bump tier.
+  linkedTransactionIds String[]     @default([])
+
+  user       User    @relation("DocumentOwner",    fields: [userId],           references: [id], onDelete: Cascade)
+  uploadedBy User?   @relation("DocumentUploader", fields: [uploadedByUserId], references: [id])
+  taxYear    TaxYear? @relation(fields: [taxYearId], references: [id], onDelete: SetNull)
+
+  @@index([userId, category])
+  @@index([taxYearId])
+  @@index([uploadedByUserId, uploadedAt(sort: Desc)])
 }
