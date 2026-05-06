@@ -16,6 +16,7 @@
  */
 import { prisma } from "@/lib/db"
 import { getClientContext } from "@/lib/cpa/clientContext"
+import { getAdminCpaContext } from "@/lib/admin/adminContext"
 import type { Prisma, ActorType } from "@/app/generated/prisma/client"
 
 export interface AuditEventInput {
@@ -29,21 +30,35 @@ export interface AuditEventInput {
   rationale?: string | null
   /** Optional explicit override — caller knows the CPA actor already. */
   actorCpaUserId?: string | null
+  /** Optional explicit override — caller knows the platform admin actor already. */
+  actorAdminUserId?: string | null
 }
 
 export async function writeAuditEvent(input: AuditEventInput) {
-  // If the caller supplied an explicit CPA actor, trust it.
-  // Otherwise, derive from the cookie-based client context.
+  // CPA actor: explicit override > admin-impersonating-CPA cookie > CPA-impersonating-client cookie.
+  // Admin actor: explicit override > admin-impersonating-CPA cookie.
+  // Both can be set on the same event (admin → CPA → client chain).
   let actorCpaUserId = input.actorCpaUserId ?? null
+  let actorAdminUserId = input.actorAdminUserId ?? null
+
+  if (actorAdminUserId === null || actorCpaUserId === null) {
+    const adminCtx = await getAdminCpaContext()
+    if (adminCtx) {
+      if (actorAdminUserId === null) actorAdminUserId = adminCtx.adminId
+      if (actorCpaUserId === null) actorCpaUserId = adminCtx.cpaId
+    }
+  }
+
   if (actorCpaUserId === null) {
-    const ctx = await getClientContext()
-    if (ctx) actorCpaUserId = ctx.cpaId
+    const clientCtx = await getClientContext()
+    if (clientCtx) actorCpaUserId = clientCtx.cpaId
   }
 
   return prisma.auditEvent.create({
     data: {
       userId: input.userId ?? null,
       actorCpaUserId,
+      actorAdminUserId,
       actorType: input.actorType,
       eventType: input.eventType,
       entityType: input.entityType,

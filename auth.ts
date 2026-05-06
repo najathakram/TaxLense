@@ -35,6 +35,8 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
 
         const user = await prisma.user.findUnique({ where: { email } })
         if (!user?.password) return null
+        // Soft-suspended users cannot log in. Rows are preserved for audit.
+        if (!user.isActive) return null
 
         const valid = await bcrypt.compare(password, user.password)
         if (!valid) return null

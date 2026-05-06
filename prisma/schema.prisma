@@ -123,6 +123,7 @@ enum KnownEntityKind {
 }
 
 enum UserRole {
+  SUPER_ADMIN
   CPA
   CLIENT
 }
@@ -153,6 +154,10 @@ model User {
   image         String?
   password      String?   // bcrypt hash; null for OAuth-only users
   role          UserRole  @default(CLIENT)
+  // Soft-suspend flag. False blocks login (auth.ts checks). Defaults to true so
+  // existing rows don't have to be backfilled. Super admin can flip via /admin
+  // — the row is preserved for audit reconstruction.
+  isActive      Boolean   @default(true)
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
 
@@ -168,9 +173,12 @@ model User {
   // Audit events where THIS user is the CPA actor (impersonating someone else).
   // The taxpayer owner of the changed data is captured by AuditEvent.userId;
   // this relation gives us "every action Najath has taken on any client".
-  auditEventsAsCpa  AuditEvent[]       @relation("AuditActorCpa")
-  documents         Document[]         @relation("DocumentOwner")
-  documentsUploaded Document[]         @relation("DocumentUploader")
+  auditEventsAsCpa     AuditEvent[]       @relation("AuditActorCpa")
+  // Audit events where THIS user is the platform super admin actor (e.g.,
+  // admin impersonating a CPA who is then editing client data).
+  auditEventsAsAdmin   AuditEvent[]       @relation("AuditActorAdmin")
+  documents            Document[]         @relation("DocumentOwner")
+  documentsUploaded    Document[]         @relation("DocumentUploader")
 
   // CPA relations
   cpaClients  CpaClient[] @relation("CpaRelation")
@@ -554,7 +562,12 @@ model AuditEvent {
   // `userId` remains the taxpayer-owner of the changed data so existing queries
   // and assertions don't change shape; `actorCpaUserId` ADDS the "who actually
   // clicked the button" dimension that the redesigned audit-trail view needs.
-  actorCpaUserId String?
+  actorCpaUserId   String?
+  // When set, the platform super admin who initiated the action (typically by
+  // impersonating a CPA). Combined with actorCpaUserId, the audit trail can
+  // reconstruct the full impersonation chain: admin → CPA → client.
+  // Populated by writeAuditEvent automatically from the cookie context.
+  actorAdminUserId String?
   actorType   ActorType
   eventType   String
   entityType  String
@@ -565,11 +578,13 @@ model AuditEvent {
   occurredAt  DateTime  @default(now())
   // NO updatedAt — insert-only by design
 
-  user     User? @relation(fields: [userId],         references: [id])
-  actorCpa User? @relation("AuditActorCpa", fields: [actorCpaUserId], references: [id])
+  user       User? @relation(fields: [userId],           references: [id])
+  actorCpa   User? @relation("AuditActorCpa",   fields: [actorCpaUserId],   references: [id])
+  actorAdmin User? @relation("AuditActorAdmin", fields: [actorAdminUserId], references: [id])
 
   @@index([userId, occurredAt(sort: Desc)])
   @@index([actorCpaUserId, occurredAt(sort: Desc)])
+  @@index([actorAdminUserId, occurredAt(sort: Desc)])
 }
 
 // ---------------------------------------------------------------------------

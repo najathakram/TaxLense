@@ -1,6 +1,8 @@
 import { requireAuth, getCurrentUserId } from "@/lib/auth"
 import { getClientContext, getCurrentCpaContext } from "@/lib/cpa/clientContext"
 import { exitClientSession } from "@/lib/cpa/actions"
+import { getCurrentAdminContext, getAdminCpaContext } from "@/lib/admin/adminContext"
+import { exitCpaSession } from "@/lib/admin/actions"
 import { prisma } from "@/lib/db"
 import Link from "next/link"
 import { signOut } from "@/auth"
@@ -8,9 +10,11 @@ import { Button } from "@/components/ui/button"
 
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
   const session = await requireAuth()
-  const [clientCtx, cpaCtx] = await Promise.all([
+  const [clientCtx, cpaCtx, adminCtx, adminCpaCtx] = await Promise.all([
     getClientContext(),
     getCurrentCpaContext(),
+    getCurrentAdminContext(),
+    getAdminCpaContext(),
   ])
   const userId = await getCurrentUserId()
   const activeYear = await prisma.taxYear.findFirst({
@@ -25,7 +29,15 @@ export default async function AppLayout({ children }: { children: React.ReactNod
       <aside className="w-56 border-r flex flex-col bg-card">
         <div className="p-4 border-b">
           <span className="font-bold text-lg text-foreground">TaxLens</span>
-          {cpaCtx && (
+          {adminCtx && (
+            <span
+              className="ml-2 text-[10px] font-medium bg-purple-100 text-purple-700 px-1.5 py-0.5 rounded"
+              title={`Logged in as platform admin ${adminCtx.adminName} (${adminCtx.adminEmail})`}
+            >
+              ADMIN
+            </span>
+          )}
+          {!adminCtx && cpaCtx && (
             <span
               className="ml-2 text-[10px] font-medium bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded"
               title={`Logged in as ${cpaCtx.cpaName} (${cpaCtx.cpaEmail})`}
@@ -110,7 +122,28 @@ export default async function AppLayout({ children }: { children: React.ReactNod
 
       {/* Main content */}
       <div className="flex-1 flex flex-col min-w-0">
-        {/* Client context banner */}
+        {/* Admin → CPA impersonation banner (purple, top of stack) */}
+        {adminCpaCtx && (
+          <div className="bg-purple-50 border-b border-purple-200 px-4 py-2 flex items-center justify-between text-sm shrink-0">
+            <span className="text-purple-900">
+              <strong>ADMIN: {adminCtx?.adminName ?? adminCpaCtx.adminId}</strong>
+              <span className="text-purple-700 mx-1.5">→</span>
+              acting as CPA: <strong>{adminCpaCtx.cpaName}</strong>
+              <span className="text-purple-700 ml-2 font-normal">({adminCpaCtx.cpaEmail})</span>
+            </span>
+            <form action={exitCpaSession}>
+              <Button
+                type="submit"
+                variant="ghost"
+                size="sm"
+                className="h-7 text-purple-800 hover:bg-purple-100 hover:text-purple-900"
+              >
+                Exit admin impersonation →
+              </Button>
+            </form>
+          </div>
+        )}
+        {/* CPA → client impersonation banner (amber, second in stack) */}
         {clientCtx && (
           <div className="bg-amber-50 border-b border-amber-200 px-4 py-2 flex items-center justify-between text-sm shrink-0">
             <span className="text-amber-900">

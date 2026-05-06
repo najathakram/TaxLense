@@ -1,18 +1,33 @@
 # TaxLens — CPA Workflow Redesign Brief
 
 > **For:** A Claude-powered design agent with full read access to this repo.
-> **Goal:** Replace the current single-taxpayer UI with a CPA-first workspace that scales to many clients across many years without losing the audit-defense rigor that already exists.
-> **Read first:** `CLAUDE.md`, `AGENTS.md`, `prisma/schema.prisma`, `app/(app)/layout.tsx`, `app/(cpa)/layout.tsx`, `lib/cpa/clientContext.ts`, `lib/auth.ts`. They contain non-obvious constraints (Next.js 16, Prisma v7, Tailwind v4, hand-written shadcn components) that determine what's buildable.
+> **Goal:** Replace the current single-taxpayer UI with a three-tier platform — **super admin → CPA → client** — where each tier has a coherent workspace, impersonation flows correctly down the chain, and the audit defense rigor that already exists is preserved.
+> **Read first:** `CLAUDE.md`, `AGENTS.md`, `prisma/schema.prisma`, `app/(app)/layout.tsx`, `app/(cpa)/layout.tsx`, `lib/cpa/clientContext.ts`, `lib/admin/adminContext.ts`, `lib/auth.ts`. They contain non-obvious constraints (Next.js 16, Prisma v7, Tailwind v4, hand-written shadcn components) that determine what's buildable.
 
 ---
 
 ## 0. The brief in one paragraph
 
-TaxLens already has the correct *data model* for a CPA tool — `User.role` (CPA / CLIENT), a `CpaClient` join table, cookie-based "act as client" impersonation, and `getCurrentUserId()` that auto-resolves to the impersonated client. What it lacks is a *workspace mental model* for the CPA: the current UI treats every login like a single taxpayer. CPAs experience this as friction — they bounce between `/clients`, a `(cpa)` layout that hides the year nav, and an `(app)` layout that hides the client list. **The redesign's job is to give the CPA one coherent workspace where the **client** is the primary noun, the **tax year** is the primary lens, and **everything they need for an audit-ready return is two clicks away.** Don't change the data model unless absolutely required; restructure routes, navigation, and information density.
+TaxLens already has the correct *data model* for a CPA tool — `User.role` (now SUPER_ADMIN / CPA / CLIENT), a `CpaClient` join table, cookie-based impersonation, and `getCurrentUserId()` that auto-resolves to the deepest impersonation target. What it lacks is a *workspace mental model* for each tier: the current UI treats every login like a single taxpayer. The platform is now three tiers — a **platform super admin** who manages CPA accounts and can impersonate any CPA for support; **CPAs** who manage their own roster of clients across many tax years; and **clients** who occasionally log in to answer STOPs and approve packages. The redesign's job is to give each tier one coherent workspace where the *next tier down* is the primary noun, the next lens is one click away, and everything an audit-ready return needs is reachable in two clicks. Don't change the data model unless absolutely required; restructure routes, navigation, and information density.
 
 ---
 
 ## 1. Personas & jobs-to-be-done
+
+### Tier-0 persona — Platform super admin (Anthropic-side operator)
+
+The person running TaxLens itself. Today there's one of them. They never prepare taxes — they keep the platform running and CPA accounts in good standing.
+
+**Jobs:**
+
+1. **Onboard a new CPA in <2 minutes** — name, email, temp password, optional firm display name. The CPA receives credentials, logs in, sees an empty `/workspace`.
+2. **List all CPAs** with: client count, total locked returns YTD, last login, last action. Filter by active / inactive.
+3. **Edit a CPA** — change display name, reset password, mark inactive (soft suspend, no data deletion).
+4. **Impersonate a CPA for support** — when a CPA emails saying "my Sara Mendoza ledger is broken", the admin enters that CPA's workspace exactly as they would see it. From there, they can also enter any of that CPA's client workspaces. Triple-tier impersonation: admin → CPA → client. Every click during impersonation is captured in the audit trail with both `actorAdminUserId` and `actorCpaUserId` set.
+5. **See cross-firm audit log** — every `AuditEvent` across every CPA, filterable by actor / event type / date range. This is the platform's compliance surface.
+6. **Disable a CPA** without deleting their data — set `isActive=false`, prevent login, keep audit trail.
+
+The super admin **does not** prepare taxes themselves. They never see a STOPs queue, never lock a year, never download an audit packet on their own behalf. If they need to do any of those, they impersonate a CPA first.
 
 ### Primary persona — Najath, CPA
 
@@ -37,11 +52,16 @@ Self-employed sole prop. Logs in only to (a) answer STOPs the CPA flagged for th
 
 Never logs in. But they read the **audit packet** — every artifact must be readable and defensible by them after the fact. Don't let cosmetic redesign weaken `/audit-packet` exports.
 
+### Anti-persona — Bad-actor admin
+
+A super admin who tries to silently fix a client's numbers under cover of CPA impersonation. The audit trail must make this impossible to hide: every event during admin-impersonating-CPA must record `actorAdminUserId` separately from `actorCpaUserId`. The cross-firm audit log lets a different super admin (or external auditor) detect this after the fact. Don't add a "stealth mode" that hides admin actions from the audit trail. Ever.
+
 ---
 
 ## 2. Design principles (non-negotiable)
 
-1. **Client is the primary noun.** Everything is "Atif > 2025 > Ledger", not "Ledger > Atif > 2025". The URL hierarchy, navigation, breadcrumbs, and titles should all reflect this.
+0. **Three tiers, one mental model.** Every page belongs to exactly one tier (admin, CPA, client). When impersonating, the user always sees the *target tier's* UI, with a chrome banner that makes the impersonation chain visible. No "hybrid" pages. No mode switches.
+1. **Client is the primary noun.** For CPAs and clients, everything is "Atif > 2025 > Ledger", not "Ledger > Atif > 2025". For admins, the primary noun is the **CPA**: "Najath > Atif > 2025 > Ledger". The URL hierarchy, navigation, breadcrumbs, and titles all reflect this.
 2. **Year is the primary lens, not a hidden detail.** The current design buries the year inside one client's sidebar. The new design puts the year selector beside the client selector, both first-class.
 3. **Calm, dense, professional.** This is a tool used 4 hours a day by someone with strong opinions. No marketing gradients. No emoji decoration. No animations that block work. Information density above visual flourish — this should feel closer to Linear or a modern Bloomberg terminal than to a consumer SaaS landing page.
 4. **Status is always visible.** Every page shows: which client, which year, year status (CREATED → INGESTION → REVIEW → LOCKED), pending blockers count, last action timestamp. Never let the CPA wonder "where am I?"
@@ -51,6 +71,8 @@ Never logs in. But they read the **audit packet** — every artifact must be rea
 8. **Audit trail visible on demand.** Every meaningful row should let you peek at "who did this, when, with what rationale" — `AuditEvent` already records this. Surface it in a side panel, not a modal that takes you out of context.
 9. **Don't redesign the data; redesign the path through it.** The schema, classification logic, AI agents, assertions, and lock flow are correct as-shipped. They are paid-for work. Redesign navigation, layouts, components, and content density. Leave the engine alone.
 10. **Bounded autonomy.** The new UI never publishes anything externally, never sends client emails on its own, never authorizes a download without explicit click — same principle 9 from CLAUDE.md.
+11. **Impersonation is always visible, never silent.** When admin → CPA, the chrome shows it. When admin → CPA → client, the chrome shows the full chain. The "Exit impersonation" affordance is always within one click. Closing the tab does NOT clear impersonation cookies — the user must explicitly exit. (Cookies expire after 8 hours regardless.)
+12. **Admin actions are auditable, never invisible.** Every AuditEvent during admin impersonation records `actorAdminUserId`. The cross-firm audit log surfaces these distinctly. There is no "stealth admin mode."
 
 ---
 
@@ -59,9 +81,23 @@ Never logs in. But they read the **audit packet** — every artifact must be rea
 ### URL structure (the primary deliverable of this redesign)
 
 ```
-/                                       ← redirects to /workspace
-/login, /signup                         ← unchanged
+/                                       ← redirects based on role:
+                                          SUPER_ADMIN → /admin
+                                          CPA         → /workspace
+                                          CLIENT      → /workspace (their own)
+/login, /signup                         ← unchanged (signup creates a CLIENT only;
+                                          CPA accounts are created by an admin)
 
+# ── Super admin tier ─────────────────────────────────────────────────────
+/admin                                  ← admin home: KPI strip + "needs attention"
+/admin/cpas                             ← list of all CPAs (table-as-spreadsheet)
+/admin/cpas/new                         ← create CPA
+/admin/cpas/[cpaId]                     ← CPA detail (clients owned, recent activity)
+/admin/cpas/[cpaId]/edit                ← edit display name / reset password / suspend
+/admin/audit                            ← cross-firm audit event log
+/admin/settings                         ← platform-level settings (rule version pinning, etc.)
+
+# ── CPA tier (impersonation can target this from admin) ──────────────────
 /workspace                              ← CPA home (replaces /dashboard for CPAs)
 /workspace/inbox                        ← cross-client triage queue (NEW)
 /workspace/calendar                     ← deadline-aware view (NEW, optional)
@@ -73,6 +109,7 @@ Never logs in. But they read the **audit packet** — every artifact must be rea
 /clients/[clientId]/profile             ← business profile (today /profile)
 /clients/[clientId]/documents           ← per-client document hub (NEW — see §4 below)
 
+# ── Client-year tier (impersonation can target this from CPA, or from admin via CPA) ──
 /clients/[clientId]/years/[year]                      ← year overview (replaces today's /years/[year])
 /clients/[clientId]/years/[year]/upload               ← (today /years/[year]/upload)
 /clients/[clientId]/years/[year]/coverage             ← idem
@@ -85,8 +122,9 @@ Never logs in. But they read the **audit packet** — every artifact must be rea
 /clients/[clientId]/years/[year]/download             ← idem
 /clients/[clientId]/years/[year]/audit-trail         ← (NEW) AuditEvent stream for this year
 
-/account/profile                        ← CPA's own settings (NEW)
-/account/firm                           ← firm-level settings (logo, default rule version, etc.)
+# ── Account-level (any tier) ─────────────────────────────────────────────
+/account/profile                        ← user's own settings (works for all 3 roles)
+/account/firm                           ← CPA-only: firm-level settings (logo, default rule version)
 /account/billing                        ← subscription / usage (deferred)
 ```
 
@@ -95,6 +133,8 @@ Never logs in. But they read the **audit packet** — every artifact must be rea
 **Solo-CLIENT-login mode** (Atif logging in directly): instead of restructuring the app twice, log them in as if they had impersonated themselves — the cookie context resolves `clientId = session.user.id` automatically. They see the same `/clients/[clientId]/...` URLs, just with the client picker hidden.
 
 ### Navigation shell
+
+**Standard CPA-tier shell** (CPA logged in, possibly impersonating a client):
 
 ```
 ┌────────────────────────────────────────────────────────────────────────┐
@@ -138,9 +178,93 @@ Never logs in. But they read the **audit packet** — every artifact must be rea
 - Cmd-K palette (use `cmdk` from shadcn) — searches clients, years, and known doc tags. Power-user surface.
 - 🔔 = system notifications, NOT email. Placeholder for V2.
 
+**Admin-tier shell** (super admin logged in, possibly impersonating a CPA):
+
+```
+┌────────────────────────────────────────────────────────────────────────┐
+│  TaxLens [ADMIN: Anthropic ▾]   ⌘K  Search CPAs & clients     🔔  ?    │
+├──────────────────────┬─────────────────────────────────────────────────┤
+│ ● Admin              │                                                 │
+│   Dashboard          │                                                 │
+│   CPAs       [12]    │                                                 │
+│   Audit log  [HOT]   │  <main>                                         │
+│   Settings           │                                                 │
+│ ─────────────────    │                                                 │
+│ admin@…  [sign out]  │                                                 │
+└──────────────────────┴─────────────────────────────────────────────────┘
+```
+
+When the admin impersonates a CPA, the shell switches to the CPA-tier layout above, with a **stacked impersonation banner** at the top (purple over amber):
+
+```
+┌─────────────────────────────────────────────────────────────────────────┐
+│ ADMIN: Anthropic operator   →   acting as CPA: Najath  [Exit admin]     │  ← purple
+├─────────────────────────────────────────────────────────────────────────┤
+│ Najath on behalf of Atif Khan (atif@example.com)   [Exit client →]      │  ← amber
+└─────────────────────────────────────────────────────────────────────────┘
+```
+
+The bottom (amber) banner only appears when the impersonated CPA has *also* entered a client workspace. The order matters: admin row above CPA row, never reversed. Each row has its own "Exit" button — exiting client returns to "admin → CPA"; exiting admin returns to "/admin/cpas".
+
 ---
 
 ## 4. New surfaces (designs needed)
+
+### 4.0 `/admin` — super admin home
+
+The first screen after a SUPER_ADMIN logs in.
+
+**Top — KPI strip:**
+
+| Active CPAs | Total clients | Total locked YTD | Total deductions claimed YTD | Errors flagged (24h) |
+|---|---|---|---|---|
+
+**Below — "Needs attention":** A flat list of items the platform operator should look at. E.g.:
+
+- 🟠 PARSE_FAIL spike: "Najath / 2 imports failed in the last 24h" (links to filter on `/admin/audit?eventType=MERCHANT_AI_PARSE_FAIL`)
+- 🔵 NEW_CPA: "Sarah Mendoza signed up 1h ago — first onboard not yet started"
+- ⚫ LOGIN_INACTIVE: "3 CPAs not logged in for 90+ days"
+
+**Below — recent activity:** last 20 events from `actorAdminUserId IS NOT NULL` — shows what other admins (or the user themselves) did recently. Full log at `/admin/audit`.
+
+### 4.0.1 `/admin/cpas` — manage CPAs
+
+Table-as-spreadsheet. Rows = CPAs. Columns:
+
+- Name, email, status (active / suspended), client count, total deductions YTD across all clients, last login, last action timestamp.
+- Right-click row → "Impersonate", "Edit", "Reset password", "Suspend".
+- Top-right: `+ Add CPA` button → `/admin/cpas/new`.
+- Filter: by status, by tags, by activity recency.
+
+### 4.0.2 `/admin/cpas/new` — create CPA
+
+Single form, three fields: name, email, optional firm display name. Submit → creates User with `role=CPA`, generates a temp password, shows it once with a "Copy" button (admin emails it out of band).
+
+### 4.0.3 `/admin/cpas/[cpaId]` — CPA detail
+
+Read-only summary of a single CPA: profile fields, list of clients, recent activity, total deductions, lock count.
+
+Two action buttons at top:
+
+- `Impersonate this CPA →` (sets the admin context cookie, redirects to `/workspace`)
+- `Edit profile →` (links to `/admin/cpas/[cpaId]/edit`)
+
+### 4.0.4 `/admin/audit` — cross-firm audit log
+
+Time-sorted list of every AuditEvent platform-wide. Filters:
+
+- Event type (multi-select)
+- Actor type (USER / AI / SYSTEM)
+- Has `actorAdminUserId` (i.e., admin actions only)
+- Has `actorCpaUserId`
+- Date range
+- Specific CPA / specific client
+
+Export-to-CSV button for compliance handoff.
+
+### 4.0.5 `/admin/settings`
+
+Platform-level configuration: pinned RuleVersion, default model overrides, feature flags, base UPLOAD_BASE_DIR. Most fields are read-only display in V1; mutation surface deferred.
 
 ### 4.1 `/workspace` — CPA home / triage
 
@@ -285,11 +409,20 @@ The aesthetic to imitate is **Linear / Vercel / Stripe Dashboard**, not consumer
 
 These primitives must exist before the new UI can be built. The commit accompanying this brief lands them:
 
-1. **`AuditEvent.actorCpaUserId`** — when a CPA acts on behalf of a client, this captures the CPA's own user id alongside `userId` (which is the impersonated client id). The audit-trail view at §4.6 reads from this.
-2. **`Document` model** — the new `/clients/[clientId]/documents` hub needs a model. Fields per §4.4. Storage path: `<UPLOAD_BASE_DIR>/documents/<userId>/<documentId>` (sibling to existing `<UPLOAD_BASE_DIR>/<taxYearId>/...`).
-3. **`getCurrentCpaContext()`** helper — returns `{ cpaId, cpaName, cpaEmail }` of the *logged-in CPA* (whether or not impersonating). The top-bar "CPA: Najath ▾" widget reads from this.
-4. **Server actions for client switching** — `assumeClient(clientId)` (already exists as `enterClientSession`) and `exitClientSession` already exist; the redesign uses them as-is. Add `getRecentClients(limit)` for the Cmd-K palette.
-5. **Multi-year listing API** — `getClientYearStrip(clientId)` returning the year-strip data shape used by `/clients` table and `/clients/[clientId]` overview.
+1. **`UserRole.SUPER_ADMIN`** — new enum value alongside CPA and CLIENT. Granting it is a manual DB operation in V1 (no UI to promote a user to super admin); see "seed an admin" below.
+2. **`AuditEvent.actorCpaUserId`** — when a CPA acts on behalf of a client, this captures the CPA's own user id alongside `userId` (which is the impersonated client id). The audit-trail view at §4.6 reads from this.
+3. **`AuditEvent.actorAdminUserId`** — when a super admin acts (whether impersonating a CPA or just touching the admin surfaces), this captures the admin's own user id. Combined with `actorCpaUserId`, the audit trail can reconstruct the full impersonation chain after the fact.
+4. **`Document` model** — the new `/clients/[clientId]/documents` hub needs a model. Fields per §4.4. Storage path: `<UPLOAD_BASE_DIR>/documents/<userId>/<documentId>` (sibling to existing `<UPLOAD_BASE_DIR>/<taxYearId>/...`).
+5. **`getCurrentCpaContext()`** helper — returns `{ cpaId, cpaName, cpaEmail }` of the *logged-in CPA* (whether or not impersonating). The top-bar "CPA: Najath ▾" widget reads from this.
+6. **`getCurrentAdminContext()`** helper (in `lib/admin/adminContext.ts`) — returns `{ adminId, adminName, adminEmail, impersonatedCpaId? }` of the *logged-in super admin*. Returns null for non-admin sessions. Used by the admin shell to populate the top-bar admin badge and by every `writeAuditEvent` site to capture admin actor.
+7. **Admin-impersonation cookie** — `taxlens_admin_ctx` = `${adminId}:${cpaId}` set by `enterCpaSession(cpaId)` and cleared by `exitCpaSession()`. Coexists with `taxlens_client_ctx` to support admin → CPA → client. `getCurrentUserId()` resolves in order: `client_ctx.clientId` → `admin_ctx.cpaId` → `session.user.id`, so the deepest impersonation level wins.
+8. **Server actions for CPA switching** — `enterCpaSession(cpaId)` (admin-only; sets the cookie + writes an AuditEvent of type `ADMIN_ASSUMED_CPA`) and `exitCpaSession()` (clears cookie + writes `ADMIN_RELEASED_CPA`).
+9. **Server actions for client switching** — `enterClientSession(clientId)` and `exitClientSession()` already exist; the redesign uses them as-is. Add `getRecentClients(limit)` for the Cmd-K palette.
+10. **Multi-year listing API** — `getClientYearStrip(clientId)` returning the year-strip data shape used by `/clients` table and `/clients/[clientId]` overview.
+11. **`writeAuditEvent({...})`** — the audit-event helper auto-fills BOTH `actorCpaUserId` (from `getClientContext`) AND `actorAdminUserId` (from `getCurrentAdminContext`). Replaces `prisma.auditEvent.create` at sites that need impersonation provenance.
+12. **Role guard helpers** — `requireRole("SUPER_ADMIN")` for `/admin/*` routes and `requireRole("CPA")` for `/workspace`, `/clients/*` routes (with bypass when admin is impersonating a CPA).
+
+**Seed an initial super admin:** `pnpm tsx scripts/promote-admin.ts <email>` — finds the user, sets `role=SUPER_ADMIN`, writes an AuditEvent. Run once after deploy. There is no UI to do this on purpose — promoting users to admin is intentionally a DB-side operation, kept off the production UI to prevent privilege escalation via a phished CPA session.
 
 The redesign should NOT add new database migrations beyond these — the existing schema and the changes above cover §3–§5.
 
@@ -297,7 +430,9 @@ The redesign should NOT add new database migrations beyond these — the existin
 
 ## 7. Acceptance criteria for the redesign
 
-The redesigned app passes when **all** of these are true on a CPA login with at least 2 clients and at least 2 years per client:
+The redesigned app passes when **all** of these are true on three test logins (one super admin, one CPA with 2 clients × 2 years each, one solo client):
+
+**CPA tier (Najath):**
 
 - [ ] Switching from one client+year to another takes ≤2 clicks (or ≤3 keystrokes via ⌘K).
 - [ ] On any page with a client+year context, the CPA can see in the chrome: client name, year number, year status, blocker count.
@@ -313,6 +448,24 @@ The redesigned app passes when **all** of these are true on a CPA login with at 
 - [ ] Cmd-K palette works on Mac and Windows.
 - [ ] Sign-in → "I am Najath, working on Atif's 2025" → drag-drop a statement → resolve a STOP → lock the year → download the audit packet flow takes <30s of clicks (i.e., the chrome doesn't get in the way).
 
+**Admin tier:**
+
+- [ ] Admin login → `/admin` renders KPI strip, "needs attention" list, recent admin activity.
+- [ ] `/admin/cpas` shows all CPAs with last-login, client count, deductions YTD.
+- [ ] `+ Add CPA` flow: name + email + temp-password reveal → CPA can log in immediately with that password.
+- [ ] Impersonate flow: admin clicks "Impersonate" on a CPA row → lands on `/workspace` as that CPA, with the **purple admin banner** at top showing "ADMIN: <admin name> → CPA: <cpa name>".
+- [ ] During admin impersonation, every AuditEvent written has BOTH `actorCpaUserId` and `actorAdminUserId` set.
+- [ ] Triple impersonation works: admin → CPA → enter client workspace → both purple AND amber banners visible.
+- [ ] "Exit" buttons unwind the chain in correct order: client → CPA → admin home.
+- [ ] `/admin/audit` log filters by `actorAdminUserId IS NOT NULL` correctly; CSV export works.
+- [ ] Suspended CPA cannot log in (auth.ts respects an `isActive=false` flag on User).
+
+**Cross-tier:**
+
+- [ ] A CLIENT-role login redirects to `/workspace` (their own data); they cannot reach `/admin/*` or `/clients/*` (CPA's client list).
+- [ ] A CPA-role login redirects to `/workspace`; they cannot reach `/admin/*`.
+- [ ] An admin who has not started impersonation cannot reach `/clients/*` (the CPA's roster) — they must `enterCpaSession` first.
+
 ---
 
 ## 8. Hard constraints
@@ -323,13 +476,15 @@ These are the rails — break them and the redesign is wrong.
 - **Don't change** the AI agents (`lib/ai/*`), the pairing modules (`lib/pairing/*`), the lock flow (`lib/lock/*`), the assertions (`lib/validation/assertions.ts`), the rule library, or the report builders (`lib/reports/*`). They're correct.
 - **Don't change** the data formula. `computeDeductibleAmt` from `lib/classification/deductible.ts` is the only function that says "how much of this transaction is deductible." Every chart, total, and export must call it (or transitively call it via existing modules).
 - **Don't add** a chat / agent UI. The user said no.
-- **Don't add** multi-tenant *firms* (where one tenant owns many CPAs). The CPA *is* the firm in V1.
-- **Don't change** `User.role`, `CpaClient`, `getCurrentUserId()`, or the cookie-based impersonation. They work; build on them.
+- **Don't add** multi-tenant *firms* (where one tenant owns many CPAs). The CPA *is* the firm in V1. The super admin is the platform operator, not a "firm admin."
+- **Don't add** UI for promoting users to SUPER_ADMIN. The promotion is a DB / scripted operation only — see `scripts/promote-admin.ts`.
+- **Don't change** `User.role` (only ADD `SUPER_ADMIN` to the enum), `CpaClient`, `getCurrentUserId()`, or the cookie-based impersonation. They work; build on them.
+- **Don't allow stealth admin actions.** Every audit event during admin impersonation has `actorAdminUserId` populated. There is no codepath that bypasses this.
 - **Honor the principles in `CLAUDE.md`** — every redesigned surface is a new opportunity to violate "silence is a bug", "deductions travel as triples", "Cohan is a rescue not a strategy". Re-read principle 1 through 10 before shipping.
 - **Mobile is read-only.** Any breakpoint <768px shows a "TaxLens is desktop-first; you can read but not edit on mobile" banner. Don't waste cycles building mobile interactions.
 - **Accessibility:** every interactive element keyboard-reachable. ARIA labels on every status pill. Color is never the only signal (always a code letter or icon too).
 - **i18n:** US-English only in V1. No translation infrastructure.
-- **Do not** modify the auth flow (`auth.ts`, `proxy.ts`) without an explicit ask. NextAuth v5 beta is finicky.
+- **Do not** modify the auth flow (`auth.ts`, `proxy.ts`) without an explicit ask. NextAuth v5 beta is finicky. The role guards live at the layout / page level, not in middleware.
 
 ---
 
@@ -337,32 +492,36 @@ These are the rails — break them and the redesign is wrong.
 
 A single PR against `main` that:
 
-1. Adds new pages under `app/(app)/clients/[clientId]/...` (and `app/(app)/workspace/...`) implementing §3 IA, §4 surfaces, §5 visuals.
+1. Adds new pages under `app/(admin)/admin/...`, `app/(app)/workspace/...`, and `app/(app)/clients/[clientId]/...` implementing §3 IA, §4 surfaces, §5 visuals. The admin section uses its own route group `(admin)` with its own layout.
 2. Keeps the old `app/(app)/years/[year]/...` paths as 301-redirect shims that resolve `clientId` from cookie context.
-3. Replaces `app/(app)/layout.tsx` and `app/(cpa)/layout.tsx` with a unified shell at `app/(app)/layout.tsx` that renders the §3 navigation. The `(cpa)` route group is folded into `(app)`.
+3. Replaces `app/(app)/layout.tsx` and `app/(cpa)/layout.tsx` with a unified CPA shell at `app/(app)/layout.tsx` that renders the §3 CPA navigation; the `(cpa)` route group is folded into `(app)`. Adds `app/(admin)/layout.tsx` for the admin shell.
 4. Adds the `Documents` page wired to the new `Document` model.
-5. Adds the Audit Trail page reading from `AuditEvent.actorCpaUserId`.
-6. Updates `lib/cpa/clientContext.ts` with `getCurrentCpaContext()` and `getRecentClients()`.
-7. Tests: every new page has a smoke test that asserts it renders for both a CPA-with-client-context and a solo CLIENT login.
-8. README update under `design-brief/redesign-cpa-2026-implementation.md` describing what landed, including any deviations from this brief.
-9. All assertions A01–A13, all 246 existing tests, and the 19 tier-1 tests still pass.
-10. `pnpm build` clean.
+5. Adds the Audit Trail page reading from `AuditEvent.actorCpaUserId` and `actorAdminUserId`.
+6. Updates `lib/cpa/clientContext.ts` with `getCurrentCpaContext()` and `getRecentClients()`. Adds `lib/admin/adminContext.ts` with `getCurrentAdminContext()`, `enterCpaSession()`, `exitCpaSession()`, and admin-only listing helpers.
+7. Adds `scripts/promote-admin.ts` for one-time super admin seeding.
+8. Tests: every new page has a smoke test that asserts it renders for the appropriate role, and a triple-impersonation integration test asserts AuditEvent fields are populated correctly.
+9. README update under `design-brief/redesign-cpa-2026-implementation.md` describing what landed, including any deviations from this brief.
+10. All assertions A01–A13, all 246 existing tests, the 19 tier-1 tests, and the 4 redesign-prep tests still pass.
+11. `pnpm build` clean.
 
 ---
 
 ## 10. Cost / scope estimate
 
-Best-guess upper bound for the design agent: **8–12 sessions of 2–3 hours each.**
+Best-guess upper bound for the design agent: **11–15 sessions of 2–3 hours each.**
 
-- 1 session: route restructuring + 301 shims + auth/role guard rewrites
-- 2 sessions: navigation shell + ⌘K + sidebar refactor
+- 1 session: route restructuring + 301 shims + role-guard rewrites for three tiers
+- 2 sessions: CPA navigation shell + ⌘K + sidebar refactor
+- 1 session: admin navigation shell + stacked impersonation banner
+- 2 sessions: `/admin` + `/admin/cpas` + `/admin/cpas/new` + admin-impersonation flow
+- 1 session: `/admin/audit` + `/admin/settings`
 - 1 session: `/workspace` + `/workspace/inbox`
 - 1 session: redesigned `/clients` + `/clients/[id]`
-- 2 sessions: `/clients/[id]/documents` + `Document` model wiring
-- 1 session: per-year sidebar refactor + audit-trail page
+- 2 sessions: `/clients/[id]/documents` + `Document` model wiring + receipt-to-transaction linking
+- 1 session: per-year sidebar refactor + audit-trail page (with admin/CPA actor distinction)
 - 1 session: visual polish, type scale, status pills, dark mode parity
-- 1 session: tests, accessibility, performance budget
-- 1 session: bugfix and migration of any existing data into Document categories
+- 1 session: tests (triple impersonation), accessibility, performance budget
+- 1 session: bugfix and migration of any existing data
 
 If the agent finds a more compact path, take it. If a session would exceed 3h, *stop* and write a new brief; the user prefers many small visible changes to one giant invisible one.
 
@@ -376,9 +535,12 @@ If the agent finds a more compact path, take it. If a session would exceed 3h, *
 - No client portal sharing UI ("share with my client") — defer to V2.
 - No external integrations (Plaid, Stripe Sync, QBO sync).
 - No multi-language.
-- No firm-level multi-CPA access ("Sarah and I share Atif").
+- No firm-level multi-CPA access ("Sarah and I share Atif"). Each CPA is a solo tenant in V1.
+- No multi-admin co-management UI — admins all share the same `/admin/*` surface; we don't separate admin teams.
+- No "approve before merge" workflow on admin actions. Admin can act unilaterally, but every action is logged.
 - No OCR for receipts (yet — the Haiku PDF path covers statements; receipts come later).
 - No automated reminders / email scheduling.
+- No SSO / SCIM provisioning for CPAs in V1. Email + temp password only. SSO is V2.
 
 ---
 
@@ -392,6 +554,10 @@ If the agent finds a more compact path, take it. If a session would exceed 3h, *
 | CPA accidentally locks the wrong client | Lock confirmation modal already exists; reinforce with client name in big bold text in the modal. |
 | Document upload bypasses the existing rate-limit / virus-scan path | Document uploads use the same `uploadDir` storage helper and a similar parse pipeline (skipping the parser dispatch). |
 | Solo-client experience regressed | Acceptance criterion: solo Atif login renders identically to a CPA-impersonating-Atif login. CI should run both. |
+| Admin impersonation forgotten (admin walks away from desk) | Admin context cookie expires after 8h max. Top-bar banner is sticky and always visible. Optional: idle-timeout that drops admin context after 30 min of inactivity. |
+| Admin makes a destructive change to CPA's client and CPA can't tell | Audit-trail view (per client+year) shows `actorAdminUserId` events with a distinct badge. Optional V2: notify CPA via 🔔 when their client data is touched by an admin. |
+| Admin promotes themselves stealthily | Promotion is DB-only (`scripts/promote-admin.ts`); no UI path. Audit trail entry on promote. Detect via cross-firm audit log. |
+| Suspended CPA's clients orphaned | `isActive=false` doesn't delete data. Clients of a suspended CPA can still log in directly; admin can re-assign clients to another CPA in V2. |
 
 ---
 
