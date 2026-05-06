@@ -155,8 +155,22 @@ export type KnownEntityKind = (typeof KnownEntityKind)[keyof typeof KnownEntityK
 
 
 export const UserRole = {
+  SUPER_ADMIN: 'SUPER_ADMIN',
   CPA: 'CPA',
   CLIENT: 'CLIENT'
 } as const
 
 export type UserRole = (typeof UserRole)[keyof typeof UserRole]
+
+
+export const DocumentCategory = {
+  STATEMENT: 'STATEMENT',
+  TAX_FORM_RECEIVED: 'TAX_FORM_RECEIVED',
+  TAX_FORM_ISSUED: 'TAX_FORM_ISSUED',
+  ENGAGEMENT_LEGAL: 'ENGAGEMENT_LEGAL',
+  IRS_CORRESPONDENCE: 'IRS_CORRESPONDENCE',
+  RECEIPT: 'RECEIPT',
+  OTHER: 'OTHER'
+} as const
+
+export type DocumentCategory = (typeof DocumentCategory)[keyof typeof DocumentCategory]

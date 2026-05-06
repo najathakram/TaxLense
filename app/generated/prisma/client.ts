@@ -136,3 +136,8 @@ export type AuditEvent = Prisma.AuditEventModel
  * 
  */
 export type Report = Prisma.ReportModel
+/**
+ * Model Document
+ * 
+ */
+export type Document = Prisma.DocumentModel

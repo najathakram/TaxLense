@@ -756,10 +756,6 @@ export type BusinessProfileUpdaterevenueStreamsInput = {
   push?: string | string[]
 }
 
-export type BoolFieldUpdateOperationsInput = {
-  set?: boolean
-}
-
 export type BusinessProfileCreateNestedOneWithoutKnownEntitiesInput = {
   create?: Prisma.XOR<Prisma.BusinessProfileCreateWithoutKnownEntitiesInput, Prisma.BusinessProfileUncheckedCreateWithoutKnownEntitiesInput>
   connectOrCreate?: Prisma.BusinessProfileCreateOrConnectWithoutKnownEntitiesInput
