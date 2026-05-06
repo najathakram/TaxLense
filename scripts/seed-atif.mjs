@@ -105,6 +105,12 @@ async function main() {
         'UPDATE "BusinessProfile" SET "userId" = $1 WHERE "userId" = $2 RETURNING id',
         [clientUserId, cpaUserId],
       )
+      // Document.userId points at the taxpayer-owner; Document.uploadedById is the
+      // person who clicked upload (often the CPA). We move owner only.
+      const documents = await client.query(
+        'UPDATE "Document" SET "userId" = $1 WHERE "userId" = $2 RETURNING id',
+        [clientUserId, cpaUserId],
+      )
 
       const linkExisting = await client.query(
         'SELECT id FROM "CpaClient" WHERE "cpaUserId" = $1 AND "clientUserId" = $2 LIMIT 1',
@@ -126,8 +132,9 @@ async function main() {
       const movedTaxYears = taxYears.rows.length
       const movedAccounts = accounts.rows.length
       const movedProfiles = profiles.rows.length
+      const movedDocuments = documents.rows.length
 
-      if (movedTaxYears + movedAccounts + movedProfiles + (linkCreated ? 1 : 0) === 0) {
+      if (movedTaxYears + movedAccounts + movedProfiles + movedDocuments + (linkCreated ? 1 : 0) === 0) {
         await client.query("COMMIT")
         console.log(`[seed-atif] nothing to do — all rows already in place for ${cpaEmail} → ${clientEmail}.`)
         return
@@ -149,6 +156,7 @@ async function main() {
             movedTaxYears,
             movedAccounts,
             movedProfiles,
+            movedDocuments,
             linkCreated,
           }),
           `Seeded by scripts/seed-atif.mjs at ${new Date().toISOString()}.`,
@@ -157,7 +165,7 @@ async function main() {
 
       await client.query("COMMIT")
       console.log(
-        `[seed-atif] ✓ ${cpaEmail} → ${clientEmail}: moved ${movedTaxYears} tax year(s), ${movedAccounts} account(s), ${movedProfiles} profile(s); link ${linkCreated ? "created" : "already existed"}.`,
+        `[seed-atif] ✓ ${cpaEmail} → ${clientEmail}: moved ${movedTaxYears} tax year(s), ${movedAccounts} account(s), ${movedProfiles} profile(s), ${movedDocuments} document(s); link ${linkCreated ? "created" : "already existed"}.`,
       )
     } catch (err) {
       await client.query("ROLLBACK")
