@@ -9,6 +9,10 @@
 
 import { prisma } from "@/lib/db"
 import type { TransactionCode } from "@/app/generated/prisma/client"
+import {
+  DEDUCTIBLE_CODES as SHARED_DEDUCTIBLE_CODES,
+  computeDeductibleAmt,
+} from "@/lib/classification/deductible"
 
 export type RiskSeverity = "CRITICAL" | "HIGH" | "MEDIUM" | "LOW"
 
@@ -25,6 +29,10 @@ export interface RiskSignal {
 export interface RiskReport {
   score: number
   band: "LOW" | "MODERATE" | "HIGH" | "CRITICAL"
+  /** Number of blocking signals — surfaced separately from `score` so the UI
+   *  can show "BLOCKED" prominently regardless of point total. */
+  lockBlocked: boolean
+  blockerCount: number
   critical: RiskSignal[]
   high: RiskSignal[]
   medium: RiskSignal[]
@@ -34,14 +42,7 @@ export interface RiskReport {
   estimatedTaxImpactNote: string
 }
 
-const DEDUCTIBLE_CODES: TransactionCode[] = [
-  "WRITE_OFF",
-  "WRITE_OFF_TRAVEL",
-  "WRITE_OFF_COGS",
-  "MEALS_50",
-  "MEALS_100",
-  "GRAY",
-]
+const DEDUCTIBLE_CODES = SHARED_DEDUCTIBLE_CODES as readonly TransactionCode[]
 
 function band(score: number): RiskReport["band"] {
   if (score > 70) return "CRITICAL"
@@ -85,10 +86,9 @@ export async function computeRiskScore(taxYearId: string): Promise<RiskReport> {
       grossReceiptsCents += Math.round(Math.abs(amt) * 100)
     }
     if (DEDUCTIBLE_CODES.includes(c.code)) {
-      const dedCents = Math.round(Math.max(0, amt) * 100 * (c.businessPct / 100))
+      const dedCents = Math.round(computeDeductibleAmt(amt, c.code, c.businessPct) * 100)
       totalDeductibleCents += dedCents
-      if (c.code === "MEALS_50") mealDeductibleCents += Math.round(dedCents * 0.5)
-      else if (c.code === "MEALS_100") mealDeductibleCents += dedCents
+      if (c.code === "MEALS_50" || c.code === "MEALS_100") mealDeductibleCents += dedCents
       if (c.scheduleCLine === "Line 27a Other Expenses") otherLineCents += dedCents
       // round-number: exact $100/$500/$1000/$2500/$5000 multiples
       const dollars = Math.round(Math.abs(amt))
@@ -159,7 +159,7 @@ export async function computeRiskScore(taxYearId: string): Promise<RiskReport> {
       if (!c) continue
       if (c.code === "BIZ_INCOME") inc += Math.abs(Number(r.amountNormalized))
       if (DEDUCTIBLE_CODES.includes(c.code)) {
-        ded += Math.max(0, Number(r.amountNormalized)) * (c.businessPct / 100)
+        ded += computeDeductibleAmt(Number(r.amountNormalized), c.code, c.businessPct)
       }
     }
     if (ded > inc) lossYearN++
@@ -307,6 +307,27 @@ export async function computeRiskScore(taxYearId: string): Promise<RiskReport> {
   }
 
   // --- Roll up ---
+  // Pre-blocker score: just the sum of scoring signals.
+  const preBlockerScore = signals.reduce((s, sig) => s + sig.points, 0)
+  const blockerCount = signals.filter((s) => s.blocking).length
+  const lockBlocked = blockerCount > 0
+
+  // Floor the displayed score at MODERATE (21) when ANY blocker is present.
+  // Without this, a return with $35K of unclassified deposits + 51 wrong-year
+  // rows can read "1/100 LOW" — the score would lie about audit readiness.
+  // We surface the floor as a synthetic signal so the user can see why.
+  if (lockBlocked && preBlockerScore < 21) {
+    signals.push({
+      id: "LOCK_BLOCKED_FLOOR",
+      severity: "CRITICAL",
+      points: 21 - preBlockerScore,
+      title: `Lock blocked by ${blockerCount} issue${blockerCount === 1 ? "" : "s"}`,
+      details:
+        "Risk score floored at MODERATE until blockers resolve — the underlying signals are listed above; this entry only exists to bring the displayed score in line with reality.",
+      blocking: false,
+    })
+  }
+
   const score = signals.reduce((s, sig) => s + sig.points, 0)
   const critical = signals.filter((s) => s.severity === "CRITICAL")
   const high = signals.filter((s) => s.severity === "HIGH")
@@ -319,6 +340,8 @@ export async function computeRiskScore(taxYearId: string): Promise<RiskReport> {
   return {
     score,
     band: band(score),
+    lockBlocked,
+    blockerCount,
     critical,
     high,
     medium,

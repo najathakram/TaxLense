@@ -26,6 +26,30 @@ export type { ParseResult, RawTx } from "./types"
 export { fileHash, transactionKey } from "./dedup"
 export type { ExtractorTelemetry } from "./haiku-cleanup"
 
+/**
+ * Partition raw transactions by tax year. Used at upload time to prevent
+ * out-of-year rows leaking into a TaxYear (assertion A10 YEAR_BOUNDARY).
+ *
+ * Year is determined by `postedDate.getUTCFullYear()` to match A10's check.
+ * Statements that span a year boundary (e.g. Dec→Jan PDFs) typically contain
+ * rows for both years; only the in-year rows belong in this TaxYear.
+ */
+export function partitionByTaxYear<T extends { postedDate: Date }>(
+  txns: T[],
+  year: number,
+): { inYear: T[]; outOfYear: T[] } {
+  const inYear: T[] = []
+  const outOfYear: T[] = []
+  for (const tx of txns) {
+    if (tx.postedDate.getUTCFullYear() === year) {
+      inYear.push(tx)
+    } else {
+      outOfYear.push(tx)
+    }
+  }
+  return { inYear, outOfYear }
+}
+
 export interface ParseStatementOptions {
   /** Override the default AI client (for tests). */
   anthropicClient?: Anthropic

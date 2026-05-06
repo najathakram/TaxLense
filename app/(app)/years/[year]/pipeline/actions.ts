@@ -11,6 +11,7 @@ import { selectResidualCandidates } from "@/lib/ai/residualCandidates"
 import { runResidualPass } from "@/lib/ai/residualTransaction"
 import { runBulkClassifyPass } from "@/lib/ai/bulkClassify"
 import { autoResolveStops } from "@/app/(app)/years/[year]/stops/actions"
+import { deriveStopsFromAssertions } from "@/lib/stops/deriveFromAssertions"
 import { revalidatePath } from "next/cache"
 
 async function getTaxYear(userId: string, year: number) {
@@ -65,8 +66,13 @@ export async function runApplyRules(year: number) {
   const userId = await getCurrentUserId()
   const taxYear = await getTaxYear(userId, year)
   const result = await applyMerchantRules(taxYear.id)
+  // After applying rules, materialize STOPs for the conditions that A08 and A13
+  // detect (missing meal substantiation and unclassified deposits) so the
+  // dashboard and the STOPs queue stay in agreement.
+  const stopsFromAssertions = await deriveStopsFromAssertions(taxYear.id)
   revalidatePath(`/years/${year}/pipeline`)
-  return result
+  revalidatePath(`/years/${year}/stops`)
+  return { ...result, ...stopsFromAssertions }
 }
 
 export async function runResidualAI(year: number) {

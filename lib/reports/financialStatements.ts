@@ -13,22 +13,15 @@ import ExcelJS from "exceljs"
 import { prisma } from "@/lib/db"
 import type { TransactionCode } from "@/app/generated/prisma/client"
 import { SCHEDULE_C_LINES } from "@/lib/classification/constants"
+import {
+  DEDUCTIBLE_CODES as SHARED_DEDUCTIBLE_CODES,
+  computeDeductibleAmt,
+} from "@/lib/classification/deductible"
 
-const DEDUCTIBLE_CODES: TransactionCode[] = [
-  "WRITE_OFF",
-  "WRITE_OFF_TRAVEL",
-  "WRITE_OFF_COGS",
-  "MEALS_50",
-  "MEALS_100",
-  "GRAY",
-]
+const DEDUCTIBLE_CODES = SHARED_DEDUCTIBLE_CODES as readonly TransactionCode[]
 
 function deductibleAmt(amountNormalized: number, code: TransactionCode, bizPct: number): number {
-  const outflow = Math.max(0, amountNormalized)
-  let dedAmt = outflow * (bizPct / 100)
-  // §274(n)(1): 50% limitation for MEALS_50
-  if (code === "MEALS_50") dedAmt = dedAmt * 0.5
-  return dedAmt
+  return computeDeductibleAmt(amountNormalized, code, bizPct)
 }
 
 function headerFill(): ExcelJS.Fill {

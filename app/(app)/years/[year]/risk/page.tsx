@@ -95,8 +95,14 @@ export default async function RiskPage({ params }: Props) {
     runLockAssertions(taxYear.id),
   ])
 
-  const blockedCount = assertions.blockingFailures.length + risk.critical.filter((s) => s.blocking).length
-  const hasBlockers = blockedCount > 0
+  // Use the same blocker count the score uses internally so the UI doesn't drift.
+  // Combine assertion blockers + risk-signal blockers, deduplicated by id.
+  const allBlockerIds = new Set([
+    ...assertions.blockingFailures.map((a) => a.id),
+    ...risk.critical.filter((s) => s.blocking).map((s) => s.id),
+  ])
+  const blockedCount = allBlockerIds.size
+  const hasBlockers = blockedCount > 0 || risk.lockBlocked
 
   return (
     <div className="p-6 space-y-6">
@@ -108,6 +114,11 @@ export default async function RiskPage({ params }: Props) {
         <div className={`rounded border-2 px-6 py-3 text-center ${bandColor[risk.band]}`}>
           <div className="text-3xl font-bold">{risk.score}</div>
           <div className="text-xs">/ 100 — {risk.band}</div>
+          {risk.lockBlocked && (
+            <div className="mt-1 text-[10px] font-semibold uppercase tracking-wide text-red-700">
+              Lock blocked
+            </div>
+          )}
         </div>
       </div>
 

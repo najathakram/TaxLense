@@ -11,6 +11,7 @@
 
 import { prisma } from "@/lib/db"
 import type { TransactionCode } from "@/app/generated/prisma/client"
+import { computeDeductibleAmt } from "@/lib/classification/deductible"
 
 export interface AssertionResult {
   id: string
@@ -65,9 +66,12 @@ async function loadLedger(taxYearId: string) {
   }) as unknown as Promise<LedgerRow[]>
 }
 
-function deductibleCents(amountNormalized: { toString(): string }, pct: number): number {
-  const outflow = Math.max(0, Number(amountNormalized))
-  return Math.round(outflow * 100 * (pct / 100))
+function deductibleCents(
+  amountNormalized: { toString(): string },
+  code: TransactionCode,
+  pct: number,
+): number {
+  return Math.round(computeDeductibleAmt(Number(amountNormalized), code, pct) * 100)
 }
 
 // ---------- Assertions ----------
@@ -109,7 +113,7 @@ export async function A03_SCHEDULE_C_SUM(taxYearId: string): Promise<AssertionRe
   for (const r of ledger) {
     const c = r.classifications[0]
     if (!c || !DEDUCTIBLE_CODES.includes(c.code)) continue
-    const expected = deductibleCents(r.amountNormalized, c.businessPct)
+    const expected = deductibleCents(r.amountNormalized, c.code, c.businessPct)
     totalCents += expected
     if (!Number.isFinite(expected) || expected < 0) mismatches++
   }

@@ -1,6 +1,7 @@
 import { getCurrentUserId } from "@/lib/auth"
 import { prisma } from "@/lib/db"
 import { notFound } from "next/navigation"
+import { computeDeductibleAmt } from "@/lib/classification/deductible"
 import { LedgerClient, type LedgerRow } from "./ledger-client"
 
 interface Props {
@@ -46,10 +47,7 @@ export default async function LedgerPage({ params }: Props) {
       code: c?.code ?? "NEEDS_CONTEXT",
       scheduleCLine: c?.scheduleCLine ?? null,
       businessPct: c?.businessPct ?? 0,
-      deductibleAmt:
-        c && c.code !== "PERSONAL" && c.code !== "TRANSFER" && c.code !== "PAYMENT"
-          ? Math.abs(amount) * (c.businessPct / 100)
-          : 0,
+      deductibleAmt: c ? computeDeductibleAmt(amount, c.code, c.businessPct) : 0,
       evidenceTier: c?.evidenceTier ?? 3,
       confidence: c?.confidence ?? 0,
       isUserConfirmed: c?.source === "AI_USER_CONFIRMED" || c?.source === "USER",

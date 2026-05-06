@@ -17,6 +17,7 @@
 import Anthropic from "@anthropic-ai/sdk"
 import { z } from "zod"
 import { prisma } from "@/lib/db"
+import { applyFeeGuards } from "@/lib/ai/feeGuards"
 import type {
   BusinessProfile,
   Trip,
@@ -73,9 +74,10 @@ const BatchResponseSchema = z.object({
 
 const SECTION_274D_CODES = new Set(["MEALS_50", "MEALS_100", "WRITE_OFF_TRAVEL"])
 
-// Authoritative IRC citation set from the rule library (spec §7.3)
+// Authoritative IRC citation set from the rule library (spec §7.3).
+// §163(h) added so feeGuards can mark personal-interest items.
 const RULE_LIBRARY_CITATIONS = new Set([
-  "§162", "§162(a)", "§262", "§274(d)", "§274(n)", "§274(n)(1)", "§274(n)(2)",
+  "§162", "§162(a)", "§163(h)", "§262", "§274(d)", "§274(n)", "§274(n)(1)", "§274(n)(2)",
   "§280A", "§280A(c)", "§263a", "§168(k)", "§179", "§280F", "§195",
   "§6001", "§1402", "§6662", "Cohan",
   "R-162-001", "R-262-001", "R-274d-001", "R-274n-001", "R-274n-002",
@@ -85,7 +87,36 @@ const RULE_LIBRARY_CITATIONS = new Set([
 ])
 
 function enforceCrossFieldInvariants(rule: MerchantRuleOutput): MerchantRuleOutput {
-  const r = { ...rule }
+  let r = { ...rule }
+
+  // Universal fee/interest guard rails (CC fees, MEALS+0%) — runs FIRST so
+  // downstream §274(d) checks aren't applied to a now-PERSONAL row.
+  const guarded = applyFeeGuards(
+    {
+      code: r.code,
+      scheduleCLine: r.schedule_c_line,
+      businessPct: r.business_pct_default,
+      ircCitations: r.irc_citations,
+      evidenceTier: r.evidence_tier_default,
+      reasoning: r.reasoning,
+      requiresHumanInput: r.requires_human_input,
+      humanQuestion: r.human_question,
+      confidence: r.confidence,
+    },
+    r.merchant_key,
+  )
+  r = {
+    ...r,
+    code: guarded.code,
+    schedule_c_line: guarded.scheduleCLine,
+    business_pct_default: guarded.businessPct,
+    irc_citations: guarded.ircCitations,
+    evidence_tier_default: guarded.evidenceTier,
+    reasoning: guarded.reasoning,
+    requires_human_input: guarded.requiresHumanInput,
+    human_question: guarded.humanQuestion,
+    confidence: guarded.confidence,
+  }
 
   // confidence < 0.60 → must be STOP
   if (r.confidence < 0.60 && !r.requires_human_input) {
@@ -208,6 +239,15 @@ Your job: classify a batch of unique merchants into deductible categories with I
    the merchant key to refine classification. If the description contradicts or
    adds ambiguity (e.g. "AMAZON.COM*HOUSEHOLD" vs a business merchant),
    set requires_human_input=true and write a specific human_question.
+
+9. Card fees and personal interest (CASH ADVANCE INTEREST, INTEREST CHARGE,
+   LATE FEE, ANNUAL MEMBERSHIP FEE, FOREIGN TRANSACTION FEE, OVERLIMIT FEE,
+   RETURNED PAYMENT FEE) default to PERSONAL with citation §163(h). Personal
+   interest is non-deductible. Even on a business card, cash-advance interest
+   needs separate substantiation that the cash was used for business.
+
+10. NEVER classify a merchant as MEALS_50 or MEALS_100 with business_pct_default=0.
+    A 0%-business meal cannot be deducted; it should be PERSONAL with §262.
 
 === BUSINESS PROFILE ===
 NAICS: ${profile.naicsCode ?? "unknown"} — ${profile.naicsDescription ?? "Independent Artist/Creator"}
