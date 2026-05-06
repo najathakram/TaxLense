@@ -12,7 +12,11 @@ import { CLIENT_CONTEXT_COOKIE } from "./clientContext"
 
 export async function enterClientSession(clientId: string, redirectTo: string = "/dashboard") {
   const session = await requireAuth()
-  const cpaId = session.user!.id!
+  // When a SUPER_ADMIN is impersonating a CPA, the cookie context resolves the
+  // effective CPA id; otherwise it's the logged-in CPA user. Either way the
+  // CpaClient lookup must use the effective CPA id, not the raw session id.
+  const adminCpaCtx = await getAdminCpaContext()
+  const cpaId = adminCpaCtx?.cpaId ?? session.user!.id!
 
   const rel = await prisma.cpaClient.findUnique({
     where: { cpaUserId_clientUserId: { cpaUserId: cpaId, clientUserId: clientId } },
