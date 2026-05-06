@@ -164,8 +164,50 @@ interface ProfileContext {
   grossReceiptsEstimate: string | null
   homeOfficeConfig: unknown
   vehicleConfig: unknown
+  inventoryConfig?: unknown
   revenueStreams: string[]
   firstYear: boolean
+}
+
+/**
+ * NAICS-based hint for inventory/resale/dropshipping businesses where supplier
+ * purchases belong on Schedule C Part III (Cost of Goods Sold), not as a
+ * generic Line 22/27a write-off.
+ *
+ * Coverage:
+ *   42* — Wholesale Trade
+ *   44–45 — Retail Trade (including 4541 electronic shopping / dropshipping)
+ *   31–33 — Manufacturing
+ *   72* — Accommodation & Food Services (food sold = inventory)
+ */
+function isInventoryNaics(naics: string | null): boolean {
+  if (!naics) return false
+  const head2 = naics.slice(0, 2)
+  if (["42", "44", "45", "31", "32", "33", "72"].includes(head2)) return true
+  return false
+}
+
+function formatInventoryHint(profile: ProfileContext): string {
+  const inv = profile.inventoryConfig as { has?: boolean; physical?: boolean; dropship?: boolean } | null
+  const hasInventoryFlag = inv?.has === true || inv?.dropship === true
+  const naicsHint = isInventoryNaics(profile.naicsCode)
+  if (!hasInventoryFlag && !naicsHint) return ""
+  const flavor = inv?.dropship
+    ? "DROPSHIPPING / RESALE — supplier payments are inventory cost, not generic SG&A."
+    : hasInventoryFlag
+    ? "PHYSICAL INVENTORY — supplier/raw-material payments are inventory cost."
+    : "RETAIL/RESALE NAICS detected — likely has inventory; treat supplier payments as inventory cost unless contradicted."
+  return `\n=== INVENTORY / COGS POSTURE ===\n${flavor}
+For this business, classify the following as WRITE_OFF_COGS (Schedule C Part III), NOT WRITE_OFF/Line 22:
+  - Wire transfers / Wise / international remittances to overseas suppliers
+  - Payments to Alibaba, AliExpress, DHGate, 1688.com, Tmall, Taobao
+  - Payments to known fulfillment / 3PL providers (ShipBob, ShipMonk, Easyship, ShipStation if a paid plan, fulfillment fees on Amazon)
+  - Inbound import duties, customs broker fees, tariff payments
+  - Sample/product-development purchases that are intended for resale
+For each: cite §162(a) (or [VERIFY] if uncertain), set scheduleCLine="Part III COGS",
+business_pct_default=100, evidence_tier_default=3.
+If the merchant could be either business-COGS or personal (e.g. Amazon prime sub),
+set requires_human_input=true.`
 }
 
 function formatTrips(trips: Trip[]): string {
@@ -260,6 +302,7 @@ ${vehicleInfo}
 Home office: ${hoConfig?.has ? `Yes — ${hoConfig.dedicated ? "dedicated" : "non-dedicated"} space, ${hoConfig.officeSqft ?? "?"}sqft of ${hoConfig.homeSqft ?? "?"}sqft home` : "No"}
 Revenue streams: ${profile.revenueStreams.join(", ")}
 First year in business: ${profile.firstYear ? "Yes (§195 startup costs may apply)" : "No"}
+${formatInventoryHint(profile)}
 
 === CONFIRMED BUSINESS TRIPS ===
 ${formatTrips(trips)}
@@ -380,6 +423,7 @@ export async function classifyBatch(
       grossReceiptsEstimate: profile.grossReceiptsEstimate?.toString() ?? null,
       homeOfficeConfig: profile.homeOfficeConfig,
       vehicleConfig: profile.vehicleConfig,
+      inventoryConfig: profile.inventoryConfig,
       revenueStreams: profile.revenueStreams,
       firstYear: profile.firstYear,
     },

@@ -124,6 +124,21 @@ interface NeighborSummary {
   currentCode: TransactionCode | null
 }
 
+function isInventoryNaics(naics: string | null): boolean {
+  if (!naics) return false
+  const head2 = naics.slice(0, 2)
+  return ["42", "44", "45", "31", "32", "33", "72"].includes(head2)
+}
+
+function inventoryHint(profile: BusinessProfile): string {
+  const inv = profile.inventoryConfig as { has?: boolean; dropship?: boolean } | null
+  const hasFlag = inv?.has === true || inv?.dropship === true
+  const naicsHint = isInventoryNaics(profile.naicsCode)
+  if (!hasFlag && !naicsHint) return ""
+  return `\n=== INVENTORY / COGS POSTURE ===
+This taxpayer ${inv?.dropship ? "dropships (overseas suppliers + 3PL)" : hasFlag ? "carries physical inventory" : "operates in retail/resale (NAICS hint)"}. Classify supplier payments (Wise/wire transfers to overseas suppliers, Alibaba/AliExpress, fulfillment/3PL fees, customs duties) as WRITE_OFF_COGS with line "Part III COGS" and 100% business_pct.`
+}
+
 function buildSystemPrompt(
   profile: BusinessProfile,
   trips: Trip[],
@@ -163,6 +178,7 @@ Entity: ${profile.entityType}
 Accounting method: ${profile.accountingMethod}
 ${vehicleInfo}
 Revenue streams: ${profile.revenueStreams.join(", ") || "none"}
+${inventoryHint(profile)}
 
 === CONFIRMED BUSINESS TRIPS ===
 ${tripLines}
