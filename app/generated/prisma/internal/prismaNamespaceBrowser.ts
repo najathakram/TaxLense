@@ -69,7 +69,8 @@ export const ModelName = {
   MerchantRule: 'MerchantRule',
   StopItem: 'StopItem',
   AuditEvent: 'AuditEvent',
-  Report: 'Report'
+  Report: 'Report',
+  Document: 'Document'
 } as const
 
 export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -96,6 +97,7 @@ export const UserScalarFieldEnum = {
   image: 'image',
   password: 'password',
   role: 'role',
+  isActive: 'isActive',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
 } as const
@@ -377,6 +379,8 @@ export type StopItemScalarFieldEnum = (typeof StopItemScalarFieldEnum)[keyof typ
 export const AuditEventScalarFieldEnum = {
   id: 'id',
   userId: 'userId',
+  actorCpaUserId: 'actorCpaUserId',
+  actorAdminUserId: 'actorAdminUserId',
   actorType: 'actorType',
   eventType: 'eventType',
   entityType: 'entityType',
@@ -402,6 +406,26 @@ export const ReportScalarFieldEnum = {
 } as const
 
 export type ReportScalarFieldEnum = (typeof ReportScalarFieldEnum)[keyof typeof ReportScalarFieldEnum]
+
+
+export const DocumentScalarFieldEnum = {
+  id: 'id',
+  userId: 'userId',
+  taxYearId: 'taxYearId',
+  category: 'category',
+  title: 'title',
+  description: 'description',
+  filePath: 'filePath',
+  originalFilename: 'originalFilename',
+  mimeType: 'mimeType',
+  sizeBytes: 'sizeBytes',
+  tags: 'tags',
+  uploadedByUserId: 'uploadedByUserId',
+  uploadedAt: 'uploadedAt',
+  linkedTransactionIds: 'linkedTransactionIds'
+} as const
+
+export type DocumentScalarFieldEnum = (typeof DocumentScalarFieldEnum)[keyof typeof DocumentScalarFieldEnum]
 
 
 export const SortOrder = {
