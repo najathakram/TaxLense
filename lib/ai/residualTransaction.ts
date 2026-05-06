@@ -20,6 +20,7 @@
 import Anthropic from "@anthropic-ai/sdk"
 import { z } from "zod"
 import { prisma } from "@/lib/db"
+import { applyFeeGuards } from "@/lib/ai/feeGuards"
 import type {
   Transaction,
   MerchantRule,
@@ -62,14 +63,48 @@ export const ResidualOutputSchema = z.object({
 export type ResidualOutput = z.infer<typeof ResidualOutputSchema>
 
 const RULE_LIBRARY_CITATIONS = new Set([
-  "§162", "§162(a)", "§262", "§274(d)", "§274(n)", "§274(n)(1)", "§274(n)(2)",
+  "§162", "§162(a)", "§163(h)", "§262", "§274(d)", "§274(n)", "§274(n)(1)", "§274(n)(2)",
   "§280A", "§280A(c)", "§263a", "§168(k)", "§179", "§280F", "§195",
   "§6001", "§1402", "§6662", "Cohan", "§61",
 ])
 const SECTION_274D_CODES = new Set<TransactionCode>(["MEALS_50", "MEALS_100", "WRITE_OFF_TRAVEL"])
 
-function enforceInvariants(out: ResidualOutput, txInTrip: boolean): ResidualOutput {
-  const r = { ...out }
+function enforceInvariants(
+  out: ResidualOutput,
+  txInTrip: boolean,
+  merchantKey: string,
+): ResidualOutput {
+  let r = { ...out }
+
+  // Universal fee/interest guard rails — runs FIRST so we don't continue to
+  // apply §274(d) substantiation pressure to a row that's actually PERSONAL.
+  const guarded = applyFeeGuards(
+    {
+      code: r.code,
+      scheduleCLine: r.schedule_c_line,
+      businessPct: r.business_pct,
+      ircCitations: r.irc_citations,
+      evidenceTier: r.evidence_tier,
+      reasoning: r.reasoning,
+      requiresHumanInput: r.requires_human_input,
+      humanQuestion: r.human_question,
+      confidence: r.confidence,
+    },
+    merchantKey,
+  )
+  r = {
+    ...r,
+    code: guarded.code,
+    schedule_c_line: guarded.scheduleCLine,
+    business_pct: guarded.businessPct,
+    irc_citations: guarded.ircCitations,
+    evidence_tier: guarded.evidenceTier,
+    reasoning: guarded.reasoning,
+    requires_human_input: guarded.requiresHumanInput,
+    human_question: guarded.humanQuestion,
+    confidence: guarded.confidence,
+  }
+
   if (r.confidence < 0.60 && !r.requires_human_input) {
     r.requires_human_input = true
     r.human_question ??= "Confidence below 0.60 — need user confirmation on this transaction."
@@ -331,7 +366,8 @@ export async function classifyResidual(
     }
   }
 
-  const enforced = enforceInvariants(parsed!, activeTrip !== null)
+  const merchantKeyForGuards = txn.merchantNormalized ?? txn.merchantRaw
+  const enforced = enforceInvariants(parsed!, activeTrip !== null, merchantKeyForGuards)
 
   // AuditEvent
   await prisma.auditEvent.create({

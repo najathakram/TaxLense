@@ -35,6 +35,10 @@ export interface Derived {
   evidenceTier: number
   reasoning: string
   source: ClassificationSource
+  /** §274(d) structured substantiation — written to Classification.substantiation
+   *  so the audit packet, A08 assertion, and per-row ledger view all read from
+   *  the same place. Only populated for section_274d answers in V1. */
+  substantiation?: Record<string, unknown>
 }
 
 export function deriveFromAnswer(
@@ -197,6 +201,15 @@ export function deriveFromAnswer(
         evidenceTier: 2,
         reasoning: `Attendees: ${answer.attendees}. Relationship: ${answer.relationship}. Purpose: ${answer.purpose}.${answer.outcome ? ` Outcome: ${answer.outcome}.` : ""}`,
         source: "USER",
+        substantiation: {
+          attendees: answer.attendees,
+          relationship: answer.relationship,
+          purpose: answer.purpose,
+          ...(answer.outcome ? { outcome: answer.outcome } : {}),
+          // capturedAt lets the audit packet show *when* the substantiation was
+          // recorded, in case the IRS needs to test contemporaneousness.
+          capturedAt: new Date().toISOString(),
+        },
       }
   }
   throw new Error("Unknown StopAnswer shape")

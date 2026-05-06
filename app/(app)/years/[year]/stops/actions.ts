@@ -41,7 +41,10 @@ export async function resolveStop(
           })
         : []
 
-      // Flip and insert per-transaction
+      // Flip and insert per-transaction. The substantiation JSON (when present
+      // — §274(d) answers carry it) is written here so that A08, the audit
+      // packet, and the ledger all read from Classification.substantiation
+      // rather than from StopItem.userAnswer.
       for (const txId of txIds) {
         await tx.classification.updateMany({
           where: { transactionId: txId, isCurrent: true },
@@ -58,6 +61,9 @@ export async function resolveStop(
             evidenceTier: derived.evidenceTier,
             source: derived.source,
             reasoning: derived.reasoning,
+            substantiation: derived.substantiation
+              ? (derived.substantiation as Prisma.InputJsonValue)
+              : undefined,
             isCurrent: true,
             createdByUserId: userId,
           },

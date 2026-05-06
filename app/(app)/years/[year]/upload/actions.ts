@@ -14,7 +14,7 @@ import { after } from "next/server"
 import { getCurrentUserId } from "@/lib/auth"
 import { getClientContext } from "@/lib/cpa/clientContext"
 import { prisma } from "@/lib/db"
-import { parseStatement, fileHash, transactionKey } from "@/lib/parsers"
+import { parseStatement, fileHash, transactionKey, partitionByTaxYear } from "@/lib/parsers"
 import {
   openOrGetSession,
   chargeApiCall,
@@ -177,6 +177,8 @@ export type ParseImportResult =
       importId: string
       txCount: number
       skipped: number
+      /** Rows whose postedDate fell outside the TaxYear and were dropped per A10. */
+      outOfYearCount: number
       institution: string | null
       sessionId: string
       apiCallsUsed: number
@@ -299,10 +301,16 @@ async function _doParseImport(importId: string, year: number): Promise<ParseImpo
     } as ParseImportResult
   }
 
+  // Filter out rows that fall outside this TaxYear (assertion A10).
+  // Statements that span a year boundary (Dec → Jan PDFs) often contain rows
+  // for both years; only the in-year rows belong here. Out-of-year rows are
+  // surfaced through `userNotes.out_of_year_warning` and the result type.
+  const { inYear, outOfYear } = partitionByTaxYear(parseResult.transactions, imp.taxYear.year)
+
   let inserted = 0
   let skipped = 0
 
-  for (const tx of parseResult.transactions) {
+  for (const tx of inYear) {
     const iKey = transactionKey(imp.accountId, tx.postedDate, tx.amountNormalized, tx.merchantRaw)
     const exists = await prisma.transaction.findUnique({ where: { idempotencyKey: iKey } })
     if (exists) { skipped++; continue }
@@ -322,6 +330,25 @@ async function _doParseImport(importId: string, year: number): Promise<ParseImpo
       },
     })
     inserted++
+  }
+
+  if (outOfYear.length > 0) {
+    const existingNotes = (imp.userNotes as Record<string, unknown> | null) ?? {}
+    const sampleDates = outOfYear.slice(0, 5).map((t) => t.postedDate.toISOString().slice(0, 10))
+    await prisma.statementImport.update({
+      where: { id: importId },
+      data: {
+        userNotes: {
+          ...existingNotes,
+          out_of_year_warning: {
+            count: outOfYear.length,
+            taxYear: imp.taxYear.year,
+            sampleDates,
+            message: `${outOfYear.length} transaction${outOfYear.length === 1 ? "" : "s"} outside ${imp.taxYear.year} were dropped (assertion A10). Move them to the correct TaxYear by uploading this statement under that year's account.`,
+          },
+        } as Prisma.InputJsonValue,
+      },
+    })
   }
 
   await prisma.statementImport.update({
@@ -346,7 +373,7 @@ async function _doParseImport(importId: string, year: number): Promise<ParseImpo
       periodStart: parseResult.periodStart ?? null,
       periodEnd: parseResult.periodEnd ?? null,
     },
-    transactions: parseResult.transactions.map((t) => ({
+    transactions: inYear.map((t) => ({
       postedDate: t.postedDate,
       amountNormalized: t.amountNormalized as unknown as import("@/app/generated/prisma/client").Prisma.Decimal,
       merchantRaw: t.merchantRaw,
@@ -369,6 +396,7 @@ async function _doParseImport(importId: string, year: number): Promise<ParseImpo
     importId: imp.id,
     txCount: inserted,
     skipped,
+    outOfYearCount: outOfYear.length,
     institution: parseResult.institution ?? null,
     sessionId: session.id,
     apiCallsUsed: sessionAfter.totalApiCalls,
@@ -537,7 +565,7 @@ export async function createAccount(input: z.infer<typeof CreateAccountSchema>):
 // ── reparseImport ─────────────────────────────────────────────────────────────
 
 export type ReparseResult =
-  | { ok: true; txCount: number; skipped: number }
+  | { ok: true; txCount: number; skipped: number; outOfYearCount: number }
   | { ok: false; error: string }
 
 export async function reparseImport(importId: string, year: number): Promise<ReparseResult> {
@@ -551,6 +579,8 @@ export async function reparseImport(importId: string, year: number): Promise<Rep
       originalFilename: true,
       accountId: true,
       taxYearId: true,
+      userNotes: true,
+      taxYear: { select: { year: true } },
     },
   })
 
@@ -596,10 +626,13 @@ export async function reparseImport(importId: string, year: number): Promise<Rep
     return { ok: false, error: parseResult.error ?? "Reparse failed" }
   }
 
+  // Filter out rows that fall outside this TaxYear (assertion A10).
+  const { inYear, outOfYear } = partitionByTaxYear(parseResult.transactions, imp.taxYear.year)
+
   let inserted = 0
   let skipped = 0
 
-  for (const tx of parseResult.transactions) {
+  for (const tx of inYear) {
     const iKey = transactionKey(imp.accountId, tx.postedDate, tx.amountNormalized, tx.merchantRaw)
     const exists = await prisma.transaction.findUnique({ where: { idempotencyKey: iKey } })
     if (exists) { skipped++; continue }
@@ -621,6 +654,25 @@ export async function reparseImport(importId: string, year: number): Promise<Rep
     inserted++
   }
 
+  if (outOfYear.length > 0) {
+    const existingNotes = (imp.userNotes as Record<string, unknown> | null) ?? {}
+    const sampleDates = outOfYear.slice(0, 5).map((t) => t.postedDate.toISOString().slice(0, 10))
+    await prisma.statementImport.update({
+      where: { id: importId },
+      data: {
+        userNotes: {
+          ...existingNotes,
+          out_of_year_warning: {
+            count: outOfYear.length,
+            taxYear: imp.taxYear.year,
+            sampleDates,
+            message: `${outOfYear.length} transaction${outOfYear.length === 1 ? "" : "s"} outside ${imp.taxYear.year} were dropped (assertion A10).`,
+          },
+        } as Prisma.InputJsonValue,
+      },
+    })
+  }
+
   await prisma.statementImport.update({
     where: { id: importId },
     data: { transactionCount: inserted },
@@ -629,5 +681,5 @@ export async function reparseImport(importId: string, year: number): Promise<Rep
   revalidatePath(`/years/${year}/upload`)
   revalidatePath(`/years/${year}/coverage`)
 
-  return { ok: true, txCount: inserted, skipped }
+  return { ok: true, txCount: inserted, skipped, outOfYearCount: outOfYear.length }
 }
