@@ -4,7 +4,8 @@ import { requireAuth } from "@/lib/auth"
 import { prisma } from "@/lib/db"
 import { getCurrentCpaContext } from "@/lib/cpa/clientContext"
 import { getAdminCpaContext } from "@/lib/admin/adminContext"
-import { Section, Card, Btn, Pill, Avi, fmtUSD, statusKey } from "@/components/v2/primitives"
+import { Section, Card, Btn, Pill, Avi } from "@/components/v2/primitives"
+import { fmtUSD, statusKey } from "@/components/v2/format"
 import { computeDeductibleAmt } from "@/lib/classification/deductible"
 
 export default async function ClientsPage() {

@@ -2,7 +2,8 @@ import { redirect, notFound } from "next/navigation"
 import Link from "next/link"
 import { prisma } from "@/lib/db"
 import { getCurrentAdminContext } from "@/lib/admin/adminContext"
-import { Section, Card, Btn, Pill, Avi, fmtDate, relTime } from "@/components/v2/primitives"
+import { Section, Card, Btn, Pill, Avi } from "@/components/v2/primitives"
+import { fmtDate, relTime } from "@/components/v2/format"
 import { ImpersonateButton } from "../impersonate-button"
 
 interface Props {

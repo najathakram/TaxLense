@@ -4,7 +4,8 @@ import { requireAuth } from "@/lib/auth"
 import { prisma } from "@/lib/db"
 import { getCurrentCpaContext } from "@/lib/cpa/clientContext"
 import { getAdminCpaContext } from "@/lib/admin/adminContext"
-import { Section, Card, KPI, Pill, Avi, fmtUSD, relTime } from "@/components/v2/primitives"
+import { Section, Card, KPI, Pill, Avi } from "@/components/v2/primitives"
+import { fmtUSD, relTime } from "@/components/v2/format"
 
 export default async function WorkspacePage() {
   await requireAuth()

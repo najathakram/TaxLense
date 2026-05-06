@@ -1,7 +1,8 @@
 import { redirect } from "next/navigation"
 import { prisma } from "@/lib/db"
 import { getCurrentAdminContext } from "@/lib/admin/adminContext"
-import { Section, KPI, Card, Btn, fmtUSD, relTime } from "@/components/v2/primitives"
+import { Section, KPI, Card, Btn } from "@/components/v2/primitives"
+import { fmtUSD, relTime } from "@/components/v2/format"
 import Link from "next/link"
 
 export default async function AdminHomePage() {
