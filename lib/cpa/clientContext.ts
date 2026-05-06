@@ -2,6 +2,7 @@ import { cache } from "react"
 import { cookies } from "next/headers"
 import { auth } from "@/auth"
 import { prisma } from "@/lib/db"
+import { getAdminCpaContext } from "@/lib/admin/adminContext"
 
 export const CLIENT_CONTEXT_COOKIE = "taxlens_client_ctx"
 export const RECENT_CLIENTS_COOKIE = "taxlens_recent_clients"
@@ -22,7 +23,17 @@ export const getClientContext = cache(async (): Promise<ClientContext | null> =>
   if (!val) return null
 
   const [cpaId, clientId] = val.split(":")
-  if (!cpaId || !clientId || cpaId !== session.user.id) return null
+  if (!cpaId || !clientId) return null
+
+  // Cookie cpaId must equal one of:
+  //   1. the logged-in user (a CPA in their own session), or
+  //   2. the CPA currently being impersonated by an admin.
+  // Anything else means a stale/spoofed cookie.
+  const adminCpaCtx = await getAdminCpaContext()
+  const allowedCpaIds = new Set<string>()
+  allowedCpaIds.add(session.user.id)
+  if (adminCpaCtx?.cpaId) allowedCpaIds.add(adminCpaCtx.cpaId)
+  if (!allowedCpaIds.has(cpaId)) return null
 
   const rel = await prisma.cpaClient.findUnique({
     where: { cpaUserId_clientUserId: { cpaUserId: cpaId, clientUserId: clientId } },
