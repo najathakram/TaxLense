@@ -1,12 +1,14 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useTransition } from "react"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
 import { Pencil } from "lucide-react"
 import { US_STATES, TOP_NAICS_CODES } from "@/app/(app)/onboarding/constants"
-import { saveProfileEdit } from "@/app/(app)/onboarding/actions"
+import { saveProfileEdit, saveLegalName } from "@/app/(app)/onboarding/actions"
 import Step1 from "@/app/(app)/onboarding/steps/step1"
 import Step2 from "@/app/(app)/onboarding/steps/step2"
 import Step3 from "@/app/(app)/onboarding/steps/step3"
@@ -18,11 +20,20 @@ import Step8 from "@/app/(app)/onboarding/steps/step8"
 import Step9 from "@/app/(app)/onboarding/steps/step9"
 import type { WizardData } from "@/app/(app)/onboarding/types"
 
-type Props = { profileData: Partial<WizardData> }
+type Props = {
+  profileData: Partial<WizardData>
+  legalName?: string
+  email?: string
+}
 
-export default function ProfileEditClient({ profileData }: Props) {
+export default function ProfileEditClient({ profileData, legalName: initialLegalName = "", email = "" }: Props) {
   const [data, setData] = useState<Partial<WizardData>>(profileData)
   const [editStep, setEditStep] = useState<number | null>(null)
+  const [legalName, setLegalName] = useState(initialLegalName)
+  const [legalNameDraft, setLegalNameDraft] = useState(initialLegalName)
+  const [legalNameDialogOpen, setLegalNameDialogOpen] = useState(false)
+  const [legalNameError, setLegalNameError] = useState<string | null>(null)
+  const [isSavingLegalName, startSavingLegalName] = useTransition()
 
   const handleSave = (stepData: Partial<WizardData>) => {
     setData((prev) => ({ ...prev, ...stepData }))
@@ -52,8 +63,49 @@ export default function ProfileEditClient({ profileData }: Props) {
     )
   }
 
+  const handleSaveLegalName = () => {
+    setLegalNameError(null)
+    startSavingLegalName(async () => {
+      const trimmed = legalNameDraft.trim()
+      if (!trimmed) {
+        setLegalNameError("Legal name is required")
+        return
+      }
+      const res = await saveLegalName({ name: trimmed })
+      if (!res.ok) {
+        setLegalNameError(res.error)
+        return
+      }
+      setLegalName(trimmed)
+      setLegalNameDialogOpen(false)
+    })
+  }
+
   return (
     <div className="space-y-4">
+      <div className="border rounded-lg p-4 space-y-2">
+        <div className="flex items-center justify-between">
+          <h3 className="font-semibold text-sm">Identity</h3>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => {
+              setLegalNameDraft(legalName)
+              setLegalNameError(null)
+              setLegalNameDialogOpen(true)
+            }}
+          >
+            <Pencil className="h-3 w-3 mr-1" /> Edit name
+          </Button>
+        </div>
+        <dl className="grid grid-cols-2 gap-x-4 gap-y-1 text-sm">
+          <dt className="text-muted-foreground">Legal name</dt>
+          <dd>{legalName || <span className="text-muted-foreground italic">Not set</span>}</dd>
+          <dt className="text-muted-foreground">Email</dt>
+          <dd className="font-mono text-xs">{email || "—"}</dd>
+        </dl>
+      </div>
+
       <Section title="Basics" step={1}>
         <dl className="grid grid-cols-2 gap-x-4 gap-y-1 text-sm">
           <dt className="text-muted-foreground">Tax year</dt><dd>{data.year}</dd>
@@ -132,6 +184,39 @@ export default function ProfileEditClient({ profileData }: Props) {
             </div>
           ))}
       </Section>
+
+      {/* Legal name edit dialog */}
+      <Dialog open={legalNameDialogOpen} onOpenChange={(o) => !o && setLegalNameDialogOpen(false)}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Edit legal name</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3 mt-2">
+            <div className="space-y-1.5">
+              <Label htmlFor="legal-name">Legal name</Label>
+              <Input
+                id="legal-name"
+                value={legalNameDraft}
+                onChange={(e) => setLegalNameDraft(e.target.value)}
+                onKeyDown={(e) => { if (e.key === "Enter") handleSaveLegalName() }}
+                disabled={isSavingLegalName}
+                autoFocus
+              />
+            </div>
+            {legalNameError && (
+              <p className="text-sm text-destructive">{legalNameError}</p>
+            )}
+            <div className="flex justify-end gap-2">
+              <Button variant="ghost" onClick={() => setLegalNameDialogOpen(false)} disabled={isSavingLegalName}>
+                Cancel
+              </Button>
+              <Button onClick={handleSaveLegalName} disabled={isSavingLegalName}>
+                {isSavingLegalName ? "Saving…" : "Save"}
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       {/* Edit Dialog */}
       <Dialog open={editStep !== null} onOpenChange={(o) => !o && setEditStep(null)}>

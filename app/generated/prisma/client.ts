@@ -107,6 +107,11 @@ export type StatementImport = Prisma.StatementImportModel
  */
 export type ImportSession = Prisma.ImportSessionModel
 /**
+ * Model PipelineRun
+ * 
+ */
+export type PipelineRun = Prisma.PipelineRunModel
+/**
  * Model Transaction
  * 
  */

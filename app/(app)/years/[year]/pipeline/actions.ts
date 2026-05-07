@@ -1,5 +1,7 @@
 "use server"
 
+import { after } from "next/server"
+import { revalidatePath } from "next/cache"
 import { getCurrentUserId } from "@/lib/auth"
 import { prisma } from "@/lib/db"
 import { normalizeMerchantsForYear, applyMerchantRules } from "@/lib/classification/apply"
@@ -12,7 +14,12 @@ import { runResidualPass } from "@/lib/ai/residualTransaction"
 import { runBulkClassifyPass } from "@/lib/ai/bulkClassify"
 import { autoResolveStops } from "@/app/(app)/years/[year]/stops/actions"
 import { deriveStopsFromAssertions } from "@/lib/stops/deriveFromAssertions"
-import { revalidatePath } from "next/cache"
+import {
+  startPipelineRun,
+  executePipelineRun,
+  getLatestRunByKind,
+} from "@/lib/jobs/pipelineRun"
+import type { Prisma, PipelineRunKind } from "@/app/generated/prisma/client"
 
 async function getTaxYear(userId: string, year: number) {
   const taxYear = await prisma.taxYear.findUnique({
@@ -22,81 +29,142 @@ async function getTaxYear(userId: string, year: number) {
   return taxYear
 }
 
-export async function runNormalizeMerchants(year: number) {
+async function alreadyRunning(taxYearId: string, kind: PipelineRunKind): Promise<string | null> {
+  const latest = await getLatestRunByKind(taxYearId, kind)
+  return latest && latest.status === "RUNNING" ? latest.id : null
+}
+
+/**
+ * Generic background-runner wrapper. Returns the runId so the page can poll
+ * its status. The `op` is executed inside an `after()` hook so the calling
+ * server action returns within ~100ms regardless of how long the AI work
+ * takes.
+ */
+type RunOp = (
+  taxYearId: string,
+  setProgress: (p: Prisma.InputJsonValue) => Promise<void>,
+) => Promise<unknown>
+
+/**
+ * Round-trips through JSON to drop Decimals / Dates / unsupported types from
+ * the pipeline-step return values before persisting in PipelineRun.result.
+ */
+function toJson(value: unknown): Prisma.InputJsonValue {
+  return JSON.parse(JSON.stringify(value ?? null))
+}
+
+async function enqueue(
+  year: number,
+  kind: PipelineRunKind,
+  op: RunOp,
+): Promise<{ runId: string; reused?: boolean }> {
   const userId = await getCurrentUserId()
   const taxYear = await getTaxYear(userId, year)
-  const updated = await normalizeMerchantsForYear(taxYear.id)
-  revalidatePath(`/years/${year}/pipeline`)
-  return { updated }
+
+  // De-dupe: if a run of the same kind is already RUNNING, return its id
+  // instead of starting another one.
+  const existing = await alreadyRunning(taxYear.id, kind)
+  if (existing) return { runId: existing, reused: true }
+
+  const run = await startPipelineRun({ taxYearId: taxYear.id, kind })
+  after(async () => {
+    await executePipelineRun(run.id, async (setProgress) => {
+      const result = await op(taxYear.id, setProgress)
+      // Revalidate after the heavy work is done, so the page shows fresh data.
+      revalidatePath(`/years/${year}/pipeline`)
+      revalidatePath(`/years/${year}/ledger`)
+      revalidatePath(`/years/${year}/stops`)
+      return toJson(result)
+    })
+  })
+
+  return { runId: run.id }
+}
+
+export async function runNormalizeMerchants(year: number) {
+  return enqueue(year, "NORMALIZE_MERCHANTS", async (taxYearId) => {
+    const updated = await normalizeMerchantsForYear(taxYearId)
+    return { updated }
+  })
 }
 
 export async function runMatchTransfers(year: number) {
-  const userId = await getCurrentUserId()
-  const taxYear = await getTaxYear(userId, year)
-  const result = await matchTransfers(taxYear.id)
-  revalidatePath(`/years/${year}/pipeline`)
-  return result
+  return enqueue(year, "MATCH_TRANSFERS", async (taxYearId) => {
+    return matchTransfers(taxYearId)
+  })
 }
 
 export async function runMatchPayments(year: number) {
-  const userId = await getCurrentUserId()
-  const taxYear = await getTaxYear(userId, year)
-  const result = await matchCardPayments(taxYear.id)
-  revalidatePath(`/years/${year}/pipeline`)
-  return result
+  return enqueue(year, "MATCH_PAYMENTS", async (taxYearId) => {
+    return matchCardPayments(taxYearId)
+  })
 }
 
 export async function runMatchRefunds(year: number) {
-  const userId = await getCurrentUserId()
-  const taxYear = await getTaxYear(userId, year)
-  const result = await matchRefunds(taxYear.id)
-  revalidatePath(`/years/${year}/pipeline`)
-  return result
+  return enqueue(year, "MATCH_REFUNDS", async (taxYearId) => {
+    return matchRefunds(taxYearId)
+  })
 }
 
 export async function runMerchantAI(year: number) {
-  const userId = await getCurrentUserId()
-  const taxYear = await getTaxYear(userId, year)
-  const result = await runMerchantIntelligence(taxYear.id)
-  revalidatePath(`/years/${year}/pipeline`)
-  return result
+  return enqueue(year, "MERCHANT_AI", async (taxYearId) => {
+    return runMerchantIntelligence(taxYearId)
+  })
 }
 
 export async function runApplyRules(year: number) {
-  const userId = await getCurrentUserId()
-  const taxYear = await getTaxYear(userId, year)
-  const result = await applyMerchantRules(taxYear.id)
-  // After applying rules, materialize STOPs for the conditions that A08 and A13
-  // detect (missing meal substantiation and unclassified deposits) so the
-  // dashboard and the STOPs queue stay in agreement.
-  const stopsFromAssertions = await deriveStopsFromAssertions(taxYear.id)
-  revalidatePath(`/years/${year}/pipeline`)
-  revalidatePath(`/years/${year}/stops`)
-  return { ...result, ...stopsFromAssertions }
+  return enqueue(year, "APPLY_RULES", async (taxYearId) => {
+    const result = await applyMerchantRules(taxYearId)
+    // After applying rules, materialize STOPs for the conditions that A08 and
+    // A13 detect (missing meal substantiation and unclassified deposits) so the
+    // dashboard and the STOPs queue stay in agreement.
+    const stopsFromAssertions = await deriveStopsFromAssertions(taxYearId)
+    return { ...result, ...stopsFromAssertions }
+  })
 }
 
 export async function runResidualAI(year: number) {
-  const userId = await getCurrentUserId()
-  const taxYear = await getTaxYear(userId, year)
-  const candidates = await selectResidualCandidates(taxYear.id)
-  const result = await runResidualPass(taxYear.id, candidates)
-  revalidatePath(`/years/${year}/pipeline`)
-  revalidatePath(`/years/${year}/ledger`)
-  return { candidates: candidates.length, classified: result.classified, escalated: result.stops }
+  return enqueue(year, "RESIDUAL_AI", async (taxYearId) => {
+    const candidates = await selectResidualCandidates(taxYearId)
+    const result = await runResidualPass(taxYearId, candidates)
+    return {
+      candidates: candidates.length,
+      classified: result.classified,
+      escalated: result.stops,
+    }
+  })
 }
 
 export async function runBulkClassify(year: number) {
   const userId = await getCurrentUserId()
-  const taxYear = await getTaxYear(userId, year)
-  const result = await runBulkClassifyPass(taxYear.id, userId)
-  revalidatePath(`/years/${year}/pipeline`)
-  revalidatePath(`/years/${year}/ledger`)
-  revalidatePath(`/years/${year}/stops`)
-  return result
+  return enqueue(year, "BULK_CLASSIFY", async (taxYearId) => {
+    return runBulkClassifyPass(taxYearId, userId)
+  })
 }
 
 export async function runAutoResolveStops(year: number) {
-  const result = await autoResolveStops(year)
-  revalidatePath(`/years/${year}/pipeline`)
-  return result
+  return enqueue(year, "AUTO_RESOLVE_STOPS", async () => {
+    return autoResolveStops(year)
+  })
+}
+
+/**
+ * Status-polling endpoint exposed as a server action. The pipeline page calls
+ * this periodically while a run is RUNNING.
+ */
+export async function getPipelineRunStatus(runId: string) {
+  const run = await prisma.pipelineRun.findUnique({
+    where: { id: runId },
+    select: {
+      id: true,
+      status: true,
+      progress: true,
+      result: true,
+      lastError: true,
+      kind: true,
+      startedAt: true,
+      finishedAt: true,
+    },
+  })
+  return run
 }

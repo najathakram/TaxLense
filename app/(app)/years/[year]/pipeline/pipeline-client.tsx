@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useTransition } from "react"
+import { useEffect, useRef, useState, useTransition } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
@@ -14,6 +14,7 @@ import {
   runResidualAI,
   runBulkClassify,
   runAutoResolveStops,
+  getPipelineRunStatus,
 } from "./actions"
 
 interface PipelineStats {
@@ -38,23 +39,68 @@ interface StepResult {
   ok: boolean
 }
 
+interface RunHandle {
+  runId: string
+  reused?: boolean
+}
+
+const POLL_INTERVAL_MS = 2_000
+
 export function PipelineClient({ year, initial }: PipelineClientProps) {
-  const [stats, setStats] = useState(initial)
+  const [stats] = useState(initial)
   const [results, setResults] = useState<StepResult[]>([])
   const [isPending, startTransition] = useTransition()
   const [fullAutoRunning, setFullAutoRunning] = useState(false)
+  const [activeRun, setActiveRun] = useState<{ runId: string; label: string } | null>(null)
+  const [progress, setProgress] = useState<Record<string, unknown>>({})
+  const pollRef = useRef<ReturnType<typeof setInterval> | null>(null)
 
   function addResult(label: string, detail: string, ok: boolean) {
     setResults((prev) => [...prev, { label, detail, ok }])
   }
 
-  function run(action: () => Promise<unknown>, label: string) {
+  // Poll the active run until it leaves RUNNING. Stops the poll, reloads the
+  // page so server-rendered stats refresh.
+  useEffect(() => {
+    if (!activeRun) {
+      if (pollRef.current) {
+        clearInterval(pollRef.current)
+        pollRef.current = null
+      }
+      return
+    }
+    const tick = async () => {
+      const status = await getPipelineRunStatus(activeRun.runId)
+      if (!status) return
+      setProgress((status.progress as Record<string, unknown>) ?? {})
+      if (status.status === "DONE") {
+        addResult(activeRun.label, JSON.stringify(status.result, null, 0), true)
+        setActiveRun(null)
+        setFullAutoRunning(false)
+        setTimeout(() => window.location.reload(), 250)
+      } else if (status.status === "FAILED") {
+        addResult(activeRun.label, status.lastError ?? "failed", false)
+        setActiveRun(null)
+        setFullAutoRunning(false)
+      }
+    }
+    void tick()
+    pollRef.current = setInterval(tick, POLL_INTERVAL_MS)
+    return () => {
+      if (pollRef.current) clearInterval(pollRef.current)
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeRun?.runId])
+
+  function run(action: () => Promise<RunHandle>, label: string) {
     startTransition(async () => {
       try {
-        const result = await action()
-        addResult(label, JSON.stringify(result, null, 0), true)
-        // Refresh stats — server component will revalidate on next render
-        window.location.reload()
+        const handle = await action()
+        setProgress({})
+        setActiveRun({ runId: handle.runId, label })
+        if (handle.reused) {
+          addResult(label, `(re-attached to in-progress run ${handle.runId})`, true)
+        }
       } catch (err) {
         addResult(label, String(err), false)
       }
@@ -63,22 +109,22 @@ export function PipelineClient({ year, initial }: PipelineClientProps) {
 
   async function runFullAutoClassify() {
     setFullAutoRunning(true)
-    const steps789 = [
+    const stepsList = [
       { fn: () => runResidualAI(year), label: "7. Residual AI Pass" },
       { fn: () => runBulkClassify(year), label: "8. CPA Bulk Classify" },
       { fn: () => runAutoResolveStops(year), label: "9. Auto-Resolve Stops" },
     ]
-    for (const step of steps789) {
+    for (const step of stepsList) {
       try {
-        const result = await step.fn()
-        addResult(step.label, JSON.stringify(result, null, 0), true)
+        const handle = await step.fn()
+        await waitForRun(handle.runId, step.label, addResult)
       } catch (err) {
         addResult(step.label, String(err), false)
         break
       }
     }
     setFullAutoRunning(false)
-    window.location.reload()
+    setTimeout(() => window.location.reload(), 250)
   }
 
   const steps = [
@@ -150,8 +196,29 @@ export function PipelineClient({ year, initial }: PipelineClientProps) {
     },
   ]
 
+  const runDisabled = isPending || fullAutoRunning || activeRun !== null
+
   return (
     <div className="space-y-6">
+      {/* Live progress banner — visible only when a run is active */}
+      {activeRun && (
+        <Card>
+          <CardContent className="py-4">
+            <div className="flex items-center justify-between gap-4">
+              <div>
+                <p className="font-medium text-sm">{activeRun.label}</p>
+                <p className="text-xs text-muted-foreground">
+                  Running in background · runId {activeRun.runId.slice(0, 12)}…
+                </p>
+              </div>
+              <span className="text-xs font-mono text-muted-foreground">
+                {Object.keys(progress).length > 0 ? JSON.stringify(progress) : "starting…"}
+              </span>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
       {/* Stats overview */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <StatCard label="Total transactions" value={stats.totalTx} />
@@ -175,10 +242,10 @@ export function PipelineClient({ year, initial }: PipelineClientProps) {
               <Button
                 size="sm"
                 variant="outline"
-                disabled={isPending || fullAutoRunning}
+                disabled={runDisabled}
                 onClick={() => run(step.action, step.label)}
               >
-                {isPending ? "Running…" : "Run"}
+                {runDisabled ? "Running…" : "Run"}
               </Button>
             </CardContent>
           </Card>
@@ -196,7 +263,7 @@ export function PipelineClient({ year, initial }: PipelineClientProps) {
           </div>
           <Button
             size="sm"
-            disabled={isPending || fullAutoRunning}
+            disabled={runDisabled}
             onClick={runFullAutoClassify}
             className="shrink-0"
           >
@@ -216,10 +283,10 @@ export function PipelineClient({ year, initial }: PipelineClientProps) {
               <Button
                 size="sm"
                 variant="outline"
-                disabled={isPending || fullAutoRunning}
+                disabled={runDisabled}
                 onClick={() => run(step.action, step.label)}
               >
-                {isPending ? "Running…" : "Run"}
+                {runDisabled ? "Running…" : "Run"}
               </Button>
             </CardContent>
           </Card>
@@ -246,6 +313,26 @@ export function PipelineClient({ year, initial }: PipelineClientProps) {
       )}
     </div>
   )
+}
+
+async function waitForRun(
+  runId: string,
+  label: string,
+  addResult: (label: string, detail: string, ok: boolean) => void,
+): Promise<void> {
+  for (;;) {
+    await new Promise((r) => setTimeout(r, POLL_INTERVAL_MS))
+    const status = await getPipelineRunStatus(runId)
+    if (!status) return
+    if (status.status === "DONE") {
+      addResult(label, JSON.stringify(status.result, null, 0), true)
+      return
+    }
+    if (status.status === "FAILED") {
+      addResult(label, status.lastError ?? "failed", false)
+      throw new Error(status.lastError ?? "failed")
+    }
+  }
 }
 
 function StatCard({ label, value }: { label: string; value: number }) {

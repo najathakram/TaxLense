@@ -397,6 +397,7 @@ export const ModelName = {
   FinancialAccount: 'FinancialAccount',
   StatementImport: 'StatementImport',
   ImportSession: 'ImportSession',
+  PipelineRun: 'PipelineRun',
   Transaction: 'Transaction',
   Classification: 'Classification',
   MerchantRule: 'MerchantRule',
@@ -419,7 +420,7 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
     omit: GlobalOmitOptions
   }
   meta: {
-    modelProps: "user" | "cpaClient" | "account" | "session" | "verificationToken" | "ruleVersion" | "taxYear" | "businessProfile" | "knownEntity" | "trip" | "financialAccount" | "statementImport" | "importSession" | "transaction" | "classification" | "merchantRule" | "stopItem" | "auditEvent" | "report" | "document"
+    modelProps: "user" | "cpaClient" | "account" | "session" | "verificationToken" | "ruleVersion" | "taxYear" | "businessProfile" | "knownEntity" | "trip" | "financialAccount" | "statementImport" | "importSession" | "pipelineRun" | "transaction" | "classification" | "merchantRule" | "stopItem" | "auditEvent" | "report" | "document"
     txIsolationLevel: TransactionIsolationLevel
   }
   model: {
@@ -1385,6 +1386,80 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
         }
       }
     }
+    PipelineRun: {
+      payload: Prisma.$PipelineRunPayload<ExtArgs>
+      fields: Prisma.PipelineRunFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.PipelineRunFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PipelineRunPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.PipelineRunFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PipelineRunPayload>
+        }
+        findFirst: {
+          args: Prisma.PipelineRunFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PipelineRunPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.PipelineRunFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PipelineRunPayload>
+        }
+        findMany: {
+          args: Prisma.PipelineRunFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PipelineRunPayload>[]
+        }
+        create: {
+          args: Prisma.PipelineRunCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PipelineRunPayload>
+        }
+        createMany: {
+          args: Prisma.PipelineRunCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.PipelineRunCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PipelineRunPayload>[]
+        }
+        delete: {
+          args: Prisma.PipelineRunDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PipelineRunPayload>
+        }
+        update: {
+          args: Prisma.PipelineRunUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PipelineRunPayload>
+        }
+        deleteMany: {
+          args: Prisma.PipelineRunDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.PipelineRunUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.PipelineRunUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PipelineRunPayload>[]
+        }
+        upsert: {
+          args: Prisma.PipelineRunUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PipelineRunPayload>
+        }
+        aggregate: {
+          args: Prisma.PipelineRunAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregatePipelineRun>
+        }
+        groupBy: {
+          args: Prisma.PipelineRunGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.PipelineRunGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.PipelineRunCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.PipelineRunCountAggregateOutputType> | number
+        }
+      }
+    }
     Transaction: {
       payload: Prisma.$TransactionPayload<ExtArgs>
       fields: Prisma.TransactionFieldRefs
@@ -2145,6 +2220,24 @@ export const ImportSessionScalarFieldEnum = {
 export type ImportSessionScalarFieldEnum = (typeof ImportSessionScalarFieldEnum)[keyof typeof ImportSessionScalarFieldEnum]
 
 
+export const PipelineRunScalarFieldEnum = {
+  id: 'id',
+  taxYearId: 'taxYearId',
+  kind: 'kind',
+  status: 'status',
+  progress: 'progress',
+  result: 'result',
+  lastError: 'lastError',
+  startedAt: 'startedAt',
+  finishedAt: 'finishedAt',
+  initiatedByUserId: 'initiatedByUserId',
+  actorCpaUserId: 'actorCpaUserId',
+  actorAdminUserId: 'actorAdminUserId'
+} as const
+
+export type PipelineRunScalarFieldEnum = (typeof PipelineRunScalarFieldEnum)[keyof typeof PipelineRunScalarFieldEnum]
+
+
 export const TransactionScalarFieldEnum = {
   id: 'id',
   statementImportId: 'statementImportId',
@@ -2567,6 +2660,34 @@ export type ListEnumImportSessionStatusFieldRefInput<$PrismaModel> = FieldRefInp
 
 
 /**
+ * Reference to a field of type 'PipelineRunKind'
+ */
+export type EnumPipelineRunKindFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'PipelineRunKind'>
+    
+
+
+/**
+ * Reference to a field of type 'PipelineRunKind[]'
+ */
+export type ListEnumPipelineRunKindFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'PipelineRunKind[]'>
+    
+
+
+/**
+ * Reference to a field of type 'PipelineRunStatus'
+ */
+export type EnumPipelineRunStatusFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'PipelineRunStatus'>
+    
+
+
+/**
+ * Reference to a field of type 'PipelineRunStatus[]'
+ */
+export type ListEnumPipelineRunStatusFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'PipelineRunStatus[]'>
+    
+
+
+/**
  * Reference to a field of type 'ClassificationSource'
  */
 export type EnumClassificationSourceFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'ClassificationSource'>
@@ -2757,6 +2878,7 @@ export type GlobalOmitConfig = {
   financialAccount?: Prisma.FinancialAccountOmit
   statementImport?: Prisma.StatementImportOmit
   importSession?: Prisma.ImportSessionOmit
+  pipelineRun?: Prisma.PipelineRunOmit
   transaction?: Prisma.TransactionOmit
   classification?: Prisma.ClassificationOmit
   merchantRule?: Prisma.MerchantRuleOmit
