@@ -35,9 +35,11 @@ export interface ApplyRulesResult {
   skipped: number
 }
 
+import type { ProgressReporter } from "@/lib/jobs/pipelineRun"
+
 export async function applyMerchantRules(
   taxYearId: string,
-  options: { force?: boolean; merchantKey?: string; tx?: PrismaLike } = {}
+  options: { force?: boolean; merchantKey?: string; tx?: PrismaLike; reportProgress?: ProgressReporter } = {}
 ): Promise<ApplyRulesResult> {
   const db: PrismaLike = options.tx ?? prisma
   // Load all merchant rules for this year (optionally filtered to one key)
@@ -72,7 +74,17 @@ export async function applyMerchantRules(
   let tripOverrides = 0
   let skipped = 0
 
-  for (const tx of txns) {
+  if (options.reportProgress) {
+    await options.reportProgress({
+      phase: "apply_rules",
+      processed: 0,
+      total: txns.length,
+      label: `Applying rules to ${txns.length} transaction${txns.length === 1 ? "" : "s"}…`,
+    })
+  }
+
+  for (let txIdx = 0; txIdx < txns.length; txIdx++) {
+    const tx = txns[txIdx]!
     // Check for existing current AI classification
     if (!options.force) {
       const existing = await db.classification.findFirst({
@@ -148,6 +160,26 @@ export async function applyMerchantRules(
     })
 
     classified++
+
+    if (options.reportProgress && (txIdx + 1) % 25 === 0) {
+      // Throttle reports — apply_rules is fast (~5ms/tx) but we still want
+      // visible progress on a 500-row ledger.
+      await options.reportProgress({
+        phase: "apply_rules",
+        processed: txIdx + 1,
+        total: txns.length,
+        label: `${classified} classified · ${tripOverrides} trip override${tripOverrides === 1 ? "" : "s"} · ${skipped} skipped`,
+      })
+    }
+  }
+
+  if (options.reportProgress) {
+    await options.reportProgress({
+      phase: "apply_rules",
+      processed: txns.length,
+      total: txns.length,
+      label: `Done · ${classified} classified · ${tripOverrides} trip override${tripOverrides === 1 ? "" : "s"} · ${skipped} skipped`,
+    })
   }
 
   return { classified, tripOverrides, skipped }

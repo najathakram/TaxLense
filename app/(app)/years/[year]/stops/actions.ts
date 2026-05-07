@@ -8,6 +8,7 @@ import { applyMerchantRules } from "@/lib/classification/apply"
 import type { Prisma, ClassificationSource } from "@/app/generated/prisma/client"
 import { deriveFromAnswer, type StopAnswer } from "@/lib/stops/derive"
 import { classifyStopsWithAI, type StopForAI } from "@/lib/ai/autoResolveStops"
+import type { ProgressReporter } from "@/lib/jobs/pipelineRun"
 export type { StopAnswer } from "@/lib/stops/derive"
 
 
@@ -182,7 +183,10 @@ export interface AutoResolveResult {
 
 const AUTO_RESOLVE_CONFIDENCE_THRESHOLD = 0.85
 
-export async function autoResolveStops(year: number): Promise<AutoResolveResult> {
+export async function autoResolveStops(
+  year: number,
+  reportProgress?: ProgressReporter,
+): Promise<AutoResolveResult> {
   const userId = await getCurrentUserId()
 
   const taxYear = await prisma.taxYear.findUnique({
@@ -231,6 +235,15 @@ export async function autoResolveStops(year: number): Promise<AutoResolveResult>
     `NAICS: ${taxYear.businessProfile?.naicsCode ?? ""}`,
   ].filter(Boolean).join(". ")
 
+  if (reportProgress) {
+    await reportProgress({
+      phase: "auto_resolve_stops",
+      processed: 0,
+      total: stops.length,
+      label: `Asking AI to resolve ${stops.length} STOP${stops.length === 1 ? "" : "s"}…`,
+    })
+  }
+
   // Call AI
   const aiResults = await classifyStopsWithAI(stopsForAI, businessContext)
   const resultMap = new Map(aiResults.map((r) => [r.stopId, r]))
@@ -240,7 +253,8 @@ export async function autoResolveStops(year: number): Promise<AutoResolveResult>
   let errors = 0
   const details: AutoResolveResult["details"] = []
 
-  for (const stop of stops) {
+  for (let stopIdx = 0; stopIdx < stops.length; stopIdx++) {
+    const stop = stops[stopIdx]!
     const ai = resultMap.get(stop.id)
     const mk = stop.merchantRule?.merchantKey ?? "UNKNOWN"
 
@@ -337,6 +351,15 @@ export async function autoResolveStops(year: number): Promise<AutoResolveResult>
     } catch {
       errors++
       details.push({ merchantKey: mk, code: ai.code, confidence: ai.confidence, status: "error" })
+    }
+
+    if (reportProgress) {
+      await reportProgress({
+        phase: "auto_resolve_stops",
+        processed: stopIdx + 1,
+        total: stops.length,
+        label: `${stopIdx + 1} of ${stops.length} · ${resolved} resolved · ${skipped} skipped · ${errors} error${errors === 1 ? "" : "s"}`,
+      })
     }
   }
 

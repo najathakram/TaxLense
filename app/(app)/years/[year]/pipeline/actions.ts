@@ -20,6 +20,7 @@ import {
   getLatestRunByKind,
 } from "@/lib/jobs/pipelineRun"
 import type { Prisma, PipelineRunKind } from "@/app/generated/prisma/client"
+import type { PipelineProgress, ProgressReporter } from "@/lib/jobs/pipelineRun"
 
 async function getTaxYear(userId: string, year: number) {
   const taxYear = await prisma.taxYear.findUnique({
@@ -42,7 +43,7 @@ async function alreadyRunning(taxYearId: string, kind: PipelineRunKind): Promise
  */
 type RunOp = (
   taxYearId: string,
-  setProgress: (p: Prisma.InputJsonValue) => Promise<void>,
+  setProgress: ProgressReporter,
 ) => Promise<unknown>
 
 /**
@@ -69,7 +70,12 @@ async function enqueue(
   const run = await startPipelineRun({ taxYearId: taxYear.id, kind })
   after(async () => {
     await executePipelineRun(run.id, async (setProgress) => {
-      const result = await op(taxYear.id, setProgress)
+      // Adapt the runner's raw-JSON setProgress into a typed ProgressReporter
+      // so downstream functions can publish a structured PipelineProgress
+      // payload without knowing about Prisma's InputJsonValue.
+      const reporter: ProgressReporter = (p: PipelineProgress) =>
+        setProgress(p as unknown as Prisma.InputJsonValue)
+      const result = await op(taxYear.id, reporter)
       // Revalidate after the heavy work is done, so the page shows fresh data.
       revalidatePath(`/years/${year}/pipeline`)
       revalidatePath(`/years/${year}/ledger`)
@@ -107,14 +113,14 @@ export async function runMatchRefunds(year: number) {
 }
 
 export async function runMerchantAI(year: number) {
-  return enqueue(year, "MERCHANT_AI", async (taxYearId) => {
-    return runMerchantIntelligence(taxYearId)
+  return enqueue(year, "MERCHANT_AI", async (taxYearId, setProgress) => {
+    return runMerchantIntelligence(taxYearId, undefined, setProgress)
   })
 }
 
 export async function runApplyRules(year: number) {
-  return enqueue(year, "APPLY_RULES", async (taxYearId) => {
-    const result = await applyMerchantRules(taxYearId)
+  return enqueue(year, "APPLY_RULES", async (taxYearId, setProgress) => {
+    const result = await applyMerchantRules(taxYearId, { reportProgress: setProgress })
     // After applying rules, materialize STOPs for the conditions that A08 and
     // A13 detect (missing meal substantiation and unclassified deposits) so the
     // dashboard and the STOPs queue stay in agreement.
@@ -124,9 +130,9 @@ export async function runApplyRules(year: number) {
 }
 
 export async function runResidualAI(year: number) {
-  return enqueue(year, "RESIDUAL_AI", async (taxYearId) => {
+  return enqueue(year, "RESIDUAL_AI", async (taxYearId, setProgress) => {
     const candidates = await selectResidualCandidates(taxYearId)
-    const result = await runResidualPass(taxYearId, candidates)
+    const result = await runResidualPass(taxYearId, candidates, undefined, setProgress)
     return {
       candidates: candidates.length,
       classified: result.classified,
@@ -137,14 +143,14 @@ export async function runResidualAI(year: number) {
 
 export async function runBulkClassify(year: number) {
   const userId = await getCurrentUserId()
-  return enqueue(year, "BULK_CLASSIFY", async (taxYearId) => {
-    return runBulkClassifyPass(taxYearId, userId)
+  return enqueue(year, "BULK_CLASSIFY", async (taxYearId, setProgress) => {
+    return runBulkClassifyPass(taxYearId, userId, undefined, setProgress)
   })
 }
 
 export async function runAutoResolveStops(year: number) {
-  return enqueue(year, "AUTO_RESOLVE_STOPS", async () => {
-    return autoResolveStops(year)
+  return enqueue(year, "AUTO_RESOLVE_STOPS", async (_taxYearId, setProgress) => {
+    return autoResolveStops(year, setProgress)
   })
 }
 
