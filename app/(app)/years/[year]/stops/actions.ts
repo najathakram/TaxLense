@@ -1,5 +1,6 @@
 "use server"
 
+import { after } from "next/server"
 import { prisma } from "@/lib/db"
 import { getCurrentUserId } from "@/lib/auth"
 import { revalidatePath } from "next/cache"
@@ -19,32 +20,44 @@ export async function resolveStop(
 ) {
   const userId = await getCurrentUserId()
 
+  // Read once outside the txn — needed for revalidate paths + the after()
+  // propagation step. Keeps the txn lean.
+  const stopBefore = await prisma.stopItem.findUnique({
+    where: { id: stopId },
+    include: { merchantRule: true, taxYear: true },
+  })
+  if (!stopBefore) throw new Error("StopItem not found")
+  if (stopBefore.taxYear.userId !== userId) throw new Error("Not authorized")
+  if (stopBefore.state !== "PENDING") throw new Error(`StopItem is already ${stopBefore.state}`)
+
+  const derived = deriveFromAnswer(answer, {
+    ruleCode: stopBefore.merchantRule?.code,
+    ruleLine: stopBefore.merchantRule?.scheduleCLine,
+  })
+
+  const txIds = stopBefore.transactionIds
+  const willPropagate =
+    applyToSimilar &&
+    stopBefore.category === "MERCHANT" &&
+    !!stopBefore.merchantRuleId &&
+    !!stopBefore.merchantRule?.merchantKey
+
+  // Tight transaction: only the immediate side-effects on THIS stop and its
+  // own transactions. Propagation to other matching transactions is moved to
+  // an after() hook so the user gets instant resolution feedback even when
+  // the merchant has 30+ rows.
   await prisma.$transaction(
     async (tx) => {
-      const stop = await tx.stopItem.findUnique({
-        where: { id: stopId },
-        include: { merchantRule: true, taxYear: true },
-      })
-      if (!stop) throw new Error("StopItem not found")
-      if (stop.taxYear.userId !== userId) throw new Error("Not authorized")
-      if (stop.state !== "PENDING") throw new Error(`StopItem is already ${stop.state}`)
-
-      const derived = deriveFromAnswer(answer, {
-        ruleCode: stop.merchantRule?.code,
-        ruleLine: stop.merchantRule?.scheduleCLine,
-      })
-
-      const txIds = stop.transactionIds
       const priorClassifications = txIds.length
         ? await tx.classification.findMany({
             where: { transactionId: { in: txIds }, isCurrent: true },
           })
         : []
 
-      // Flip and insert per-transaction. The substantiation JSON (when present
-      // — §274(d) answers carry it) is written here so that A08, the audit
-      // packet, and the ledger all read from Classification.substantiation
-      // rather than from StopItem.userAnswer.
+      // Flip + insert per affected transaction. The substantiation JSON
+      // (when present — §274(d) answers carry it) is written here so that
+      // A08, the audit packet, and the ledger all read from
+      // Classification.substantiation rather than from StopItem.userAnswer.
       for (const txId of txIds) {
         await tx.classification.updateMany({
           where: { transactionId: txId, isCurrent: true },
@@ -70,11 +83,12 @@ export async function resolveStop(
         })
       }
 
-      // MerchantRule update + re-apply
-      let ruleUpdated = false
-      if (applyToSimilar && stop.category === "MERCHANT" && stop.merchantRuleId) {
+      // MerchantRule update — atomic with the classifications above so a
+      // mid-flight failure doesn't leave the rule pointing at a code that
+      // hasn't been written. The rule UPDATE is one row, ~ms.
+      if (willPropagate) {
         await tx.merchantRule.update({
-          where: { id: stop.merchantRuleId },
+          where: { id: stopBefore.merchantRuleId! },
           data: {
             code: derived.code,
             scheduleCLine: derived.scheduleCLine,
@@ -88,15 +102,6 @@ export async function resolveStop(
             confidence: 1.0,
           },
         })
-        ruleUpdated = true
-
-        if (stop.merchantRule?.merchantKey) {
-          await applyMerchantRules(stop.taxYearId, {
-            merchantKey: stop.merchantRule.merchantKey,
-            tx: tx as unknown as Prisma.TransactionClient,
-            force: false,
-          })
-        }
       }
 
       await tx.auditEvent.create({
@@ -117,7 +122,7 @@ export async function resolveStop(
             code: derived.code,
             businessPct: derived.businessPct,
             applyToSimilar,
-            ruleUpdated,
+            ruleUpdated: willPropagate,
             txCount: txIds.length,
           },
           rationale: derived.reasoning,
@@ -133,19 +138,37 @@ export async function resolveStop(
         },
       })
     },
-    { timeout: 30_000 }
+    // 120s ceiling as a safety net — the new shape should land in <500ms,
+    // but a few legacy STOPs cover hundreds of txns and we don't want to
+    // hard-fail those at the ceiling.
+    { timeout: 120_000 }
   )
 
-  revalidatePath(`/years/${(await getYearFor(stopId)) ?? ""}/stops`)
-  revalidatePath(`/years/${(await getYearFor(stopId)) ?? ""}/ledger`)
-}
+  // Revalidate immediately so the page-level fetch on next render reflects
+  // the resolved STOP (banner / count / row strikethrough).
+  const year = stopBefore.taxYear.year
+  revalidatePath(`/years/${year}/stops`)
+  revalidatePath(`/years/${year}/ledger`)
 
-async function getYearFor(stopId: string): Promise<number | null> {
-  const s = await prisma.stopItem.findUnique({
-    where: { id: stopId },
-    include: { taxYear: true },
-  })
-  return s?.taxYear.year ?? null
+  // Propagate to other matching transactions in the background. Bulk
+  // re-classification of every TIM HORTONS row is the dominant cost on a
+  // 500+ ledger; doing it inside the request would push the resolve over
+  // the server-action timeout.
+  if (willPropagate && stopBefore.merchantRule?.merchantKey) {
+    const merchantKey = stopBefore.merchantRule.merchantKey
+    const taxYearId = stopBefore.taxYearId
+    after(async () => {
+      try {
+        await applyMerchantRules(taxYearId, { merchantKey, force: false })
+        revalidatePath(`/years/${year}/stops`)
+        revalidatePath(`/years/${year}/ledger`)
+      } catch (err) {
+        // Don't fail the user-facing action — the rule update is already
+        // committed, so a future Apply Rules run will pick it up.
+        console.error("[resolveStop] propagation after-hook failed:", err)
+      }
+    })
+  }
 }
 
 // ---------- AI auto-resolve ----------
@@ -234,6 +257,7 @@ export async function autoResolveStops(year: number): Promise<AutoResolveResult>
     }
 
     try {
+      const willPropagate = ai.applyToSimilar && !!stop.merchantRuleId && !!stop.merchantRule?.merchantKey
       await prisma.$transaction(async (tx) => {
         // Flip + insert classification for every transaction in this stop
         for (const txId of stop.transactionIds) {
@@ -258,10 +282,13 @@ export async function autoResolveStops(year: number): Promise<AutoResolveResult>
           })
         }
 
-        // Update merchant rule if applyToSimilar
-        if (ai.applyToSimilar && stop.merchantRuleId) {
+        // Update merchant rule (rule UPDATE only — propagation to other
+        // matching transactions is moved to an after() hook below so the
+        // per-stop $transaction stays under the timeout when a single
+        // rule covers 30+ ledger rows).
+        if (willPropagate) {
           await tx.merchantRule.update({
-            where: { id: stop.merchantRuleId },
+            where: { id: stop.merchantRuleId! },
             data: {
               code: ai.code,
               scheduleCLine: ai.scheduleCLine,
@@ -273,13 +300,6 @@ export async function autoResolveStops(year: number): Promise<AutoResolveResult>
               reasoning: ai.reasoning,
             },
           })
-          if (stop.merchantRule?.merchantKey) {
-            await applyMerchantRules(stop.taxYearId, {
-              merchantKey: stop.merchantRule.merchantKey,
-              tx: tx as unknown as Prisma.TransactionClient,
-              force: false,
-            })
-          }
         }
 
         await tx.stopItem.update({
@@ -298,7 +318,19 @@ export async function autoResolveStops(year: number): Promise<AutoResolveResult>
             rationale: ai.reasoning,
           },
         })
-      }, { timeout: 30_000 })
+      }, { timeout: 120_000 })
+
+      if (willPropagate && stop.merchantRule?.merchantKey) {
+        const merchantKey = stop.merchantRule.merchantKey
+        const taxYearId = stop.taxYearId
+        after(async () => {
+          try {
+            await applyMerchantRules(taxYearId, { merchantKey, force: false })
+          } catch (err) {
+            console.error("[autoResolveStops] propagation after-hook failed:", err)
+          }
+        })
+      }
 
       resolved++
       details.push({ merchantKey: mk, code: ai.code, confidence: ai.confidence, status: "resolved" })
