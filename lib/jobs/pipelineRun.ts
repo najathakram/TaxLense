@@ -24,6 +24,30 @@ import { auth } from "@/auth"
 import { getCurrentCpaContext } from "@/lib/cpa/clientContext"
 import { getAdminCpaContext } from "@/lib/admin/adminContext"
 
+/**
+ * Shared progress shape that every long-running pipeline operation reports.
+ * The pipeline page renders this directly into a floating progress panel.
+ *
+ * `phase` is a stable machine string ("merchant_ai", "bulk_classify",
+ * "residual_ai", "apply_rules", "auto_resolve_stops") so the UI can pick
+ * a friendly label and color. `label` is the human-readable detail line
+ * shown under the phase title (e.g. "TIM HORTONS · batch 12 of 27").
+ */
+export interface PipelineProgress {
+  phase: string
+  processed: number
+  total: number
+  label?: string
+  costUsd?: number
+}
+
+/**
+ * Optional reporter passed to AI/classification functions so they can call
+ * back into the runner with per-step progress. Intentionally permissive in
+ * its return shape — sync `void` is fine, async fire-and-forget is fine too.
+ */
+export type ProgressReporter = (p: PipelineProgress) => Promise<void> | void
+
 export interface StartPipelineRunOptions {
   taxYearId: string
   kind: PipelineRunKind

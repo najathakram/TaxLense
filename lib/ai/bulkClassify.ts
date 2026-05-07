@@ -168,15 +168,28 @@ function sanitizeCitations(citations: unknown[]): string[] {
     .map((c) => (VALID_CITATIONS.has(c) ? c : "[VERIFY]"))
 }
 
+import type { ProgressReporter } from "@/lib/jobs/pipelineRun"
+
 export async function bulkClassifyTransactions(
   transactions: TxForClassification[],
   businessContext: string,
   client?: Anthropic,
+  reportProgress?: ProgressReporter,
 ): Promise<BulkClassifyResult[]> {
   if (transactions.length === 0) return []
   const anthropic = client ?? new Anthropic({ apiKey: process.env["ANTHROPIC_API_KEY"] })
 
   const results: BulkClassifyResult[] = []
+  const totalBatches = Math.ceil(transactions.length / BATCH_SIZE)
+
+  if (reportProgress) {
+    await reportProgress({
+      phase: "bulk_classify",
+      processed: 0,
+      total: transactions.length,
+      label: `Classifying ${transactions.length} transaction${transactions.length === 1 ? "" : "s"} in ${totalBatches} batch${totalBatches === 1 ? "" : "es"}…`,
+    })
+  }
 
   for (let i = 0; i < transactions.length; i += BATCH_SIZE) {
     const batch = transactions.slice(i, i + BATCH_SIZE)
@@ -228,6 +241,17 @@ export async function bulkClassifyTransactions(
     } catch {
       // partial batch failure — leave those transactions as NEEDS_CONTEXT
     }
+
+    if (reportProgress) {
+      const processed = Math.min(i + BATCH_SIZE, transactions.length)
+      const batchNum = Math.floor(i / BATCH_SIZE) + 1
+      await reportProgress({
+        phase: "bulk_classify",
+        processed,
+        total: transactions.length,
+        label: `Batch ${batchNum} of ${totalBatches} · ${results.length} classified`,
+      })
+    }
   }
 
   return results
@@ -249,6 +273,7 @@ export async function runBulkClassifyPass(
   taxYearId: string,
   userId: string,
   anthropicClient?: Anthropic,
+  reportProgress?: ProgressReporter,
 ): Promise<BulkClassifyRunResult> {
   // Fetch NEEDS_CONTEXT transactions (AI-set, not user-confirmed)
   const txns = await prisma.transaction.findMany({
@@ -288,12 +313,23 @@ export async function runBulkClassifyPass(
     currentCode: (t.classifications[0]?.code ?? "NEEDS_CONTEXT") as TransactionCode,
   }))
 
-  const aiResults = await bulkClassifyTransactions(forAI, businessContext, anthropicClient)
+  const aiResults = await bulkClassifyTransactions(forAI, businessContext, anthropicClient, reportProgress)
   const resultMap = new Map(aiResults.map((r) => [r.txId, r]))
 
   let autoApplied = 0
   let stopsCreated = 0
 
+  // Switch to a "writing" phase since AI is done and we're now persisting.
+  if (reportProgress) {
+    await reportProgress({
+      phase: "bulk_classify",
+      processed: 0,
+      total: candidates.length,
+      label: `Writing ${candidates.length} classification${candidates.length === 1 ? "" : "s"} to ledger…`,
+    })
+  }
+
+  let writeIdx = 0
   for (const tx of candidates) {
     const ai = resultMap.get(tx.id)
     if (!ai) continue
@@ -365,6 +401,18 @@ export async function runBulkClassifyPass(
         })
         stopsCreated++
       }
+    }
+
+    writeIdx++
+    if (reportProgress && writeIdx % 5 === 0) {
+      // Throttle write-phase reports to every 5 rows so we don't spam the
+      // PipelineRun row with ~500 updates on a normal run.
+      await reportProgress({
+        phase: "bulk_classify",
+        processed: writeIdx,
+        total: candidates.length,
+        label: `Wrote ${autoApplied} auto-applied · ${stopsCreated} STOPs created`,
+      })
     }
   }
 

@@ -456,17 +456,41 @@ async function escalateToStop(
   return { transactionId: txn.id, outcome: "STOP", stopItemId: stop.id }
 }
 
+import type { ProgressReporter } from "@/lib/jobs/pipelineRun"
+
 export async function runResidualPass(
   taxYearId: string,
   candidates: ResidualCandidate[],
-  anthropicClient?: Anthropic
+  anthropicClient?: Anthropic,
+  reportProgress?: ProgressReporter,
 ): Promise<{ classified: number; stops: number }> {
   let classified = 0
   let stops = 0
-  for (const c of candidates) {
+
+  if (reportProgress) {
+    await reportProgress({
+      phase: "residual_ai",
+      processed: 0,
+      total: candidates.length,
+      label: candidates.length === 0
+        ? "No residual candidates."
+        : `Reviewing ${candidates.length} residual transaction${candidates.length === 1 ? "" : "s"}…`,
+    })
+  }
+
+  for (let i = 0; i < candidates.length; i++) {
+    const c = candidates[i]!
     const res = await classifyResidual(c, anthropicClient)
     if (res.outcome === "CLASSIFIED") classified++
     else stops++
+    if (reportProgress) {
+      await reportProgress({
+        phase: "residual_ai",
+        processed: i + 1,
+        total: candidates.length,
+        label: `${i + 1} of ${candidates.length} · ${classified} classified · ${stops} escalated`,
+      })
+    }
   }
   await prisma.auditEvent.create({
     data: {

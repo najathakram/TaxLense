@@ -4,6 +4,7 @@ import { useEffect, useRef, useState, useTransition } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
+import { FloatingProgress } from "@/components/pipeline/floating-progress"
 import {
   runNormalizeMerchants,
   runMatchTransfers,
@@ -53,6 +54,7 @@ export function PipelineClient({ year, initial }: PipelineClientProps) {
   const [fullAutoRunning, setFullAutoRunning] = useState(false)
   const [activeRun, setActiveRun] = useState<{ runId: string; label: string } | null>(null)
   const [progress, setProgress] = useState<Record<string, unknown>>({})
+  const [lastError, setLastError] = useState<string | null>(null)
   const pollRef = useRef<ReturnType<typeof setInterval> | null>(null)
 
   function addResult(label: string, detail: string, ok: boolean) {
@@ -77,11 +79,13 @@ export function PipelineClient({ year, initial }: PipelineClientProps) {
         addResult(activeRun.label, JSON.stringify(status.result, null, 0), true)
         setActiveRun(null)
         setFullAutoRunning(false)
+        setLastError(null)
         setTimeout(() => window.location.reload(), 250)
       } else if (status.status === "FAILED") {
         addResult(activeRun.label, status.lastError ?? "failed", false)
         setActiveRun(null)
         setFullAutoRunning(false)
+        setLastError(status.lastError ?? "Run failed without an error message.")
       }
     }
     void tick()
@@ -95,6 +99,7 @@ export function PipelineClient({ year, initial }: PipelineClientProps) {
   function run(action: () => Promise<RunHandle>, label: string) {
     startTransition(async () => {
       try {
+        setLastError(null)
         const handle = await action()
         setProgress({})
         setActiveRun({ runId: handle.runId, label })
@@ -103,12 +108,14 @@ export function PipelineClient({ year, initial }: PipelineClientProps) {
         }
       } catch (err) {
         addResult(label, String(err), false)
+        setLastError(String(err))
       }
     })
   }
 
   async function runFullAutoClassify() {
     setFullAutoRunning(true)
+    setLastError(null)
     const stepsList = [
       { fn: () => runResidualAI(year), label: "7. Residual AI Pass" },
       { fn: () => runBulkClassify(year), label: "8. CPA Bulk Classify" },
@@ -117,12 +124,23 @@ export function PipelineClient({ year, initial }: PipelineClientProps) {
     for (const step of stepsList) {
       try {
         const handle = await step.fn()
-        await waitForRun(handle.runId, step.label, addResult)
+        // Activate the floating progress bar for this sub-step too so the user
+        // can watch the phase change between steps 7 → 8 → 9.
+        setProgress({})
+        setActiveRun({ runId: handle.runId, label: step.label })
+        await waitForRun(handle.runId, step.label, (logLabel, detail, ok, prog) => {
+          if (prog) setProgress(prog as Record<string, unknown>)
+          // Only write to the run log when waitForRun emits a non-empty label
+          // (i.e. terminal status — DONE / FAILED). Empty label = progress tick.
+          if (logLabel) addResult(logLabel, detail, ok)
+        })
       } catch (err) {
         addResult(step.label, String(err), false)
+        setLastError(String(err))
         break
       }
     }
+    setActiveRun(null)
     setFullAutoRunning(false)
     setTimeout(() => window.location.reload(), 250)
   }
@@ -200,24 +218,13 @@ export function PipelineClient({ year, initial }: PipelineClientProps) {
 
   return (
     <div className="space-y-6">
-      {/* Live progress banner — visible only when a run is active */}
-      {activeRun && (
-        <Card>
-          <CardContent className="py-4">
-            <div className="flex items-center justify-between gap-4">
-              <div>
-                <p className="font-medium text-sm">{activeRun.label}</p>
-                <p className="text-xs text-muted-foreground">
-                  Running in background · runId {activeRun.runId.slice(0, 12)}…
-                </p>
-              </div>
-              <span className="text-xs font-mono text-muted-foreground">
-                {Object.keys(progress).length > 0 ? JSON.stringify(progress) : "starting…"}
-              </span>
-            </div>
-          </CardContent>
-        </Card>
-      )}
+      {/* Floating live progress — fixed bottom-right, visible across the whole page */}
+      <FloatingProgress
+        active={activeRun}
+        progress={progress as { phase?: string; processed?: number; total?: number; label?: string }}
+        errorMessage={lastError}
+        recentResults={results}
+      />
 
       {/* Stats overview */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
@@ -318,18 +325,23 @@ export function PipelineClient({ year, initial }: PipelineClientProps) {
 async function waitForRun(
   runId: string,
   label: string,
-  addResult: (label: string, detail: string, ok: boolean) => void,
+  cb: (label: string, detail: string, ok: boolean, progress?: unknown) => void,
 ): Promise<void> {
   for (;;) {
     await new Promise((r) => setTimeout(r, POLL_INTERVAL_MS))
     const status = await getPipelineRunStatus(runId)
     if (!status) return
+    if (status.status === "RUNNING") {
+      // Surface progress without writing a run-log line on every tick.
+      cb("", "", true, status.progress)
+      continue
+    }
     if (status.status === "DONE") {
-      addResult(label, JSON.stringify(status.result, null, 0), true)
+      cb(label, JSON.stringify(status.result, null, 0), true, status.progress)
       return
     }
     if (status.status === "FAILED") {
-      addResult(label, status.lastError ?? "failed", false)
+      cb(label, status.lastError ?? "failed", false, status.progress)
       throw new Error(status.lastError ?? "failed")
     }
   }

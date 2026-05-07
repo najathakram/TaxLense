@@ -240,3 +240,8 @@ button:focus-visible, a:focus-visible {
 .stripes {
   background-image: repeating-linear-gradient(45deg, rgba(255, 255, 255, 0.03) 0 6px, transparent 6px 14px);
 }
+
+/* spinner used by the floating pipeline-progress panel */
+@keyframes tl-spin {
+  to { transform: rotate(360deg); }
+}

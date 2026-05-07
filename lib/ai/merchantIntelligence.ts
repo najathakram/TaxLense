@@ -575,9 +575,12 @@ export async function aggregateClientNotes(taxYearId: string): Promise<string> {
   return parts.join("\n")
 }
 
+import type { ProgressReporter } from "@/lib/jobs/pipelineRun"
+
 export async function runMerchantIntelligence(
   taxYearId: string,
-  anthropicClient?: Anthropic
+  anthropicClient?: Anthropic,
+  reportProgress?: ProgressReporter,
 ): Promise<RunMerchantIntelligenceResult> {
   // Load profile context
   const taxYear = await prisma.taxYear.findUniqueOrThrow({
@@ -655,7 +658,19 @@ export async function runMerchantIntelligence(
   let rulesCreated = 0
   let stopsGenerated = 0
 
-  for (const batch of batches) {
+  // Report initial progress so the UI knows the total batch count immediately,
+  // even before the first Sonnet call returns.
+  if (reportProgress) {
+    await reportProgress({
+      phase: "merchant_ai",
+      processed: 0,
+      total: batches.length,
+      label: `Classifying ${merchantsToClassify.length} merchant${merchantsToClassify.length === 1 ? "" : "s"} in ${batches.length} batch${batches.length === 1 ? "" : "es"}…`,
+    })
+  }
+
+  for (let batchIdx = 0; batchIdx < batches.length; batchIdx++) {
+    const batch = batches[batchIdx]!
     const rules = await classifyBatch(
       batch,
       profile,
@@ -751,6 +766,15 @@ export async function runMerchantIntelligence(
           stopsGenerated++
         }
       }
+    }
+
+    if (reportProgress) {
+      await reportProgress({
+        phase: "merchant_ai",
+        processed: batchIdx + 1,
+        total: batches.length,
+        label: `Batch ${batchIdx + 1} of ${batches.length} · ${rulesCreated} rule${rulesCreated === 1 ? "" : "s"} created`,
+      })
     }
   }
 
