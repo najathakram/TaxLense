@@ -1,0 +1,28 @@
+# Nixpacks build config for Railway.
+#
+# Why this exists: Railway's default Nixpacks build for this repo has been
+# failing on the apt install of `libatomic1` with:
+#   "install apt packages: libatomic1
+#    no active session for ...: context canceled"
+# That error is internal to Nixpacks' apt-session driver — not a transient
+# mirror outage. It reproduces on every deploy.
+#
+# Workaround: drop into a custom setup phase that uses nix-store packages only
+# (no apt). The runtime needs libstdc++ for Prisma's binary engine, openssl
+# for HTTPS, and pnpm/node for the app — all available from nixpkgs without
+# the broken apt path.
+
+[phases.setup]
+# `...` keeps the auto-detected base; we only override which extra packages
+# to pull in. Pulling stdenv/openssl from nix avoids the apt session entirely.
+nixPkgs = ["...", "openssl", "stdenv.cc.cc.lib"]
+aptPkgs = []
+
+[phases.install]
+cmds = ["pnpm install --frozen-lockfile"]
+
+[phases.build]
+cmds = ["pnpm build"]
+
+[start]
+cmd = "pnpm start"
