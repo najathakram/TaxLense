@@ -64,6 +64,7 @@ export const ModelName = {
   FinancialAccount: 'FinancialAccount',
   StatementImport: 'StatementImport',
   ImportSession: 'ImportSession',
+  PipelineRun: 'PipelineRun',
   Transaction: 'Transaction',
   Classification: 'Classification',
   MerchantRule: 'MerchantRule',
@@ -290,6 +291,24 @@ export const ImportSessionScalarFieldEnum = {
 } as const
 
 export type ImportSessionScalarFieldEnum = (typeof ImportSessionScalarFieldEnum)[keyof typeof ImportSessionScalarFieldEnum]
+
+
+export const PipelineRunScalarFieldEnum = {
+  id: 'id',
+  taxYearId: 'taxYearId',
+  kind: 'kind',
+  status: 'status',
+  progress: 'progress',
+  result: 'result',
+  lastError: 'lastError',
+  startedAt: 'startedAt',
+  finishedAt: 'finishedAt',
+  initiatedByUserId: 'initiatedByUserId',
+  actorCpaUserId: 'actorCpaUserId',
+  actorAdminUserId: 'actorAdminUserId'
+} as const
+
+export type PipelineRunScalarFieldEnum = (typeof PipelineRunScalarFieldEnum)[keyof typeof PipelineRunScalarFieldEnum]
 
 
 export const TransactionScalarFieldEnum = {

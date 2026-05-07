@@ -1,13 +1,16 @@
+import Link from "next/link"
 import { redirect, notFound } from "next/navigation"
 import { requireAuth } from "@/lib/auth"
 import { prisma } from "@/lib/db"
 import { getCurrentCpaContext } from "@/lib/cpa/clientContext"
 import { getAdminCpaContext } from "@/lib/admin/adminContext"
+import type { DocumentCategory } from "@/app/generated/prisma/client"
 import { Section, Card, Btn, Tag } from "@/components/v2/primitives"
 import { fmtDate } from "@/components/v2/format"
 
 interface Props {
   params: Promise<{ clientId: string }>
+  searchParams: Promise<{ cat?: string }>
 }
 
 const CATEGORY_LABELS: Record<string, string> = {
@@ -20,8 +23,13 @@ const CATEGORY_LABELS: Record<string, string> = {
   OTHER: "Other",
 }
 
-export default async function ClientDocumentsPage({ params }: Props) {
+function isValidCategory(v: string | undefined): v is DocumentCategory {
+  return !!v && Object.prototype.hasOwnProperty.call(CATEGORY_LABELS, v)
+}
+
+export default async function ClientDocumentsPage({ params, searchParams }: Props) {
   const { clientId } = await params
+  const { cat } = await searchParams
   await requireAuth()
   const cpaCtx = await getCurrentCpaContext()
   const adminCpaCtx = await getAdminCpaContext()
@@ -34,19 +42,24 @@ export default async function ClientDocumentsPage({ params }: Props) {
   })
   if (!rel) notFound()
 
-  const documents = await prisma.document.findMany({
+  // Always fetch all docs for the per-category counts; filter the visible list separately.
+  const allDocuments = await prisma.document.findMany({
     where: { userId: clientId },
     orderBy: { uploadedAt: "desc" },
     include: { uploadedBy: { select: { name: true, email: true } } },
   })
+  const activeCategory = isValidCategory(cat) ? cat : null
+  const documents = activeCategory
+    ? allDocuments.filter((d) => d.category === activeCategory)
+    : allDocuments
 
   const categoryCounts = new Map<string, number>()
-  for (const d of documents) categoryCounts.set(d.category, (categoryCounts.get(d.category) ?? 0) + 1)
+  for (const d of allDocuments) categoryCounts.set(d.category, (categoryCounts.get(d.category) ?? 0) + 1)
 
   return (
     <Section
       sub="DOCUMENTS"
-      title={`${documents.length} document${documents.length === 1 ? "" : "s"} · ${rel.client.name ?? rel.client.email}`}
+      title={`${documents.length} document${documents.length === 1 ? "" : "s"}${activeCategory ? ` · ${CATEGORY_LABELS[activeCategory]}` : ""} · ${rel.client.name ?? rel.client.email}`}
       right={
         <>
           <Btn icon="↓">Bulk download</Btn>
@@ -55,34 +68,42 @@ export default async function ClientDocumentsPage({ params }: Props) {
       }
     >
       <div style={{ display: "flex", gap: 8, marginBottom: 14, flexWrap: "wrap" }}>
-        <span
+        <Link
+          href={`/clients/${clientId}/documents`}
           className="tl-pill"
           style={{
             fontSize: 12,
             padding: "6px 14px",
-            background: "var(--tl-accent)",
-            color: "#0a1428",
-            fontWeight: 700,
+            background: !activeCategory ? "var(--tl-accent)" : "rgba(255,255,255,0.05)",
+            color: !activeCategory ? "#0a1428" : "var(--fg-1)",
+            fontWeight: !activeCategory ? 700 : 600,
+            border: !activeCategory ? "0" : "1px solid var(--hairline)",
+            textDecoration: "none",
           }}
         >
-          All · {documents.length}
-        </span>
-        {Object.entries(CATEGORY_LABELS).map(([key, label]) => (
-          <span
-            key={key}
-            className="tl-pill"
-            style={{
-              fontSize: 12,
-              padding: "6px 14px",
-              background: "rgba(255,255,255,0.05)",
-              color: "var(--fg-1)",
-              fontWeight: 600,
-              border: "1px solid var(--hairline)",
-            }}
-          >
-            {label} · {categoryCounts.get(key) ?? 0}
-          </span>
-        ))}
+          All · {allDocuments.length}
+        </Link>
+        {Object.entries(CATEGORY_LABELS).map(([key, label]) => {
+          const isActive = activeCategory === key
+          return (
+            <Link
+              key={key}
+              href={`/clients/${clientId}/documents?cat=${key}`}
+              className="tl-pill"
+              style={{
+                fontSize: 12,
+                padding: "6px 14px",
+                background: isActive ? "var(--tl-accent)" : "rgba(255,255,255,0.05)",
+                color: isActive ? "#0a1428" : "var(--fg-1)",
+                fontWeight: isActive ? 700 : 600,
+                border: isActive ? "0" : "1px solid var(--hairline)",
+                textDecoration: "none",
+              }}
+            >
+              {label} · {categoryCounts.get(key) ?? 0}
+            </Link>
+          )
+        })}
       </div>
 
       <Card
@@ -135,7 +156,12 @@ export default async function ClientDocumentsPage({ params }: Props) {
                   style={{ borderBottom: i < documents.length - 1 ? "1px solid var(--hairline)" : "none" }}
                 >
                   <td style={{ padding: "12px 18px" }}>
-                    <div style={{ display: "flex", alignItems: "center", gap: 11 }}>
+                    <Link
+                      href={`/api/documents/${d.id}/file`}
+                      target="_blank"
+                      rel="noopener"
+                      style={{ display: "flex", alignItems: "center", gap: 11, textDecoration: "none", color: "inherit" }}
+                    >
                       <span
                         style={{
                           width: 32,
@@ -164,7 +190,7 @@ export default async function ClientDocumentsPage({ params }: Props) {
                           </div>
                         )}
                       </div>
-                    </div>
+                    </Link>
                   </td>
                   <td style={{ padding: "12px 18px" }}>
                     <Tag>{CATEGORY_LABELS[d.category] ?? d.category}</Tag>

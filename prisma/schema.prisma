@@ -73,6 +73,30 @@ enum ImportSessionStatus {
   ABORTED
 }
 
+enum PipelineRunStatus {
+  RUNNING
+  DONE
+  FAILED
+  CANCELLED
+}
+
+enum PipelineRunKind {
+  // Phase 0.4 placeholder kinds — the deterministic-pipeline buttons each
+  // open one of these in a background container so the page-level server
+  // action returns within 1s.
+  NORMALIZE_MERCHANTS
+  MATCH_TRANSFERS
+  MATCH_PAYMENTS
+  MATCH_REFUNDS
+  MERCHANT_AI
+  APPLY_RULES
+  RESIDUAL_AI
+  BULK_CLASSIFY
+  AUTO_RESOLVE_STOPS
+  // Phase 1 — single autonomous-bookkeeper run.
+  CPA_AGENT
+}
+
 // All 9 classification codes + 2 supplementary (spec §3.1)
 enum TransactionCode {
   WRITE_OFF
@@ -278,6 +302,7 @@ model TaxYear {
   reports           Report[]
   importSessions    ImportSession[]
   documents         Document[]
+  pipelineRuns      PipelineRun[]
 
   @@unique([userId, year])
 }
@@ -424,6 +449,43 @@ model ImportSession {
 
   taxYear TaxYear           @relation(fields: [taxYearId], references: [id], onDelete: Cascade)
   imports StatementImport[]
+}
+
+// ---------------------------------------------------------------------------
+// PIPELINE RUN — Phase 0.4
+// ---------------------------------------------------------------------------
+// Persists the state of a long-running pipeline operation (Apply Rules, the
+// future CPA agent, etc.) so the page-level server action can return within
+// 1s and the client can poll this row instead of waiting on the AI calls
+// inside the request lifetime. Replaces the 30s server-action ceiling.
+//
+// `progress` is freeform JSON intended to carry phase / counter pairs:
+//   { phase: "merchant_ai", processed: 12, total: 27, costUsd: 0.41 }
+//
+// One row per run; never updated in-place from outside the runner. The runner
+// is the only writer — readers only read.
+//
+// Append-only? Effectively yes. We DO update status/progress/finishedAt on
+// the runner side, but the row is never deleted; the audit trail is the
+// monotonic series of PipelineRun rows for a TaxYear.
+model PipelineRun {
+  id          String            @id @default(cuid())
+  taxYearId   String
+  kind        PipelineRunKind
+  status      PipelineRunStatus @default(RUNNING)
+  progress    Json              @default("{}")
+  result      Json?
+  lastError   String?
+  startedAt   DateTime          @default(now())
+  finishedAt  DateTime?
+  // Who fired the run; mirrors AuditEvent.actorCpaUserId / actorAdminUserId.
+  initiatedByUserId String?
+  actorCpaUserId    String?
+  actorAdminUserId  String?
+
+  taxYear TaxYear @relation(fields: [taxYearId], references: [id], onDelete: Cascade)
+
+  @@index([taxYearId, startedAt(sort: Desc)])
 }
 
 // ---------------------------------------------------------------------------

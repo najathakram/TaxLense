@@ -88,6 +88,32 @@ export const ImportSessionStatus = {
 export type ImportSessionStatus = (typeof ImportSessionStatus)[keyof typeof ImportSessionStatus]
 
 
+export const PipelineRunStatus = {
+  RUNNING: 'RUNNING',
+  DONE: 'DONE',
+  FAILED: 'FAILED',
+  CANCELLED: 'CANCELLED'
+} as const
+
+export type PipelineRunStatus = (typeof PipelineRunStatus)[keyof typeof PipelineRunStatus]
+
+
+export const PipelineRunKind = {
+  NORMALIZE_MERCHANTS: 'NORMALIZE_MERCHANTS',
+  MATCH_TRANSFERS: 'MATCH_TRANSFERS',
+  MATCH_PAYMENTS: 'MATCH_PAYMENTS',
+  MATCH_REFUNDS: 'MATCH_REFUNDS',
+  MERCHANT_AI: 'MERCHANT_AI',
+  APPLY_RULES: 'APPLY_RULES',
+  RESIDUAL_AI: 'RESIDUAL_AI',
+  BULK_CLASSIFY: 'BULK_CLASSIFY',
+  AUTO_RESOLVE_STOPS: 'AUTO_RESOLVE_STOPS',
+  CPA_AGENT: 'CPA_AGENT'
+} as const
+
+export type PipelineRunKind = (typeof PipelineRunKind)[keyof typeof PipelineRunKind]
+
+
 export const TransactionCode = {
   WRITE_OFF: 'WRITE_OFF',
   WRITE_OFF_TRAVEL: 'WRITE_OFF_TRAVEL',

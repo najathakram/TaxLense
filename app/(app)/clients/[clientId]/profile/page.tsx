@@ -3,7 +3,14 @@ import { requireAuth } from "@/lib/auth"
 import { prisma } from "@/lib/db"
 import { getCurrentCpaContext } from "@/lib/cpa/clientContext"
 import { getAdminCpaContext } from "@/lib/admin/adminContext"
-import { Section, Card, Btn } from "@/components/v2/primitives"
+import { enterClientSession } from "@/lib/cpa/actions"
+import { Section, Card } from "@/components/v2/primitives"
+
+async function enterAndEditProfile(formData: FormData) {
+  "use server"
+  const clientId = formData.get("clientId") as string
+  await enterClientSession(clientId, "/profile")
+}
 
 interface Props {
   params: Promise<{ clientId: string }>
@@ -40,7 +47,34 @@ export default async function ClientProfilePage({ params }: Props) {
   ]
 
   return (
-    <Section sub="CPA · CLIENT · PROFILE" title="Business profile" right={<Btn kind="primary">Edit profile</Btn>}>
+    <Section
+      sub="CPA · CLIENT · PROFILE"
+      title="Business profile"
+      right={
+        <form action={enterAndEditProfile} style={{ display: "inline" }}>
+          <input type="hidden" name="clientId" value={rel.client.id} />
+          <button
+            type="submit"
+            style={{
+              all: "unset",
+              cursor: "pointer",
+              display: "inline-flex",
+              alignItems: "center",
+              gap: 7,
+              padding: "7px 14px",
+              fontSize: 13,
+              fontWeight: 600,
+              borderRadius: 999,
+              background: "linear-gradient(180deg, #8fb6ff 0%, #6f9bff 100%)",
+              color: "#0a1428",
+              boxShadow: "0 4px 12px rgba(122,166,255,0.35), inset 0 1px 0 rgba(255,255,255,0.4)",
+            }}
+          >
+            Edit profile →
+          </button>
+        </form>
+      }
+    >
       <Card>
         <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: 24 }}>
           {fields.map(([k, v], i) => (

@@ -463,3 +463,41 @@ export async function saveProfileEdit(step: number, raw: unknown): Promise<Actio
 
   return result
 }
+
+// ---------------------------------------------------------------------------
+// Edit legal name — sole field on User row that the wizard didn't cover.
+// Used by the redesigned profile screen so a CPA can fix a misspelled client
+// name without an SQL operator. Honors getCurrentUserId so it writes to the
+// impersonated client when the CPA has entered the client session.
+// ---------------------------------------------------------------------------
+
+const legalNameSchema = z.object({ name: z.string().trim().min(1).max(120) })
+
+export async function saveLegalName(raw: unknown): Promise<ActionResult> {
+  const userId = await getCurrentUserId()
+  const parsed = legalNameSchema.safeParse(raw)
+  if (!parsed.success) return { ok: false, error: parsed.error.issues[0]?.message ?? "Validation error" }
+
+  const before = await prisma.user.findUnique({ where: { id: userId }, select: { name: true } })
+  if (!before) return { ok: false, error: "User not found" }
+  if (before.name === parsed.data.name) return { ok: true }
+
+  await prisma.user.update({
+    where: { id: userId },
+    data: { name: parsed.data.name },
+  })
+  await prisma.auditEvent.create({
+    data: {
+      userId,
+      actorType: "USER",
+      eventType: "LEGAL_NAME_EDITED",
+      entityType: "User",
+      entityId: userId,
+      beforeState: { name: before.name },
+      afterState: { name: parsed.data.name },
+    },
+  })
+
+  revalidatePath("/profile")
+  return { ok: true }
+}

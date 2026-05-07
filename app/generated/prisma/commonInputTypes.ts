@@ -541,6 +541,40 @@ export type EnumImportSessionStatusWithAggregatesFilter<$PrismaModel = never> = 
   _max?: Prisma.NestedEnumImportSessionStatusFilter<$PrismaModel>
 }
 
+export type EnumPipelineRunKindFilter<$PrismaModel = never> = {
+  equals?: $Enums.PipelineRunKind | Prisma.EnumPipelineRunKindFieldRefInput<$PrismaModel>
+  in?: $Enums.PipelineRunKind[] | Prisma.ListEnumPipelineRunKindFieldRefInput<$PrismaModel>
+  notIn?: $Enums.PipelineRunKind[] | Prisma.ListEnumPipelineRunKindFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumPipelineRunKindFilter<$PrismaModel> | $Enums.PipelineRunKind
+}
+
+export type EnumPipelineRunStatusFilter<$PrismaModel = never> = {
+  equals?: $Enums.PipelineRunStatus | Prisma.EnumPipelineRunStatusFieldRefInput<$PrismaModel>
+  in?: $Enums.PipelineRunStatus[] | Prisma.ListEnumPipelineRunStatusFieldRefInput<$PrismaModel>
+  notIn?: $Enums.PipelineRunStatus[] | Prisma.ListEnumPipelineRunStatusFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumPipelineRunStatusFilter<$PrismaModel> | $Enums.PipelineRunStatus
+}
+
+export type EnumPipelineRunKindWithAggregatesFilter<$PrismaModel = never> = {
+  equals?: $Enums.PipelineRunKind | Prisma.EnumPipelineRunKindFieldRefInput<$PrismaModel>
+  in?: $Enums.PipelineRunKind[] | Prisma.ListEnumPipelineRunKindFieldRefInput<$PrismaModel>
+  notIn?: $Enums.PipelineRunKind[] | Prisma.ListEnumPipelineRunKindFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumPipelineRunKindWithAggregatesFilter<$PrismaModel> | $Enums.PipelineRunKind
+  _count?: Prisma.NestedIntFilter<$PrismaModel>
+  _min?: Prisma.NestedEnumPipelineRunKindFilter<$PrismaModel>
+  _max?: Prisma.NestedEnumPipelineRunKindFilter<$PrismaModel>
+}
+
+export type EnumPipelineRunStatusWithAggregatesFilter<$PrismaModel = never> = {
+  equals?: $Enums.PipelineRunStatus | Prisma.EnumPipelineRunStatusFieldRefInput<$PrismaModel>
+  in?: $Enums.PipelineRunStatus[] | Prisma.ListEnumPipelineRunStatusFieldRefInput<$PrismaModel>
+  notIn?: $Enums.PipelineRunStatus[] | Prisma.ListEnumPipelineRunStatusFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumPipelineRunStatusWithAggregatesFilter<$PrismaModel> | $Enums.PipelineRunStatus
+  _count?: Prisma.NestedIntFilter<$PrismaModel>
+  _min?: Prisma.NestedEnumPipelineRunStatusFilter<$PrismaModel>
+  _max?: Prisma.NestedEnumPipelineRunStatusFilter<$PrismaModel>
+}
+
 export type DecimalFilter<$PrismaModel = never> = {
   equals?: runtime.Decimal | runtime.DecimalJsLike | number | string | Prisma.DecimalFieldRefInput<$PrismaModel>
   in?: runtime.Decimal[] | runtime.DecimalJsLike[] | number[] | string[] | Prisma.ListDecimalFieldRefInput<$PrismaModel>
@@ -1187,6 +1221,40 @@ export type NestedEnumImportSessionStatusWithAggregatesFilter<$PrismaModel = nev
   _count?: Prisma.NestedIntFilter<$PrismaModel>
   _min?: Prisma.NestedEnumImportSessionStatusFilter<$PrismaModel>
   _max?: Prisma.NestedEnumImportSessionStatusFilter<$PrismaModel>
+}
+
+export type NestedEnumPipelineRunKindFilter<$PrismaModel = never> = {
+  equals?: $Enums.PipelineRunKind | Prisma.EnumPipelineRunKindFieldRefInput<$PrismaModel>
+  in?: $Enums.PipelineRunKind[] | Prisma.ListEnumPipelineRunKindFieldRefInput<$PrismaModel>
+  notIn?: $Enums.PipelineRunKind[] | Prisma.ListEnumPipelineRunKindFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumPipelineRunKindFilter<$PrismaModel> | $Enums.PipelineRunKind
+}
+
+export type NestedEnumPipelineRunStatusFilter<$PrismaModel = never> = {
+  equals?: $Enums.PipelineRunStatus | Prisma.EnumPipelineRunStatusFieldRefInput<$PrismaModel>
+  in?: $Enums.PipelineRunStatus[] | Prisma.ListEnumPipelineRunStatusFieldRefInput<$PrismaModel>
+  notIn?: $Enums.PipelineRunStatus[] | Prisma.ListEnumPipelineRunStatusFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumPipelineRunStatusFilter<$PrismaModel> | $Enums.PipelineRunStatus
+}
+
+export type NestedEnumPipelineRunKindWithAggregatesFilter<$PrismaModel = never> = {
+  equals?: $Enums.PipelineRunKind | Prisma.EnumPipelineRunKindFieldRefInput<$PrismaModel>
+  in?: $Enums.PipelineRunKind[] | Prisma.ListEnumPipelineRunKindFieldRefInput<$PrismaModel>
+  notIn?: $Enums.PipelineRunKind[] | Prisma.ListEnumPipelineRunKindFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumPipelineRunKindWithAggregatesFilter<$PrismaModel> | $Enums.PipelineRunKind
+  _count?: Prisma.NestedIntFilter<$PrismaModel>
+  _min?: Prisma.NestedEnumPipelineRunKindFilter<$PrismaModel>
+  _max?: Prisma.NestedEnumPipelineRunKindFilter<$PrismaModel>
+}
+
+export type NestedEnumPipelineRunStatusWithAggregatesFilter<$PrismaModel = never> = {
+  equals?: $Enums.PipelineRunStatus | Prisma.EnumPipelineRunStatusFieldRefInput<$PrismaModel>
+  in?: $Enums.PipelineRunStatus[] | Prisma.ListEnumPipelineRunStatusFieldRefInput<$PrismaModel>
+  notIn?: $Enums.PipelineRunStatus[] | Prisma.ListEnumPipelineRunStatusFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumPipelineRunStatusWithAggregatesFilter<$PrismaModel> | $Enums.PipelineRunStatus
+  _count?: Prisma.NestedIntFilter<$PrismaModel>
+  _min?: Prisma.NestedEnumPipelineRunStatusFilter<$PrismaModel>
+  _max?: Prisma.NestedEnumPipelineRunStatusFilter<$PrismaModel>
 }
 
 export type NestedDecimalFilter<$PrismaModel = never> = {

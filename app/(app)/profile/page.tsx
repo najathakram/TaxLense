@@ -26,6 +26,7 @@ export default async function ProfilePage() {
   }
 
   const profile = taxYear.businessProfile
+  const user = await prisma.user.findUnique({ where: { id: userId }, select: { name: true, email: true } })
 
   const profileData: Partial<WizardData> = {
     year: taxYear.year,
@@ -73,7 +74,11 @@ export default async function ProfilePage() {
         <Badge variant={taxYear.status === "LOCKED" ? "default" : "secondary"}>{taxYear.status}</Badge>
       </div>
 
-      <ProfileEditClient profileData={profileData} />
+      <ProfileEditClient
+        profileData={profileData}
+        legalName={user?.name ?? ""}
+        email={user?.email ?? ""}
+      />
     </div>
   )
 }
