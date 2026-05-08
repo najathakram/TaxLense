@@ -7,6 +7,7 @@ import { redirect } from "next/navigation"
 import { runLockAssertions, type AssertionRunResult } from "@/lib/validation/assertions"
 import { computeRiskScore, type RiskReport } from "@/lib/risk/score"
 import { computeLedgerHash } from "@/lib/lock/hash"
+import { recomputeStatus } from "@/lib/taxYear/status"
 
 export interface LockAttemptResult {
   blocked: boolean
@@ -90,7 +91,7 @@ export async function unlockTaxYear(year: number, rationale: string): Promise<vo
   await prisma.$transaction(async (tx) => {
     await tx.taxYear.update({
       where: { id: taxYear.id },
-      data: { status: "REVIEW" },
+      data: { status: "REVIEW", lockedAt: null, lockedSnapshotHash: null },
     })
     await tx.report.updateMany({
       where: { taxYearId: taxYear.id, isCurrent: true },
@@ -108,6 +109,11 @@ export async function unlockTaxYear(year: number, rationale: string): Promise<vo
       },
     })
   })
+
+  // After unlock the seeded REVIEW value may not match reality (e.g. user
+  // unlocks to fix a row, which will re-create a STOP and demote to
+  // CLASSIFICATION). Reconcile to whatever the counts actually say.
+  await recomputeStatus(taxYear.id)
 
   revalidatePath(`/years/${year}`)
   revalidatePath(`/years/${year}/lock`)

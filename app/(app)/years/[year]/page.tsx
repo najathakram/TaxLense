@@ -3,6 +3,7 @@ import { prisma } from "@/lib/db"
 import { notFound } from "next/navigation"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { NextStopsBanner } from "@/components/pipeline/next-stops-banner"
 
 interface Props {
   params: Promise<{ year: string }>
@@ -26,12 +27,30 @@ export default async function YearPage({ params }: Props) {
 
   if (!taxYear) notFound()
 
+  // Counts driving the next-step banner. Match the denominators used on the
+  // pipeline page so the two views agree on "everything classified."
+  const [classified, pendingStops] = await Promise.all([
+    prisma.classification.count({
+      where: { transaction: { taxYearId: taxYear.id }, isCurrent: true },
+    }),
+    prisma.stopItem.count({
+      where: { taxYearId: taxYear.id, state: "PENDING" },
+    }),
+  ])
+
   return (
     <div className="p-6 space-y-6">
       <div className="flex items-center gap-3">
         <h1 className="text-2xl font-bold text-foreground">Tax Year {year}</h1>
         <Badge variant="outline">{taxYear.status}</Badge>
       </div>
+
+      <NextStopsBanner
+        year={year}
+        pendingStops={pendingStops}
+        classified={classified}
+        totalTx={taxYear._count.transactions}
+      />
 
       <div className="grid gap-4 sm:grid-cols-3">
         <Card>

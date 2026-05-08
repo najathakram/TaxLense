@@ -21,6 +21,7 @@ import {
   executePipelineRun,
   getLatestRunByKind,
 } from "@/lib/jobs/pipelineRun"
+import { recomputeStatus } from "@/lib/taxYear/status"
 import type { Prisma, PipelineRunKind } from "@/app/generated/prisma/client"
 import type { PipelineProgress, ProgressReporter } from "@/lib/jobs/pipelineRun"
 
@@ -78,7 +79,12 @@ async function enqueue(
       const reporter: ProgressReporter = (p: PipelineProgress) =>
         setProgress(p as unknown as Prisma.InputJsonValue)
       const result = await op(taxYear.id, reporter)
+      // Auto-promote the year's status based on what's actually in the DB now
+      // (e.g. INGESTION → CLASSIFICATION once the first row is classified;
+      // CLASSIFICATION → REVIEW once every row is classified and STOPs == 0).
+      await recomputeStatus(taxYear.id)
       // Revalidate after the heavy work is done, so the page shows fresh data.
+      revalidatePath(`/years/${year}`)
       revalidatePath(`/years/${year}/pipeline`)
       revalidatePath(`/years/${year}/ledger`)
       revalidatePath(`/years/${year}/stops`)

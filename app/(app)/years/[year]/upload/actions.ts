@@ -10,6 +10,7 @@
  */
 
 import { revalidatePath } from "next/cache"
+import { recomputeStatus } from "@/lib/taxYear/status"
 import { after } from "next/server"
 import { getCurrentUserId } from "@/lib/auth"
 import { getClientContext } from "@/lib/cpa/clientContext"
@@ -386,6 +387,9 @@ async function _doParseImport(importId: string, year: number): Promise<ParseImpo
     where: { id: session.id },
     select: { totalApiCalls: true, apiCallLimit: true },
   })
+
+  // Promote CREATED → INGESTION on first parse, or keep INGESTION as is.
+  await recomputeStatus(imp.taxYearId)
 
   revalidatePath(`/years/${year}/upload`)
   revalidatePath(`/years/${year}/coverage`)

@@ -6,6 +6,7 @@ import { revalidatePath } from "next/cache"
 import type { TransactionCode, ClassificationSource } from "@/app/generated/prisma/client"
 import { MAX_SPLITS_PER_TRANSACTION } from "@/lib/splits/config"
 import { batchCategorizeMerchants } from "@/lib/ai/merchantCategories"
+import { recomputeStatus } from "@/lib/taxYear/status"
 
 export async function fetchMerchantCategories(
   year: number,
@@ -31,6 +32,7 @@ export interface SingleEdit {
 
 export async function editClassification(year: number, edit: SingleEdit) {
   const userId = await getCurrentUserId()
+  let taxYearId: string | null = null
 
   await prisma.$transaction(async (tx) => {
     const txn = await tx.transaction.findUnique({
@@ -39,6 +41,7 @@ export async function editClassification(year: number, edit: SingleEdit) {
     })
     if (!txn) throw new Error("Transaction not found")
     if (txn.taxYear.userId !== userId) throw new Error("Not authorized")
+    taxYearId = txn.taxYearId
 
     const current = txn.classifications[0]
 
@@ -88,6 +91,8 @@ export async function editClassification(year: number, edit: SingleEdit) {
     })
   })
 
+  if (taxYearId) await recomputeStatus(taxYearId)
+  revalidatePath(`/years/${year}`)
   revalidatePath(`/years/${year}/ledger`)
 }
 
@@ -107,6 +112,7 @@ export async function bulkReclassify(year: number, edit: BulkEdit) {
   if (edit.transactionIds.length > 1000) throw new Error("Too many transactions (max 1000)")
 
   let updated = 0
+  let taxYearId: string | null = null
   await prisma.$transaction(
     async (tx) => {
       for (const id of edit.transactionIds) {
@@ -119,6 +125,7 @@ export async function bulkReclassify(year: number, edit: BulkEdit) {
         })
         if (!txn) continue
         if (txn.taxYear.userId !== userId) throw new Error("Not authorized")
+        if (!taxYearId) taxYearId = txn.taxYearId
 
         const code = edit.code ?? current?.code ?? "NEEDS_CONTEXT"
         const pct = edit.businessPct ?? current?.businessPct ?? 0
@@ -162,6 +169,8 @@ export async function bulkReclassify(year: number, edit: BulkEdit) {
     { timeout: 60_000 }
   )
 
+  if (taxYearId) await recomputeStatus(taxYearId)
+  revalidatePath(`/years/${year}`)
   revalidatePath(`/years/${year}/ledger`)
   return { updated }
 }
@@ -183,6 +192,7 @@ export async function splitTransaction(year: number, parentId: string, splits: S
   if (splits.length > MAX_SPLITS_PER_TRANSACTION)
     throw new Error(`Max ${MAX_SPLITS_PER_TRANSACTION} splits per transaction`)
 
+  let taxYearId: string | null = null
   await prisma.$transaction(async (tx) => {
     const parent = await tx.transaction.findUnique({
       where: { id: parentId },
@@ -192,6 +202,7 @@ export async function splitTransaction(year: number, parentId: string, splits: S
     if (parent.taxYear.userId !== userId) throw new Error("Not authorized")
     if (parent.isSplit) throw new Error("Transaction is already split")
     if (parent.splitOfId) throw new Error("Cannot split a child of another split")
+    taxYearId = parent.taxYearId
 
     const parentCents = Math.round(Number(parent.amountNormalized.toString()) * 100)
     const sumCents = splits.reduce((s, x) => s + Math.round(x.amount * 100), 0)
@@ -278,6 +289,8 @@ export async function splitTransaction(year: number, parentId: string, splits: S
     })
   })
 
+  if (taxYearId) await recomputeStatus(taxYearId)
+  revalidatePath(`/years/${year}`)
   revalidatePath(`/years/${year}/ledger`)
 }
 
@@ -315,6 +328,7 @@ export async function applyReclassification(
 
   let updated = 0
   let rulesUpdated = 0
+  let taxYearId: string | null = null
   await prisma.$transaction(
     async (tx) => {
       for (const m of matches) {
@@ -324,6 +338,7 @@ export async function applyReclassification(
         })
         if (!txn) continue
         if (txn.taxYear.userId !== userId) throw new Error("Not authorized")
+        if (!taxYearId) taxYearId = txn.taxYearId
 
         await tx.classification.updateMany({
           where: { transactionId: m.transactionId, isCurrent: true },
@@ -404,6 +419,8 @@ export async function applyReclassification(
     { timeout: 60_000 }
   )
 
+  if (taxYearId) await recomputeStatus(taxYearId)
+  revalidatePath(`/years/${year}`)
   revalidatePath(`/years/${year}/ledger`)
   return { updated, rulesUpdated }
 }

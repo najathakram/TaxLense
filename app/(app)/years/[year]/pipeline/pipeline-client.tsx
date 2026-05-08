@@ -29,6 +29,12 @@ interface PipelineStats {
   merchantRules: number
   classified: number
   stops: number
+  /** Step 7 input — GRAY merchant rules at confidence < 0.85 (multi-candidate proxy). */
+  residualCandidates: number
+  /** Step 8 input — current classifications stamped NEEDS_CONTEXT. */
+  needsContextCount: number
+  /** Step 9 input — StopItems still PENDING. */
+  pendingStops: number
 }
 
 interface PipelineClientProps {
@@ -147,6 +153,16 @@ export function PipelineClient({ year, initial }: PipelineClientProps) {
     setTimeout(() => window.location.reload(), 250)
   }
 
+  // Per-step status derivation. Done = no work to do; Idle = upstream input
+  // not ready yet; Ready = there's work to do here. Running is set live from
+  // activeRun; Error not derived locally (covered by FloatingProgress).
+  const totalNonZero = stats.totalTx > 0
+  const stepStatus = (
+    backlog: number,
+    isReady: boolean,
+  ): "done" | "ready" | "idle" =>
+    !isReady ? "idle" : backlog === 0 ? "done" : "ready"
+
   const steps = [
     {
       id: "normalize",
@@ -154,6 +170,7 @@ export function PipelineClient({ year, initial }: PipelineClientProps) {
       description: "Strip processor prefixes, trailing city/state, reference numbers",
       action: () => runNormalizeMerchants(year),
       stat: `${stats.normalizedTx} / ${stats.totalTx} normalized`,
+      status: stepStatus(stats.totalTx - stats.normalizedTx, totalNonZero),
     },
     {
       id: "transfers",
@@ -161,6 +178,9 @@ export function PipelineClient({ year, initial }: PipelineClientProps) {
       description: "Pair outflow/inflow across accounts (±5 days, same amount)",
       action: () => runMatchTransfers(year),
       stat: `${stats.transferPairs} transfer pairs`,
+      // Transfers is informational — there's no "missing" backlog. Treat as
+      // ready whenever there are transactions and at least one has been run.
+      status: stepStatus(0, totalNonZero) as "done" | "ready" | "idle",
     },
     {
       id: "payments",
@@ -168,6 +188,7 @@ export function PipelineClient({ year, initial }: PipelineClientProps) {
       description: 'Pair "Payment Thank You" with checking outflow',
       action: () => runMatchPayments(year),
       stat: `${stats.paymentPairs} payment pairs`,
+      status: stepStatus(0, totalNonZero) as "done" | "ready" | "idle",
     },
     {
       id: "refunds",
@@ -175,6 +196,7 @@ export function PipelineClient({ year, initial }: PipelineClientProps) {
       description: "Pair credit card refunds to prior charges (90-day window)",
       action: () => runMatchRefunds(year),
       stat: `${stats.refundPairs} refund pairs`,
+      status: stepStatus(0, totalNonZero) as "done" | "ready" | "idle",
     },
     {
       id: "ai",
@@ -182,6 +204,15 @@ export function PipelineClient({ year, initial }: PipelineClientProps) {
       description: "Call Sonnet 4.6 in batches of 25 — classify unique merchants",
       action: () => runMerchantAI(year),
       stat: `${stats.merchantRules} rules`,
+      // Done if every distinct normalized merchant has a rule. We don't have
+      // that count here so use a softer check: "ready" while there are
+      // transactions but no rules; "done" once any rule exists.
+      status:
+        !totalNonZero
+          ? ("idle" as const)
+          : stats.merchantRules === 0
+            ? ("ready" as const)
+            : ("done" as const),
     },
     {
       id: "apply",
@@ -189,30 +220,52 @@ export function PipelineClient({ year, initial }: PipelineClientProps) {
       description: "Stamp Classification rows; apply trip overrides",
       action: () => runApplyRules(year),
       stat: `${stats.classified} classified, ${stats.stops} STOPs`,
+      status: stepStatus(
+        Math.max(0, stats.totalTx - stats.classified),
+        stats.merchantRules > 0,
+      ),
     },
   ]
 
+  // Steps 7–9 share the same gating: Apply Rules (step 6) must have run at
+  // least once before any of these have meaningful input.
+  const aiReady = stats.merchantRules > 0 && stats.classified > 0
   const aiSteps = [
     {
       id: "residual",
       label: "7. Residual AI Pass",
       description: "Classifies GRAY / outlier / trip-ambiguous transactions with per-transaction reasoning",
       action: () => runResidualAI(year),
-      stat: "GRAY + outliers",
+      stat:
+        stats.residualCandidates === 0
+          ? "no residual candidates"
+          : `${stats.residualCandidates} candidate${stats.residualCandidates === 1 ? "" : "s"}`,
+      backlog: stats.residualCandidates,
+      status: stepStatus(stats.residualCandidates, aiReady),
     },
     {
       id: "bulk",
       label: "8. CPA Bulk Classify",
       description: "Senior CPA (Sonnet 4.6) classifies remaining NEEDS_CONTEXT — auto-applies ≥78% confidence",
       action: () => runBulkClassify(year),
-      stat: `${stats.stops} stops pending`,
+      stat:
+        stats.needsContextCount === 0
+          ? "no NEEDS_CONTEXT rows"
+          : `${stats.needsContextCount} NEEDS_CONTEXT`,
+      backlog: stats.needsContextCount,
+      status: stepStatus(stats.needsContextCount, aiReady),
     },
     {
       id: "autostops",
       label: "9. Auto-Resolve Stops",
       description: "Sonnet resolves PENDING stops at ≥85% confidence — no user input needed",
       action: () => runAutoResolveStops(year),
-      stat: `${stats.stops} stops pending`,
+      stat:
+        stats.pendingStops === 0
+          ? "no pending stops"
+          : `${stats.pendingStops} pending stop${stats.pendingStops === 1 ? "" : "s"}`,
+      backlog: stats.pendingStops,
+      status: stepStatus(stats.pendingStops, aiReady),
     },
   ]
 
@@ -245,6 +298,9 @@ export function PipelineClient({ year, initial }: PipelineClientProps) {
                 client&apos;s Documents folder. Defaults uncertain §274(d) rows to PERSONAL
                 with a &quot;not-claimed&quot; line so you can promote them later by uploading
                 receipts — no STOP queue.
+              </p>
+              <p className="text-xs text-muted-foreground/80 mt-2">
+                This is the canonical CTA. Open <span className="font-medium">Advanced</span> below only to re-run a single phase.
               </p>
             </div>
             <Button
@@ -292,81 +348,98 @@ export function PipelineClient({ year, initial }: PipelineClientProps) {
         </CardContent>
       </Card>
 
-      {/* Step buttons 1–6 — the legacy multi-stage flow. Kept as an
-          "Advanced" disclosure for debugging individual phases; normal
-          use now goes through the autonomous CPA agent above. */}
-      <details className="group">
+      {/* Step buttons 1–6 + AI sub-pipeline 7–9 — the legacy multi-stage flow.
+          Hidden by default behind an Advanced disclosure; normal use now goes
+          through the autonomous CPA agent above. The 7→9 button stays inside
+          this block so we have one canonical "Run everything" CTA at the top
+          (Autonomous CPA) and one debugging surface here. */}
+      <details className="group space-y-3">
         <summary className="cursor-pointer text-sm font-medium text-muted-foreground hover:text-foreground flex items-center gap-2 select-none">
-          <span className="transition-transform group-open:rotate-90">▸</span>
+          <span className="transition-transform group-open:rotate-90 inline-block">▸</span>
           Advanced — run individual pipeline stages
         </summary>
-      </details>
 
-      {/* Step buttons 1–6 */}
-      <div className="space-y-3">
-        {steps.map((step) => (
-          <Card key={step.id}>
-            <CardContent className="flex items-center justify-between py-4 gap-4">
-              <div className="flex-1 min-w-0">
-                <p className="font-medium text-sm">{step.label}</p>
-                <p className="text-xs text-muted-foreground">{step.description}</p>
-              </div>
-              <Badge variant="outline" className="text-xs shrink-0">
-                {step.stat}
-              </Badge>
-              <Button
-                size="sm"
-                variant="outline"
-                disabled={runDisabled}
-                onClick={() => run(step.action, step.label)}
-              >
-                {runDisabled ? "Running…" : "Run"}
-              </Button>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
-
-      {/* AI auto-classify section */}
-      <div className="space-y-3">
-        <div className="flex items-center justify-between">
-          <div>
-            <h3 className="text-sm font-semibold">AI Auto-Classification</h3>
-            <p className="text-xs text-muted-foreground">
-              Steps 7–9 cover 90–95% of remaining transactions automatically
-            </p>
-          </div>
-          <Button
-            size="sm"
-            disabled={runDisabled}
-            onClick={runFullAutoClassify}
-            className="shrink-0"
-          >
-            {fullAutoRunning ? "Running 7→9…" : "Run Full Auto-Classify (7→9)"}
-          </Button>
+        <div className="space-y-3 mt-3">
+          {steps.map((step) => {
+            const isRunning = activeRun?.label === step.label
+            const liveStatus: "done" | "ready" | "idle" | "running" = isRunning ? "running" : step.status
+            const stepDisabled = runDisabled || liveStatus === "idle" || liveStatus === "done"
+            return (
+              <Card key={step.id} className={liveStatus === "done" ? "opacity-70" : undefined}>
+                <CardContent className="flex items-center justify-between py-4 gap-4">
+                  <div className="flex items-center gap-3 flex-1 min-w-0">
+                    <StatusPill status={liveStatus} />
+                    <div className="flex-1 min-w-0">
+                      <p className="font-medium text-sm">{step.label}</p>
+                      <p className="text-xs text-muted-foreground">{step.description}</p>
+                    </div>
+                  </div>
+                  <Badge variant="outline" className="text-xs shrink-0">
+                    {step.stat}
+                  </Badge>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    disabled={stepDisabled}
+                    onClick={() => run(step.action, step.label)}
+                  >
+                    {isRunning ? "Running…" : liveStatus === "done" ? "Re-run" : "Run"}
+                  </Button>
+                </CardContent>
+              </Card>
+            )
+          })}
         </div>
-        {aiSteps.map((step) => (
-          <Card key={step.id}>
-            <CardContent className="flex items-center justify-between py-4 gap-4">
-              <div className="flex-1 min-w-0">
-                <p className="font-medium text-sm">{step.label}</p>
-                <p className="text-xs text-muted-foreground">{step.description}</p>
-              </div>
-              <Badge variant="outline" className="text-xs shrink-0">
-                {step.stat}
-              </Badge>
-              <Button
-                size="sm"
-                variant="outline"
-                disabled={runDisabled}
-                onClick={() => run(step.action, step.label)}
-              >
-                {runDisabled ? "Running…" : "Run"}
-              </Button>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
+
+        <div className="space-y-3 mt-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <h3 className="text-sm font-semibold">AI Auto-Classification</h3>
+              <p className="text-xs text-muted-foreground">
+                Steps 7–9 cover 90–95% of remaining transactions automatically
+              </p>
+            </div>
+            <Button
+              size="sm"
+              variant="outline"
+              disabled={runDisabled}
+              onClick={runFullAutoClassify}
+              className="shrink-0"
+            >
+              {fullAutoRunning ? "Running 7→9…" : "Run AI sub-pipeline (7→9)"}
+            </Button>
+          </div>
+          {aiSteps.map((step) => {
+            const isRunning = activeRun?.label === step.label
+            const liveStatus: "done" | "ready" | "idle" | "running" = isRunning ? "running" : step.status
+            const stepDisabled = runDisabled || liveStatus === "idle" || liveStatus === "done"
+            return (
+              <Card key={step.id} className={liveStatus === "done" ? "opacity-70" : undefined}>
+                <CardContent className="flex items-center justify-between py-4 gap-4">
+                  <div className="flex items-center gap-3 flex-1 min-w-0">
+                    <StatusPill status={liveStatus} />
+                    <div className="flex-1 min-w-0">
+                      <p className="font-medium text-sm">{step.label}</p>
+                      <p className="text-xs text-muted-foreground">{step.description}</p>
+                    </div>
+                  </div>
+                  <Badge variant="outline" className="text-xs shrink-0">
+                    {step.stat}
+                  </Badge>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    disabled={stepDisabled}
+                    onClick={() => run(step.action, step.label)}
+                  >
+                    {isRunning ? "Running…" : liveStatus === "done" ? "Re-run" : "Run"}
+                  </Button>
+                </CardContent>
+              </Card>
+            )
+          })}
+        </div>
+      </details>
 
       {/* Run log */}
       {results.length > 0 && (
@@ -423,5 +496,40 @@ function StatCard({ label, value }: { label: string; value: number }) {
         <p className="text-xs text-muted-foreground mt-1">{label}</p>
       </CardContent>
     </Card>
+  )
+}
+
+const STATUS_GLYPH = {
+  done: "✓",
+  running: "⋯",
+  ready: "◌",
+  idle: "–",
+} as const
+
+const STATUS_LABEL = {
+  done: "Done",
+  running: "Running",
+  ready: "Ready",
+  idle: "Idle",
+} as const
+
+const STATUS_CLASS = {
+  // Tailwind utility tokens — match the existing dark/light theming used
+  // elsewhere in the pipeline page so we don't introduce new design tokens.
+  done: "bg-emerald-500/15 text-emerald-500 border-emerald-500/30",
+  running: "bg-blue-500/15 text-blue-500 border-blue-500/30 animate-pulse",
+  ready: "bg-amber-500/15 text-amber-500 border-amber-500/30",
+  idle: "bg-muted text-muted-foreground border-border",
+} as const
+
+function StatusPill({ status }: { status: "done" | "running" | "ready" | "idle" }) {
+  return (
+    <span
+      title={STATUS_LABEL[status]}
+      className={`inline-flex items-center justify-center w-7 h-7 rounded-full border text-sm font-semibold shrink-0 ${STATUS_CLASS[status]}`}
+      aria-label={`Status: ${STATUS_LABEL[status]}`}
+    >
+      {STATUS_GLYPH[status]}
+    </span>
   )
 }

@@ -9,6 +9,7 @@ import type { Prisma, ClassificationSource } from "@/app/generated/prisma/client
 import { deriveFromAnswer, type StopAnswer } from "@/lib/stops/derive"
 import { classifyStopsWithAI, type StopForAI } from "@/lib/ai/autoResolveStops"
 import type { ProgressReporter } from "@/lib/jobs/pipelineRun"
+import { recomputeStatus } from "@/lib/taxYear/status"
 export type { StopAnswer } from "@/lib/stops/derive"
 
 
@@ -145,9 +146,15 @@ export async function resolveStop(
     { timeout: 120_000 }
   )
 
+  // Auto-advance the year's stage now that one more STOP is gone (may flip
+  // CLASSIFICATION → REVIEW if this was the last pending STOP and every row
+  // is classified).
+  await recomputeStatus(stopBefore.taxYearId)
+
   // Revalidate immediately so the page-level fetch on next render reflects
   // the resolved STOP (banner / count / row strikethrough).
   const year = stopBefore.taxYear.year
+  revalidatePath(`/years/${year}`)
   revalidatePath(`/years/${year}/stops`)
   revalidatePath(`/years/${year}/ledger`)
 
@@ -363,6 +370,11 @@ export async function autoResolveStops(
     }
   }
 
+  // Bulk auto-resolve flips many STOPs in one go — recompute once at the end
+  // rather than per-STOP for performance.
+  await recomputeStatus(taxYear.id)
+
+  revalidatePath(`/years/${year}`)
   revalidatePath(`/years/${year}/stops`)
   revalidatePath(`/years/${year}/ledger`)
   return { resolved, skipped, errors, details }
@@ -396,5 +408,8 @@ export async function deferStop(stopId: string) {
     })
   })
 
+  await recomputeStatus(stop.taxYearId)
+
+  revalidatePath(`/years/${stop.taxYear.year}`)
   revalidatePath(`/years/${stop.taxYear.year}/stops`)
 }
