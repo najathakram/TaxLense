@@ -28,15 +28,42 @@ const PHASE_TONE: Record<string, string> = {
   cpa_agent: "var(--tl-accent, #7aa6ff)",
 }
 
+interface DecisionFlash {
+  merchant: string
+  code: string
+  businessPct: number
+  amount: number
+}
+
 export interface FloatingProgressProps {
   /** When null, the panel is hidden. */
   active: { runId: string; label: string } | null
   /** Latest progress payload from the PipelineRun row. */
-  progress: { phase?: string; processed?: number; total?: number; label?: string } | null
+  progress: {
+    phase?: string
+    processed?: number
+    total?: number
+    label?: string
+    recentDecisions?: DecisionFlash[]
+  } | null
   /** Set when status === FAILED so the user sees the failure inline. */
   errorMessage?: string | null
   /** Recent results — last 3 lines pinned so the user has visible feedback after a quick run. */
   recentResults?: Array<{ ok: boolean; label: string; detail: string }>
+}
+
+const CODE_TONE: Record<string, string> = {
+  WRITE_OFF: "var(--tl-green, #34c98a)",
+  WRITE_OFF_TRAVEL: "var(--tl-green, #34c98a)",
+  WRITE_OFF_COGS: "var(--tl-green, #34c98a)",
+  MEALS_50: "var(--tl-amber, #f4c451)",
+  MEALS_100: "var(--tl-amber, #f4c451)",
+  GRAY: "var(--tl-orange, #ff9a57)",
+  PERSONAL: "var(--fg-3, #94a3b8)",
+  TRANSFER: "var(--fg-3, #94a3b8)",
+  PAYMENT: "var(--fg-3, #94a3b8)",
+  BIZ_INCOME: "var(--tl-accent-2, #5fd4b1)",
+  NEEDS_CONTEXT: "var(--tl-red, #ff6b6b)",
 }
 
 export function FloatingProgress({ active, progress, errorMessage, recentResults }: FloatingProgressProps) {
@@ -51,6 +78,7 @@ export function FloatingProgress({ active, progress, errorMessage, recentResults
   const processed = Math.min(progress?.processed ?? 0, total)
   const pct = total > 0 ? Math.round((processed / total) * 100) : null
   const detail = progress?.label
+  const recentDecisions = progress?.recentDecisions ?? []
 
   return (
     <div
@@ -149,6 +177,84 @@ export function FloatingProgress({ active, progress, errorMessage, recentResults
               {processed} / {total}
             </div>
           )}
+
+          {recentDecisions.length > 0 && (
+            <div
+              style={{
+                marginTop: 12,
+                paddingTop: 10,
+                borderTop: "1px solid rgba(255,255,255,0.06)",
+                display: "grid",
+                gap: 4,
+                maxHeight: 110,
+                overflow: "hidden",
+              }}
+              aria-label="Recent AI decisions"
+            >
+              {[...recentDecisions].reverse().map((d, i) => (
+                <div
+                  key={`${d.merchant}-${i}`}
+                  className="mono"
+                  style={{
+                    fontFamily: "var(--mono, monospace)",
+                    fontSize: 11,
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                    gap: 8,
+                    opacity: 1 - i * 0.18,
+                    transform: i === 0 ? "none" : "none",
+                    animation: i === 0 ? "tl-decision-slide 220ms cubic-bezier(.22,.61,.36,1)" : undefined,
+                  }}
+                >
+                  <span
+                    style={{
+                      flex: "1 1 auto",
+                      minWidth: 0,
+                      whiteSpace: "nowrap",
+                      overflow: "hidden",
+                      textOverflow: "ellipsis",
+                      color: i === 0 ? "rgba(248,250,252,0.96)" : "rgba(248,250,252,0.55)",
+                    }}
+                    title={d.merchant}
+                  >
+                    {d.merchant}
+                  </span>
+                  <span
+                    style={{
+                      flexShrink: 0,
+                      fontSize: 10,
+                      fontWeight: 700,
+                      letterSpacing: 0.3,
+                      padding: "2px 6px",
+                      borderRadius: 999,
+                      background: "rgba(255,255,255,0.04)",
+                      color: CODE_TONE[d.code] ?? "rgba(248,250,252,0.7)",
+                    }}
+                  >
+                    {d.code}
+                    {d.businessPct < 100 && d.code !== "PERSONAL" && d.code !== "TRANSFER" && d.code !== "PAYMENT" && d.code !== "BIZ_INCOME"
+                      ? ` ${d.businessPct}%`
+                      : ""}
+                  </span>
+                  {d.amount > 0 && (
+                    <span
+                      style={{
+                        flexShrink: 0,
+                        fontSize: 10,
+                        fontFamily: "var(--mono, monospace)",
+                        color: "rgba(248,250,252,0.45)",
+                        minWidth: 56,
+                        textAlign: "right",
+                      }}
+                    >
+                      ${d.amount.toFixed(0)}
+                    </span>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
         </>
       )}
 
@@ -195,6 +301,10 @@ export function FloatingProgress({ active, progress, errorMessage, recentResults
         @keyframes tl-progress-indet {
           0% { transform: translateX(-100%); }
           100% { transform: translateX(400%); }
+        }
+        @keyframes tl-decision-slide {
+          0%   { opacity: 0; transform: translateY(-6px); }
+          100% { opacity: 1; transform: none; }
         }
       `}</style>
     </div>

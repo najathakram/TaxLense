@@ -217,6 +217,12 @@ export async function runCpaAgent(taxYearId: string, opts: CpaAgentOptions = {})
   }
 
   // Persist classifications (flip-and-insert pattern, append-only ledger).
+  // Each decision flashes through the floating progress feed in real time —
+  // the user sees "TIM HORTONS · MEALS_50 100% · $4.50" land one after the
+  // next as the AI commits its judgments. Up to 5 most-recent decisions are
+  // kept in the progress payload so the UI can render them as a fading stack.
+  const txnLookupById = new Map(allTxns.map((t) => [t.id, t]))
+  const recent: Array<{ merchant: string; code: string; businessPct: number; amount: number }> = []
   let leftAsPersonal = 0
   let writeIdx = 0
   for (const d of allDecisions) {
@@ -244,12 +250,22 @@ export async function runCpaAgent(taxYearId: string, opts: CpaAgentOptions = {})
     if (d.code === "PERSONAL" && d.notClaimedReason) leftAsPersonal++
 
     writeIdx++
-    if (reporter && writeIdx % 25 === 0) {
+
+    if (reporter) {
+      const tx = txnLookupById.get(d.txId)
+      const merchantBase = tx?.merchantNormalized || tx?.merchantRaw || "(unknown)"
+      const merchant = merchantBase.length > 28 ? `${merchantBase.slice(0, 27)}…` : merchantBase
+      const amount = tx ? Math.abs(Number(tx.amountNormalized.toString())) : 0
+      const flash = { merchant, code: d.code, businessPct: d.businessPct, amount }
+      recent.push(flash)
+      if (recent.length > 5) recent.shift()
+
       await reporter({
         phase: "cpa_agent",
         processed: chunks.length,
         total: chunks.length,
-        label: `Writing ${writeIdx} / ${allDecisions.length} classifications…`,
+        label: `${merchant} → ${d.code}${d.businessPct === 100 ? "" : ` ${d.businessPct}%`}${amount > 0 ? ` · $${amount.toFixed(2)}` : ""}`,
+        recentDecisions: [...recent],
       })
     }
   }
