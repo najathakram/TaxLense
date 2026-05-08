@@ -177,7 +177,7 @@ export const FORM_REGISTRY: Record<EntityKey, FormSpec> = {
     k1: true,
     seTax: true,
     requiresOwnerPayroll: false,
-    supported: false,
+    supported: true,
     displayName: "Multi-Member LLC (taxed as partnership)",
     description: "Multi-owner LLC default-taxed as partnership. Files Form 1065; income/deductions flow to partners via K-1. General partners pay SE tax.",
   },

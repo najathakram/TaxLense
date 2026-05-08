@@ -20,7 +20,7 @@ type Props = {
 
 type FormValues = {
   year: number
-  entityType: "SOLE_PROP" | "LLC_SINGLE" | "S_CORP" | "OTHER"
+  entityType: "SOLE_PROP" | "LLC_SINGLE" | "S_CORP" | "LLC_MULTI" | "OTHER"
   primaryState: string
   accountingMethod: "CASH" | "ACCRUAL"
   firstYear: boolean
@@ -49,7 +49,7 @@ export default function Step1({ data, onNext }: Props) {
     const result = await saveStep1(values)
     setIsLoading(false)
     if (!result.ok) { setServerError(result.error); return }
-    onNext({ year: values.year, entityType: values.entityType as "SOLE_PROP" | "LLC_SINGLE" | "S_CORP", primaryState: values.primaryState, accountingMethod: values.accountingMethod, firstYear: values.firstYear })
+    onNext({ year: values.year, entityType: values.entityType as "SOLE_PROP" | "LLC_SINGLE" | "S_CORP" | "LLC_MULTI", primaryState: values.primaryState, accountingMethod: values.accountingMethod, firstYear: values.firstYear })
   }
 
   return (
@@ -73,7 +73,8 @@ export default function Step1({ data, onNext }: Props) {
             { value: "SOLE_PROP", label: "Sole Proprietor (Schedule C / 1040)" },
             { value: "LLC_SINGLE", label: "Single-Member LLC (disregarded entity)" },
             { value: "S_CORP", label: "S-Corporation (Form 1120-S + K-1)" },
-            { value: "OTHER", label: "Multi-member LLC / C-Corp / Partnership (coming soon)" },
+            { value: "LLC_MULTI", label: "Multi-Member LLC / Partnership (Form 1065 + K-1)" },
+            { value: "OTHER", label: "C-Corp (coming soon — Phase 4)" },
           ].map((opt) => (
             <label key={opt.value} className="flex items-center gap-2 cursor-pointer">
               <input
@@ -91,8 +92,19 @@ export default function Step1({ data, onNext }: Props) {
           <Alert className="mt-2">
             <Info className="h-4 w-4" />
             <AlertDescription>
-              Multi-member LLC (Form 1065) and C-Corp (Form 1120) are next on the roadmap.
-              For now, please work with your CPA for those entity types.
+              C-Corp (Form 1120) is scheduled for Phase 4 of the rewrite.
+              For now, please work with your CPA for that entity type.
+            </AlertDescription>
+          </Alert>
+        )}
+        {entityType === "LLC_MULTI" && (
+          <Alert className="mt-2">
+            <Info className="h-4 w-4" />
+            <AlertDescription>
+              Multi-member LLC: TaxLens will generate <strong>Form 1065</strong> and a Schedule K-1
+              per partner. General partners pay SE tax on Box 14 ordinary income.
+              Owner records (per-partner ownership %) are captured in the next release —
+              for now the K-1 defaults to single-owner 100% allocation.
             </AlertDescription>
           </Alert>
         )}
