@@ -5,7 +5,7 @@
   "scripts": {
     "dev": "next dev",
     "build": "prisma generate && next build",
-    "start": "prisma migrate deploy && node scripts/bootstrap.mjs && node scripts/seed-atif.mjs && node scripts/backfill-documents.mjs && next start",
+    "start": "prisma migrate deploy && node scripts/bootstrap.mjs && node scripts/seed-atif.mjs && node scripts/backfill-documents.mjs && node scripts/reclassify-tax-year.mjs && next start",
     "lint": "eslint",
     "seed": "tsx prisma/seed.ts",
     "test": "vitest run",
@@ -55,6 +55,7 @@
     "react-hook-form": "^7.72.1",
     "recharts": "^2.12",
     "tailwind-merge": "^3.5.0",
+    "tsx": "^4.21.0",
     "zod": "^4.3.6",
     "zustand": "^5.0.12"
   },
@@ -76,7 +77,6 @@
     "eslint-config-next": "16.2.4",
     "jsdom": "^29.0.2",
     "tailwindcss": "^4",
-    "tsx": "^4.21.0",
     "typescript": "^5",
     "vitest": "^4.1.4"
   }
