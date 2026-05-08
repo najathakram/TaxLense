@@ -455,6 +455,136 @@ function ScheduleK1Doc({ ctx, owner, sourceForm }: { ctx: EntityContext; owner: 
 }
 
 // ---------------------------------------------------------------------------
+// Form 1120 — C-Corp Income Tax Return Worksheet
+// ---------------------------------------------------------------------------
+
+const C_CORP_FED_RATE = 0.21
+
+function Form1120Doc({ ctx }: { ctx: EntityContext }) {
+  const t = ctx.totalsByLine
+  const grossReceipts = ctx.grossReceipts
+  const cogs = t.get("Part III COGS") ?? 0
+  const grossProfit = grossReceipts - cogs
+
+  const officerComp = t.get("12 Compensation of officers") ?? 0
+  const salaries = t.get("13 Salaries and wages (less employment credits)") ?? 0
+  const repairs = t.get("14 Repairs and maintenance") ?? t.get("Line 21 Repairs & Maintenance") ?? 0
+  const rents = t.get("16 Rents") ?? t.get("Line 20b Rent — Other") ?? 0
+  const taxes = t.get("17 Taxes and licenses") ?? t.get("Line 23 Taxes & Licenses") ?? 0
+  const interest = t.get("18 Interest") ?? t.get("Line 16b Interest") ?? 0
+  const charitable = t.get("19 Charitable contributions") ?? 0
+  const depreciation = t.get("20 Depreciation") ?? t.get("Line 13 Depreciation") ?? 0
+  const advertising = t.get("22 Advertising") ?? t.get("Line 8 Advertising") ?? 0
+  const benefits = t.get("24 Employee benefit programs") ?? t.get("Line 15 Insurance") ?? 0
+
+  const knownLines = new Set([
+    "12 Compensation of officers",
+    "13 Salaries and wages (less employment credits)",
+    "14 Repairs and maintenance",
+    "16 Rents",
+    "17 Taxes and licenses",
+    "18 Interest",
+    "19 Charitable contributions",
+    "20 Depreciation",
+    "22 Advertising",
+    "23 Pension, profit-sharing, etc., plans",
+    "24 Employee benefit programs",
+    "Part III COGS",
+    "Line 21 Repairs & Maintenance",
+    "Line 20b Rent — Other",
+    "Line 23 Taxes & Licenses",
+    "Line 16b Interest",
+    "Line 13 Depreciation",
+    "Line 8 Advertising",
+    "Line 15 Insurance",
+  ])
+  let other = 0
+  for (const [line, amt] of t.entries()) {
+    if (!knownLines.has(line)) other += amt
+  }
+
+  const totalDeductions =
+    officerComp + salaries + repairs + rents + taxes + interest + charitable + depreciation + advertising + benefits + other
+  const taxableIncome = grossProfit - totalDeductions
+  const fedTax = Math.max(0, taxableIncome) * C_CORP_FED_RATE
+
+  return (
+    <Document>
+      <Page size="LETTER" style={styles.page}>
+        <View style={styles.formHeaderBar}>
+          <Text>FORM 1120 WORKSHEET — TaxLens (not the official IRS form)</Text>
+        </View>
+        <Text style={styles.h1}>{ctx.ownerName}</Text>
+        <Text style={styles.muted}>
+          C-Corporation Income Tax Return · Tax Year {ctx.header.year}
+          {ctx.header.ein ? ` · EIN ${ctx.header.ein}` : " · EIN: [VERIFY]"}
+        </Text>
+
+        <Text style={styles.h2}>Income</Text>
+        <FormLine num="1a" label="Gross receipts or sales" amount={grossReceipts} />
+        <FormLine num="2" label="Cost of goods sold" amount={cogs} />
+        <FormLine num="3" label="Gross profit" amount={grossProfit} />
+
+        <Text style={styles.h2}>Deductions</Text>
+        <FormLine num="12" label="Compensation of officers" amount={officerComp} />
+        <FormLine num="13" label="Salaries and wages (less employment credits)" amount={salaries} />
+        <FormLine num="14" label="Repairs and maintenance" amount={repairs} />
+        <FormLine num="16" label="Rents" amount={rents} />
+        <FormLine num="17" label="Taxes and licenses" amount={taxes} />
+        <FormLine num="18" label="Interest" amount={interest} />
+        <FormLine num="19" label="Charitable contributions" amount={charitable} />
+        <FormLine num="20" label="Depreciation" amount={depreciation} />
+        <FormLine num="22" label="Advertising" amount={advertising} />
+        <FormLine num="24" label="Employee benefit programs" amount={benefits} />
+        <FormLine num="26" label="Other deductions (see attached statement)" amount={other} />
+
+        <View style={styles.totalRow}>
+          <Text style={styles.lineNum}>27</Text>
+          <Text style={styles.lineLabel}>Total deductions</Text>
+          <Text style={styles.lineAmount}>{fmtUSD(totalDeductions)}</Text>
+        </View>
+        <View style={styles.totalRow}>
+          <Text style={styles.lineNum}>30</Text>
+          <Text style={styles.lineLabel}>Taxable income (before NOL/special deductions)</Text>
+          <Text style={styles.lineAmount}>{fmtUSD(taxableIncome)}</Text>
+        </View>
+        <View style={styles.totalRow}>
+          <Text style={styles.lineNum}>31</Text>
+          <Text style={styles.lineLabel}>Federal income tax @ 21% flat rate</Text>
+          <Text style={styles.lineAmount}>{fmtUSD(fedTax)}</Text>
+        </View>
+
+        {officerComp === 0 && grossReceipts > 0 && (
+          <View style={styles.warningBox}>
+            <Text style={{ fontFamily: "Helvetica-Bold" }}>⚠ Officer compensation flag</Text>
+            <Text style={{ marginTop: 3 }}>
+              Officer compensation is $0 with positive gross receipts. C-Corp
+              shareholder-officers actively rendering services should receive
+              W-2 wages. Unreasonably low officer pay can be re-characterized
+              by the IRS, especially in closely-held C-Corps that distribute
+              dividends.
+            </Text>
+          </View>
+        )}
+
+        <View style={styles.warningBox}>
+          <Text style={{ fontFamily: "Helvetica-Bold" }}>Double-taxation reminder</Text>
+          <Text style={{ marginTop: 3 }}>
+            C-Corp net income is taxed at the entity level (~$
+            {Math.round(fedTax).toLocaleString()} above). Distributions to
+            shareholders are then taxed again as dividends on their personal
+            1040. Compare against an S-Corp election for closely-held single-
+            owner businesses.
+          </Text>
+        </View>
+
+        <FormFooter header={ctx.header} />
+      </Page>
+    </Document>
+  )
+}
+
+// ---------------------------------------------------------------------------
 // Public builders
 // ---------------------------------------------------------------------------
 
@@ -475,6 +605,12 @@ export async function buildForm1120SPdf(taxYearId: string): Promise<Buffer> {
 export async function buildForm1065Pdf(taxYearId: string): Promise<Buffer> {
   const ctx = await loadEntityContext(taxYearId)
   const stream = await pdf(<Form1065Doc ctx={ctx} />).toBuffer()
+  return pdfToBuffer(stream as unknown as AsyncIterable<Buffer | string>)
+}
+
+export async function buildForm1120Pdf(taxYearId: string): Promise<Buffer> {
+  const ctx = await loadEntityContext(taxYearId)
+  const stream = await pdf(<Form1120Doc ctx={ctx} />).toBuffer()
   return pdfToBuffer(stream as unknown as AsyncIterable<Buffer | string>)
 }
 
