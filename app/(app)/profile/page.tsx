@@ -78,6 +78,22 @@ export default async function ProfilePage() {
         profileData={profileData}
         legalName={user?.name ?? ""}
         email={user?.email ?? ""}
+        profileId={profile.id}
+        entityType={profile.entityType}
+        initialOwners={(await prisma.owner.findMany({
+          where: { profileId: profile.id },
+          orderBy: { ownershipPct: "desc" },
+        })).map((o) => ({
+          id: o.id,
+          kind: o.kind,
+          name: o.name,
+          ssnLast4: o.ssnLast4,
+          ein: o.ein,
+          ownershipPct: Number(o.ownershipPct.toString()),
+          w2Wages: o.w2Wages ? Number(o.w2Wages.toString()) : null,
+          guaranteedPayments: o.guaranteedPayments ? Number(o.guaranteedPayments.toString()) : null,
+          notes: o.notes,
+        }))}
       />
     </div>
   )

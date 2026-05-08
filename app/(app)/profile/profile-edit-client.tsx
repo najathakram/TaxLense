@@ -9,6 +9,7 @@ import { Label } from "@/components/ui/label"
 import { Pencil } from "lucide-react"
 import { US_STATES, TOP_NAICS_CODES } from "@/app/(app)/onboarding/constants"
 import { saveProfileEdit, saveLegalName } from "@/app/(app)/onboarding/actions"
+import OwnersPanel, { type OwnerRow } from "./owners-panel"
 import Step1 from "@/app/(app)/onboarding/steps/step1"
 import Step2 from "@/app/(app)/onboarding/steps/step2"
 import Step3 from "@/app/(app)/onboarding/steps/step3"
@@ -24,9 +25,19 @@ type Props = {
   profileData: Partial<WizardData>
   legalName?: string
   email?: string
+  profileId?: string
+  entityType?: string
+  initialOwners?: OwnerRow[]
 }
 
-export default function ProfileEditClient({ profileData, legalName: initialLegalName = "", email = "" }: Props) {
+export default function ProfileEditClient({
+  profileData,
+  legalName: initialLegalName = "",
+  email = "",
+  profileId,
+  entityType,
+  initialOwners = [],
+}: Props) {
   const [data, setData] = useState<Partial<WizardData>>(profileData)
   const [editStep, setEditStep] = useState<number | null>(null)
   const [legalName, setLegalName] = useState(initialLegalName)
@@ -105,6 +116,14 @@ export default function ProfileEditClient({ profileData, legalName: initialLegal
           <dd className="font-mono text-xs">{email || "—"}</dd>
         </dl>
       </div>
+
+      {profileId && entityType && (
+        <OwnersPanel
+          profileId={profileId}
+          entityType={entityType}
+          initialOwners={initialOwners}
+        />
+      )}
 
       <Section title="Basics" step={1}>
         <dl className="grid grid-cols-2 gap-x-4 gap-y-1 text-sm">
