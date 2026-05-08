@@ -9,6 +9,7 @@ import { matchTransfers } from "@/lib/pairing/transfers"
 import { matchCardPayments } from "@/lib/pairing/payments"
 import { matchRefunds } from "@/lib/pairing/refunds"
 import { runMerchantIntelligence } from "@/lib/ai/merchantIntelligence"
+import { runCpaAgent } from "@/lib/ai/cpaAgent"
 import { selectResidualCandidates } from "@/lib/ai/residualCandidates"
 import { runResidualPass } from "@/lib/ai/residualTransaction"
 import { runBulkClassifyPass } from "@/lib/ai/bulkClassify"
@@ -151,6 +152,29 @@ export async function runBulkClassify(year: number) {
 export async function runAutoResolveStops(year: number) {
   return enqueue(year, "AUTO_RESOLVE_STOPS", async (_taxYearId, setProgress) => {
     return autoResolveStops(year, setProgress)
+  })
+}
+
+/**
+ * Phase 1 — Autonomous CPA Agent. Replaces the multi-stage pipeline with one
+ * Sonnet-led pass that thinks like a CPA, classifies the whole ledger in
+ * chunks, and emits a single audit memo (stored as a Document under the
+ * client's account).
+ *
+ * Use the floating progress panel to watch the run live; on DONE the page
+ * reloads and the audit memo appears in /clients/<id>/documents under
+ * "Other" (tagged "audit-memo", "cpa-agent").
+ */
+export async function runCpaAgentAction(year: number) {
+  return enqueue(year, "CPA_AGENT", async (taxYearId, setProgress) => {
+    const result = await runCpaAgent(taxYearId, { reportProgress: setProgress })
+    return {
+      rowsConsidered: result.rowsConsidered,
+      rowsClassified: result.rowsClassified,
+      rowsLeftAsPersonal: result.rowsLeftAsPersonal,
+      memoDocumentId: result.memoDocumentId,
+      summary: result.memo.summary,
+    }
   })
 }
 

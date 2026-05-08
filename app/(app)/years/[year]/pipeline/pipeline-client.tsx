@@ -15,6 +15,7 @@ import {
   runResidualAI,
   runBulkClassify,
   runAutoResolveStops,
+  runCpaAgentAction,
   getPipelineRunStatus,
 } from "./actions"
 
@@ -226,6 +227,37 @@ export function PipelineClient({ year, initial }: PipelineClientProps) {
         recentResults={results}
       />
 
+      {/* Hero: Autonomous CPA Agent — single-click rewrite that replaces the
+          per-step flow below for normal use. The 6+3 stage buttons stay
+          available as an "Advanced" disclosure. */}
+      <Card className="border-2 border-primary/40 bg-gradient-to-br from-primary/5 to-transparent">
+        <CardContent className="py-5">
+          <div className="flex items-start justify-between gap-4">
+            <div className="flex-1">
+              <h3 className="font-semibold text-base">
+                Autonomous CPA Agent <Badge variant="default" className="ml-2 text-xs align-middle">v1</Badge>
+              </h3>
+              <p className="text-sm text-muted-foreground mt-1.5 leading-relaxed">
+                One Sonnet-led pass over the entire ledger. Classifies every transaction
+                (with IRC citations + evidence tier + confidence), applies the same
+                judgment a senior CPA would, and emits a single audit memo to the
+                client&apos;s Documents folder. Defaults uncertain §274(d) rows to PERSONAL
+                with a &quot;not-claimed&quot; line so you can promote them later by uploading
+                receipts — no STOP queue.
+              </p>
+            </div>
+            <Button
+              size="lg"
+              disabled={runDisabled}
+              onClick={() => run(() => runCpaAgentAction(year), "Autonomous CPA Agent")}
+              className="shrink-0"
+            >
+              {runDisabled ? "Running…" : "Run autonomous CPA"}
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+
       {/* Stats overview */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <StatCard label="Total transactions" value={stats.totalTx} />
@@ -233,6 +265,16 @@ export function PipelineClient({ year, initial }: PipelineClientProps) {
         <StatCard label="Merchant rules" value={stats.merchantRules} />
         <StatCard label="STOPs pending" value={stats.stops} />
       </div>
+
+      {/* Step buttons 1–6 — the legacy multi-stage flow. Kept as an
+          "Advanced" disclosure for debugging individual phases; normal
+          use now goes through the autonomous CPA agent above. */}
+      <details className="group">
+        <summary className="cursor-pointer text-sm font-medium text-muted-foreground hover:text-foreground flex items-center gap-2 select-none">
+          <span className="transition-transform group-open:rotate-90">▸</span>
+          Advanced — run individual pipeline stages
+        </summary>
+      </details>
 
       {/* Step buttons 1–6 */}
       <div className="space-y-3">
