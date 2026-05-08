@@ -10,6 +10,7 @@ import { matchCardPayments } from "@/lib/pairing/payments"
 import { matchRefunds } from "@/lib/pairing/refunds"
 import { runMerchantIntelligence } from "@/lib/ai/merchantIntelligence"
 import { runCpaAgent } from "@/lib/ai/cpaAgent"
+import { reExtractLowConfidence } from "@/lib/parsers/reExtract"
 import { selectResidualCandidates } from "@/lib/ai/residualCandidates"
 import { runResidualPass } from "@/lib/ai/residualTransaction"
 import { runBulkClassifyPass } from "@/lib/ai/bulkClassify"
@@ -152,6 +153,18 @@ export async function runBulkClassify(year: number) {
 export async function runAutoResolveStops(year: number) {
   return enqueue(year, "AUTO_RESOLVE_STOPS", async (_taxYearId, setProgress) => {
     return autoResolveStops(year, setProgress)
+  })
+}
+
+/**
+ * Phase A — Sonnet vision re-extraction for low-confidence PDFs. Finds
+ * StatementImports with parseConfidence < 0.85 (Haiku-extracted, possibly
+ * scanned/noisy), re-runs Sonnet vision over each, and upserts higher-
+ * quality transactions via the existing idempotencyKey constraint.
+ */
+export async function runExtractRePass(year: number) {
+  return enqueue(year, "EXTRACT_REPASS", async (taxYearId, setProgress) => {
+    return reExtractLowConfidence(taxYearId, { reportProgress: setProgress })
   })
 }
 

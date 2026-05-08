@@ -112,7 +112,8 @@ export const PipelineRunKind = {
   RESIDUAL_AI: 'RESIDUAL_AI',
   BULK_CLASSIFY: 'BULK_CLASSIFY',
   AUTO_RESOLVE_STOPS: 'AUTO_RESOLVE_STOPS',
-  CPA_AGENT: 'CPA_AGENT'
+  CPA_AGENT: 'CPA_AGENT',
+  EXTRACT_REPASS: 'EXTRACT_REPASS'
 } as const
 
 export type PipelineRunKind = (typeof PipelineRunKind)[keyof typeof PipelineRunKind]
