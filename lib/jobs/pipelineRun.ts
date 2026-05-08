@@ -33,12 +33,31 @@ import { getAdminCpaContext } from "@/lib/admin/adminContext"
  * a friendly label and color. `label` is the human-readable detail line
  * shown under the phase title (e.g. "TIM HORTONS · batch 12 of 27").
  */
+export interface PipelineDecisionFlash {
+  /** Merchant or transaction description shown to the user. */
+  merchant: string
+  /** Code chosen by the AI (WRITE_OFF, MEALS_50, PERSONAL, …). */
+  code: string
+  /** Business % applied to the deduction (0–100). */
+  businessPct: number
+  /** Absolute amount in dollars (rounded). */
+  amount: number
+}
+
 export interface PipelineProgress {
   phase: string
   processed: number
   total: number
   label?: string
   costUsd?: number
+  /**
+   * Most recent classification decisions, freshest last. The floating
+   * progress UI uses these to render a "watching the AI think" feed
+   * while the CPA agent persists classifications. Only set during the
+   * cpa_agent persistence phase — other phases leave it undefined so
+   * the UI only shows the feed when it's relevant.
+   */
+  recentDecisions?: PipelineDecisionFlash[]
 }
 
 /**
