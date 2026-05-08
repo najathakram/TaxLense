@@ -11,7 +11,11 @@
 
 export const EntityType = {
   SOLE_PROP: 'SOLE_PROP',
-  LLC_SINGLE: 'LLC_SINGLE'
+  LLC_SINGLE: 'LLC_SINGLE',
+  S_CORP: 'S_CORP',
+  LLC_MULTI: 'LLC_MULTI',
+  C_CORP: 'C_CORP',
+  PARTNERSHIP: 'PARTNERSHIP'
 } as const
 
 export type EntityType = (typeof EntityType)[keyof typeof EntityType]

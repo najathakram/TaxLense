@@ -42,6 +42,7 @@ import { matchRefunds } from "@/lib/pairing/refunds"
 import { normalizeMerchantsForYear } from "@/lib/classification/apply"
 import { aggregateClientNotes } from "@/lib/ai/merchantIntelligence"
 import { inYearWindow } from "@/lib/queries/yearWindow"
+import { getFormSpec } from "@/lib/forms/registry"
 import type { ProgressReporter } from "@/lib/jobs/pipelineRun"
 
 const MODEL_PRIMARY = "claude-sonnet-4-6" as const
@@ -178,7 +179,7 @@ export async function runCpaAgent(taxYearId: string, opts: CpaAgentOptions = {})
   })
 
   const clientNotes = await aggregateClientNotes(taxYearId)
-  const systemPrompt = buildAgentSystemPrompt(profile, clientNotes)
+  const systemPrompt = buildAgentSystemPrompt(profile, clientNotes, profile.entityType)
 
   // Skip already-paired rows (transfers/payments already classified by
   // the deterministic pairing logic). Process every other row.
@@ -342,7 +343,17 @@ function buildAgentSystemPrompt(
     knownEntities: Array<{ displayName: string; kind: string; matchKeywords: string[]; notes: string | null }>
   },
   clientNotes: string,
+  entityType: string,
 ): string {
+  const form = getFormSpec(entityType)
+  const lineMap = form.lines.map((l) => `"${l}"`).join(", ")
+  const entitySpecific = entityType === "S_CORP"
+    ? `\n=== S-CORP SPECIFIC RULES ===\n- Owner W-2 wages must be reasonable per §1402; if owner W-2 = $0, set riskNote on the largest WRITE_OFF row to flag the IRS audit trigger.\n- No SE tax — distributions to shareholders are NOT subject to §1402 self-employment tax.\n- Health insurance for >2% shareholders: classify as WRITE_OFF (line "18 Employee benefit programs") with §1402(a)(13) and the riskNote "Shareholder-employee health insurance — must be added to W-2 Box 1 per Notice 2008-1."\n- Officer compensation goes on its own line; non-officer salaries on line 8.\n- Distributions to shareholders are NOT deductible — code = TRANSFER (basis), not WRITE_OFF.`
+    : entityType === "LLC_MULTI" || entityType === "PARTNERSHIP"
+    ? `\n=== PARTNERSHIP SPECIFIC RULES ===\n- Guaranteed payments to partners are deductible by the partnership (line 10) but ordinary income to the partner; flag with riskNote.\n- Each partner gets a K-1; ordinary income flows to Box 1 and is subject to SE tax for general partners.`
+    : entityType === "C_CORP"
+    ? `\n=== C-CORP SPECIFIC RULES ===\n- Officer compensation (line 12) must be reasonable; excess flagged as a riskNote.\n- Dividends paid to shareholders are NOT deductible (line 19 charitable contributions are; dividends go on 1099-DIV later).\n- 21% flat federal rate after deductions and §199A NOL.`
+    : "" // SOLE_PROP / LLC_SINGLE — Schedule C (default behavior).
   const tripsBlock = profile.trips.length === 0
     ? "None confirmed."
     : profile.trips
@@ -415,14 +426,14 @@ ${tripsBlock}
 === KNOWN ENTITIES ===
 ${entitiesBlock}
 
-=== SCHEDULE C LINE MAP (use exact strings; for non-Schedule-C entities the line names still apply for your output — the form router downstream maps them to 1120/1120-S/1065 lines) ===
-"Line 8 Advertising", "Line 9 Car & Truck", "Line 11 Contract Labor",
-"Line 13 Depreciation", "Line 15 Insurance", "Line 16b Interest",
-"Line 17 Legal & Professional", "Line 18 Office Expense",
-"Line 20b Rent — Other", "Line 21 Repairs & Maintenance", "Line 22 Supplies",
-"Line 23 Taxes & Licenses", "Line 24a Travel", "Line 24b Meals",
-"Line 25 Utilities", "Line 27a Other Expenses", "Line 30 Home Office",
-"Part III COGS", null
+=== TARGET FORM ===
+This taxpayer files: ${form.primaryReturn}
+${form.k1 ? `Owners receive: Schedule K-1 per ${entityType === "S_CORP" ? "shareholder" : "partner"}.` : "No K-1 — owner reports on their own 1040."}
+SE tax applies: ${form.seTax ? "Yes (owner pays SE tax on net business income)" : "No (no SE tax on this entity's distributions)"}.
+Owner payroll required: ${form.requiresOwnerPayroll ? "Yes (W-2 reasonable comp)" : "No"}.
+
+=== ALLOWED scheduleLine VALUES (use the exact string verbatim, or null) ===
+${lineMap}, null${entitySpecific}
 
 === EVIDENCE TIERS ===
 1 = Receipt + calendar + trip context + deliverable link (rare)

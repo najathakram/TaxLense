@@ -42,7 +42,9 @@ async function advanceDraftStep(profileId: string, step: number) {
 
 const step1Schema = z.object({
   year: z.number().int().min(2020).max(2030),
-  entityType: z.enum(["SOLE_PROP", "LLC_SINGLE"]),
+  // Phase 2 — added S_CORP. LLC_MULTI / C_CORP / PARTNERSHIP are reserved
+  // for Phases 3/4; the wizard surfaces them as "coming soon".
+  entityType: z.enum(["SOLE_PROP", "LLC_SINGLE", "S_CORP"]),
   primaryState: z.string().min(2).max(2),
   accountingMethod: z.enum(["CASH", "ACCRUAL"]),
   firstYear: z.boolean(),
