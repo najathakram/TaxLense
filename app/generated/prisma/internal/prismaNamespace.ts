@@ -2349,6 +2349,8 @@ export const TransactionScalarFieldEnum = {
   isRefundPairedWith: 'isRefundPairedWith',
   isSplit: 'isSplit',
   splitOfId: 'splitOfId',
+  isStale: 'isStale',
+  staleReason: 'staleReason',
   createdAt: 'createdAt'
 } as const
 

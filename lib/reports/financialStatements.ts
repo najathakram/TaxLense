@@ -67,7 +67,7 @@ async function loadClassifiedTxns(taxYearId: string): Promise<ClassifiedTx[]> {
   const ty = await prisma.taxYear.findUnique({ where: { id: taxYearId }, select: { year: true } })
   if (!ty) return []
   const rows = await prisma.transaction.findMany({
-    where: { taxYearId, isSplit: false, ...inYearWindow(ty.year) },
+    where: { taxYearId, isSplit: false, isStale: false, ...inYearWindow(ty.year) },
     orderBy: [{ postedDate: "asc" }, { id: "asc" }],
     include: {
       classifications: { where: { isCurrent: true }, take: 1 },
@@ -276,7 +276,7 @@ export async function buildFinancialStatements(taxYearId: string): Promise<Buffe
     where: { taxYearId },
     include: {
       transactions: {
-        where: { taxYearId, isSplit: false },
+        where: { taxYearId, isSplit: false, isStale: false },
         select: { amountNormalized: true },
       },
     },

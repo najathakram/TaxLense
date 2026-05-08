@@ -58,7 +58,7 @@ export async function buildAuditPacket(taxYearId: string, skipMemos = false): Pr
   const [taxYear, allTxns, stopItems, imports] = await Promise.all([
     prisma.taxYear.findUniqueOrThrow({ where: { id: taxYearId } }),
     prisma.transaction.findMany({
-      where: { taxYearId, isSplit: false },
+      where: { taxYearId, isSplit: false, isStale: false },
       orderBy: [{ postedDate: "asc" }, { id: "asc" }],
       include: {
         classifications: { where: { isCurrent: true }, take: 1 },

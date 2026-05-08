@@ -39,6 +39,8 @@ export interface ReExtractResult {
   importsConsidered: number
   importsReExtracted: number
   newTransactions: number
+  /** Total rows marked isStale=true (superseded by the better extraction). */
+  staledTransactions: number
   bumpedConfidence: number
   errors: number
   details: Array<{
@@ -47,6 +49,7 @@ export interface ReExtractResult {
     oldConfidence: number
     newConfidence: number | null
     newTransactions: number
+    staledTransactions: number
     status: "reextracted" | "skipped-no-file" | "skipped-still-low" | "error"
     errorMessage?: string
   }>
@@ -80,6 +83,7 @@ export async function reExtractLowConfidence(
     importsConsidered: candidates.length,
     importsReExtracted: 0,
     newTransactions: 0,
+    staledTransactions: 0,
     bumpedConfidence: 0,
     errors: 0,
     details: [],
@@ -110,6 +114,7 @@ export async function reExtractLowConfidence(
       oldConfidence: imp.parseConfidence ?? 0,
       newConfidence: null,
       newTransactions: 0,
+      staledTransactions: 0,
       status: "error",
     }
 
@@ -171,11 +176,32 @@ export async function reExtractLowConfidence(
       // Drop transactions that fall outside this TaxYear (matches A10 logic).
       const { inYear } = partitionByTaxYear(parsed.transactions, ty.year)
 
+      // Compute the set of idempotency keys the new (better) extraction
+      // produced. Anything attached to this StatementImport that is NOT
+      // in this set is considered stale — it was an artifact of the old
+      // low-confidence extraction that the better one didn't confirm.
+      const newKeys = new Set<string>()
+      for (const tx of inYear) {
+        newKeys.add(transactionKey(imp.accountId, tx.postedDate, tx.amountNormalized, tx.merchantRaw))
+      }
+
+      // Insert any new transactions the better extraction discovered.
       let inserted = 0
       for (const tx of inYear) {
         const iKey = transactionKey(imp.accountId, tx.postedDate, tx.amountNormalized, tx.merchantRaw)
         const existing = await prisma.transaction.findUnique({ where: { idempotencyKey: iKey } })
-        if (existing) continue
+        if (existing) {
+          // If a row was previously marked stale (e.g. a re-extract was
+          // partially run before), un-stale it now that the better
+          // extraction confirmed it.
+          if (existing.isStale) {
+            await prisma.transaction.update({
+              where: { id: existing.id },
+              data: { isStale: false, staleReason: null },
+            })
+          }
+          continue
+        }
         await prisma.transaction.create({
           data: {
             statementImportId: imp.id,
@@ -193,6 +219,29 @@ export async function reExtractLowConfidence(
         inserted++
       }
 
+      // Mark any transactions previously attached to this StatementImport
+      // that the new extraction did NOT confirm as stale. They stay in the
+      // DB for audit (append-only-friendly) but get filtered from totals
+      // + ledger views.
+      const oldRows = await prisma.transaction.findMany({
+        where: { statementImportId: imp.id, isStale: false },
+        select: { id: true, idempotencyKey: true },
+      })
+      const stalingIds = oldRows
+        .filter((row) => !newKeys.has(row.idempotencyKey))
+        .map((row) => row.id)
+      let staled = 0
+      if (stalingIds.length > 0) {
+        const updated = await prisma.transaction.updateMany({
+          where: { id: { in: stalingIds } },
+          data: {
+            isStale: true,
+            staleReason: `Superseded by Sonnet vision re-extract on ${new Date().toISOString().slice(0, 10)} (import ${imp.id}).`,
+          },
+        })
+        staled = updated.count
+      }
+
       // Update the StatementImport row with the better confidence + path.
       await prisma.statementImport.update({
         where: { id: imp.id },
@@ -206,8 +255,10 @@ export async function reExtractLowConfidence(
 
       detail.status = "reextracted"
       detail.newTransactions = inserted
+      detail.staledTransactions = staled
       result.importsReExtracted++
       result.newTransactions += inserted
+      result.staledTransactions += staled
       result.bumpedConfidence++
 
       await prisma.auditEvent.create({
@@ -220,9 +271,10 @@ export async function reExtractLowConfidence(
             oldConfidence: imp.parseConfidence ?? 0,
             newConfidence: parsed.parseConfidence ?? null,
             newTransactionsInserted: inserted,
+            staleTransactionsMarked: staled,
             extractionPath: "VISION_DOC",
           },
-          rationale: `Re-extracted ${imp.originalFilename} via Sonnet vision (confidence ${(imp.parseConfidence ?? 0).toFixed(2)} → ${(parsed.parseConfidence ?? 0).toFixed(2)}).`,
+          rationale: `Re-extracted ${imp.originalFilename} via Sonnet vision (confidence ${(imp.parseConfidence ?? 0).toFixed(2)} → ${(parsed.parseConfidence ?? 0).toFixed(2)}). ${staled} stale row${staled === 1 ? "" : "s"} marked.`,
         },
       })
     } catch (err) {
@@ -238,7 +290,7 @@ export async function reExtractLowConfidence(
         phase: "extract_repass",
         processed: i + 1,
         total: candidates.length,
-        label: `${i + 1} / ${candidates.length} · ${result.importsReExtracted} re-extracted · ${result.newTransactions} new tx`,
+        label: `${i + 1} / ${candidates.length} · ${result.importsReExtracted} re-extracted · ${result.newTransactions} new · ${result.staledTransactions} staled`,
       })
     }
   }

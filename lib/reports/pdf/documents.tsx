@@ -115,7 +115,7 @@ async function loadContext(taxYearId: string): Promise<PackageContext> {
   const clientName = ty.user.name ?? ty.user.email
 
   const txns = await prisma.transaction.findMany({
-    where: { taxYearId, isSplit: false, isDuplicateOf: null },
+    where: { taxYearId, isSplit: false, isStale: false, isDuplicateOf: null },
     select: {
       amountNormalized: true,
       classifications: {
@@ -510,7 +510,7 @@ interface HandoffStats {
 export async function buildCpaHandoffPdf(taxYearId: string): Promise<Buffer> {
   const ctx = await loadContext(taxYearId)
   const [txCount, stopsResolved, stopsTotal] = await Promise.all([
-    prisma.transaction.count({ where: { taxYearId, isSplit: false, isDuplicateOf: null } }),
+    prisma.transaction.count({ where: { taxYearId, isSplit: false, isStale: false, isDuplicateOf: null } }),
     prisma.stopItem.count({ where: { taxYearId, state: "ANSWERED" } }),
     prisma.stopItem.count({ where: { taxYearId } }),
   ])
@@ -534,6 +534,7 @@ export async function build1099NecCsv(taxYearId: string): Promise<string> {
     where: {
       taxYearId,
       isSplit: false,
+      isStale: false,
       isDuplicateOf: null,
       classifications: { some: { isCurrent: true, code: "WRITE_OFF", scheduleCLine: "Line 11 Contract Labor" } },
     },

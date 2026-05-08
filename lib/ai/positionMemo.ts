@@ -43,7 +43,7 @@ async function gather183Facts(taxYearId: string): Promise<{ facts: string; expos
   ])
 
   const txns = await prisma.transaction.findMany({
-    where: { taxYearId, isSplit: false },
+    where: { taxYearId, isSplit: false, isStale: false },
     include: { classifications: { where: { isCurrent: true }, take: 1 } },
   })
 
@@ -75,7 +75,7 @@ async function gather183Facts(taxYearId: string): Promise<{ facts: string; expos
 
 async function gather274n2Facts(taxYearId: string): Promise<{ facts: string; exposure: number }> {
   const txns = await prisma.transaction.findMany({
-    where: { taxYearId, isSplit: false },
+    where: { taxYearId, isSplit: false, isStale: false },
     include: { classifications: { where: { isCurrent: true }, take: 1 } },
   })
 
@@ -115,7 +115,7 @@ async function gather280AFacts(taxYearId: string): Promise<{ facts: string; expo
   const deduction = method === "SIMPLIFIED" ? Math.min(300, sqft) * 5 : 0
 
   const txns = await prisma.transaction.findMany({
-    where: { taxYearId, isSplit: false },
+    where: { taxYearId, isSplit: false, isStale: false },
     include: { classifications: { where: { isCurrent: true }, take: 1 } },
   })
   let grossRevenue = 0
@@ -148,6 +148,7 @@ async function gatherWardrobeFacts(taxYearId: string): Promise<{ facts: string; 
     where: {
       taxYearId,
       isSplit: false,
+      isStale: false,
       merchantRaw: { contains: "cloth", mode: "insensitive" },
     },
     include: { classifications: { where: { isCurrent: true }, take: 1 } },
@@ -157,6 +158,7 @@ async function gatherWardrobeFacts(taxYearId: string): Promise<{ facts: string; 
     where: {
       taxYearId,
       isSplit: false,
+      isStale: false,
       classifications: { some: { isCurrent: true, reasoning: { contains: "wardrobe", mode: "insensitive" } } },
     },
     include: { classifications: { where: { isCurrent: true }, take: 1 } },

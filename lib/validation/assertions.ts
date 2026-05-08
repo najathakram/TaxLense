@@ -61,7 +61,7 @@ type LedgerRow = {
 
 async function loadLedger(taxYearId: string) {
   return prisma.transaction.findMany({
-    where: { taxYearId, isSplit: false },
+    where: { taxYearId, isSplit: false, isStale: false },
     include: { classifications: { where: { isCurrent: true }, take: 1 } },
   }) as unknown as Promise<LedgerRow[]>
 }
@@ -177,7 +177,7 @@ export async function A06_PAYMENT_ZERO(taxYearId: string): Promise<AssertionResu
 
 export async function A07_TRANSFER_PAIRED(taxYearId: string): Promise<AssertionResult> {
   const txns = await prisma.transaction.findMany({
-    where: { taxYearId, isSplit: false },
+    where: { taxYearId, isSplit: false, isStale: false },
     include: { classifications: { where: { isCurrent: true }, take: 1 } },
   })
   const transfers = txns.filter((t) => t.classifications[0]?.code === "TRANSFER")
@@ -236,7 +236,7 @@ export async function A10_YEAR_BOUNDARY(taxYearId: string): Promise<AssertionRes
   const taxYear = await prisma.taxYear.findUnique({ where: { id: taxYearId } })
   if (!taxYear) throw new Error("TaxYear not found")
   const txns = await prisma.transaction.findMany({
-    where: { taxYearId, isSplit: false },
+    where: { taxYearId, isSplit: false, isStale: false },
     select: { id: true, postedDate: true },
   })
   const offenders = txns.filter((t) => t.postedDate.getUTCFullYear() !== taxYear.year).map((t) => t.id)
@@ -252,7 +252,7 @@ export async function A10_YEAR_BOUNDARY(taxYearId: string): Promise<AssertionRes
 
 export async function A11_REFUND_NET_ZERO(taxYearId: string): Promise<AssertionResult> {
   const txns = await prisma.transaction.findMany({
-    where: { taxYearId, isSplit: false, isRefundPairedWith: { not: null } },
+    where: { taxYearId, isSplit: false, isStale: false, isRefundPairedWith: { not: null } },
     select: { id: true, amountNormalized: true, isRefundPairedWith: true },
   })
   const byPair = new Map<string, number>()
@@ -293,7 +293,7 @@ export async function A13_DEPOSITS_RECONSTRUCTED(taxYearId: string): Promise<Ass
   // Spec §12.1: Σ inflows − paired transfers − classified gifts/loans/refunds − BIZ_INCOME
   // If |delta| > $500 → CRITICAL block
   const txns = await prisma.transaction.findMany({
-    where: { taxYearId, isSplit: false, amountNormalized: { lt: 0 } }, // inflows only
+    where: { taxYearId, isSplit: false, isStale: false, amountNormalized: { lt: 0 } }, // inflows only
     include: { classifications: { where: { isCurrent: true }, take: 1 } },
   })
   let totalInflows = 0

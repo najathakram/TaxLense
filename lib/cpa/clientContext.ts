@@ -189,7 +189,7 @@ export async function getClientYearStrip(clientId: string): Promise<YearStripEnt
   const result: YearStripEntry[] = []
   for (const ty of taxYears) {
     const txns = await prisma.transaction.findMany({
-      where: { taxYearId: ty.id, isSplit: false, ...inYearWindow(ty.year) },
+      where: { taxYearId: ty.id, isSplit: false, isStale: false, ...inYearWindow(ty.year) },
       select: {
         amountNormalized: true,
         classifications: {

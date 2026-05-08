@@ -62,7 +62,7 @@ export async function buildMasterLedger(taxYearId: string): Promise<Buffer> {
       include: { financialAccounts: true },
     }),
     prisma.transaction.findMany({
-      where: { taxYearId, isSplit: false },
+      where: { taxYearId, isSplit: false, isStale: false },
       orderBy: [{ postedDate: "asc" }, { id: "asc" }],
       include: {
         classifications: { where: { isCurrent: true }, take: 1 },

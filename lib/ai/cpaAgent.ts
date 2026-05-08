@@ -163,6 +163,7 @@ export async function runCpaAgent(taxYearId: string, opts: CpaAgentOptions = {})
     where: {
       taxYearId,
       isSplit: false,
+      isStale: false,
       isDuplicateOf: null,
       ...inYearWindow(taxYear.year),
     },

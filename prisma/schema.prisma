@@ -561,6 +561,15 @@ model Transaction {
   isRefundPairedWith   String?
   isSplit              Boolean   @default(false) // true on the parent when its amount is split into child txns
   splitOfId            String?   // set on child rows pointing back to the parent txn
+  /**
+   * Phase A re-extract cleanup. Set true on rows that the original (low-
+   * quality) extraction created but the higher-quality Sonnet vision
+   * re-extraction did NOT confirm. Excluded from totals + ledger views.
+   * Append-only-friendly: row is kept on disk for audit, just hidden from
+   * computation.
+   */
+  isStale              Boolean   @default(false)
+  staleReason          String?
   createdAt            DateTime  @default(now())
   // NO updatedAt — immutable by design
 
@@ -584,6 +593,8 @@ model Transaction {
   // Spec §5.1 indexes
   @@index([taxYearId, postedDate])
   @@index([accountId, postedDate])
+  // Phase A re-extract cleanup: filter stale rows from totals/ledger views
+  @@index([taxYearId, isStale])
 }
 
 // ---------------------------------------------------------------------------

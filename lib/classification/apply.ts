@@ -65,6 +65,7 @@ export async function applyMerchantRules(
       isPaymentPairedWith: null,
       isDuplicateOf: null,
       isSplit: false,
+      isStale: false,
       merchantNormalized: { not: null },
       ...(options.merchantKey ? { merchantNormalized: options.merchantKey } : {}),
     },
