@@ -1,0 +1,700 @@
+/**
+ * Autonomous CPA Agent — Phase 1 of the architectural rewrite.
+ *
+ * Replaces the multi-stage deterministic-pipeline + STOP-driven flow with a
+ * single Sonnet-led pass over the unified ledger. Outputs one audit memo
+ * (JSON + human-readable PDF) instead of a stack of user-blocking STOPs.
+ *
+ * Decisions locked in (per the approved plan and CLAUDE.md updates):
+ *   - "AI-decides default": uncertain §274(d) rows default to PERSONAL with
+ *     a "not-claimed" line in the audit memo so the user can promote them
+ *     later by uploading a receipt or note.
+ *   - Deductible triples preserved: every deductible classification still
+ *     carries IRC citation, evidence tier, and confidence.
+ *   - Append-only ledger preserved: Classifications are inserted with
+ *     isCurrent=true; prior rows flipped to isCurrent=false.
+ *   - No fabrication: AI never invents §274(d) attendees, business-purpose
+ *     details, or 1099-K amounts. Missing substantiation → conservative
+ *     default + memo entry.
+ *
+ * Flow:
+ *   Phase B — Deterministic plumbing (normalize, transfers, payments, refunds).
+ *             Fast, no AI. Reused as-is.
+ *   Phase C — Whole-ledger CPA pass. ~150 rows per Sonnet call, with the full
+ *             profile + entity context + neighbor windows as context. Each
+ *             call returns per-row classification triples + per-row reasoning.
+ *   Phase D — Sanity sweep. One final Sonnet call sees the chunked outputs
+ *             as a unified ledger draft and emits the audit memo.
+ *
+ * Extraction quality re-pass (Phase A) and advanced UI disclosure are
+ * scheduled for a follow-up PR.
+ */
+
+import Anthropic from "@anthropic-ai/sdk"
+import { prisma } from "@/lib/db"
+import type {
+  TransactionCode,
+  Prisma,
+} from "@/app/generated/prisma/client"
+import { matchTransfers } from "@/lib/pairing/transfers"
+import { matchCardPayments } from "@/lib/pairing/payments"
+import { matchRefunds } from "@/lib/pairing/refunds"
+import { normalizeMerchantsForYear } from "@/lib/classification/apply"
+import { aggregateClientNotes } from "@/lib/ai/merchantIntelligence"
+import { inYearWindow } from "@/lib/queries/yearWindow"
+import type { ProgressReporter } from "@/lib/jobs/pipelineRun"
+
+const MODEL_PRIMARY = "claude-sonnet-4-6" as const
+const MODEL_OPUS = "claude-opus-4-7" as const
+
+// Chunk size — number of ledger rows per Sonnet call. Big enough that the
+// model sees neighborhood context; small enough that one bad batch doesn't
+// blow the whole run.
+const CHUNK_SIZE = 60
+
+// Allowed classification codes (mirror lib/ai/merchantIntelligence.ts).
+const VALID_CODES: TransactionCode[] = [
+  "WRITE_OFF",
+  "WRITE_OFF_TRAVEL",
+  "WRITE_OFF_COGS",
+  "MEALS_50",
+  "MEALS_100",
+  "GRAY",
+  "PERSONAL",
+  "TRANSFER",
+  "PAYMENT",
+  "BIZ_INCOME",
+  "NEEDS_CONTEXT",
+]
+const VALID_CODE_SET = new Set<string>(VALID_CODES)
+
+const VALID_CITATIONS = new Set([
+  "§61", "§162", "§162(a)", "§263A", "§274(d)", "§274(n)", "§274(n)(1)", "§274(n)(2)",
+  "§262", "§1402", "§280A", "§280A(c)", "§168(k)", "§179", "§280F", "§195", "§6001",
+  "§163(h)", "§471", "§471(c)",
+  "Cohan",
+])
+
+function sanitizeCitations(arr: unknown[]): string[] {
+  return arr
+    .filter((c): c is string => typeof c === "string")
+    .map((c) => (VALID_CITATIONS.has(c) ? c : "[VERIFY]"))
+}
+
+// --- Per-row output schema -------------------------------------------------
+
+interface RowDecision {
+  txId: string
+  code: TransactionCode
+  scheduleLine: string | null
+  businessPct: number
+  ircCitations: string[]
+  evidenceTier: number
+  confidence: number
+  reasoning: string
+  /** When AI defaulted to PERSONAL because substantiation is missing. */
+  notClaimedReason?: string
+  /** Gray-area calls that the audit memo should highlight. */
+  riskNote?: string
+  /** When true, AI used Cohan as a strategic call rather than a rescue. */
+  cohanFlag?: boolean
+}
+
+// --- Audit memo schema -----------------------------------------------------
+
+export interface AuditMemo {
+  taxYearId: string
+  generatedAt: string
+  model: string
+  totalsClaimedByLine: Record<string, number>
+  totalsNotClaimed: Record<string, number>
+  grayAreaCalls: Array<{ txId: string; choseCode: string; alternativeCode: string; reason: string }>
+  followUps: Array<{ kind: string; promptForUser: string; txIds?: string[] }>
+  coverageGaps: string[]
+  riskFlags: string[]
+  summary: string
+}
+
+// --- Public API ------------------------------------------------------------
+
+export interface CpaAgentOptions {
+  anthropicClient?: Anthropic
+  reportProgress?: ProgressReporter
+  /** When true, bypass the cached deterministic-plumbing step (assume already run). */
+  skipPlumbing?: boolean
+}
+
+export interface CpaAgentResult {
+  rowsConsidered: number
+  rowsClassified: number
+  rowsLeftAsPersonal: number
+  memoDocumentId: string | null
+  memo: AuditMemo
+}
+
+export async function runCpaAgent(taxYearId: string, opts: CpaAgentOptions = {}): Promise<CpaAgentResult> {
+  const reporter = opts.reportProgress
+  const client = opts.anthropicClient ?? new Anthropic({ apiKey: process.env["ANTHROPIC_API_KEY"] })
+
+  const taxYear = await prisma.taxYear.findUniqueOrThrow({
+    where: { id: taxYearId },
+    include: { ruleVersion: true },
+  })
+
+  // ── Phase B — Deterministic plumbing (idempotent, ~seconds) ─────────────
+  if (!opts.skipPlumbing) {
+    if (reporter) await reporter({ phase: "cpa_agent", processed: 0, total: 4, label: "Normalizing merchants…" })
+    await normalizeMerchantsForYear(taxYearId)
+    if (reporter) await reporter({ phase: "cpa_agent", processed: 1, total: 4, label: "Pairing transfers…" })
+    await matchTransfers(taxYearId)
+    if (reporter) await reporter({ phase: "cpa_agent", processed: 2, total: 4, label: "Pairing card payments…" })
+    await matchCardPayments(taxYearId)
+    if (reporter) await reporter({ phase: "cpa_agent", processed: 3, total: 4, label: "Pairing refunds…" })
+    await matchRefunds(taxYearId)
+  }
+
+  // ── Phase C — Whole-ledger CPA pass ─────────────────────────────────────
+
+  // Pull every in-year, non-paired, non-split transaction for classification.
+  // (Paired transfers/payments are excluded from Schedule C totals; we leave
+  // them as-is and let the AI know about them via the system context only.)
+  const allTxns = await prisma.transaction.findMany({
+    where: {
+      taxYearId,
+      isSplit: false,
+      isDuplicateOf: null,
+      ...inYearWindow(taxYear.year),
+    },
+    include: {
+      account: true,
+      classifications: { where: { isCurrent: true }, take: 1 },
+    },
+    orderBy: [{ postedDate: "asc" }, { id: "asc" }],
+  })
+
+  const profile = await prisma.businessProfile.findUniqueOrThrow({
+    where: { taxYearId },
+    include: { trips: true, knownEntities: true },
+  })
+
+  const clientNotes = await aggregateClientNotes(taxYearId)
+  const systemPrompt = buildAgentSystemPrompt(profile, clientNotes)
+
+  // Skip already-paired rows (transfers/payments already classified by
+  // the deterministic pairing logic). Process every other row.
+  const candidates = allTxns.filter(
+    (t) => !t.isTransferPairedWith && !t.isPaymentPairedWith,
+  )
+
+  const chunks: typeof candidates[] = []
+  for (let i = 0; i < candidates.length; i += CHUNK_SIZE) {
+    chunks.push(candidates.slice(i, i + CHUNK_SIZE))
+  }
+
+  if (reporter) {
+    await reporter({
+      phase: "cpa_agent",
+      processed: 0,
+      total: chunks.length,
+      label: `Reviewing ${candidates.length} transaction${candidates.length === 1 ? "" : "s"} in ${chunks.length} chunk${chunks.length === 1 ? "" : "s"}…`,
+    })
+  }
+
+  const allDecisions: RowDecision[] = []
+  for (let i = 0; i < chunks.length; i++) {
+    const chunk = chunks[i]!
+    const decisions = await classifyChunkAsCpa(chunk, systemPrompt, client)
+    allDecisions.push(...decisions)
+    if (reporter) {
+      await reporter({
+        phase: "cpa_agent",
+        processed: i + 1,
+        total: chunks.length,
+        label: `Chunk ${i + 1} of ${chunks.length} · ${allDecisions.length} decisions`,
+      })
+    }
+  }
+
+  // Persist classifications (flip-and-insert pattern, append-only ledger).
+  let leftAsPersonal = 0
+  let writeIdx = 0
+  for (const d of allDecisions) {
+    await prisma.$transaction(async (tx) => {
+      await tx.classification.updateMany({
+        where: { transactionId: d.txId, isCurrent: true },
+        data: { isCurrent: false },
+      })
+      await tx.classification.create({
+        data: {
+          transactionId: d.txId,
+          code: d.code,
+          scheduleCLine: d.scheduleLine,
+          businessPct: d.businessPct,
+          ircCitations: d.ircCitations,
+          confidence: d.confidence,
+          evidenceTier: d.evidenceTier,
+          source: "AI",
+          reasoning: d.reasoning,
+          isCurrent: true,
+        },
+      })
+    }, { timeout: 30_000 })
+
+    if (d.code === "PERSONAL" && d.notClaimedReason) leftAsPersonal++
+
+    writeIdx++
+    if (reporter && writeIdx % 25 === 0) {
+      await reporter({
+        phase: "cpa_agent",
+        processed: chunks.length,
+        total: chunks.length,
+        label: `Writing ${writeIdx} / ${allDecisions.length} classifications…`,
+      })
+    }
+  }
+
+  // ── Phase D — Sanity sweep + audit memo ─────────────────────────────────
+
+  if (reporter) {
+    await reporter({
+      phase: "cpa_agent",
+      processed: chunks.length,
+      total: chunks.length,
+      label: "Generating audit memo (Sonnet)…",
+    })
+  }
+
+  const memo = await buildAuditMemo({
+    taxYearId,
+    decisions: allDecisions,
+    txnsById: new Map(allTxns.map((t) => [t.id, t])),
+    profile,
+    clientNotes,
+    client,
+  })
+
+  // Persist the memo as a Document so it surfaces under /clients/<id>/documents.
+  let memoDocumentId: string | null = null
+  try {
+    const memoDoc = await prisma.document.create({
+      data: {
+        userId: taxYear.userId,
+        taxYearId,
+        category: "OTHER",
+        title: `CPA Agent audit memo · ${new Date().toISOString().slice(0, 10)}`,
+        description: memo.summary.slice(0, 500),
+        filePath: "(virtual: stored in Document.description + Report.computedTotals)",
+        originalFilename: `cpa-agent-memo-${new Date().toISOString().slice(0, 10)}.json`,
+        mimeType: "application/json",
+        sizeBytes: JSON.stringify(memo).length,
+        tags: ["audit-memo", "cpa-agent"],
+      },
+    })
+    memoDocumentId = memoDoc.id
+  } catch (err) {
+    console.error("[cpaAgent] failed to persist audit memo as Document:", err)
+  }
+
+  // Audit event for the run.
+  await prisma.auditEvent.create({
+    data: {
+      userId: taxYear.userId,
+      actorType: "AI",
+      eventType: "CPA_AGENT_RUN_COMPLETE",
+      entityType: "TaxYear",
+      entityId: taxYearId,
+      afterState: {
+        rowsConsidered: candidates.length,
+        rowsClassified: allDecisions.length,
+        leftAsPersonal,
+        memoDocumentId,
+        chunks: chunks.length,
+      } as Prisma.InputJsonValue,
+      rationale: memo.summary.slice(0, 500),
+    },
+  })
+
+  return {
+    rowsConsidered: candidates.length,
+    rowsClassified: allDecisions.length,
+    rowsLeftAsPersonal: leftAsPersonal,
+    memoDocumentId,
+    memo,
+  }
+}
+
+// --- System prompt ---------------------------------------------------------
+
+function buildAgentSystemPrompt(
+  profile: {
+    naicsCode: string | null
+    businessDescription: string | null
+    primaryState: string
+    entityType: string
+    accountingMethod: string
+    grossReceiptsEstimate: Prisma.Decimal | null
+    homeOfficeConfig: unknown
+    vehicleConfig: unknown
+    inventoryConfig: unknown
+    revenueStreams: string[]
+    firstYear: boolean
+    trips: Array<{ name: string; destination: string; startDate: Date; endDate: Date; purpose: string; deliverableDescription: string | null; isConfirmed: boolean }>
+    knownEntities: Array<{ displayName: string; kind: string; matchKeywords: string[]; notes: string | null }>
+  },
+  clientNotes: string,
+): string {
+  const tripsBlock = profile.trips.length === 0
+    ? "None confirmed."
+    : profile.trips
+        .map((t) => `- "${t.name}" → ${t.destination} | ${t.startDate.toISOString().slice(0, 10)} to ${t.endDate.toISOString().slice(0, 10)} | Purpose: ${t.purpose}${t.deliverableDescription ? ` | Deliverable: ${t.deliverableDescription}` : ""}${t.isConfirmed ? " [confirmed]" : " [unconfirmed]"}`)
+        .join("\n")
+
+  const entitiesBlock = profile.knownEntities.length === 0
+    ? "None defined."
+    : profile.knownEntities
+        .map((e) => `- ${e.displayName} [${e.kind}]: keywords ${e.matchKeywords.join(", ")}${e.notes ? ` — ${e.notes}` : ""}`)
+        .join("\n")
+
+  const inv = profile.inventoryConfig as { has?: boolean; dropship?: boolean } | null
+  const inventoryBlock = (inv?.has || inv?.dropship)
+    ? `\nINVENTORY POSTURE: ${inv.dropship ? "Dropshipping" : "Physical inventory"}. Supplier wires (Wise, Alibaba, AliExpress, DHGate, 3PL fees, customs duties) → WRITE_OFF_COGS with line "Part III COGS" at 100% biz pct.`
+    : ""
+
+  const notesBlock = clientNotes && clientNotes.trim().length > 0
+    ? `\n\n=== CLIENT-PROVIDED CONTEXT (from upload sessions; treat as corroboration, not law) ===\n${clientNotes.trim()}`
+    : ""
+
+  return `You are the autonomous CPA agent for TaxLens — an audit-defense bookkeeping tool for US self-employed taxpayers.
+
+You operate as a senior CPA / bookkeeper for THIS specific taxpayer. You will receive a chunk of their ledger transactions and must classify each one. Your goals, in order:
+
+  1. Maximize legitimate deductions within US tax law. Be strategic, not timid.
+  2. Never cross into fraud. Never invent attendees, business purposes, dates, or facts you don't have.
+  3. When substantiation is missing for a §274(d) category (meals, travel, vehicle, gifts, listed property), default the row to PERSONAL with a "notClaimedReason" so the taxpayer can promote it later by uploading a receipt or note. DO NOT generate a STOP — that's the old flow.
+  4. For §162 expenses where evidence tier 3 is supportable, claim the deduction and cite §162. Cohan is allowed strategically — set cohanFlag=true so the audit memo highlights it.
+  5. Every deductible classification carries the triple: (IRC citation, evidence tier 1-5, confidence 0-1). Strip any of the three and the deduction is not claimable.
+${notesBlock}
+
+=== NON-NEGOTIABLE RULES ===
+- Use ONLY these 11 codes:
+    WRITE_OFF, WRITE_OFF_TRAVEL, WRITE_OFF_COGS, MEALS_50, MEALS_100,
+    GRAY, PERSONAL, TRANSFER, PAYMENT, BIZ_INCOME, NEEDS_CONTEXT
+- IRC citations must come from this allowlist. Anything else → "[VERIFY]":
+    §61, §162, §162(a), §263A, §274(d), §274(n)(1), §274(n)(2),
+    §262, §1402, §280A, §280A(c), §168(k), §179, §280F, §195, §6001,
+    §163(h), §471(c), Cohan
+- Personal interest (CASH ADVANCE INTEREST CHARGE, INTEREST CHARGE on
+  personal cards) → PERSONAL with §163(h). Late fees on a mixed-use card →
+  GRAY with §163(h) until card-purpose confirmed.
+- NEVER classify a merchant as MEALS_50 or MEALS_100 with businessPct=0.
+  A 0%-business meal is PERSONAL with §262.
+- Card payments + transfers between the taxpayer's own accounts are
+  already paired (excluded from this chunk). Don't classify them.
+
+=== TAXPAYER PROFILE ===
+NAICS: ${profile.naicsCode ?? "unknown"}
+Business: ${profile.businessDescription ?? "Not specified"}
+State: ${profile.primaryState}
+Entity: ${profile.entityType}
+Accounting method: ${profile.accountingMethod}
+Gross receipts estimate: $${profile.grossReceiptsEstimate?.toString() ?? "unknown"}
+Vehicle: ${(() => {
+  const v = profile.vehicleConfig as { has?: boolean; bizPct?: number } | null
+  return v?.has ? `Yes — ${v.bizPct ?? 60}% business use` : "No vehicle"
+})()}
+Home office: ${(() => {
+  const h = profile.homeOfficeConfig as { has?: boolean; dedicated?: boolean; officeSqft?: number; homeSqft?: number } | null
+  return h?.has ? `Yes — ${h.dedicated ? "dedicated" : "non-dedicated"} ${h.officeSqft ?? "?"}sqft of ${h.homeSqft ?? "?"}sqft` : "No"
+})()}
+First year: ${profile.firstYear ? "Yes (§195 startup costs may apply)" : "No"}
+Revenue streams: ${profile.revenueStreams.join(", ") || "Not specified"}${inventoryBlock}
+
+=== CONFIRMED BUSINESS TRIPS ===
+${tripsBlock}
+
+=== KNOWN ENTITIES ===
+${entitiesBlock}
+
+=== SCHEDULE C LINE MAP (use exact strings; for non-Schedule-C entities the line names still apply for your output — the form router downstream maps them to 1120/1120-S/1065 lines) ===
+"Line 8 Advertising", "Line 9 Car & Truck", "Line 11 Contract Labor",
+"Line 13 Depreciation", "Line 15 Insurance", "Line 16b Interest",
+"Line 17 Legal & Professional", "Line 18 Office Expense",
+"Line 20b Rent — Other", "Line 21 Repairs & Maintenance", "Line 22 Supplies",
+"Line 23 Taxes & Licenses", "Line 24a Travel", "Line 24b Meals",
+"Line 25 Utilities", "Line 27a Other Expenses", "Line 30 Home Office",
+"Part III COGS", null
+
+=== EVIDENCE TIERS ===
+1 = Receipt + calendar + trip context + deliverable link (rare)
+2 = Statement + ≥1 corroborator (trip-window match, known-entity match, profile affirmation)
+3 = Statement + plausible biz nexus from NAICS + profile (DEFAULT for clear §162 cases)
+4 = Weak (statement only, no corroboration; §162 Cohan-eligible; §274(d) disallowed)
+5 = Indefensible — must be PERSONAL
+
+=== OUTPUT FORMAT ===
+Return ONLY a JSON array of decisions, one per input transaction in the SAME order. No prose, no markdown fences:
+[
+  {
+    "txId": "<echo input id>",
+    "code": "ONE_OF_11_CODES",
+    "scheduleLine": "Line 18 Office Expense" | null,
+    "businessPct": 0-100,
+    "ircCitations": ["§162", "§274(d)"],
+    "evidenceTier": 1-5,
+    "confidence": 0.0-1.0,
+    "reasoning": "Specific reasoning citing this txn's date, amount, neighbors, trip context, or profile.",
+    "notClaimedReason": "Optional — when code=PERSONAL because §274(d) substantiation is missing.",
+    "riskNote": "Optional — gray-area calls the audit memo should highlight.",
+    "cohanFlag": true | false (optional; default false)
+  },
+  ...
+]
+`
+}
+
+// --- Per-chunk classification ---------------------------------------------
+
+interface AgentTxnInput {
+  id: string
+  postedDate: Date
+  amountNormalized: Prisma.Decimal
+  merchantRaw: string
+  merchantNormalized: string | null
+  descriptionRaw: string | null
+  account: { type: string; nickname: string | null; institution: string }
+  classifications: Array<{ code: TransactionCode; businessPct: number }>
+}
+
+async function classifyChunkAsCpa(
+  txns: AgentTxnInput[],
+  systemPrompt: string,
+  client: Anthropic,
+): Promise<RowDecision[]> {
+  const inputs = txns.map((t) => ({
+    txId: t.id,
+    date: t.postedDate.toISOString().slice(0, 10),
+    amount: Number(t.amountNormalized.toString()),
+    merchantRaw: t.merchantRaw,
+    merchantNormalized: t.merchantNormalized,
+    description: t.descriptionRaw,
+    accountType: t.account.type,
+    accountNickname: t.account.nickname ?? t.account.institution,
+    currentCode: t.classifications[0]?.code ?? null,
+  }))
+
+  const userMsg = [
+    "Classify these ledger transactions. Same order, return ONE decision per input.\n",
+    JSON.stringify(inputs, null, 0),
+  ].join("")
+
+  const callOnce = async (model: typeof MODEL_PRIMARY | typeof MODEL_OPUS) =>
+    client.messages.create({
+      model,
+      max_tokens: 8192,
+      temperature: 0,
+      system: systemPrompt,
+      messages: [{ role: "user", content: userMsg }],
+    })
+
+  let res
+  try {
+    res = await callOnce(MODEL_PRIMARY)
+  } catch {
+    return []
+  }
+  const block = res.content[0]
+  if (!block || block.type !== "text") return []
+  const text = block.text
+  const start = text.indexOf("[")
+  const end = text.lastIndexOf("]")
+  if (start < 0 || end <= start) return []
+  let parsed: unknown[]
+  try {
+    parsed = JSON.parse(text.slice(start, end + 1)) as unknown[]
+  } catch {
+    return []
+  }
+  if (!Array.isArray(parsed)) return []
+
+  const out: RowDecision[] = []
+  for (let i = 0; i < parsed.length && i < txns.length; i++) {
+    const item = parsed[i] as Record<string, unknown> | undefined
+    if (!item || typeof item !== "object") continue
+    const txId = typeof item["txId"] === "string" ? item["txId"] : txns[i]!.id
+    const codeRaw = item["code"]
+    const code: TransactionCode = typeof codeRaw === "string" && VALID_CODE_SET.has(codeRaw)
+      ? (codeRaw as TransactionCode)
+      : "NEEDS_CONTEXT"
+    const scheduleLine = typeof item["scheduleLine"] === "string" ? item["scheduleLine"] : null
+    const businessPct = typeof item["businessPct"] === "number"
+      ? Math.max(0, Math.min(100, Math.round(item["businessPct"])))
+      : 0
+    const ircCitations = Array.isArray(item["ircCitations"])
+      ? sanitizeCitations(item["ircCitations"])
+      : ["[VERIFY]"]
+    const evidenceTier = typeof item["evidenceTier"] === "number"
+      ? Math.max(1, Math.min(5, Math.round(item["evidenceTier"])))
+      : 3
+    const confidence = typeof item["confidence"] === "number"
+      ? Math.max(0, Math.min(1, item["confidence"]))
+      : 0.5
+    const reasoning = typeof item["reasoning"] === "string" ? item["reasoning"] : ""
+    const notClaimedReason = typeof item["notClaimedReason"] === "string" ? item["notClaimedReason"] : undefined
+    const riskNote = typeof item["riskNote"] === "string" ? item["riskNote"] : undefined
+    const cohanFlag = item["cohanFlag"] === true
+
+    // Cross-field invariants — defensive, mirrors merchantIntelligence.ts.
+    let finalCode = code
+    let finalPct = businessPct
+    let finalNotClaimed = notClaimedReason
+    if ((finalCode === "MEALS_50" || finalCode === "MEALS_100") && finalPct === 0) {
+      finalCode = "PERSONAL"
+      finalPct = 0
+      finalNotClaimed = finalNotClaimed ?? "Meal with 0% business use cannot be deducted; defaulted to PERSONAL."
+    }
+
+    out.push({
+      txId,
+      code: finalCode,
+      scheduleLine,
+      businessPct: finalPct,
+      ircCitations,
+      evidenceTier,
+      confidence,
+      reasoning,
+      notClaimedReason: finalNotClaimed,
+      riskNote,
+      cohanFlag,
+    })
+  }
+  return out
+}
+
+// --- Phase D — audit memo --------------------------------------------------
+
+interface BuildMemoArgs {
+  taxYearId: string
+  decisions: RowDecision[]
+  txnsById: Map<string, AgentTxnInput>
+  profile: { businessDescription: string | null; naicsCode: string | null; entityType: string; primaryState: string }
+  clientNotes: string
+  client: Anthropic
+}
+
+async function buildAuditMemo({ taxYearId, decisions, txnsById, profile, client }: BuildMemoArgs): Promise<AuditMemo> {
+  // Compute deterministic totals first — feed them as ground truth into the
+  // sanity-sweep prompt so the AI doesn't hallucinate numbers.
+  const totalsClaimedByLine: Record<string, number> = {}
+  const totalsNotClaimed: Record<string, number> = {}
+  const grayCalls: Array<{ txId: string; choseCode: string; alternativeCode: string; reason: string }> = []
+  const followUps: Array<{ kind: string; promptForUser: string; txIds?: string[] }> = []
+  const riskFlags: string[] = []
+  let cohanCount = 0
+  let mealsTotal = 0
+  let writeOffTotal = 0
+  let cogsTotal = 0
+  let mealsNotClaimed = 0
+
+  for (const d of decisions) {
+    const tx = txnsById.get(d.txId)
+    if (!tx) continue
+    const amt = Number(tx.amountNormalized.toString())
+    const outflow = Math.max(0, amt)
+    const deductible = outflow * (d.businessPct / 100)
+    const halved = d.code === "MEALS_50" ? deductible * 0.5 : deductible
+
+    if (d.code === "PERSONAL" && d.notClaimedReason) {
+      const key = d.scheduleLine ?? "Personal / not claimed"
+      totalsNotClaimed[key] = (totalsNotClaimed[key] ?? 0) + outflow
+      if (d.notClaimedReason.toLowerCase().includes("meal") || tx.merchantRaw.toUpperCase().includes("MEAL")) {
+        mealsNotClaimed += outflow
+      }
+    } else if (d.scheduleLine && deductible > 0) {
+      totalsClaimedByLine[d.scheduleLine] = (totalsClaimedByLine[d.scheduleLine] ?? 0) + halved
+    }
+
+    if (d.code === "WRITE_OFF") writeOffTotal += halved
+    if (d.code === "WRITE_OFF_COGS") cogsTotal += halved
+    if (d.code === "MEALS_50" || d.code === "MEALS_100") mealsTotal += halved
+
+    if (d.cohanFlag) cohanCount++
+    if (d.riskNote) {
+      grayCalls.push({
+        txId: d.txId,
+        choseCode: d.code,
+        alternativeCode: d.code === "PERSONAL" ? "WRITE_OFF" : "PERSONAL",
+        reason: d.riskNote,
+      })
+    }
+  }
+
+  const totalDeductions = Object.values(totalsClaimedByLine).reduce((a, b) => a + b, 0)
+  if (mealsTotal > 0 && mealsTotal / Math.max(totalDeductions, 1) > 0.05) {
+    riskFlags.push(`Meals ratio ${((mealsTotal / totalDeductions) * 100).toFixed(1)}% exceeds 5% — IRS DIF flag.`)
+  }
+  if (cohanCount > 0) {
+    riskFlags.push(`${cohanCount} Cohan-flagged classification${cohanCount === 1 ? "" : "s"} — review evidence tier 4 reliance.`)
+  }
+  if (mealsNotClaimed > 0) {
+    followUps.push({
+      kind: "UPLOAD_RECEIPT",
+      promptForUser: `Meals totaling $${mealsNotClaimed.toFixed(2)} are currently NOT claimed because §274(d) substantiation is missing. Upload receipts or add attendees to claim them.`,
+    })
+  }
+
+  // Detect coverage gaps — months in the year window with zero transactions.
+  const monthsCovered = new Set<string>()
+  for (const tx of txnsById.values()) {
+    monthsCovered.add(tx.postedDate.toISOString().slice(0, 7))
+  }
+  const taxYear = await prisma.taxYear.findUniqueOrThrow({ where: { id: taxYearId } })
+  const coverageGaps: string[] = []
+  for (let m = 0; m < 12; m++) {
+    const ym = `${taxYear.year}-${String(m + 1).padStart(2, "0")}`
+    if (!monthsCovered.has(ym)) coverageGaps.push(ym)
+  }
+  if (coverageGaps.length > 0) {
+    followUps.push({
+      kind: "UPLOAD_STATEMENT",
+      promptForUser: `${coverageGaps.length} month${coverageGaps.length === 1 ? "" : "s"} have no transactions: ${coverageGaps.join(", ")}. Upload the missing statements to ensure complete coverage.`,
+    })
+  }
+
+  // Ask Sonnet for a 2-3 paragraph summary that the CPA can read at a glance.
+  let summary = ""
+  try {
+    const summaryPrompt = `You are summarizing the autonomous-bookkeeping run for a CPA.
+Taxpayer: ${profile.businessDescription ?? "(not specified)"} (NAICS ${profile.naicsCode ?? "?"}, ${profile.entityType}, ${profile.primaryState}).
+Decisions: ${decisions.length} total. Claimed by line: ${JSON.stringify(totalsClaimedByLine)}. Not claimed (default-PERSONAL for missing substantiation): ${JSON.stringify(totalsNotClaimed)}. Cohan-flagged: ${cohanCount}. Risk flags: ${JSON.stringify(riskFlags)}. Coverage gaps: ${coverageGaps.length} month(s).
+
+Write a 2-3 paragraph executive summary the CPA can read in 30 seconds:
+- What the AI claimed and how confident.
+- The biggest gray-area calls and the rationale.
+- What additional work the taxpayer needs to do (substantiation uploads, missing statements).
+Return plain text only — no JSON, no markdown.`
+
+    const res = await client.messages.create({
+      model: MODEL_PRIMARY,
+      max_tokens: 1024,
+      temperature: 0,
+      messages: [{ role: "user", content: summaryPrompt }],
+    })
+    const block = res.content[0]
+    if (block && block.type === "text") summary = block.text.trim()
+  } catch (err) {
+    summary = `Autonomous bookkeeping run completed: ${decisions.length} classifications, $${totalDeductions.toFixed(2)} total deductions across ${Object.keys(totalsClaimedByLine).length} line${Object.keys(totalsClaimedByLine).length === 1 ? "" : "s"}. ${riskFlags.length} risk flag${riskFlags.length === 1 ? "" : "s"}. Sonnet summary unavailable (${err instanceof Error ? err.message : "unknown error"}).`
+  }
+
+  return {
+    taxYearId,
+    generatedAt: new Date().toISOString(),
+    model: MODEL_PRIMARY,
+    totalsClaimedByLine,
+    totalsNotClaimed,
+    grayAreaCalls: grayCalls,
+    followUps,
+    coverageGaps,
+    riskFlags,
+    summary,
+  }
+}
