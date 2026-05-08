@@ -92,6 +92,11 @@ export type KnownEntity = Prisma.KnownEntityModel
  */
 export type Trip = Prisma.TripModel
 /**
+ * Model Owner
+ * 
+ */
+export type Owner = Prisma.OwnerModel
+/**
  * Model FinancialAccount
  * 
  */

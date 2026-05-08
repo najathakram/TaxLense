@@ -391,9 +391,48 @@ interface K1Owner {
   ownershipPct: number
   /** S-Corp only: owner's W-2 wages from the corp during the year. */
   w2Wages?: number
+  /** Partnership only: §707(c) guaranteed payments to this partner. */
+  guaranteedPayments?: number
+  /** OFFICER | SHAREHOLDER | GENERAL_PARTNER | LIMITED_PARTNER | MEMBER */
+  kind?: string
 }
 
-function ScheduleK1Doc({ ctx, owner, sourceForm }: { ctx: EntityContext; owner: K1Owner; sourceForm: "1120-S" | "1065" }) {
+/**
+ * Loads the recorded Owner rows for a TaxYear's BusinessProfile. Returns []
+ * when no owners are recorded — caller should fall back to a single-owner
+ * 100% default in that case.
+ */
+async function loadOwnersForTaxYear(taxYearId: string): Promise<K1Owner[]> {
+  const profile = await prisma.businessProfile.findUnique({
+    where: { taxYearId },
+    select: { id: true },
+  })
+  if (!profile) return []
+  const owners = await prisma.owner.findMany({
+    where: { profileId: profile.id },
+    orderBy: { ownershipPct: "desc" },
+  })
+  return owners.map((o) => ({
+    name: o.name,
+    ssnLast4: o.ssnLast4,
+    ownershipPct: Number(o.ownershipPct.toString()),
+    w2Wages: o.w2Wages ? Number(o.w2Wages.toString()) : undefined,
+    guaranteedPayments: o.guaranteedPayments ? Number(o.guaranteedPayments.toString()) : undefined,
+    kind: o.kind,
+  }))
+}
+
+function ScheduleK1Doc({
+  ctx,
+  owner,
+  sourceForm,
+  isSingleOwnerDefault,
+}: {
+  ctx: EntityContext
+  owner: K1Owner
+  sourceForm: "1120-S" | "1065"
+  isSingleOwnerDefault: boolean
+}) {
   const t = ctx.totalsByLine
   const grossReceipts = ctx.grossReceipts
   const cogs = t.get("Part III COGS") ?? 0
@@ -401,10 +440,28 @@ function ScheduleK1Doc({ ctx, owner, sourceForm }: { ctx: EntityContext; owner: 
   const ordinaryIncome = grossReceipts - cogs - totalDeductions
   const allocated = ordinaryIncome * (owner.ownershipPct / 100)
 
+  // SE-tax posture differs by source form AND owner.kind for partnerships.
+  // General partners pay SE tax on Box 14; limited partners do NOT (per
+  // §1402(a)(13) self-employment exception). S-Corp shareholders never pay
+  // SE tax on K-1 distributions — only on W-2 wages.
+  const isLimitedPartner = sourceForm === "1065" && owner.kind === "LIMITED_PARTNER"
   const seTaxNote =
     sourceForm === "1065"
-      ? `Box 14 self-employment earnings: ${fmtUSD(allocated)} (general partner — subject to §1402 SE tax)`
+      ? isLimitedPartner
+        ? `Limited partner — Box 14 self-employment earnings excluded per §1402(a)(13).`
+        : `Box 14 self-employment earnings: ${fmtUSD(allocated)} (general partner — subject to §1402 SE tax)`
       : `S-Corp distributions are NOT subject to §1402 SE tax — owner pays SE tax on W-2 wages only.`
+
+  const ownerLabel =
+    sourceForm === "1120-S"
+      ? owner.kind === "OFFICER"
+        ? "S-Corp Officer-Shareholder"
+        : "S-Corp Shareholder"
+      : owner.kind === "GENERAL_PARTNER"
+        ? "General Partner"
+        : owner.kind === "LIMITED_PARTNER"
+          ? "Limited Partner"
+          : "Partner / Member"
 
   return (
     <Document>
@@ -414,7 +471,7 @@ function ScheduleK1Doc({ ctx, owner, sourceForm }: { ctx: EntityContext; owner: 
         </View>
         <Text style={styles.h1}>Schedule K-1 — {owner.name}</Text>
         <Text style={styles.muted}>
-          {sourceForm === "1120-S" ? "S-Corp Shareholder" : "Partner"} · {owner.ownershipPct.toFixed(2)}% ownership
+          {ownerLabel} · {owner.ownershipPct.toFixed(2)}% ownership
           {owner.ssnLast4 ? ` · SSN ending ${owner.ssnLast4}` : " · SSN: [VERIFY]"}
         </Text>
         <Text style={styles.muted}>
@@ -424,8 +481,12 @@ function ScheduleK1Doc({ ctx, owner, sourceForm }: { ctx: EntityContext; owner: 
         <Text style={styles.h2}>Allocable income items</Text>
         <FormLine num="1" label="Ordinary business income (loss)" amount={allocated} />
         <FormLine num="2" label="Net rental real estate income (loss)" amount={null} />
-        <FormLine num="4" label="Interest income" amount={null} />
-        <FormLine num="5a" label="Ordinary dividends" amount={null} />
+        <FormLine num={sourceForm === "1065" ? "5" : "4"} label="Interest income" amount={null} />
+        <FormLine num={sourceForm === "1065" ? "6a" : "5a"} label="Ordinary dividends" amount={null} />
+
+        {sourceForm === "1065" && owner.guaranteedPayments !== undefined && owner.guaranteedPayments > 0 && (
+          <FormLine num="4a" label="Guaranteed payments for services (§707(c))" amount={owner.guaranteedPayments} />
+        )}
 
         {sourceForm === "1120-S" && owner.w2Wages !== undefined && (
           <>
@@ -437,16 +498,17 @@ function ScheduleK1Doc({ ctx, owner, sourceForm }: { ctx: EntityContext; owner: 
         <Text style={styles.h2}>SE tax posture</Text>
         <Text style={styles.small}>{seTaxNote}</Text>
 
-        <View style={styles.warningBox}>
-          <Text style={{ fontFamily: "Helvetica-Bold" }}>Single-owner default</Text>
-          <Text style={{ marginTop: 3 }}>
-            Until shareholder/partner records are captured in TaxLens, this K-1
-            is rendered with the taxpayer as a 100% owner. Real allocations
-            require a Shareholder/Partner table (planned for the next release).
-            CPA must transcribe the per-owner numbers manually for any
-            multi-owner entity.
-          </Text>
-        </View>
+        {isSingleOwnerDefault && (
+          <View style={styles.warningBox}>
+            <Text style={{ fontFamily: "Helvetica-Bold" }}>Single-owner default</Text>
+            <Text style={{ marginTop: 3 }}>
+              No Owner records have been entered for this entity, so this K-1
+              defaults the taxpayer to 100% ownership. Add Owner rows
+              (Profile → Owners) to render one K-1 per shareholder/partner
+              with per-owner ownership %, W-2 wages, and guaranteed payments.
+            </Text>
+          </View>
+        )}
 
         <FormFooter header={ctx.header} />
       </Page>
@@ -624,11 +686,60 @@ export async function buildScheduleK1Pdf(
     ssnLast4: opts.owner?.ssnLast4 ?? null,
     ownershipPct: opts.owner?.ownershipPct ?? 100,
     w2Wages: opts.owner?.w2Wages,
+    guaranteedPayments: opts.owner?.guaranteedPayments,
+    kind: opts.owner?.kind,
   }
   const stream = await pdf(
-    <ScheduleK1Doc ctx={ctx} owner={owner} sourceForm={opts.sourceForm} />,
+    <ScheduleK1Doc ctx={ctx} owner={owner} sourceForm={opts.sourceForm} isSingleOwnerDefault={true} />,
   ).toBuffer()
   return pdfToBuffer(stream as unknown as AsyncIterable<Buffer | string>)
 }
+
+/**
+ * Per-owner K-1 emitter. Reads Owner rows from BusinessProfile; emits one
+ * K-1 PDF per recorded owner. Falls back to the single-owner-100% default
+ * (via buildScheduleK1Pdf) when no Owner rows exist for the profile.
+ *
+ * Returns an array of `{ owner, buffer }` so the tax-package router can
+ * name each PDF with the owner's name (e.g. `08_k1_atif_ameer.pdf`).
+ */
+export async function buildScheduleK1PdfPerOwner(
+  taxYearId: string,
+  sourceForm: "1120-S" | "1065",
+): Promise<Array<{ owner: K1Owner; buffer: Buffer }>> {
+  const owners = await loadOwnersForTaxYear(taxYearId)
+  if (owners.length === 0) {
+    // No owners on file — fall back to single-owner default.
+    const buf = await buildScheduleK1Pdf(taxYearId, { sourceForm })
+    const ctx = await loadEntityContext(taxYearId)
+    return [{
+      owner: { name: ctx.ownerName, ssnLast4: null, ownershipPct: 100 },
+      buffer: buf,
+    }]
+  }
+  const ctx = await loadEntityContext(taxYearId)
+  const out: Array<{ owner: K1Owner; buffer: Buffer }> = []
+  for (const owner of owners) {
+    const stream = await pdf(
+      <ScheduleK1Doc ctx={ctx} owner={owner} sourceForm={sourceForm} isSingleOwnerDefault={false} />,
+    ).toBuffer()
+    const buffer = await pdfToBuffer(stream as unknown as AsyncIterable<Buffer | string>)
+    out.push({ owner, buffer })
+  }
+  return out
+}
+
+/** Slugify an owner name for use in a filename. */
+function slugifyOwnerName(name: string): string {
+  return name
+    .toLowerCase()
+    .normalize("NFKD")
+    .replace(/[^\w\s-]/g, "")
+    .replace(/\s+/g, "_")
+    .replace(/_+/g, "_")
+    .slice(0, 40)
+}
+
+export { slugifyOwnerName }
 
 void Readable // satisfy import-not-used in some setups

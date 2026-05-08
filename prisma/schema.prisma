@@ -344,6 +344,7 @@ model BusinessProfile {
   taxYear       TaxYear         @relation(fields: [taxYearId], references: [id], onDelete: Cascade)
   knownEntities KnownEntity[]
   trips         Trip[]
+  owners        Owner[]
 }
 
 // ---------------------------------------------------------------------------
@@ -378,6 +379,45 @@ model Trip {
   isConfirmed            Boolean  @default(false)
 
   profile BusinessProfile @relation(fields: [profileId], references: [id], onDelete: Cascade)
+}
+
+// ---------------------------------------------------------------------------
+// OWNER (Phase 3 follow-up — drives multi-owner K-1 generation)
+// ---------------------------------------------------------------------------
+// One row per shareholder (S-Corp), partner (LLC-multi / partnership), or
+// officer-shareholder (C-Corp). For SOLE_PROP / LLC_SINGLE the model is
+// unused; the owner is implicitly the User row. ownership values are
+// percent (0-100) and must sum to 100 across owners of the same profile —
+// validated at write time.
+//
+// SSN/EIN / W-2 wages are sensitive personal data; we store ssnLast4 only
+// (per IRS K-1 form which only requires the last 4) and treat w2Wages as
+// a non-secret figure (it's already on the K-1 itself).
+model Owner {
+  id           String   @id @default(cuid())
+  profileId    String
+  /** OFFICER (S-Corp officer-shareholder) | SHAREHOLDER (S-Corp non-officer) |
+   *  GENERAL_PARTNER | LIMITED_PARTNER | MEMBER (multi-member LLC) */
+  kind         String
+  /** Display name as it should appear on the K-1. */
+  name         String
+  /** Last 4 of SSN — full SSN never stored. */
+  ssnLast4     String?
+  /** EIN if the owner is an entity (e.g., a trust holding S-Corp stock). */
+  ein          String?
+  /** Ownership %; 0-100. Must sum to 100 across owners of the same profile. */
+  ownershipPct Decimal  @db.Decimal(7, 4)
+  /** S-Corp officer-shareholder W-2 wages from this corp during the year. */
+  w2Wages      Decimal? @db.Decimal(15, 2)
+  /** Partnership general-partner guaranteed payments (1065 line 10). */
+  guaranteedPayments Decimal? @db.Decimal(15, 2)
+  /** Free-text CPA notes — capital account roll-forward, special allocations. */
+  notes        String?
+  createdAt    DateTime @default(now())
+
+  profile BusinessProfile @relation(fields: [profileId], references: [id], onDelete: Cascade)
+
+  @@index([profileId])
 }
 
 // ---------------------------------------------------------------------------

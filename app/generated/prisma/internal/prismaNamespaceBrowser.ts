@@ -61,6 +61,7 @@ export const ModelName = {
   BusinessProfile: 'BusinessProfile',
   KnownEntity: 'KnownEntity',
   Trip: 'Trip',
+  Owner: 'Owner',
   FinancialAccount: 'FinancialAccount',
   StatementImport: 'StatementImport',
   ImportSession: 'ImportSession',
@@ -230,6 +231,23 @@ export const TripScalarFieldEnum = {
 } as const
 
 export type TripScalarFieldEnum = (typeof TripScalarFieldEnum)[keyof typeof TripScalarFieldEnum]
+
+
+export const OwnerScalarFieldEnum = {
+  id: 'id',
+  profileId: 'profileId',
+  kind: 'kind',
+  name: 'name',
+  ssnLast4: 'ssnLast4',
+  ein: 'ein',
+  ownershipPct: 'ownershipPct',
+  w2Wages: 'w2Wages',
+  guaranteedPayments: 'guaranteedPayments',
+  notes: 'notes',
+  createdAt: 'createdAt'
+} as const
+
+export type OwnerScalarFieldEnum = (typeof OwnerScalarFieldEnum)[keyof typeof OwnerScalarFieldEnum]
 
 
 export const FinancialAccountScalarFieldEnum = {
