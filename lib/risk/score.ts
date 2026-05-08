@@ -57,7 +57,7 @@ export async function computeRiskScore(taxYearId: string): Promise<RiskReport> {
   const yearWindow = ty ? inYearWindow(ty.year) : {}
   const [ledger, profile, pendingStops, lossHistory] = await Promise.all([
     prisma.transaction.findMany({
-      where: { taxYearId, isSplit: false, ...yearWindow },
+      where: { taxYearId, isSplit: false, isStale: false, ...yearWindow },
       include: { classifications: { where: { isCurrent: true }, take: 1 } },
     }),
     prisma.businessProfile.findUnique({ where: { taxYearId } }),
@@ -152,7 +152,7 @@ export async function computeRiskScore(taxYearId: string): Promise<RiskReport> {
   let lossYearN = 0
   for (const ty of lossHistory) {
     const txns = await prisma.transaction.findMany({
-      where: { taxYearId: ty.id, isSplit: false, ...inYearWindow(ty.year) },
+      where: { taxYearId: ty.id, isSplit: false, isStale: false, ...inYearWindow(ty.year) },
       include: { classifications: { where: { isCurrent: true }, take: 1 } },
     })
     let inc = 0

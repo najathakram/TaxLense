@@ -140,6 +140,7 @@ export async function buildAnalytics(taxYearId: string): Promise<AnalyticsDatase
     where: {
       taxYearId,
       isSplit: false,
+      isStale: false,
       isDuplicateOf: null,
     },
     select: {

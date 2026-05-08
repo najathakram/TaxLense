@@ -24,6 +24,7 @@ export default async function LedgerPage({ params }: Props) {
     where: {
       taxYearId: taxYear.id,
       isSplit: false,
+      isStale: false,
       isDuplicateOf: null,
       ...inYearWindow(taxYear.year),
     },

@@ -280,6 +280,7 @@ export async function runBulkClassifyPass(
     where: {
       taxYearId,
       isSplit: false,
+      isStale: false,
       isDuplicateOf: null,
     },
     include: {

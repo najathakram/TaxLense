@@ -11,7 +11,7 @@ import { prisma } from "@/lib/db"
 
 export async function computeLedgerHash(taxYearId: string): Promise<string> {
   const rows = await prisma.transaction.findMany({
-    where: { taxYearId, isSplit: false },
+    where: { taxYearId, isSplit: false, isStale: false },
     orderBy: { id: "asc" },
     include: { classifications: { where: { isCurrent: true }, take: 1 } },
   })

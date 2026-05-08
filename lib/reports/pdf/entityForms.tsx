@@ -121,7 +121,7 @@ async function loadEntityContext(taxYearId: string): Promise<EntityContext> {
   const clientName = ty.user.name ?? ty.user.email
 
   const txns = await prisma.transaction.findMany({
-    where: { taxYearId, isSplit: false, isDuplicateOf: null, ...inYearWindow(ty.year) },
+    where: { taxYearId, isSplit: false, isStale: false, isDuplicateOf: null, ...inYearWindow(ty.year) },
     select: {
       amountNormalized: true,
       classifications: {

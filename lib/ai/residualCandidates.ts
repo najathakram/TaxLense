@@ -46,6 +46,7 @@ export async function selectResidualCandidates(
       where: {
         taxYearId,
         isSplit: false,
+        isStale: false,
         splitOfId: null,
         isDuplicateOf: null,
         isTransferPairedWith: null,

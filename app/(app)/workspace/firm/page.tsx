@@ -39,7 +39,7 @@ export default async function FirmOverviewPage() {
       if (ty.status === "REVIEW") pendingLock++
 
       const txns = await prisma.transaction.findMany({
-        where: { taxYearId: ty.id, isSplit: false },
+        where: { taxYearId: ty.id, isSplit: false, isStale: false },
         select: {
           amountNormalized: true,
           classifications: { where: { isCurrent: true }, select: { code: true, businessPct: true }, take: 1 },

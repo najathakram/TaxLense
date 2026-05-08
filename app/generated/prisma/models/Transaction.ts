@@ -55,6 +55,8 @@ export type TransactionMinAggregateOutputType = {
   isRefundPairedWith: string | null
   isSplit: boolean | null
   splitOfId: string | null
+  isStale: boolean | null
+  staleReason: string | null
   createdAt: Date | null
 }
 
@@ -77,6 +79,8 @@ export type TransactionMaxAggregateOutputType = {
   isRefundPairedWith: string | null
   isSplit: boolean | null
   splitOfId: string | null
+  isStale: boolean | null
+  staleReason: string | null
   createdAt: Date | null
 }
 
@@ -99,6 +103,8 @@ export type TransactionCountAggregateOutputType = {
   isRefundPairedWith: number
   isSplit: number
   splitOfId: number
+  isStale: number
+  staleReason: number
   createdAt: number
   _all: number
 }
@@ -133,6 +139,8 @@ export type TransactionMinAggregateInputType = {
   isRefundPairedWith?: true
   isSplit?: true
   splitOfId?: true
+  isStale?: true
+  staleReason?: true
   createdAt?: true
 }
 
@@ -155,6 +163,8 @@ export type TransactionMaxAggregateInputType = {
   isRefundPairedWith?: true
   isSplit?: true
   splitOfId?: true
+  isStale?: true
+  staleReason?: true
   createdAt?: true
 }
 
@@ -177,6 +187,8 @@ export type TransactionCountAggregateInputType = {
   isRefundPairedWith?: true
   isSplit?: true
   splitOfId?: true
+  isStale?: true
+  staleReason?: true
   createdAt?: true
   _all?: true
 }
@@ -286,6 +298,8 @@ export type TransactionGroupByOutputType = {
   isRefundPairedWith: string | null
   isSplit: boolean
   splitOfId: string | null
+  isStale: boolean
+  staleReason: string | null
   createdAt: Date
   _count: TransactionCountAggregateOutputType | null
   _avg: TransactionAvgAggregateOutputType | null
@@ -331,6 +345,8 @@ export type TransactionWhereInput = {
   isRefundPairedWith?: Prisma.StringNullableFilter<"Transaction"> | string | null
   isSplit?: Prisma.BoolFilter<"Transaction"> | boolean
   splitOfId?: Prisma.StringNullableFilter<"Transaction"> | string | null
+  isStale?: Prisma.BoolFilter<"Transaction"> | boolean
+  staleReason?: Prisma.StringNullableFilter<"Transaction"> | string | null
   createdAt?: Prisma.DateTimeFilter<"Transaction"> | Date | string
   statementImport?: Prisma.XOR<Prisma.StatementImportNullableScalarRelationFilter, Prisma.StatementImportWhereInput> | null
   account?: Prisma.XOR<Prisma.FinancialAccountScalarRelationFilter, Prisma.FinancialAccountWhereInput>
@@ -367,6 +383,8 @@ export type TransactionOrderByWithRelationInput = {
   isRefundPairedWith?: Prisma.SortOrderInput | Prisma.SortOrder
   isSplit?: Prisma.SortOrder
   splitOfId?: Prisma.SortOrderInput | Prisma.SortOrder
+  isStale?: Prisma.SortOrder
+  staleReason?: Prisma.SortOrderInput | Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   statementImport?: Prisma.StatementImportOrderByWithRelationInput
   account?: Prisma.FinancialAccountOrderByWithRelationInput
@@ -406,6 +424,8 @@ export type TransactionWhereUniqueInput = Prisma.AtLeast<{
   isRefundPairedWith?: Prisma.StringNullableFilter<"Transaction"> | string | null
   isSplit?: Prisma.BoolFilter<"Transaction"> | boolean
   splitOfId?: Prisma.StringNullableFilter<"Transaction"> | string | null
+  isStale?: Prisma.BoolFilter<"Transaction"> | boolean
+  staleReason?: Prisma.StringNullableFilter<"Transaction"> | string | null
   createdAt?: Prisma.DateTimeFilter<"Transaction"> | Date | string
   statementImport?: Prisma.XOR<Prisma.StatementImportNullableScalarRelationFilter, Prisma.StatementImportWhereInput> | null
   account?: Prisma.XOR<Prisma.FinancialAccountScalarRelationFilter, Prisma.FinancialAccountWhereInput>
@@ -442,6 +462,8 @@ export type TransactionOrderByWithAggregationInput = {
   isRefundPairedWith?: Prisma.SortOrderInput | Prisma.SortOrder
   isSplit?: Prisma.SortOrder
   splitOfId?: Prisma.SortOrderInput | Prisma.SortOrder
+  isStale?: Prisma.SortOrder
+  staleReason?: Prisma.SortOrderInput | Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   _count?: Prisma.TransactionCountOrderByAggregateInput
   _avg?: Prisma.TransactionAvgOrderByAggregateInput
@@ -472,6 +494,8 @@ export type TransactionScalarWhereWithAggregatesInput = {
   isRefundPairedWith?: Prisma.StringNullableWithAggregatesFilter<"Transaction"> | string | null
   isSplit?: Prisma.BoolWithAggregatesFilter<"Transaction"> | boolean
   splitOfId?: Prisma.StringNullableWithAggregatesFilter<"Transaction"> | string | null
+  isStale?: Prisma.BoolWithAggregatesFilter<"Transaction"> | boolean
+  staleReason?: Prisma.StringNullableWithAggregatesFilter<"Transaction"> | string | null
   createdAt?: Prisma.DateTimeWithAggregatesFilter<"Transaction"> | Date | string
 }
 
@@ -486,6 +510,8 @@ export type TransactionCreateInput = {
   descriptionRaw?: string | null
   idempotencyKey: string
   isSplit?: boolean
+  isStale?: boolean
+  staleReason?: string | null
   createdAt?: Date | string
   statementImport?: Prisma.StatementImportCreateNestedOneWithoutTransactionsInput
   account: Prisma.FinancialAccountCreateNestedOneWithoutTransactionsInput
@@ -522,6 +548,8 @@ export type TransactionUncheckedCreateInput = {
   isRefundPairedWith?: string | null
   isSplit?: boolean
   splitOfId?: string | null
+  isStale?: boolean
+  staleReason?: string | null
   createdAt?: Date | string
   duplicateFor?: Prisma.TransactionUncheckedCreateNestedManyWithoutDuplicateOfInput
   transferPairs?: Prisma.TransactionUncheckedCreateNestedManyWithoutTransferPairInput
@@ -542,6 +570,8 @@ export type TransactionUpdateInput = {
   descriptionRaw?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   idempotencyKey?: Prisma.StringFieldUpdateOperationsInput | string
   isSplit?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  isStale?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  staleReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   statementImport?: Prisma.StatementImportUpdateOneWithoutTransactionsNestedInput
   account?: Prisma.FinancialAccountUpdateOneRequiredWithoutTransactionsNestedInput
@@ -578,6 +608,8 @@ export type TransactionUncheckedUpdateInput = {
   isRefundPairedWith?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   isSplit?: Prisma.BoolFieldUpdateOperationsInput | boolean
   splitOfId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  isStale?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  staleReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   duplicateFor?: Prisma.TransactionUncheckedUpdateManyWithoutDuplicateOfNestedInput
   transferPairs?: Prisma.TransactionUncheckedUpdateManyWithoutTransferPairNestedInput
@@ -606,6 +638,8 @@ export type TransactionCreateManyInput = {
   isRefundPairedWith?: string | null
   isSplit?: boolean
   splitOfId?: string | null
+  isStale?: boolean
+  staleReason?: string | null
   createdAt?: Date | string
 }
 
@@ -620,6 +654,8 @@ export type TransactionUpdateManyMutationInput = {
   descriptionRaw?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   idempotencyKey?: Prisma.StringFieldUpdateOperationsInput | string
   isSplit?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  isStale?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  staleReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
 
@@ -642,6 +678,8 @@ export type TransactionUncheckedUpdateManyInput = {
   isRefundPairedWith?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   isSplit?: Prisma.BoolFieldUpdateOperationsInput | boolean
   splitOfId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  isStale?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  staleReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
 
@@ -679,6 +717,8 @@ export type TransactionCountOrderByAggregateInput = {
   isRefundPairedWith?: Prisma.SortOrder
   isSplit?: Prisma.SortOrder
   splitOfId?: Prisma.SortOrder
+  isStale?: Prisma.SortOrder
+  staleReason?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
 }
 
@@ -706,6 +746,8 @@ export type TransactionMaxOrderByAggregateInput = {
   isRefundPairedWith?: Prisma.SortOrder
   isSplit?: Prisma.SortOrder
   splitOfId?: Prisma.SortOrder
+  isStale?: Prisma.SortOrder
+  staleReason?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
 }
 
@@ -728,6 +770,8 @@ export type TransactionMinOrderByAggregateInput = {
   isRefundPairedWith?: Prisma.SortOrder
   isSplit?: Prisma.SortOrder
   splitOfId?: Prisma.SortOrder
+  isStale?: Prisma.SortOrder
+  staleReason?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
 }
 
@@ -1182,6 +1226,8 @@ export type TransactionCreateWithoutTaxYearInput = {
   descriptionRaw?: string | null
   idempotencyKey: string
   isSplit?: boolean
+  isStale?: boolean
+  staleReason?: string | null
   createdAt?: Date | string
   statementImport?: Prisma.StatementImportCreateNestedOneWithoutTransactionsInput
   account: Prisma.FinancialAccountCreateNestedOneWithoutTransactionsInput
@@ -1216,6 +1262,8 @@ export type TransactionUncheckedCreateWithoutTaxYearInput = {
   isRefundPairedWith?: string | null
   isSplit?: boolean
   splitOfId?: string | null
+  isStale?: boolean
+  staleReason?: string | null
   createdAt?: Date | string
   duplicateFor?: Prisma.TransactionUncheckedCreateNestedManyWithoutDuplicateOfInput
   transferPairs?: Prisma.TransactionUncheckedCreateNestedManyWithoutTransferPairInput
@@ -1273,6 +1321,8 @@ export type TransactionScalarWhereInput = {
   isRefundPairedWith?: Prisma.StringNullableFilter<"Transaction"> | string | null
   isSplit?: Prisma.BoolFilter<"Transaction"> | boolean
   splitOfId?: Prisma.StringNullableFilter<"Transaction"> | string | null
+  isStale?: Prisma.BoolFilter<"Transaction"> | boolean
+  staleReason?: Prisma.StringNullableFilter<"Transaction"> | string | null
   createdAt?: Prisma.DateTimeFilter<"Transaction"> | Date | string
 }
 
@@ -1287,6 +1337,8 @@ export type TransactionCreateWithoutAccountInput = {
   descriptionRaw?: string | null
   idempotencyKey: string
   isSplit?: boolean
+  isStale?: boolean
+  staleReason?: string | null
   createdAt?: Date | string
   statementImport?: Prisma.StatementImportCreateNestedOneWithoutTransactionsInput
   taxYear: Prisma.TaxYearCreateNestedOneWithoutTransactionsInput
@@ -1321,6 +1373,8 @@ export type TransactionUncheckedCreateWithoutAccountInput = {
   isRefundPairedWith?: string | null
   isSplit?: boolean
   splitOfId?: string | null
+  isStale?: boolean
+  staleReason?: string | null
   createdAt?: Date | string
   duplicateFor?: Prisma.TransactionUncheckedCreateNestedManyWithoutDuplicateOfInput
   transferPairs?: Prisma.TransactionUncheckedCreateNestedManyWithoutTransferPairInput
@@ -1367,6 +1421,8 @@ export type TransactionCreateWithoutStatementImportInput = {
   descriptionRaw?: string | null
   idempotencyKey: string
   isSplit?: boolean
+  isStale?: boolean
+  staleReason?: string | null
   createdAt?: Date | string
   account: Prisma.FinancialAccountCreateNestedOneWithoutTransactionsInput
   taxYear: Prisma.TaxYearCreateNestedOneWithoutTransactionsInput
@@ -1401,6 +1457,8 @@ export type TransactionUncheckedCreateWithoutStatementImportInput = {
   isRefundPairedWith?: string | null
   isSplit?: boolean
   splitOfId?: string | null
+  isStale?: boolean
+  staleReason?: string | null
   createdAt?: Date | string
   duplicateFor?: Prisma.TransactionUncheckedCreateNestedManyWithoutDuplicateOfInput
   transferPairs?: Prisma.TransactionUncheckedCreateNestedManyWithoutTransferPairInput
@@ -1447,6 +1505,8 @@ export type TransactionCreateWithoutDuplicateForInput = {
   descriptionRaw?: string | null
   idempotencyKey: string
   isSplit?: boolean
+  isStale?: boolean
+  staleReason?: string | null
   createdAt?: Date | string
   statementImport?: Prisma.StatementImportCreateNestedOneWithoutTransactionsInput
   account: Prisma.FinancialAccountCreateNestedOneWithoutTransactionsInput
@@ -1482,6 +1542,8 @@ export type TransactionUncheckedCreateWithoutDuplicateForInput = {
   isRefundPairedWith?: string | null
   isSplit?: boolean
   splitOfId?: string | null
+  isStale?: boolean
+  staleReason?: string | null
   createdAt?: Date | string
   transferPairs?: Prisma.TransactionUncheckedCreateNestedManyWithoutTransferPairInput
   paymentPairs?: Prisma.TransactionUncheckedCreateNestedManyWithoutPaymentPairInput
@@ -1506,6 +1568,8 @@ export type TransactionCreateWithoutDuplicateOfInput = {
   descriptionRaw?: string | null
   idempotencyKey: string
   isSplit?: boolean
+  isStale?: boolean
+  staleReason?: string | null
   createdAt?: Date | string
   statementImport?: Prisma.StatementImportCreateNestedOneWithoutTransactionsInput
   account: Prisma.FinancialAccountCreateNestedOneWithoutTransactionsInput
@@ -1540,6 +1604,8 @@ export type TransactionUncheckedCreateWithoutDuplicateOfInput = {
   isRefundPairedWith?: string | null
   isSplit?: boolean
   splitOfId?: string | null
+  isStale?: boolean
+  staleReason?: string | null
   createdAt?: Date | string
   duplicateFor?: Prisma.TransactionUncheckedCreateNestedManyWithoutDuplicateOfInput
   transferPairs?: Prisma.TransactionUncheckedCreateNestedManyWithoutTransferPairInput
@@ -1570,6 +1636,8 @@ export type TransactionCreateWithoutTransferPairsInput = {
   descriptionRaw?: string | null
   idempotencyKey: string
   isSplit?: boolean
+  isStale?: boolean
+  staleReason?: string | null
   createdAt?: Date | string
   statementImport?: Prisma.StatementImportCreateNestedOneWithoutTransactionsInput
   account: Prisma.FinancialAccountCreateNestedOneWithoutTransactionsInput
@@ -1605,6 +1673,8 @@ export type TransactionUncheckedCreateWithoutTransferPairsInput = {
   isRefundPairedWith?: string | null
   isSplit?: boolean
   splitOfId?: string | null
+  isStale?: boolean
+  staleReason?: string | null
   createdAt?: Date | string
   duplicateFor?: Prisma.TransactionUncheckedCreateNestedManyWithoutDuplicateOfInput
   paymentPairs?: Prisma.TransactionUncheckedCreateNestedManyWithoutPaymentPairInput
@@ -1629,6 +1699,8 @@ export type TransactionCreateWithoutTransferPairInput = {
   descriptionRaw?: string | null
   idempotencyKey: string
   isSplit?: boolean
+  isStale?: boolean
+  staleReason?: string | null
   createdAt?: Date | string
   statementImport?: Prisma.StatementImportCreateNestedOneWithoutTransactionsInput
   account: Prisma.FinancialAccountCreateNestedOneWithoutTransactionsInput
@@ -1663,6 +1735,8 @@ export type TransactionUncheckedCreateWithoutTransferPairInput = {
   isRefundPairedWith?: string | null
   isSplit?: boolean
   splitOfId?: string | null
+  isStale?: boolean
+  staleReason?: string | null
   createdAt?: Date | string
   duplicateFor?: Prisma.TransactionUncheckedCreateNestedManyWithoutDuplicateOfInput
   transferPairs?: Prisma.TransactionUncheckedCreateNestedManyWithoutTransferPairInput
@@ -1693,6 +1767,8 @@ export type TransactionCreateWithoutPaymentPairsInput = {
   descriptionRaw?: string | null
   idempotencyKey: string
   isSplit?: boolean
+  isStale?: boolean
+  staleReason?: string | null
   createdAt?: Date | string
   statementImport?: Prisma.StatementImportCreateNestedOneWithoutTransactionsInput
   account: Prisma.FinancialAccountCreateNestedOneWithoutTransactionsInput
@@ -1728,6 +1804,8 @@ export type TransactionUncheckedCreateWithoutPaymentPairsInput = {
   isRefundPairedWith?: string | null
   isSplit?: boolean
   splitOfId?: string | null
+  isStale?: boolean
+  staleReason?: string | null
   createdAt?: Date | string
   duplicateFor?: Prisma.TransactionUncheckedCreateNestedManyWithoutDuplicateOfInput
   transferPairs?: Prisma.TransactionUncheckedCreateNestedManyWithoutTransferPairInput
@@ -1752,6 +1830,8 @@ export type TransactionCreateWithoutPaymentPairInput = {
   descriptionRaw?: string | null
   idempotencyKey: string
   isSplit?: boolean
+  isStale?: boolean
+  staleReason?: string | null
   createdAt?: Date | string
   statementImport?: Prisma.StatementImportCreateNestedOneWithoutTransactionsInput
   account: Prisma.FinancialAccountCreateNestedOneWithoutTransactionsInput
@@ -1786,6 +1866,8 @@ export type TransactionUncheckedCreateWithoutPaymentPairInput = {
   isRefundPairedWith?: string | null
   isSplit?: boolean
   splitOfId?: string | null
+  isStale?: boolean
+  staleReason?: string | null
   createdAt?: Date | string
   duplicateFor?: Prisma.TransactionUncheckedCreateNestedManyWithoutDuplicateOfInput
   transferPairs?: Prisma.TransactionUncheckedCreateNestedManyWithoutTransferPairInput
@@ -1816,6 +1898,8 @@ export type TransactionCreateWithoutRefundPairsInput = {
   descriptionRaw?: string | null
   idempotencyKey: string
   isSplit?: boolean
+  isStale?: boolean
+  staleReason?: string | null
   createdAt?: Date | string
   statementImport?: Prisma.StatementImportCreateNestedOneWithoutTransactionsInput
   account: Prisma.FinancialAccountCreateNestedOneWithoutTransactionsInput
@@ -1851,6 +1935,8 @@ export type TransactionUncheckedCreateWithoutRefundPairsInput = {
   isRefundPairedWith?: string | null
   isSplit?: boolean
   splitOfId?: string | null
+  isStale?: boolean
+  staleReason?: string | null
   createdAt?: Date | string
   duplicateFor?: Prisma.TransactionUncheckedCreateNestedManyWithoutDuplicateOfInput
   transferPairs?: Prisma.TransactionUncheckedCreateNestedManyWithoutTransferPairInput
@@ -1875,6 +1961,8 @@ export type TransactionCreateWithoutRefundPairInput = {
   descriptionRaw?: string | null
   idempotencyKey: string
   isSplit?: boolean
+  isStale?: boolean
+  staleReason?: string | null
   createdAt?: Date | string
   statementImport?: Prisma.StatementImportCreateNestedOneWithoutTransactionsInput
   account: Prisma.FinancialAccountCreateNestedOneWithoutTransactionsInput
@@ -1909,6 +1997,8 @@ export type TransactionUncheckedCreateWithoutRefundPairInput = {
   isPaymentPairedWith?: string | null
   isSplit?: boolean
   splitOfId?: string | null
+  isStale?: boolean
+  staleReason?: string | null
   createdAt?: Date | string
   duplicateFor?: Prisma.TransactionUncheckedCreateNestedManyWithoutDuplicateOfInput
   transferPairs?: Prisma.TransactionUncheckedCreateNestedManyWithoutTransferPairInput
@@ -1939,6 +2029,8 @@ export type TransactionCreateWithoutSplitChildrenInput = {
   descriptionRaw?: string | null
   idempotencyKey: string
   isSplit?: boolean
+  isStale?: boolean
+  staleReason?: string | null
   createdAt?: Date | string
   statementImport?: Prisma.StatementImportCreateNestedOneWithoutTransactionsInput
   account: Prisma.FinancialAccountCreateNestedOneWithoutTransactionsInput
@@ -1974,6 +2066,8 @@ export type TransactionUncheckedCreateWithoutSplitChildrenInput = {
   isRefundPairedWith?: string | null
   isSplit?: boolean
   splitOfId?: string | null
+  isStale?: boolean
+  staleReason?: string | null
   createdAt?: Date | string
   duplicateFor?: Prisma.TransactionUncheckedCreateNestedManyWithoutDuplicateOfInput
   transferPairs?: Prisma.TransactionUncheckedCreateNestedManyWithoutTransferPairInput
@@ -1998,6 +2092,8 @@ export type TransactionCreateWithoutSplitOfInput = {
   descriptionRaw?: string | null
   idempotencyKey: string
   isSplit?: boolean
+  isStale?: boolean
+  staleReason?: string | null
   createdAt?: Date | string
   statementImport?: Prisma.StatementImportCreateNestedOneWithoutTransactionsInput
   account: Prisma.FinancialAccountCreateNestedOneWithoutTransactionsInput
@@ -2032,6 +2128,8 @@ export type TransactionUncheckedCreateWithoutSplitOfInput = {
   isPaymentPairedWith?: string | null
   isRefundPairedWith?: string | null
   isSplit?: boolean
+  isStale?: boolean
+  staleReason?: string | null
   createdAt?: Date | string
   duplicateFor?: Prisma.TransactionUncheckedCreateNestedManyWithoutDuplicateOfInput
   transferPairs?: Prisma.TransactionUncheckedCreateNestedManyWithoutTransferPairInput
@@ -2073,6 +2171,8 @@ export type TransactionUpdateWithoutDuplicateForInput = {
   descriptionRaw?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   idempotencyKey?: Prisma.StringFieldUpdateOperationsInput | string
   isSplit?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  isStale?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  staleReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   statementImport?: Prisma.StatementImportUpdateOneWithoutTransactionsNestedInput
   account?: Prisma.FinancialAccountUpdateOneRequiredWithoutTransactionsNestedInput
@@ -2108,6 +2208,8 @@ export type TransactionUncheckedUpdateWithoutDuplicateForInput = {
   isRefundPairedWith?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   isSplit?: Prisma.BoolFieldUpdateOperationsInput | boolean
   splitOfId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  isStale?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  staleReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   transferPairs?: Prisma.TransactionUncheckedUpdateManyWithoutTransferPairNestedInput
   paymentPairs?: Prisma.TransactionUncheckedUpdateManyWithoutPaymentPairNestedInput
@@ -2154,6 +2256,8 @@ export type TransactionUpdateWithoutTransferPairsInput = {
   descriptionRaw?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   idempotencyKey?: Prisma.StringFieldUpdateOperationsInput | string
   isSplit?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  isStale?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  staleReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   statementImport?: Prisma.StatementImportUpdateOneWithoutTransactionsNestedInput
   account?: Prisma.FinancialAccountUpdateOneRequiredWithoutTransactionsNestedInput
@@ -2189,6 +2293,8 @@ export type TransactionUncheckedUpdateWithoutTransferPairsInput = {
   isRefundPairedWith?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   isSplit?: Prisma.BoolFieldUpdateOperationsInput | boolean
   splitOfId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  isStale?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  staleReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   duplicateFor?: Prisma.TransactionUncheckedUpdateManyWithoutDuplicateOfNestedInput
   paymentPairs?: Prisma.TransactionUncheckedUpdateManyWithoutPaymentPairNestedInput
@@ -2235,6 +2341,8 @@ export type TransactionUpdateWithoutPaymentPairsInput = {
   descriptionRaw?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   idempotencyKey?: Prisma.StringFieldUpdateOperationsInput | string
   isSplit?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  isStale?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  staleReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   statementImport?: Prisma.StatementImportUpdateOneWithoutTransactionsNestedInput
   account?: Prisma.FinancialAccountUpdateOneRequiredWithoutTransactionsNestedInput
@@ -2270,6 +2378,8 @@ export type TransactionUncheckedUpdateWithoutPaymentPairsInput = {
   isRefundPairedWith?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   isSplit?: Prisma.BoolFieldUpdateOperationsInput | boolean
   splitOfId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  isStale?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  staleReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   duplicateFor?: Prisma.TransactionUncheckedUpdateManyWithoutDuplicateOfNestedInput
   transferPairs?: Prisma.TransactionUncheckedUpdateManyWithoutTransferPairNestedInput
@@ -2316,6 +2426,8 @@ export type TransactionUpdateWithoutRefundPairsInput = {
   descriptionRaw?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   idempotencyKey?: Prisma.StringFieldUpdateOperationsInput | string
   isSplit?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  isStale?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  staleReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   statementImport?: Prisma.StatementImportUpdateOneWithoutTransactionsNestedInput
   account?: Prisma.FinancialAccountUpdateOneRequiredWithoutTransactionsNestedInput
@@ -2351,6 +2463,8 @@ export type TransactionUncheckedUpdateWithoutRefundPairsInput = {
   isRefundPairedWith?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   isSplit?: Prisma.BoolFieldUpdateOperationsInput | boolean
   splitOfId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  isStale?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  staleReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   duplicateFor?: Prisma.TransactionUncheckedUpdateManyWithoutDuplicateOfNestedInput
   transferPairs?: Prisma.TransactionUncheckedUpdateManyWithoutTransferPairNestedInput
@@ -2397,6 +2511,8 @@ export type TransactionUpdateWithoutSplitChildrenInput = {
   descriptionRaw?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   idempotencyKey?: Prisma.StringFieldUpdateOperationsInput | string
   isSplit?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  isStale?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  staleReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   statementImport?: Prisma.StatementImportUpdateOneWithoutTransactionsNestedInput
   account?: Prisma.FinancialAccountUpdateOneRequiredWithoutTransactionsNestedInput
@@ -2432,6 +2548,8 @@ export type TransactionUncheckedUpdateWithoutSplitChildrenInput = {
   isRefundPairedWith?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   isSplit?: Prisma.BoolFieldUpdateOperationsInput | boolean
   splitOfId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  isStale?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  staleReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   duplicateFor?: Prisma.TransactionUncheckedUpdateManyWithoutDuplicateOfNestedInput
   transferPairs?: Prisma.TransactionUncheckedUpdateManyWithoutTransferPairNestedInput
@@ -2467,6 +2585,8 @@ export type TransactionCreateWithoutClassificationsInput = {
   descriptionRaw?: string | null
   idempotencyKey: string
   isSplit?: boolean
+  isStale?: boolean
+  staleReason?: string | null
   createdAt?: Date | string
   statementImport?: Prisma.StatementImportCreateNestedOneWithoutTransactionsInput
   account: Prisma.FinancialAccountCreateNestedOneWithoutTransactionsInput
@@ -2502,6 +2622,8 @@ export type TransactionUncheckedCreateWithoutClassificationsInput = {
   isRefundPairedWith?: string | null
   isSplit?: boolean
   splitOfId?: string | null
+  isStale?: boolean
+  staleReason?: string | null
   createdAt?: Date | string
   duplicateFor?: Prisma.TransactionUncheckedCreateNestedManyWithoutDuplicateOfInput
   transferPairs?: Prisma.TransactionUncheckedCreateNestedManyWithoutTransferPairInput
@@ -2537,6 +2659,8 @@ export type TransactionUpdateWithoutClassificationsInput = {
   descriptionRaw?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   idempotencyKey?: Prisma.StringFieldUpdateOperationsInput | string
   isSplit?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  isStale?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  staleReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   statementImport?: Prisma.StatementImportUpdateOneWithoutTransactionsNestedInput
   account?: Prisma.FinancialAccountUpdateOneRequiredWithoutTransactionsNestedInput
@@ -2572,6 +2696,8 @@ export type TransactionUncheckedUpdateWithoutClassificationsInput = {
   isRefundPairedWith?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   isSplit?: Prisma.BoolFieldUpdateOperationsInput | boolean
   splitOfId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  isStale?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  staleReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   duplicateFor?: Prisma.TransactionUncheckedUpdateManyWithoutDuplicateOfNestedInput
   transferPairs?: Prisma.TransactionUncheckedUpdateManyWithoutTransferPairNestedInput
@@ -2598,6 +2724,8 @@ export type TransactionCreateManyTaxYearInput = {
   isRefundPairedWith?: string | null
   isSplit?: boolean
   splitOfId?: string | null
+  isStale?: boolean
+  staleReason?: string | null
   createdAt?: Date | string
 }
 
@@ -2612,6 +2740,8 @@ export type TransactionUpdateWithoutTaxYearInput = {
   descriptionRaw?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   idempotencyKey?: Prisma.StringFieldUpdateOperationsInput | string
   isSplit?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  isStale?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  staleReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   statementImport?: Prisma.StatementImportUpdateOneWithoutTransactionsNestedInput
   account?: Prisma.FinancialAccountUpdateOneRequiredWithoutTransactionsNestedInput
@@ -2646,6 +2776,8 @@ export type TransactionUncheckedUpdateWithoutTaxYearInput = {
   isRefundPairedWith?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   isSplit?: Prisma.BoolFieldUpdateOperationsInput | boolean
   splitOfId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  isStale?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  staleReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   duplicateFor?: Prisma.TransactionUncheckedUpdateManyWithoutDuplicateOfNestedInput
   transferPairs?: Prisma.TransactionUncheckedUpdateManyWithoutTransferPairNestedInput
@@ -2673,6 +2805,8 @@ export type TransactionUncheckedUpdateManyWithoutTaxYearInput = {
   isRefundPairedWith?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   isSplit?: Prisma.BoolFieldUpdateOperationsInput | boolean
   splitOfId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  isStale?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  staleReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
 
@@ -2694,6 +2828,8 @@ export type TransactionCreateManyAccountInput = {
   isRefundPairedWith?: string | null
   isSplit?: boolean
   splitOfId?: string | null
+  isStale?: boolean
+  staleReason?: string | null
   createdAt?: Date | string
 }
 
@@ -2708,6 +2844,8 @@ export type TransactionUpdateWithoutAccountInput = {
   descriptionRaw?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   idempotencyKey?: Prisma.StringFieldUpdateOperationsInput | string
   isSplit?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  isStale?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  staleReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   statementImport?: Prisma.StatementImportUpdateOneWithoutTransactionsNestedInput
   taxYear?: Prisma.TaxYearUpdateOneRequiredWithoutTransactionsNestedInput
@@ -2742,6 +2880,8 @@ export type TransactionUncheckedUpdateWithoutAccountInput = {
   isRefundPairedWith?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   isSplit?: Prisma.BoolFieldUpdateOperationsInput | boolean
   splitOfId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  isStale?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  staleReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   duplicateFor?: Prisma.TransactionUncheckedUpdateManyWithoutDuplicateOfNestedInput
   transferPairs?: Prisma.TransactionUncheckedUpdateManyWithoutTransferPairNestedInput
@@ -2769,6 +2909,8 @@ export type TransactionUncheckedUpdateManyWithoutAccountInput = {
   isRefundPairedWith?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   isSplit?: Prisma.BoolFieldUpdateOperationsInput | boolean
   splitOfId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  isStale?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  staleReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
 
@@ -2790,6 +2932,8 @@ export type TransactionCreateManyStatementImportInput = {
   isRefundPairedWith?: string | null
   isSplit?: boolean
   splitOfId?: string | null
+  isStale?: boolean
+  staleReason?: string | null
   createdAt?: Date | string
 }
 
@@ -2804,6 +2948,8 @@ export type TransactionUpdateWithoutStatementImportInput = {
   descriptionRaw?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   idempotencyKey?: Prisma.StringFieldUpdateOperationsInput | string
   isSplit?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  isStale?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  staleReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   account?: Prisma.FinancialAccountUpdateOneRequiredWithoutTransactionsNestedInput
   taxYear?: Prisma.TaxYearUpdateOneRequiredWithoutTransactionsNestedInput
@@ -2838,6 +2984,8 @@ export type TransactionUncheckedUpdateWithoutStatementImportInput = {
   isRefundPairedWith?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   isSplit?: Prisma.BoolFieldUpdateOperationsInput | boolean
   splitOfId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  isStale?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  staleReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   duplicateFor?: Prisma.TransactionUncheckedUpdateManyWithoutDuplicateOfNestedInput
   transferPairs?: Prisma.TransactionUncheckedUpdateManyWithoutTransferPairNestedInput
@@ -2865,6 +3013,8 @@ export type TransactionUncheckedUpdateManyWithoutStatementImportInput = {
   isRefundPairedWith?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   isSplit?: Prisma.BoolFieldUpdateOperationsInput | boolean
   splitOfId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  isStale?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  staleReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
 
@@ -2886,6 +3036,8 @@ export type TransactionCreateManyDuplicateOfInput = {
   isRefundPairedWith?: string | null
   isSplit?: boolean
   splitOfId?: string | null
+  isStale?: boolean
+  staleReason?: string | null
   createdAt?: Date | string
 }
 
@@ -2907,6 +3059,8 @@ export type TransactionCreateManyTransferPairInput = {
   isRefundPairedWith?: string | null
   isSplit?: boolean
   splitOfId?: string | null
+  isStale?: boolean
+  staleReason?: string | null
   createdAt?: Date | string
 }
 
@@ -2928,6 +3082,8 @@ export type TransactionCreateManyPaymentPairInput = {
   isRefundPairedWith?: string | null
   isSplit?: boolean
   splitOfId?: string | null
+  isStale?: boolean
+  staleReason?: string | null
   createdAt?: Date | string
 }
 
@@ -2949,6 +3105,8 @@ export type TransactionCreateManyRefundPairInput = {
   isPaymentPairedWith?: string | null
   isSplit?: boolean
   splitOfId?: string | null
+  isStale?: boolean
+  staleReason?: string | null
   createdAt?: Date | string
 }
 
@@ -2970,6 +3128,8 @@ export type TransactionCreateManySplitOfInput = {
   isPaymentPairedWith?: string | null
   isRefundPairedWith?: string | null
   isSplit?: boolean
+  isStale?: boolean
+  staleReason?: string | null
   createdAt?: Date | string
 }
 
@@ -2984,6 +3144,8 @@ export type TransactionUpdateWithoutDuplicateOfInput = {
   descriptionRaw?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   idempotencyKey?: Prisma.StringFieldUpdateOperationsInput | string
   isSplit?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  isStale?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  staleReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   statementImport?: Prisma.StatementImportUpdateOneWithoutTransactionsNestedInput
   account?: Prisma.FinancialAccountUpdateOneRequiredWithoutTransactionsNestedInput
@@ -3018,6 +3180,8 @@ export type TransactionUncheckedUpdateWithoutDuplicateOfInput = {
   isRefundPairedWith?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   isSplit?: Prisma.BoolFieldUpdateOperationsInput | boolean
   splitOfId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  isStale?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  staleReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   duplicateFor?: Prisma.TransactionUncheckedUpdateManyWithoutDuplicateOfNestedInput
   transferPairs?: Prisma.TransactionUncheckedUpdateManyWithoutTransferPairNestedInput
@@ -3045,6 +3209,8 @@ export type TransactionUncheckedUpdateManyWithoutDuplicateOfInput = {
   isRefundPairedWith?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   isSplit?: Prisma.BoolFieldUpdateOperationsInput | boolean
   splitOfId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  isStale?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  staleReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
 
@@ -3059,6 +3225,8 @@ export type TransactionUpdateWithoutTransferPairInput = {
   descriptionRaw?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   idempotencyKey?: Prisma.StringFieldUpdateOperationsInput | string
   isSplit?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  isStale?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  staleReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   statementImport?: Prisma.StatementImportUpdateOneWithoutTransactionsNestedInput
   account?: Prisma.FinancialAccountUpdateOneRequiredWithoutTransactionsNestedInput
@@ -3093,6 +3261,8 @@ export type TransactionUncheckedUpdateWithoutTransferPairInput = {
   isRefundPairedWith?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   isSplit?: Prisma.BoolFieldUpdateOperationsInput | boolean
   splitOfId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  isStale?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  staleReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   duplicateFor?: Prisma.TransactionUncheckedUpdateManyWithoutDuplicateOfNestedInput
   transferPairs?: Prisma.TransactionUncheckedUpdateManyWithoutTransferPairNestedInput
@@ -3120,6 +3290,8 @@ export type TransactionUncheckedUpdateManyWithoutTransferPairInput = {
   isRefundPairedWith?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   isSplit?: Prisma.BoolFieldUpdateOperationsInput | boolean
   splitOfId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  isStale?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  staleReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
 
@@ -3134,6 +3306,8 @@ export type TransactionUpdateWithoutPaymentPairInput = {
   descriptionRaw?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   idempotencyKey?: Prisma.StringFieldUpdateOperationsInput | string
   isSplit?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  isStale?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  staleReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   statementImport?: Prisma.StatementImportUpdateOneWithoutTransactionsNestedInput
   account?: Prisma.FinancialAccountUpdateOneRequiredWithoutTransactionsNestedInput
@@ -3168,6 +3342,8 @@ export type TransactionUncheckedUpdateWithoutPaymentPairInput = {
   isRefundPairedWith?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   isSplit?: Prisma.BoolFieldUpdateOperationsInput | boolean
   splitOfId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  isStale?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  staleReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   duplicateFor?: Prisma.TransactionUncheckedUpdateManyWithoutDuplicateOfNestedInput
   transferPairs?: Prisma.TransactionUncheckedUpdateManyWithoutTransferPairNestedInput
@@ -3195,6 +3371,8 @@ export type TransactionUncheckedUpdateManyWithoutPaymentPairInput = {
   isRefundPairedWith?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   isSplit?: Prisma.BoolFieldUpdateOperationsInput | boolean
   splitOfId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  isStale?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  staleReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
 
@@ -3209,6 +3387,8 @@ export type TransactionUpdateWithoutRefundPairInput = {
   descriptionRaw?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   idempotencyKey?: Prisma.StringFieldUpdateOperationsInput | string
   isSplit?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  isStale?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  staleReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   statementImport?: Prisma.StatementImportUpdateOneWithoutTransactionsNestedInput
   account?: Prisma.FinancialAccountUpdateOneRequiredWithoutTransactionsNestedInput
@@ -3243,6 +3423,8 @@ export type TransactionUncheckedUpdateWithoutRefundPairInput = {
   isPaymentPairedWith?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   isSplit?: Prisma.BoolFieldUpdateOperationsInput | boolean
   splitOfId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  isStale?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  staleReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   duplicateFor?: Prisma.TransactionUncheckedUpdateManyWithoutDuplicateOfNestedInput
   transferPairs?: Prisma.TransactionUncheckedUpdateManyWithoutTransferPairNestedInput
@@ -3270,6 +3452,8 @@ export type TransactionUncheckedUpdateManyWithoutRefundPairInput = {
   isPaymentPairedWith?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   isSplit?: Prisma.BoolFieldUpdateOperationsInput | boolean
   splitOfId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  isStale?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  staleReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
 
@@ -3284,6 +3468,8 @@ export type TransactionUpdateWithoutSplitOfInput = {
   descriptionRaw?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   idempotencyKey?: Prisma.StringFieldUpdateOperationsInput | string
   isSplit?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  isStale?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  staleReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   statementImport?: Prisma.StatementImportUpdateOneWithoutTransactionsNestedInput
   account?: Prisma.FinancialAccountUpdateOneRequiredWithoutTransactionsNestedInput
@@ -3318,6 +3504,8 @@ export type TransactionUncheckedUpdateWithoutSplitOfInput = {
   isPaymentPairedWith?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   isRefundPairedWith?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   isSplit?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  isStale?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  staleReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   duplicateFor?: Prisma.TransactionUncheckedUpdateManyWithoutDuplicateOfNestedInput
   transferPairs?: Prisma.TransactionUncheckedUpdateManyWithoutTransferPairNestedInput
@@ -3345,6 +3533,8 @@ export type TransactionUncheckedUpdateManyWithoutSplitOfInput = {
   isPaymentPairedWith?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   isRefundPairedWith?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   isSplit?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  isStale?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  staleReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
 
@@ -3443,6 +3633,8 @@ export type TransactionSelect<ExtArgs extends runtime.Types.Extensions.InternalA
   isRefundPairedWith?: boolean
   isSplit?: boolean
   splitOfId?: boolean
+  isStale?: boolean
+  staleReason?: boolean
   createdAt?: boolean
   statementImport?: boolean | Prisma.Transaction$statementImportArgs<ExtArgs>
   account?: boolean | Prisma.FinancialAccountDefaultArgs<ExtArgs>
@@ -3480,6 +3672,8 @@ export type TransactionSelectCreateManyAndReturn<ExtArgs extends runtime.Types.E
   isRefundPairedWith?: boolean
   isSplit?: boolean
   splitOfId?: boolean
+  isStale?: boolean
+  staleReason?: boolean
   createdAt?: boolean
   statementImport?: boolean | Prisma.Transaction$statementImportArgs<ExtArgs>
   account?: boolean | Prisma.FinancialAccountDefaultArgs<ExtArgs>
@@ -3510,6 +3704,8 @@ export type TransactionSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.E
   isRefundPairedWith?: boolean
   isSplit?: boolean
   splitOfId?: boolean
+  isStale?: boolean
+  staleReason?: boolean
   createdAt?: boolean
   statementImport?: boolean | Prisma.Transaction$statementImportArgs<ExtArgs>
   account?: boolean | Prisma.FinancialAccountDefaultArgs<ExtArgs>
@@ -3540,10 +3736,12 @@ export type TransactionSelectScalar = {
   isRefundPairedWith?: boolean
   isSplit?: boolean
   splitOfId?: boolean
+  isStale?: boolean
+  staleReason?: boolean
   createdAt?: boolean
 }
 
-export type TransactionOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "statementImportId" | "accountId" | "taxYearId" | "postedDate" | "transactionDate" | "amountOriginal" | "amountNormalized" | "merchantRaw" | "merchantNormalized" | "descriptionRaw" | "idempotencyKey" | "isDuplicateOf" | "isTransferPairedWith" | "isPaymentPairedWith" | "isRefundPairedWith" | "isSplit" | "splitOfId" | "createdAt", ExtArgs["result"]["transaction"]>
+export type TransactionOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "statementImportId" | "accountId" | "taxYearId" | "postedDate" | "transactionDate" | "amountOriginal" | "amountNormalized" | "merchantRaw" | "merchantNormalized" | "descriptionRaw" | "idempotencyKey" | "isDuplicateOf" | "isTransferPairedWith" | "isPaymentPairedWith" | "isRefundPairedWith" | "isSplit" | "splitOfId" | "isStale" | "staleReason" | "createdAt", ExtArgs["result"]["transaction"]>
 export type TransactionInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   statementImport?: boolean | Prisma.Transaction$statementImportArgs<ExtArgs>
   account?: boolean | Prisma.FinancialAccountDefaultArgs<ExtArgs>
@@ -3619,6 +3817,16 @@ export type $TransactionPayload<ExtArgs extends runtime.Types.Extensions.Interna
     isRefundPairedWith: string | null
     isSplit: boolean
     splitOfId: string | null
+    /**
+     * *
+     *    * Phase A re-extract cleanup. Set true on rows that the original (low-
+     *    * quality) extraction created but the higher-quality Sonnet vision
+     *    * re-extraction did NOT confirm. Excluded from totals + ledger views.
+     *    * Append-only-friendly: row is kept on disk for audit, just hidden from
+     *    * computation.
+     */
+    isStale: boolean
+    staleReason: string | null
     createdAt: Date
   }, ExtArgs["result"]["transaction"]>
   composites: {}
@@ -4075,6 +4283,8 @@ export interface TransactionFieldRefs {
   readonly isRefundPairedWith: Prisma.FieldRef<"Transaction", 'String'>
   readonly isSplit: Prisma.FieldRef<"Transaction", 'Boolean'>
   readonly splitOfId: Prisma.FieldRef<"Transaction", 'String'>
+  readonly isStale: Prisma.FieldRef<"Transaction", 'Boolean'>
+  readonly staleReason: Prisma.FieldRef<"Transaction", 'String'>
   readonly createdAt: Prisma.FieldRef<"Transaction", 'DateTime'>
 }
     

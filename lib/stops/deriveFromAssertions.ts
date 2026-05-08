@@ -28,6 +28,7 @@ export async function deriveStopsFromAssertions(
     where: {
       taxYearId,
       isSplit: false,
+      isStale: false,
       isTransferPairedWith: null,
       isPaymentPairedWith: null,
       amountNormalized: { lt: 0 }, // inflows are negative per spec §4.2
@@ -78,6 +79,7 @@ export async function deriveStopsFromAssertions(
     where: {
       taxYearId,
       isSplit: false,
+      isStale: false,
       classifications: {
         some: {
           isCurrent: true,
