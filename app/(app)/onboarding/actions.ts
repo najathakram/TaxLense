@@ -488,6 +488,23 @@ export async function saveLegalName(raw: unknown): Promise<ActionResult> {
     where: { id: userId },
     data: { name: parsed.data.name },
   })
+
+  // Propagate the rename to any CpaClient row whose displayName tracked the
+  // old User.name (i.e. it was a default copy, not a custom CPA-set label).
+  // This stops the sidebar chip / clients table from going stale after the
+  // user updates their legal name. CPAs who set a custom displayName see
+  // it preserved.
+  const propagated = await prisma.cpaClient.updateMany({
+    where: {
+      clientUserId: userId,
+      OR: [
+        { displayName: before.name },
+        { displayName: null },
+      ],
+    },
+    data: { displayName: parsed.data.name },
+  })
+
   await prisma.auditEvent.create({
     data: {
       userId,
@@ -496,10 +513,11 @@ export async function saveLegalName(raw: unknown): Promise<ActionResult> {
       entityType: "User",
       entityId: userId,
       beforeState: { name: before.name },
-      afterState: { name: parsed.data.name },
+      afterState: { name: parsed.data.name, cpaClientRowsUpdated: propagated.count },
     },
   })
 
   revalidatePath("/profile")
+  revalidatePath("/clients")
   return { ok: true }
 }
