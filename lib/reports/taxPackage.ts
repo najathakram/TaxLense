@@ -26,6 +26,11 @@ import {
   buildCpaHandoffPdf,
   build1099NecCsv,
 } from "./pdf/documents"
+import {
+  buildForm1120SPdf,
+  buildForm1065Pdf,
+  buildScheduleK1Pdf,
+} from "./pdf/entityForms"
 import { buildMasterLedger } from "./masterLedger"
 import { buildFinancialStatements } from "./financialStatements"
 
@@ -33,6 +38,32 @@ function bufferToStream(buf: Buffer): Readable {
   const pt = new PassThrough()
   pt.end(buf)
   return pt
+}
+
+interface EntityFormFile {
+  name: string
+  buffer: Buffer
+}
+
+/**
+ * Phase 3 — entity-specific tax-form PDFs. Phases 1/2 ship Schedule C as
+ * the only output; this branches on entityType:
+ *   S_CORP → Form 1120-S worksheet + Schedule K-1 (single-owner default)
+ *   LLC_MULTI / PARTNERSHIP → Form 1065 worksheet + Schedule K-1
+ *   SOLE_PROP / LLC_SINGLE / C_CORP → empty (sole prop already covered;
+ *                                            C_CORP scheduled for Phase 4).
+ */
+async function loadEntityForms(taxYearId: string, entityType: string): Promise<EntityFormFile[]> {
+  const out: EntityFormFile[] = []
+  if (entityType === "S_CORP") {
+    out.push({ name: "07_form_1120s_worksheet.pdf", buffer: await buildForm1120SPdf(taxYearId) })
+    out.push({ name: "08_schedule_k1_1120s.pdf", buffer: await buildScheduleK1Pdf(taxYearId, { sourceForm: "1120-S" }) })
+  } else if (entityType === "LLC_MULTI" || entityType === "PARTNERSHIP") {
+    out.push({ name: "07_form_1065_worksheet.pdf", buffer: await buildForm1065Pdf(taxYearId) })
+    out.push({ name: "08_schedule_k1_1065.pdf", buffer: await buildScheduleK1Pdf(taxYearId, { sourceForm: "1065" }) })
+  }
+  // C_CORP form 1120 deferred to Phase 4.
+  return out
 }
 
 export interface BuildTaxPackageOptions {
@@ -52,6 +83,13 @@ export async function buildTaxPackage(
   if (!options.allowUnlocked && ty.status !== "LOCKED") {
     throw new Error("Tax year must be LOCKED before generating a tax package")
   }
+
+  // Branch on entity type — Schedule C package vs 1120-S/K-1 vs 1065/K-1.
+  const profile = await prisma.businessProfile.findUnique({
+    where: { taxYearId },
+    select: { entityType: true },
+  })
+  const entityType = profile?.entityType ?? "SOLE_PROP"
 
   const [
     clientSummary,
@@ -73,6 +111,8 @@ export async function buildTaxPackage(
     buildFinancialStatements(taxYearId),
   ])
 
+  const entityForms = await loadEntityForms(taxYearId, entityType)
+
   return new Promise<Buffer>((resolve, reject) => {
     const archive = archiver("zip", { zlib: { level: 6 } })
     const passthrough = new PassThrough()
@@ -90,6 +130,15 @@ export async function buildTaxPackage(
     archive.append(bufferToStream(depreciation),    { name: "04_depreciation.pdf" })
     archive.append(necCsv,                          { name: "05_1099_nec_recipients.csv" })
     archive.append(bufferToStream(handoff),         { name: "06_cpa_handoff.pdf" })
+
+    // Entity-specific forms ride alongside the Schedule C package — the CPA
+    // can pick whichever one matches the taxpayer's entity. For an S-Corp
+    // client these are the primary deliverables; for a sole prop they're
+    // omitted entirely.
+    for (const f of entityForms) {
+      archive.append(bufferToStream(f.buffer), { name: f.name })
+    }
+
     archive.append(bufferToStream(masterLedgerXlsx), { name: "master_ledger.xlsx" })
     archive.append(bufferToStream(financialsXlsx),  { name: "financial_statements.xlsx" })
 
