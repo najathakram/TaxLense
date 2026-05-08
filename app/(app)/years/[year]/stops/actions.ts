@@ -30,7 +30,11 @@ export async function resolveStop(
   })
   if (!stopBefore) throw new Error("StopItem not found")
   if (stopBefore.taxYear.userId !== userId) throw new Error("Not authorized")
-  if (stopBefore.state !== "PENDING") throw new Error(`StopItem is already ${stopBefore.state}`)
+  // ANSWERED + DEFERRED stops are intentionally re-resolvable: the user may
+  // realize they mis-clicked or new info changed the right answer. The flip-
+  // and-insert pattern below supersedes the prior classification cleanly,
+  // and the AuditEvent preserves the change history (append-only by design).
+  const isReAnswer = stopBefore.state === "ANSWERED"
 
   const derived = deriveFromAnswer(answer, {
     ruleCode: stopBefore.merchantRule?.code,
@@ -110,11 +114,15 @@ export async function resolveStop(
         data: {
           userId,
           actorType: "USER",
-          eventType: "STOP_RESOLVED",
+          // STOP_RE_ANSWERED on re-resolve so the audit trail clearly
+          // distinguishes a correction from the initial answer.
+          eventType: isReAnswer ? "STOP_RE_ANSWERED" : "STOP_RESOLVED",
           entityType: "StopItem",
           entityId: stopId,
           beforeState: {
-            prior: priorClassifications.map((c) => ({
+            priorState: stopBefore.state,
+            priorAnswer: stopBefore.userAnswer ?? undefined,
+            priorClassifications: priorClassifications.map((c) => ({
               transactionId: c.transactionId,
               code: c.code,
               businessPct: c.businessPct,
@@ -162,12 +170,17 @@ export async function resolveStop(
   // re-classification of every TIM HORTONS row is the dominant cost on a
   // 500+ ledger; doing it inside the request would push the resolve over
   // the server-action timeout.
+  //
+  // On re-answer (STOP was already ANSWERED), force=true so the rule change
+  // actually overwrites the prior classifications on other matching rows.
+  // Without force, applyMerchantRules skips rows that already have a current
+  // classification — which is exactly what we want to replace here.
   if (willPropagate && stopBefore.merchantRule?.merchantKey) {
     const merchantKey = stopBefore.merchantRule.merchantKey
     const taxYearId = stopBefore.taxYearId
     after(async () => {
       try {
-        await applyMerchantRules(taxYearId, { merchantKey, force: false })
+        await applyMerchantRules(taxYearId, { merchantKey, force: isReAnswer })
         revalidatePath(`/years/${year}/stops`)
         revalidatePath(`/years/${year}/ledger`)
       } catch (err) {

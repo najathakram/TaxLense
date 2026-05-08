@@ -59,6 +59,12 @@ export default async function StopsPage({ params }: Props) {
       merchantKey: s.merchantRule?.merchantKey ?? null,
       totalAmount: affected.reduce((sum, t) => sum + Math.abs(t.amount), 0),
       affected,
+      // Prior answer + answered timestamp drive the "Edit answer" UI on
+      // ANSWERED cards. userAnswer is JSON; the client tries to coerce it
+      // to a StopAnswer for prefill, falling back to defaults if it can't
+      // (e.g. AI auto-resolved stops carry {autoResolved: true, ...}).
+      userAnswer: (s.userAnswer ?? null) as Record<string, unknown> | null,
+      answeredAt: s.answeredAt ? s.answeredAt.toISOString() : null,
     }
   })
 

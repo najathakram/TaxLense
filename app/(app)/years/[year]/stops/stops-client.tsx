@@ -34,6 +34,14 @@ export interface SerializedStop {
   merchantKey: string | null
   totalAmount: number
   affected: SerializedAffected[]
+  /** Prior answer JSON — present on ANSWERED stops. Used to prefill the form
+   *  when the user clicks "Edit answer" on an already-resolved STOP. May
+   *  carry the AI auto-resolve shape ({autoResolved: true, code, ...}) which
+   *  doesn't match StopAnswer; the form treats that as "no prefill". */
+  userAnswer: Record<string, unknown> | null
+  /** ISO timestamp — shown beside the ANSWERED badge so the user can see
+   *  when the prior answer was recorded. */
+  answeredAt: string | null
 }
 
 const CATEGORIES: { key: StopCategory; label: string }[] = [
@@ -158,7 +166,10 @@ export function StopsClient({ year, stops }: { year: number; stops: SerializedSt
 
 function StopCard({ stop }: { stop: SerializedStop }) {
   const [open, setOpen] = useState(stop.state === "PENDING")
-  const disabled = stop.state !== "PENDING"
+  // For PENDING stops the form is the body of the card. For ANSWERED /
+  // DEFERRED stops the body shows a prior-answer summary by default; clicking
+  // "Edit answer" reveals the form so the user can correct a mistake.
+  const [editing, setEditing] = useState(stop.state === "PENDING")
 
   // Deep-link target: ledger rows with an open STOP link to /stops#stop-<id>,
   // and the browser will scroll this anchor into view. The scroll-margin-top
@@ -174,18 +185,132 @@ function StopCard({ stop }: { stop: SerializedStop }) {
               {stop.affected.length !== 1 ? "s" : ""}
             </span>
           </CardTitle>
-          <Badge variant={stop.state === "PENDING" ? "default" : "secondary"}>{stop.state}</Badge>
+          <div className="flex items-center gap-2">
+            {stop.answeredAt && stop.state === "ANSWERED" && (
+              <span className="text-xs text-muted-foreground hidden sm:inline">
+                {stop.answeredAt.slice(0, 10)}
+              </span>
+            )}
+            <Badge variant={stop.state === "PENDING" ? "default" : "secondary"}>
+              {stop.state}
+            </Badge>
+          </div>
         </div>
       </CardHeader>
       {open && (
         <CardContent className="space-y-4">
           <p className="text-sm">{stop.question}</p>
           <AffectedTable rows={stop.affected} />
-          {!disabled && <AnswerForm stop={stop} />}
+          {stop.state === "PENDING" ? (
+            <AnswerForm stop={stop} prior={null} />
+          ) : (
+            <AnsweredBody
+              stop={stop}
+              editing={editing}
+              onToggle={() => setEditing((v) => !v)}
+            />
+          )}
         </CardContent>
       )}
     </Card>
   )
+}
+
+/**
+ * Renders the body of an ANSWERED / DEFERRED stop. Default state shows a
+ * one-line summary of the prior answer + an "Edit answer" button. Clicking
+ * Edit reveals the same AnswerForm a PENDING stop shows, prefilled from
+ * the prior userAnswer (best-effort — AI auto-resolved answers don't match
+ * the StopAnswer shape and fall back to defaults).
+ */
+function AnsweredBody({
+  stop,
+  editing,
+  onToggle,
+}: {
+  stop: SerializedStop
+  editing: boolean
+  onToggle: () => void
+}) {
+  const prior = parsePriorAnswer(stop)
+  const summary = priorAnswerSummary(stop)
+
+  return (
+    <div className="space-y-3">
+      <div className="rounded-md border border-border bg-muted/30 p-3 flex items-start justify-between gap-3">
+        <div className="flex-1 min-w-0 text-xs">
+          <p className="text-[10px] uppercase tracking-wide text-muted-foreground font-semibold">
+            Prior answer
+          </p>
+          <p className="mt-1 text-sm">{summary}</p>
+          {stop.answeredAt && (
+            <p className="text-[11px] text-muted-foreground mt-1">
+              recorded {stop.answeredAt.replace("T", " ").slice(0, 16)} UTC
+            </p>
+          )}
+        </div>
+        <Button size="sm" variant={editing ? "outline" : "default"} onClick={onToggle}>
+          {editing ? "Cancel" : "Edit answer"}
+        </Button>
+      </div>
+      {editing && (
+        <div className="rounded-md border border-blue-500/30 bg-blue-500/5 p-3 space-y-2">
+          <p className="text-[11px] text-blue-500 font-semibold uppercase tracking-wide">
+            Editing prior answer
+          </p>
+          <AnswerForm stop={stop} prior={prior} />
+        </div>
+      )}
+    </div>
+  )
+}
+
+/**
+ * Try to coerce stop.userAnswer back to a StopAnswer for prefilling. AI
+ * auto-resolve writes a different shape ({autoResolved: true, code, ...})
+ * which we can't prefill; return null and the form will show fresh defaults.
+ */
+function parsePriorAnswer(stop: SerializedStop): StopAnswer | null {
+  const raw = stop.userAnswer
+  if (!raw || typeof raw !== "object") return null
+  const kind = (raw as { kind?: string }).kind
+  if (
+    kind === "merchant" ||
+    kind === "transfer" ||
+    kind === "deposit" ||
+    kind === "section_274d"
+  ) {
+    return raw as unknown as StopAnswer
+  }
+  return null
+}
+
+/**
+ * Best-effort one-line description of the prior answer for the summary
+ * card. Falls back to "Auto-resolved by AI" or "Answered manually" when
+ * the JSON shape doesn't match a known StopAnswer.
+ */
+function priorAnswerSummary(stop: SerializedStop): string {
+  const raw = stop.userAnswer as Record<string, unknown> | null
+  if (raw && raw.autoResolved === true) {
+    const code = typeof raw.code === "string" ? raw.code : "—"
+    const conf = typeof raw.confidence === "number" ? raw.confidence : null
+    return conf != null
+      ? `Auto-resolved by AI as ${code} (${(conf * 100).toFixed(0)}% confidence)`
+      : `Auto-resolved by AI as ${code}`
+  }
+  const prior = parsePriorAnswer(stop)
+  if (!prior) return "Answered (prior shape not recognized)"
+  switch (prior.kind) {
+    case "merchant":
+      return `${prior.choice}${prior.scheduleCLine ? ` · Sch C ${prior.scheduleCLine}` : ""}${prior.other ? ` · "${prior.other}"` : ""}`
+    case "transfer":
+      return `${prior.choice}${prior.payeeName ? ` · ${prior.payeeName}` : ""}${prior.purpose ? ` · ${prior.purpose}` : ""}`
+    case "deposit":
+      return `${prior.choice}${prior.other ? ` · "${prior.other}"` : ""}`
+    case "section_274d":
+      return `Attendees: ${prior.attendees} · ${prior.relationship} · ${prior.purpose}`
+  }
 }
 
 function AffectedTable({ rows }: { rows: SerializedAffected[] }) {
@@ -223,16 +348,22 @@ function AffectedTable({ rows }: { rows: SerializedAffected[] }) {
   )
 }
 
-function AnswerForm({ stop }: { stop: SerializedStop }) {
+function AnswerForm({
+  stop,
+  prior,
+}: {
+  stop: SerializedStop
+  prior: StopAnswer | null
+}) {
   switch (stop.category) {
     case "MERCHANT":
-      return <MerchantForm stop={stop} />
+      return <MerchantForm stop={stop} prior={prior?.kind === "merchant" ? prior : null} />
     case "TRANSFER":
-      return <TransferForm stop={stop} />
+      return <TransferForm stop={stop} prior={prior?.kind === "transfer" ? prior : null} />
     case "DEPOSIT":
-      return <DepositForm stop={stop} />
+      return <DepositForm stop={stop} prior={prior?.kind === "deposit" ? prior : null} />
     case "SECTION_274D":
-      return <Section274dForm stop={stop} />
+      return <Section274dForm stop={stop} prior={prior?.kind === "section_274d" ? prior : null} />
     case "PERIOD_GAP":
       return <PeriodGapForm stop={stop} />
   }
@@ -264,10 +395,18 @@ function useSubmit(stopId: string) {
   return { pending, error, submit, defer }
 }
 
-function MerchantForm({ stop }: { stop: SerializedStop }) {
-  const [choice, setChoice] = useState<"ALL_BUSINESS" | "DURING_TRIPS" | "MIXED_50" | "PERSONAL" | "OTHER">("ALL_BUSINESS")
-  const [other, setOther] = useState("")
-  const [line, setLine] = useState<string>("")
+function MerchantForm({
+  stop,
+  prior,
+}: {
+  stop: SerializedStop
+  prior: Extract<StopAnswer, { kind: "merchant" }> | null
+}) {
+  const [choice, setChoice] = useState<"ALL_BUSINESS" | "DURING_TRIPS" | "MIXED_50" | "PERSONAL" | "OTHER">(
+    prior?.choice ?? "ALL_BUSINESS",
+  )
+  const [other, setOther] = useState(prior?.other ?? "")
+  const [line, setLine] = useState<string>(prior?.scheduleCLine ?? "")
   const [applyToSimilar, setApplyToSimilar] = useState(true)
   const { pending, error, submit, defer } = useSubmit(stop.id)
 
@@ -337,11 +476,19 @@ function MerchantForm({ stop }: { stop: SerializedStop }) {
   )
 }
 
-function TransferForm({ stop }: { stop: SerializedStop }) {
-  const [choice, setChoice] = useState<"PERSONAL" | "CONTRACTOR" | "LOAN" | "OTHER">("PERSONAL")
-  const [payeeName, setPayeeName] = useState("")
-  const [purpose, setPurpose] = useState("")
-  const [other, setOther] = useState("")
+function TransferForm({
+  stop,
+  prior,
+}: {
+  stop: SerializedStop
+  prior: Extract<StopAnswer, { kind: "transfer" }> | null
+}) {
+  const [choice, setChoice] = useState<"PERSONAL" | "CONTRACTOR" | "LOAN" | "OTHER">(
+    prior?.choice ?? "PERSONAL",
+  )
+  const [payeeName, setPayeeName] = useState(prior?.payeeName ?? "")
+  const [purpose, setPurpose] = useState(prior?.purpose ?? "")
+  const [other, setOther] = useState(prior?.other ?? "")
   const { pending, error, submit, defer } = useSubmit(stop.id)
 
   return (
@@ -389,11 +536,17 @@ function TransferForm({ stop }: { stop: SerializedStop }) {
   )
 }
 
-function DepositForm({ stop }: { stop: SerializedStop }) {
+function DepositForm({
+  stop,
+  prior,
+}: {
+  stop: SerializedStop
+  prior: Extract<StopAnswer, { kind: "deposit" }> | null
+}) {
   const [choice, setChoice] = useState<
     "CLIENT" | "PLATFORM_1099" | "W2" | "OWNER_CONTRIB" | "GIFT" | "LOAN" | "REFUND" | "OTHER"
-  >("CLIENT")
-  const [other, setOther] = useState("")
+  >(prior?.choice ?? "CLIENT")
+  const [other, setOther] = useState(prior?.other ?? "")
   const { pending, error, submit, defer } = useSubmit(stop.id)
 
   return (
@@ -434,13 +587,19 @@ function DepositForm({ stop }: { stop: SerializedStop }) {
   )
 }
 
-function Section274dForm({ stop }: { stop: SerializedStop }) {
-  const [attendees, setAttendees] = useState("")
+function Section274dForm({
+  stop,
+  prior,
+}: {
+  stop: SerializedStop
+  prior: Extract<StopAnswer, { kind: "section_274d" }> | null
+}) {
+  const [attendees, setAttendees] = useState(prior?.attendees ?? "")
   const [relationship, setRelationship] = useState<
     "CLIENT" | "PROSPECT" | "VENDOR" | "EMPLOYEE" | "OTHER"
-  >("CLIENT")
-  const [purpose, setPurpose] = useState("")
-  const [outcome, setOutcome] = useState("")
+  >(prior?.relationship ?? "CLIENT")
+  const [purpose, setPurpose] = useState(prior?.purpose ?? "")
+  const [outcome, setOutcome] = useState(prior?.outcome ?? "")
   const { pending, error, submit, defer } = useSubmit(stop.id)
 
   const valid = attendees.trim() && purpose.trim()
