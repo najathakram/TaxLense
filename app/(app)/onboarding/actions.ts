@@ -42,9 +42,9 @@ async function advanceDraftStep(profileId: string, step: number) {
 
 const step1Schema = z.object({
   year: z.number().int().min(2020).max(2030),
-  // Phases 2-3 — SOLE_PROP, LLC_SINGLE, S_CORP, LLC_MULTI all supported.
-  // C_CORP / PARTNERSHIP reserved for Phase 4 / future.
-  entityType: z.enum(["SOLE_PROP", "LLC_SINGLE", "S_CORP", "LLC_MULTI"]),
+  // Phases 2-4 — SOLE_PROP, LLC_SINGLE, S_CORP, LLC_MULTI, C_CORP all supported.
+  // Generic PARTNERSHIP (non-LLC) reserved for future.
+  entityType: z.enum(["SOLE_PROP", "LLC_SINGLE", "S_CORP", "LLC_MULTI", "C_CORP"]),
   primaryState: z.string().min(2).max(2),
   accountingMethod: z.enum(["CASH", "ACCRUAL"]),
   firstYear: z.boolean(),

@@ -46,7 +46,7 @@ export type IncomeSourceFormData = {
 
 export type WizardData = {
   year: number
-  entityType: "SOLE_PROP" | "LLC_SINGLE" | "S_CORP" | "LLC_MULTI"
+  entityType: "SOLE_PROP" | "LLC_SINGLE" | "S_CORP" | "LLC_MULTI" | "C_CORP"
   primaryState: string
   accountingMethod: "CASH" | "ACCRUAL"
   firstYear: boolean

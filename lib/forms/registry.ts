@@ -187,7 +187,7 @@ export const FORM_REGISTRY: Record<EntityKey, FormSpec> = {
     k1: false,
     seTax: false,
     requiresOwnerPayroll: true,
-    supported: false,
+    supported: true,
     displayName: "C-Corporation",
     description: "Standalone taxable corporation. Files Form 1120 at 21% flat rate. Officers paid via W-2; dividends reported on 1099-DIV.",
   },

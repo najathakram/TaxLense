@@ -29,6 +29,7 @@ import {
 import {
   buildForm1120SPdf,
   buildForm1065Pdf,
+  buildForm1120Pdf,
   buildScheduleK1Pdf,
 } from "./pdf/entityForms"
 import { buildMasterLedger } from "./masterLedger"
@@ -61,8 +62,10 @@ async function loadEntityForms(taxYearId: string, entityType: string): Promise<E
   } else if (entityType === "LLC_MULTI" || entityType === "PARTNERSHIP") {
     out.push({ name: "07_form_1065_worksheet.pdf", buffer: await buildForm1065Pdf(taxYearId) })
     out.push({ name: "08_schedule_k1_1065.pdf", buffer: await buildScheduleK1Pdf(taxYearId, { sourceForm: "1065" }) })
+  } else if (entityType === "C_CORP") {
+    // No K-1 — C-Corp shareholders receive 1099-DIV (separate filing flow).
+    out.push({ name: "07_form_1120_worksheet.pdf", buffer: await buildForm1120Pdf(taxYearId) })
   }
-  // C_CORP form 1120 deferred to Phase 4.
   return out
 }
 

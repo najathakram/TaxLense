@@ -20,7 +20,7 @@ type Props = {
 
 type FormValues = {
   year: number
-  entityType: "SOLE_PROP" | "LLC_SINGLE" | "S_CORP" | "LLC_MULTI" | "OTHER"
+  entityType: "SOLE_PROP" | "LLC_SINGLE" | "S_CORP" | "LLC_MULTI" | "C_CORP" | "OTHER"
   primaryState: string
   accountingMethod: "CASH" | "ACCRUAL"
   firstYear: boolean
@@ -49,7 +49,7 @@ export default function Step1({ data, onNext }: Props) {
     const result = await saveStep1(values)
     setIsLoading(false)
     if (!result.ok) { setServerError(result.error); return }
-    onNext({ year: values.year, entityType: values.entityType as "SOLE_PROP" | "LLC_SINGLE" | "S_CORP" | "LLC_MULTI", primaryState: values.primaryState, accountingMethod: values.accountingMethod, firstYear: values.firstYear })
+    onNext({ year: values.year, entityType: values.entityType as "SOLE_PROP" | "LLC_SINGLE" | "S_CORP" | "LLC_MULTI" | "C_CORP", primaryState: values.primaryState, accountingMethod: values.accountingMethod, firstYear: values.firstYear })
   }
 
   return (
@@ -74,7 +74,8 @@ export default function Step1({ data, onNext }: Props) {
             { value: "LLC_SINGLE", label: "Single-Member LLC (disregarded entity)" },
             { value: "S_CORP", label: "S-Corporation (Form 1120-S + K-1)" },
             { value: "LLC_MULTI", label: "Multi-Member LLC / Partnership (Form 1065 + K-1)" },
-            { value: "OTHER", label: "C-Corp (coming soon — Phase 4)" },
+            { value: "C_CORP", label: "C-Corporation (Form 1120, 21% flat rate)" },
+            { value: "OTHER", label: "Something else (work with your CPA)" },
           ].map((opt) => (
             <label key={opt.value} className="flex items-center gap-2 cursor-pointer">
               <input
@@ -92,8 +93,22 @@ export default function Step1({ data, onNext }: Props) {
           <Alert className="mt-2">
             <Info className="h-4 w-4" />
             <AlertDescription>
-              C-Corp (Form 1120) is scheduled for Phase 4 of the rewrite.
-              For now, please work with your CPA for that entity type.
+              TaxLens currently supports sole proprietors, LLCs, S-Corps, and C-Corps.
+              For trusts, REITs, non-profits, or other less-common entity types,
+              please work directly with your CPA.
+            </AlertDescription>
+          </Alert>
+        )}
+        {entityType === "C_CORP" && (
+          <Alert className="mt-2">
+            <Info className="h-4 w-4" />
+            <AlertDescription>
+              C-Corporation: TaxLens will generate <strong>Form 1120</strong> at the 21% flat
+              federal rate. No K-1 — shareholders receive 1099-DIV for dividends.
+              Officer compensation goes on line 12 (W-2 required for active
+              shareholder-officers). Note: C-Corp earnings are taxed twice
+              (corporate level + dividend level); compare against an S-Corp
+              election for closely-held single-owner businesses.
             </AlertDescription>
           </Alert>
         )}
