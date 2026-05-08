@@ -3,7 +3,8 @@ import { prisma } from "@/lib/db"
 import { notFound } from "next/navigation"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { NextStopsBanner } from "@/components/pipeline/next-stops-banner"
+import { NextActionCard } from "@/components/pipeline/next-action-card"
+import { deriveStage } from "@/lib/taxYear/status"
 
 interface Props {
   params: Promise<{ year: string }>
@@ -27,43 +28,65 @@ export default async function YearPage({ params }: Props) {
 
   if (!taxYear) notFound()
 
-  // Counts driving the next-step banner. Match the denominators used on the
-  // pipeline page so the two views agree on "everything classified."
-  const [classified, pendingStops] = await Promise.all([
+  // Counts driving the NextActionCard hero. Match the denominators used on
+  // the pipeline page so the two views agree on "everything classified."
+  // Excluding duplicates from totalTx mirrors lib/taxYear/status.ts and the
+  // pipeline page's stat cards.
+  const [totalTx, classified, pendingStops] = await Promise.all([
+    prisma.transaction.count({
+      where: { taxYearId: taxYear.id, isDuplicateOf: null },
+    }),
     prisma.classification.count({
-      where: { transaction: { taxYearId: taxYear.id }, isCurrent: true },
+      where: {
+        transaction: { taxYearId: taxYear.id, isDuplicateOf: null },
+        isCurrent: true,
+      },
     }),
     prisma.stopItem.count({
       where: { taxYearId: taxYear.id, state: "PENDING" },
     }),
   ])
 
+  // Derive the live stage from row counts. Belt-and-suspenders against years
+  // where TaxYear.status hasn't been recomputed yet (e.g. read traffic before
+  // any post-Tier-1 mutation). recomputeStatus() persists this on every
+  // server action; this derivation just keeps the chip honest on read.
+  const derivedStage = deriveStage(
+    { status: taxYear.status, lockedAt: taxYear.lockedAt },
+    { totalTx, classifiedTx: classified, pendingStops },
+  )
+
   return (
-    <div className="p-6 space-y-6">
+    <div className="p-6 space-y-6 max-w-5xl">
       <div className="flex items-center gap-3">
         <h1 className="text-2xl font-bold text-foreground">Tax Year {year}</h1>
-        <Badge variant="outline">{taxYear.status}</Badge>
+        <Badge variant="outline">{derivedStage}</Badge>
       </div>
 
-      <NextStopsBanner
+      <NextActionCard
         year={year}
-        pendingStops={pendingStops}
-        classified={classified}
-        totalTx={taxYear._count.transactions}
+        stage={derivedStage}
+        counts={{ totalTx, classifiedTx: classified, pendingStops }}
+        lockedAt={taxYear.lockedAt}
+        lockedSnapshotHash={taxYear.lockedSnapshotHash}
       />
 
-      <div className="grid gap-4 sm:grid-cols-3">
+      <div className="grid gap-4 grid-cols-2 sm:grid-cols-4">
         <Card>
           <CardHeader><CardTitle className="text-sm text-muted-foreground">Accounts</CardTitle></CardHeader>
-          <CardContent><span className="text-3xl font-bold">{taxYear._count.financialAccounts}</span></CardContent>
+          <CardContent><span className="text-3xl font-bold tabular-nums">{taxYear._count.financialAccounts}</span></CardContent>
         </Card>
         <Card>
           <CardHeader><CardTitle className="text-sm text-muted-foreground">Transactions</CardTitle></CardHeader>
-          <CardContent><span className="text-3xl font-bold">{taxYear._count.transactions}</span></CardContent>
+          <CardContent><span className="text-3xl font-bold tabular-nums">{totalTx}</span></CardContent>
         </Card>
         <Card>
-          <CardHeader><CardTitle className="text-sm text-muted-foreground">Merchant Rules</CardTitle></CardHeader>
-          <CardContent><span className="text-3xl font-bold">{taxYear._count.merchantRules}</span></CardContent>
+          <CardHeader><CardTitle className="text-sm text-muted-foreground">Classified</CardTitle></CardHeader>
+          <CardContent><span className="text-3xl font-bold tabular-nums">{classified}</span></CardContent>
+        </Card>
+        <Card>
+          <CardHeader><CardTitle className="text-sm text-muted-foreground">STOPs pending</CardTitle></CardHeader>
+          <CardContent><span className={`text-3xl font-bold tabular-nums ${pendingStops > 0 ? "text-amber-500" : ""}`}>{pendingStops}</span></CardContent>
         </Card>
       </div>
 

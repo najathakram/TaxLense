@@ -140,16 +140,16 @@ A super admin who tries to silently fix a client's numbers under cover of CPA im
 ┌────────────────────────────────────────────────────────────────────────┐
 │  TaxLens [CPA: Najath ▾]   ⌘K  Search clients & years         🔔  ?    │  ← Top bar
 ├──────────────────────┬─────────────────────────────────────────────────┤
-│ ● Workspace          │  Atif Khan  ▾   |   2025  ▾   ●  REVIEW         │  ← Context bar
+│ ● Workspace          │  Atif Ameer  ▾   |   2025  ▾   ●  REVIEW         │  ← Context bar
 │   Inbox       [4]    │                                                 │  (only when in client context)
 │   Firm overview      │                                                 │
 │ ─────────────────    │                                                 │
 │ ● Clients            │                                                 │
-│   Atif Khan          │                                                 │
+│   Atif Ameer          │                                                 │
 │   Sara Mendoza  [2]  │  <main>                                         │
 │   ...                │                                                 │
 │ ─────────────────    │                                                 │
-│ Atif Khan / 2025     │                                                 │
+│ Atif Ameer / 2025     │                                                 │
 │   Year overview      │                                                 │
 │   Documents     [3]  │                                                 │
 │   Upload             │                                                 │
@@ -168,9 +168,9 @@ A super admin who tries to silently fix a client's numbers under cover of CPA im
 
 **Sidebar rules:**
 
-- The "Atif Khan / 2025" sub-menu only appears when a client + year are active. It collapses to "Pick a year" when only the client is active.
+- The "Atif Ameer / 2025" sub-menu only appears when a client + year are active. It collapses to "Pick a year" when only the client is active.
 - Numeric badges on Inbox, Stops, Documents are real counts pulled server-side.
-- "Atif Khan" in the Clients section uses an avatar (initials in a colored circle, deterministic hash of email) — it's the only avatar in the app.
+- "Atif Ameer" in the Clients section uses an avatar (initials in a colored circle, deterministic hash of email) — it's the only avatar in the app.
 - The CPA's own row (top-right, "CPA: Najath") is a popover with: Switch firm, Account settings, Sign out.
 
 **Top bar:**
@@ -200,7 +200,7 @@ When the admin impersonates a CPA, the shell switches to the CPA-tier layout abo
 ┌─────────────────────────────────────────────────────────────────────────┐
 │ ADMIN: Anthropic operator   →   acting as CPA: Najath  [Exit admin]     │  ← purple
 ├─────────────────────────────────────────────────────────────────────────┤
-│ Najath on behalf of Atif Khan (atif@example.com)   [Exit client →]      │  ← amber
+│ Najath on behalf of Atif Ameer (atif@example.com)   [Exit client →]      │  ← amber
 └─────────────────────────────────────────────────────────────────────────┘
 ```
 
@@ -274,7 +274,7 @@ The CPA's first screen after login. Replaces `/dashboard` for CPAs (CLIENT-role 
 
 A flat list of items needing the CPA's attention right now, *across all clients*. Each row is a single action with one-click navigation:
 
-- 🔴 BLOCKER: "Atif Khan / 2024 — 3 unclassified deposits ($12,340)" → click goes to `/clients/<atif>/years/2024/stops?category=DEPOSIT`
+- 🔴 BLOCKER: "Atif Ameer / 2024 — 3 unclassified deposits ($12,340)" → click goes to `/clients/<atif>/years/2024/stops?category=DEPOSIT`
 - 🟡 PENDING: "Sara Mendoza / 2025 — 14 STOPs awaiting review" → `…/stops`
 - 🟢 READY: "Marcus Liu / 2024 — risk score green, ready to lock" → `…/lock`
 - ⏰ DEADLINE: "Sara Mendoza — Q3 estimated tax due in 6 days" (only if §C7 retirement / SE tax module ships)
@@ -308,7 +308,7 @@ This is the *one screen a CPA leaves open in a tab*. Make it dense.
 The client's own homepage, scoped to all their years.
 
 ```
-[Avatar] Atif Khan                                 najathakram1@gmail.com
+[Avatar] Atif Ameer                                 najathakram1@gmail.com
 NAICS 711510 · Independent Artist · TX · Sole prop · §471(c) cash method
 
 ┌──────────────────────────────────────────────────────────────────────┐
@@ -326,7 +326,7 @@ Documents  (view all)
 - IRS letter CP2000 (2023) — Jan 9
 
 Recent activity
-- 2 hours ago — Najath resolved 4 STOPs in Atif Khan / 2025
+- 2 hours ago — Najath resolved 4 STOPs in Atif Ameer / 2025
 - yesterday — System auto-classified 23 transactions in 2025
 - 3 days ago — Najath uploaded 2024 Chase Credit Card statements (8 files)
 ```

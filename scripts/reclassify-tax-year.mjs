@@ -16,7 +16,7 @@
 //
 // Usage on Railway:
 //   1. Set in Variables:
-//        RECLASSIFY_FOR_CLIENT_EMAIL = atif.khan@example.com
+//        RECLASSIFY_FOR_CLIENT_EMAIL = atif.ameer@example.com
 //        RECLASSIFY_YEAR             = 2025
 //      (Optional: RECLASSIFY_DRY_RUN=true to log what WOULD change without
 //      writing to the DB — recommended on the first dry pass.)

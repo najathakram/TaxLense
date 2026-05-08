@@ -46,8 +46,8 @@ async function main() {
     return
   }
 
-  const clientEmail = (process.env.SEED_ATIF_EMAIL ?? "atif.khan@example.com").trim().toLowerCase()
-  const clientName = (process.env.SEED_ATIF_NAME ?? "Atif Khan").trim()
+  const clientEmail = (process.env.SEED_ATIF_EMAIL ?? "atif.ameer@example.com").trim().toLowerCase()
+  const clientName = (process.env.SEED_ATIF_NAME ?? "Atif Ameer").trim()
 
   const connectionString = process.env.DATABASE_URL
   if (!connectionString) {

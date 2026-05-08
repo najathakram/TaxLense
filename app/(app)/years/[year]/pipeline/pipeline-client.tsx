@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { FloatingProgress } from "@/components/pipeline/floating-progress"
+import { formatDuration, formatRelative } from "@/lib/jobs/receipts"
 import {
   runNormalizeMerchants,
   runMatchTransfers,
@@ -37,9 +38,33 @@ interface PipelineStats {
   pendingStops: number
 }
 
+interface WireReceipt {
+  changed: number
+  unchanged: number | null
+  skipped: number | null
+  summary: string
+  durationMs: number
+  /** ISO string from the server (rehydrated to Date in formatRelative). */
+  finishedAt: string
+}
+
+type ReceiptKind =
+  | "NORMALIZE_MERCHANTS"
+  | "MATCH_TRANSFERS"
+  | "MATCH_PAYMENTS"
+  | "MATCH_REFUNDS"
+  | "MERCHANT_AI"
+  | "APPLY_RULES"
+  | "RESIDUAL_AI"
+  | "BULK_CLASSIFY"
+  | "AUTO_RESOLVE_STOPS"
+  | "CPA_AGENT"
+  | "EXTRACT_REPASS"
+
 interface PipelineClientProps {
   year: number
   initial: PipelineStats
+  receipts: Partial<Record<ReceiptKind, WireReceipt>>
 }
 
 interface StepResult {
@@ -55,7 +80,7 @@ interface RunHandle {
 
 const POLL_INTERVAL_MS = 2_000
 
-export function PipelineClient({ year, initial }: PipelineClientProps) {
+export function PipelineClient({ year, initial, receipts }: PipelineClientProps) {
   const [stats] = useState(initial)
   const [results, setResults] = useState<StepResult[]>([])
   const [isPending, startTransition] = useTransition()
@@ -171,6 +196,7 @@ export function PipelineClient({ year, initial }: PipelineClientProps) {
       action: () => runNormalizeMerchants(year),
       stat: `${stats.normalizedTx} / ${stats.totalTx} normalized`,
       status: stepStatus(stats.totalTx - stats.normalizedTx, totalNonZero),
+      receiptKind: "NORMALIZE_MERCHANTS" as const,
     },
     {
       id: "transfers",
@@ -181,6 +207,7 @@ export function PipelineClient({ year, initial }: PipelineClientProps) {
       // Transfers is informational — there's no "missing" backlog. Treat as
       // ready whenever there are transactions and at least one has been run.
       status: stepStatus(0, totalNonZero) as "done" | "ready" | "idle",
+      receiptKind: "MATCH_TRANSFERS" as const,
     },
     {
       id: "payments",
@@ -189,6 +216,7 @@ export function PipelineClient({ year, initial }: PipelineClientProps) {
       action: () => runMatchPayments(year),
       stat: `${stats.paymentPairs} payment pairs`,
       status: stepStatus(0, totalNonZero) as "done" | "ready" | "idle",
+      receiptKind: "MATCH_PAYMENTS" as const,
     },
     {
       id: "refunds",
@@ -197,6 +225,7 @@ export function PipelineClient({ year, initial }: PipelineClientProps) {
       action: () => runMatchRefunds(year),
       stat: `${stats.refundPairs} refund pairs`,
       status: stepStatus(0, totalNonZero) as "done" | "ready" | "idle",
+      receiptKind: "MATCH_REFUNDS" as const,
     },
     {
       id: "ai",
@@ -213,6 +242,7 @@ export function PipelineClient({ year, initial }: PipelineClientProps) {
           : stats.merchantRules === 0
             ? ("ready" as const)
             : ("done" as const),
+      receiptKind: "MERCHANT_AI" as const,
     },
     {
       id: "apply",
@@ -224,6 +254,7 @@ export function PipelineClient({ year, initial }: PipelineClientProps) {
         Math.max(0, stats.totalTx - stats.classified),
         stats.merchantRules > 0,
       ),
+      receiptKind: "APPLY_RULES" as const,
     },
   ]
 
@@ -242,6 +273,7 @@ export function PipelineClient({ year, initial }: PipelineClientProps) {
           : `${stats.residualCandidates} candidate${stats.residualCandidates === 1 ? "" : "s"}`,
       backlog: stats.residualCandidates,
       status: stepStatus(stats.residualCandidates, aiReady),
+      receiptKind: "RESIDUAL_AI" as const,
     },
     {
       id: "bulk",
@@ -254,6 +286,7 @@ export function PipelineClient({ year, initial }: PipelineClientProps) {
           : `${stats.needsContextCount} NEEDS_CONTEXT`,
       backlog: stats.needsContextCount,
       status: stepStatus(stats.needsContextCount, aiReady),
+      receiptKind: "BULK_CLASSIFY" as const,
     },
     {
       id: "autostops",
@@ -266,6 +299,7 @@ export function PipelineClient({ year, initial }: PipelineClientProps) {
           : `${stats.pendingStops} pending stop${stats.pendingStops === 1 ? "" : "s"}`,
       backlog: stats.pendingStops,
       status: stepStatus(stats.pendingStops, aiReady),
+      receiptKind: "AUTO_RESOLVE_STOPS" as const,
     },
   ]
 
@@ -364,27 +398,31 @@ export function PipelineClient({ year, initial }: PipelineClientProps) {
             const isRunning = activeRun?.label === step.label
             const liveStatus: "done" | "ready" | "idle" | "running" = isRunning ? "running" : step.status
             const stepDisabled = runDisabled || liveStatus === "idle" || liveStatus === "done"
+            const receipt = receipts[step.receiptKind]
             return (
               <Card key={step.id} className={liveStatus === "done" ? "opacity-70" : undefined}>
-                <CardContent className="flex items-center justify-between py-4 gap-4">
-                  <div className="flex items-center gap-3 flex-1 min-w-0">
-                    <StatusPill status={liveStatus} />
-                    <div className="flex-1 min-w-0">
-                      <p className="font-medium text-sm">{step.label}</p>
-                      <p className="text-xs text-muted-foreground">{step.description}</p>
+                <CardContent className="py-4 gap-4 flex flex-col">
+                  <div className="flex items-center justify-between gap-4">
+                    <div className="flex items-center gap-3 flex-1 min-w-0">
+                      <StatusPill status={liveStatus} />
+                      <div className="flex-1 min-w-0">
+                        <p className="font-medium text-sm">{step.label}</p>
+                        <p className="text-xs text-muted-foreground">{step.description}</p>
+                      </div>
                     </div>
+                    <Badge variant="outline" className="text-xs shrink-0">
+                      {step.stat}
+                    </Badge>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      disabled={stepDisabled}
+                      onClick={() => run(step.action, step.label)}
+                    >
+                      {isRunning ? "Running…" : liveStatus === "done" ? "Re-run" : "Run"}
+                    </Button>
                   </div>
-                  <Badge variant="outline" className="text-xs shrink-0">
-                    {step.stat}
-                  </Badge>
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    disabled={stepDisabled}
-                    onClick={() => run(step.action, step.label)}
-                  >
-                    {isRunning ? "Running…" : liveStatus === "done" ? "Re-run" : "Run"}
-                  </Button>
+                  {receipt && <ReceiptLine receipt={receipt} />}
                 </CardContent>
               </Card>
             )
@@ -413,27 +451,31 @@ export function PipelineClient({ year, initial }: PipelineClientProps) {
             const isRunning = activeRun?.label === step.label
             const liveStatus: "done" | "ready" | "idle" | "running" = isRunning ? "running" : step.status
             const stepDisabled = runDisabled || liveStatus === "idle" || liveStatus === "done"
+            const receipt = receipts[step.receiptKind]
             return (
               <Card key={step.id} className={liveStatus === "done" ? "opacity-70" : undefined}>
-                <CardContent className="flex items-center justify-between py-4 gap-4">
-                  <div className="flex items-center gap-3 flex-1 min-w-0">
-                    <StatusPill status={liveStatus} />
-                    <div className="flex-1 min-w-0">
-                      <p className="font-medium text-sm">{step.label}</p>
-                      <p className="text-xs text-muted-foreground">{step.description}</p>
+                <CardContent className="py-4 gap-4 flex flex-col">
+                  <div className="flex items-center justify-between gap-4">
+                    <div className="flex items-center gap-3 flex-1 min-w-0">
+                      <StatusPill status={liveStatus} />
+                      <div className="flex-1 min-w-0">
+                        <p className="font-medium text-sm">{step.label}</p>
+                        <p className="text-xs text-muted-foreground">{step.description}</p>
+                      </div>
                     </div>
+                    <Badge variant="outline" className="text-xs shrink-0">
+                      {step.stat}
+                    </Badge>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      disabled={stepDisabled}
+                      onClick={() => run(step.action, step.label)}
+                    >
+                      {isRunning ? "Running…" : liveStatus === "done" ? "Re-run" : "Run"}
+                    </Button>
                   </div>
-                  <Badge variant="outline" className="text-xs shrink-0">
-                    {step.stat}
-                  </Badge>
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    disabled={stepDisabled}
-                    onClick={() => run(step.action, step.label)}
-                  >
-                    {isRunning ? "Running…" : liveStatus === "done" ? "Re-run" : "Run"}
-                  </Button>
+                  {receipt && <ReceiptLine receipt={receipt} />}
                 </CardContent>
               </Card>
             )
@@ -521,6 +563,20 @@ const STATUS_CLASS = {
   ready: "bg-amber-500/15 text-amber-500 border-amber-500/30",
   idle: "bg-muted text-muted-foreground border-border",
 } as const
+
+function ReceiptLine({ receipt }: { receipt: WireReceipt }) {
+  const finishedAt = new Date(receipt.finishedAt)
+  const isNoOp = receipt.changed === 0
+  const dotColor = isNoOp ? "bg-muted-foreground/40" : "bg-emerald-500/70"
+  return (
+    <div className="flex items-center gap-2 pl-10 pt-1">
+      <span aria-hidden className={`inline-block w-1.5 h-1.5 rounded-full ${dotColor}`} />
+      <p className="text-[11px] text-muted-foreground/80 leading-tight">
+        Last run: {receipt.summary} · {formatDuration(receipt.durationMs)} · {formatRelative(finishedAt)}
+      </p>
+    </div>
+  )
+}
 
 function StatusPill({ status }: { status: "done" | "running" | "ready" | "idle" }) {
   return (

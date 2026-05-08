@@ -70,7 +70,7 @@ const CPAS = [
 
 // Najath's clients (the impersonation-target CPA)
 const CLIENTS_NAJATH = [
-  { id: 'cli_atif', name: 'Atif Khan', email: 'atif.khan@example.com',
+  { id: 'cli_atif', name: 'Atif Ameer', email: 'atif.ameer@example.com',
     naics: '711510', industry: 'Independent Artist', state: 'TX', entity: 'Sole Prop', method: '§471(c) cash',
     blockers: 3, stops: 4 },
   { id: 'cli_sara', name: 'Sara Mendoza', email: 'sara.m.dba@example.com',
@@ -228,19 +228,19 @@ const DOCS_ATIF = [
 
 // Audit events for Atif 2025
 const AUDIT_ATIF_2025 = [
-  { ts: '2026-05-06T11:42:00Z', actor: { type: 'USER', cpa: 'Najath Akram', user: 'Atif Khan' }, event: 'STOP_RESOLVED', entity: 'StopItem #st_5', diff: { state: 'OPEN → RESOLVED', resolution: 'Travel — Austin client visit' }, rationale: 'Client confirmed primary purpose business; 2 nights, 3 days; receipts attached.' },
-  { ts: '2026-05-06T11:38:00Z', actor: { type: 'USER', cpa: 'Najath Akram', user: 'Atif Khan' }, event: 'CLASSIFICATION_OVERRIDE', entity: 'Txn 2025-03-18 AT&T', diff: { code: '????→8120', deductible: '0→73.92' }, rationale: '80% business-use phone per §262 allocation memo.' },
+  { ts: '2026-05-06T11:42:00Z', actor: { type: 'USER', cpa: 'Najath Akram', user: 'Atif Ameer' }, event: 'STOP_RESOLVED', entity: 'StopItem #st_5', diff: { state: 'OPEN → RESOLVED', resolution: 'Travel — Austin client visit' }, rationale: 'Client confirmed primary purpose business; 2 nights, 3 days; receipts attached.' },
+  { ts: '2026-05-06T11:38:00Z', actor: { type: 'USER', cpa: 'Najath Akram', user: 'Atif Ameer' }, event: 'CLASSIFICATION_OVERRIDE', entity: 'Txn 2025-03-18 AT&T', diff: { code: '????→8120', deductible: '0→73.92' }, rationale: '80% business-use phone per §262 allocation memo.' },
   { ts: '2026-05-06T10:14:00Z', actor: { type: 'AI',   model: 'sonnet-4.6', cpa: 'Najath Akram' }, event: 'STOP_RAISED', entity: 'Txn 2025-04-02 ZELLE', diff: null, rationale: 'Inbound Zelle from non-customer, ambiguous narration; raised for clarification.' },
-  { ts: '2026-05-05T16:02:00Z', actor: { type: 'USER', cpa: 'Najath Akram', user: 'Atif Khan' }, event: 'DOCUMENT_LINKED', entity: 'Receipt d9 → Txn IL FORNAIO 2/19', diff: null, rationale: 'Substantiation linked per §274(d); attendee names captured.' },
+  { ts: '2026-05-05T16:02:00Z', actor: { type: 'USER', cpa: 'Najath Akram', user: 'Atif Ameer' }, event: 'DOCUMENT_LINKED', entity: 'Receipt d9 → Txn IL FORNAIO 2/19', diff: null, rationale: 'Substantiation linked per §274(d); attendee names captured.' },
   { ts: '2026-05-05T15:48:00Z', actor: { type: 'AI',   model: 'haiku-4.5', cpa: 'Najath Akram' }, event: 'PDF_NORMALIZE', entity: 'Statement Chase 4421 2025-03', diff: { lines: 47 }, rationale: 'Cleanup pass; no fabrications, columns: date, memo, amt.' },
-  { ts: '2026-05-04T09:11:00Z', actor: { type: 'USER', cpa: 'Najath Akram', user: 'Atif Khan' }, event: 'STATEMENT_UPLOADED', entity: 'Chase 4421 2025-03', diff: null, rationale: 'Manual upload via /upload.' },
+  { ts: '2026-05-04T09:11:00Z', actor: { type: 'USER', cpa: 'Najath Akram', user: 'Atif Ameer' }, event: 'STATEMENT_UPLOADED', entity: 'Chase 4421 2025-03', diff: null, rationale: 'Manual upload via /upload.' },
   { ts: '2026-05-03T20:00:00Z', actor: { type: 'SYSTEM' }, event: 'PIPELINE_STARTED', entity: 'TaxYear cli_atif/2025', diff: { steps: 9 }, rationale: 'Triggered by upload event.' },
   { ts: '2026-05-03T20:08:00Z', actor: { type: 'AI', model: 'sonnet-4.6', cpa: 'Najath Akram' }, event: 'CLASSIFICATION_BATCH', entity: '23 transactions', diff: { auto: 19, stop: 4 }, rationale: 'Routine batch — 4 raised to STOPs, 0 fabrications.' },
 ];
 
 // Recent activity (admin/cross-firm)
 const ADMIN_RECENT = [
-  { ts: '2026-05-06T11:42:00Z', cpa: 'Najath Akram', event: 'STOP_RESOLVED', detail: 'Atif Khan / 2025 — st_5' },
+  { ts: '2026-05-06T11:42:00Z', cpa: 'Najath Akram', event: 'STOP_RESOLVED', detail: 'Atif Ameer / 2025 — st_5' },
   { ts: '2026-05-06T10:18:00Z', cpa: 'Sara Mendoza', event: 'YEAR_LOCKED',  detail: 'Vega Cycling / 2024' },
   { ts: '2026-05-06T09:55:00Z', cpa: 'K. Park',      event: 'PIPELINE_STARTED', detail: 'Henley LLC / 2025' },
   { ts: '2026-05-06T08:14:00Z', cpa: 'Najath Akram', event: 'LOGIN', detail: 'IP 73.x.x.x' },

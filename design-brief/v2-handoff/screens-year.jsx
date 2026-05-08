@@ -96,7 +96,7 @@ function Ledger({ ctx, clientId, year }) {
 
   return (
     <div style={{display:'flex', flexDirection:'column', height:'100%', minHeight:0}}>
-      <SectionHeader sub={`ATIF KHAN / ${year} / LEDGER`} title="Master ledger"
+      <SectionHeader sub={`ATIF AMEER / ${year} / LEDGER`} title="Master ledger"
         right={
           <>
             <Btn>XLSX</Btn>
@@ -296,7 +296,7 @@ function Documents({ ctx, clientId }) {
 
   return (
     <div>
-      <SectionHeader sub="ATIF KHAN / DOCUMENTS" title={`${DOCS_ATIF.length} documents`}
+      <SectionHeader sub="ATIF AMEER / DOCUMENTS" title={`${DOCS_ATIF.length} documents`}
         right={<><Btn>Bulk download</Btn><Btn kind="primary">+ Upload</Btn></>} />
       <Tabs
         tabs={[
@@ -349,7 +349,7 @@ function AuditTrail({ ctx, clientId, year }) {
   const [drawer, setDrawer] = useStateY(null);
   return (
     <div>
-      <SectionHeader sub={`ATIF KHAN / ${year} / AUDIT TRAIL`} title={`${AUDIT_ATIF_2025.length} events`}
+      <SectionHeader sub={`ATIF AMEER / ${year} / AUDIT TRAIL`} title={`${AUDIT_ATIF_2025.length} events`}
         right={<><Btn>Filter</Btn><Btn>Export CSV</Btn></>} />
       <div style={{padding:'10px 16px', borderBottom:'1px solid var(--border)', fontSize:11, color:'var(--fg-2)', fontFamily:'var(--mono)', display:'flex', gap:8}}>
         <Tag>actor:any</Tag><Tag>events:all</Tag><Tag>last 7d</Tag>

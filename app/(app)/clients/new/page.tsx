@@ -16,9 +16,9 @@ export default async function NewClientPage() {
         <form action={createClientAccount} style={{ display: "grid", gap: 18 }}>
           {(
             [
-              ["name", "Name", "text", "Atif Khan"],
+              ["name", "Name", "text", "Atif Ameer"],
               ["email", "Email", "email", "atif@example.com"],
-              ["displayName", "Display name (optional)", "text", "Atif K."],
+              ["displayName", "Display name (optional)", "text", "Atif A."],
             ] as const
           ).map(([n, l, t, p]) => (
             <div key={n}>

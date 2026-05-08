@@ -735,7 +735,7 @@ function Calendar({ ctx }) {
   const events = [
     { date: '2026-05-08', label: 'Q1 estimated tax — clients due', type: 'irs' },
     { date: '2026-05-12', label: 'Sara Mendoza — engagement renewal', type: 'firm' },
-    { date: '2026-05-15', label: 'Atif Khan — 2025 lock target', type: 'firm' },
+    { date: '2026-05-15', label: 'Atif Ameer — 2025 lock target', type: 'firm' },
     { date: '2026-06-15', label: 'Q2 estimated tax', type: 'irs' },
     { date: '2026-07-31', label: 'Form 5500 (if applicable)', type: 'irs' },
     { date: '2026-09-15', label: 'Q3 estimated tax', type: 'irs' },
