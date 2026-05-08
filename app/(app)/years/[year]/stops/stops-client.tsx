@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useTransition } from "react"
+import { useEffect, useRef, useState, useTransition } from "react"
 import type { StopCategory, StopState } from "@/app/generated/prisma/client"
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs"
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card"
@@ -12,7 +12,9 @@ import { Label } from "@/components/ui/label"
 import { Switch } from "@/components/ui/switch"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { SCHEDULE_C_LINES } from "@/lib/classification/constants"
-import { resolveStop, deferStop, autoResolveStops, type StopAnswer, type AutoResolveResult } from "./actions"
+import { resolveStop, deferStop, type StopAnswer } from "./actions"
+import { runAutoResolveStops, getPipelineRunStatus } from "@/app/(app)/years/[year]/pipeline/actions"
+import { FloatingProgress } from "@/components/pipeline/floating-progress"
 
 export interface SerializedAffected {
   id: string
@@ -42,20 +44,56 @@ const CATEGORIES: { key: StopCategory; label: string }[] = [
   { key: "PERIOD_GAP", label: "Period Gap" },
 ]
 
+const POLL_MS = 2_000
+
 export function StopsClient({ year, stops }: { year: number; stops: SerializedStop[] }) {
-  const [autoResult, setAutoResult] = useState<AutoResolveResult | null>(null)
-  const [autoRunning, setAutoRunning] = useState(false)
+  const [activeRun, setActiveRun] = useState<{ runId: string; label: string } | null>(null)
+  const [progress, setProgress] = useState<Record<string, unknown>>({})
+  const [lastError, setLastError] = useState<string | null>(null)
+  const [lastResult, setLastResult] = useState<{ resolved: number; skipped: number; errors: number } | null>(null)
+  const pollRef = useRef<ReturnType<typeof setInterval> | null>(null)
+
+  // Polling: while a run is active, fetch its status every 2s, surface progress,
+  // and reload the page on DONE so the server-rendered stop list refreshes.
+  useEffect(() => {
+    if (!activeRun) {
+      if (pollRef.current) {
+        clearInterval(pollRef.current)
+        pollRef.current = null
+      }
+      return
+    }
+    const tick = async () => {
+      const status = await getPipelineRunStatus(activeRun.runId)
+      if (!status) return
+      setProgress((status.progress as Record<string, unknown>) ?? {})
+      if (status.status === "DONE") {
+        const r = (status.result as { resolved?: number; skipped?: number; errors?: number } | null) ?? null
+        if (r) setLastResult({ resolved: r.resolved ?? 0, skipped: r.skipped ?? 0, errors: r.errors ?? 0 })
+        setActiveRun(null)
+        setTimeout(() => window.location.reload(), 250)
+      } else if (status.status === "FAILED") {
+        setLastError(status.lastError ?? "Auto-resolve failed.")
+        setActiveRun(null)
+      }
+    }
+    void tick()
+    pollRef.current = setInterval(tick, POLL_MS)
+    return () => {
+      if (pollRef.current) clearInterval(pollRef.current)
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeRun?.runId])
 
   const onAutoResolve = async () => {
-    setAutoRunning(true)
-    setAutoResult(null)
+    setLastError(null)
+    setLastResult(null)
+    setProgress({})
     try {
-      const result = await autoResolveStops(year)
-      setAutoResult(result)
+      const handle = await runAutoResolveStops(year)
+      setActiveRun({ runId: handle.runId, label: "Auto-resolving STOPs" })
     } catch (e) {
-      alert(e instanceof Error ? e.message : String(e))
-    } finally {
-      setAutoRunning(false)
+      setLastError(e instanceof Error ? e.message : String(e))
     }
   }
 
@@ -69,24 +107,33 @@ export function StopsClient({ year, stops }: { year: number; stops: SerializedSt
 
   const totalPending = CATEGORIES.reduce((n, c) => n + pendingCount(c.key), 0)
 
+  const autoBusy = activeRun !== null
+
   return (
     <div className="space-y-4">
+      {/* Floating progress panel — shows live "X of N · resolved · skipped" while
+          a run is in flight, then a green ✓ summary when it completes. */}
+      <FloatingProgress
+        active={activeRun}
+        progress={progress as { phase?: string; processed?: number; total?: number; label?: string }}
+        errorMessage={lastError}
+        recentResults={lastResult ? [{
+          ok: lastResult.errors === 0,
+          label: "Auto-resolve",
+          detail: `${lastResult.resolved} resolved · ${lastResult.skipped} skipped · ${lastResult.errors} errors`,
+        }] : []}
+      />
+
       {/* Auto-resolve banner */}
       <div className="flex items-center justify-between gap-4 border rounded p-3 bg-muted/30">
         <div className="text-sm">
           <span className="font-medium">{totalPending} pending stops</span>
           <span className="text-muted-foreground ml-2">— AI (Sonnet) will auto-resolve high-confidence items (≥85%)</span>
         </div>
-        <Button size="sm" disabled={autoRunning || totalPending === 0} onClick={onAutoResolve}>
-          {autoRunning ? "Resolving…" : "Auto-resolve with AI"}
+        <Button size="sm" disabled={autoBusy || totalPending === 0} onClick={onAutoResolve}>
+          {autoBusy ? "Resolving…" : "Auto-resolve with AI"}
         </Button>
       </div>
-      {autoResult && (
-        <div className="border rounded p-3 text-sm space-y-1 bg-green-50 dark:bg-green-950/30">
-          <p className="font-medium">Auto-resolve complete: <span className="text-green-700 dark:text-green-400">{autoResult.resolved} resolved</span> · {autoResult.skipped} skipped (low confidence) · {autoResult.errors} errors</p>
-          <p className="text-muted-foreground text-xs">Reload the page to see updated counts. Skipped items need manual review.</p>
-        </div>
-      )}
     <Tabs defaultValue="MERCHANT" className="w-full">
       <TabsList className="grid w-full grid-cols-5">
         {CATEGORIES.map((c) => (
