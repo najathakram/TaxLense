@@ -42,6 +42,9 @@ export interface LedgerRow {
   isUserConfirmed: boolean
   reasoning: string
   isChildOfSplit: boolean
+  /** ID of a PENDING StopItem this row's transaction is part of, or null.
+   *  Drives the inline STOP badge and the "Resolve →" deep link. (Tier 3.11) */
+  openStopId: string | null
 }
 
 interface Props {
@@ -57,6 +60,9 @@ export function LedgerClient({ year, rows, accounts }: Props) {
   const [merchantSearch, setMerchantSearch] = useState("")
   const [dateFrom, setDateFrom] = useState("")
   const [dateTo, setDateTo] = useState("")
+  // Tier 3.11 — collapse to just rows with an open STOP. Off by default.
+  const [stopsOnly, setStopsOnly] = useState(false)
+  const totalWithStops = useMemo(() => rows.filter((r) => r.openStopId).length, [rows])
 
   // ---- sort state ----
   const [sortKey, setSortKey] = useState<"date" | "account" | "amount">("date")
@@ -100,6 +106,7 @@ export function LedgerClient({ year, rows, accounts }: Props) {
   const filtered = useMemo(() => {
     const q = merchantSearch.trim().toLowerCase()
     const list = rows.filter((r) => {
+      if (stopsOnly && !r.openStopId) return false
       if (accountFilter.size > 0 && !accountFilter.has(r.accountId)) return false
       if (codeFilter.size > 0 && !codeFilter.has(r.code)) return false
       if (q && !(r.merchantRaw.toLowerCase().includes(q) || (r.merchantNormalized ?? "").toLowerCase().includes(q) || (r.descriptionRaw ?? "").toLowerCase().includes(q))) return false
@@ -114,7 +121,7 @@ export function LedgerClient({ year, rows, accounts }: Props) {
       if (sortKey === "amount") return dir * (a.amount - b.amount)
       return 0
     })
-  }, [rows, accountFilter, codeFilter, merchantSearch, dateFrom, dateTo, sortKey, sortDir])
+  }, [rows, accountFilter, codeFilter, merchantSearch, dateFrom, dateTo, sortKey, sortDir, stopsOnly])
 
   // ---- virtualizer ----
   const scrollRef = useRef<HTMLDivElement>(null)
@@ -267,6 +274,23 @@ export function LedgerClient({ year, rows, accounts }: Props) {
           <Label className="text-xs">To</Label>
           <Input className="h-8 w-36" type="date" value={dateTo} onChange={(e) => setDateTo(e.target.value)} />
         </div>
+        {totalWithStops > 0 && (
+          <div>
+            <Label className="text-xs">STOPs</Label>
+            <button
+              onClick={() => setStopsOnly((v) => !v)}
+              className={`h-8 px-3 rounded border flex items-center gap-2 text-xs font-medium transition-colors ${
+                stopsOnly
+                  ? "bg-amber-500/20 text-amber-500 border-amber-500/40"
+                  : "bg-background hover:bg-muted/40"
+              }`}
+              title={stopsOnly ? "Showing only rows with open STOPs" : "Show only rows with open STOPs"}
+            >
+              <span aria-hidden className="inline-block w-1.5 h-1.5 rounded-full bg-amber-500" />
+              {stopsOnly ? "Only STOPs" : `STOPs only (${totalWithStops})`}
+            </button>
+          </div>
+        )}
         <div className="ml-auto text-right">
           <div>{filtered.length} rows</div>
           <div className="font-semibold">${totalDeductible.toFixed(2)} deductible</div>
@@ -363,7 +387,20 @@ export function LedgerClient({ year, rows, accounts }: Props) {
                   <div className="p-2">{r.date}</div>
                   <div className="p-2 truncate">{r.accountNickname}</div>
                   <div className="p-2 min-w-0" title={r.merchantRaw}>
-                    <div className="truncate">{r.merchantNormalized ?? r.merchantRaw}</div>
+                    <div className="flex items-center gap-1.5">
+                      <span className="truncate">{r.merchantNormalized ?? r.merchantRaw}</span>
+                      {r.openStopId && (
+                        <a
+                          href={`/years/${year}/stops#stop-${r.openStopId}`}
+                          className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-semibold bg-amber-500/20 text-amber-500 border border-amber-500/40 hover:bg-amber-500/30 shrink-0"
+                          title="Open STOP — click to resolve"
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          <span aria-hidden>!</span>
+                          STOP
+                        </a>
+                      )}
+                    </div>
                     {r.descriptionRaw && r.descriptionRaw !== r.merchantRaw && (
                       <div className="truncate text-[10px] text-muted-foreground">{r.descriptionRaw}</div>
                     )}

@@ -160,8 +160,11 @@ function StopCard({ stop }: { stop: SerializedStop }) {
   const [open, setOpen] = useState(stop.state === "PENDING")
   const disabled = stop.state !== "PENDING"
 
+  // Deep-link target: ledger rows with an open STOP link to /stops#stop-<id>,
+  // and the browser will scroll this anchor into view. The scroll-margin-top
+  // accommodates the year-stepper bar above (Tier 3.10).
   return (
-    <Card>
+    <Card id={`stop-${stop.id}`} style={{ scrollMarginTop: 80 }}>
       <CardHeader className="cursor-pointer" onClick={() => setOpen(!open)}>
         <div className="flex items-center justify-between gap-2">
           <CardTitle className="text-base">

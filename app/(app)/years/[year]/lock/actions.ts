@@ -76,9 +76,9 @@ export async function confirmLock(year: number): Promise<void> {
   })
 
   revalidatePath(`/years/${year}`)
-  revalidatePath(`/years/${year}/lock`)
+  revalidatePath(`/years/${year}/finalize`)
   revalidatePath(`/years/${year}/risk`)
-  redirect(`/years/${year}/lock`)
+  redirect(`/years/${year}/finalize#lock`)
 }
 
 export async function unlockTaxYear(year: number, rationale: string): Promise<void> {
@@ -116,5 +116,5 @@ export async function unlockTaxYear(year: number, rationale: string): Promise<vo
   await recomputeStatus(taxYear.id)
 
   revalidatePath(`/years/${year}`)
-  revalidatePath(`/years/${year}/lock`)
+  revalidatePath(`/years/${year}/finalize`)
 }

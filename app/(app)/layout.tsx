@@ -131,8 +131,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
         {
           label: "DELIVER",
           items: [
-            { label: "Lock",     href: `${yearBase}/lock`,     indent: 1 },
-            { label: "Download", href: `${yearBase}/download`, indent: 1 },
+            { label: "Finalize", href: `${yearBase}/finalize`, indent: 1 },
           ],
         },
       ]

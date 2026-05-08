@@ -35,6 +35,23 @@ export default async function LedgerPage({ params }: Props) {
     orderBy: { postedDate: "asc" },
   })
 
+  // Build txnId → stopId map so the ledger can flag rows with an open STOP.
+  // One PENDING StopItem can affect 30+ transactions (e.g. a MERCHANT-category
+  // STOP for TIM HORTONS), so the join is a single read + a flat-map.
+  const pendingStops = await prisma.stopItem.findMany({
+    where: { taxYearId: taxYear.id, state: "PENDING" },
+    select: { id: true, transactionIds: true },
+  })
+  const stopByTxn = new Map<string, string>()
+  for (const s of pendingStops) {
+    for (const txnId of s.transactionIds) {
+      // First match wins — if the same txn is in two STOPs (rare), the first
+      // one is what the row will deep-link to. Acceptable trade-off given
+      // STOPs are typically merchant-disjoint.
+      if (!stopByTxn.has(txnId)) stopByTxn.set(txnId, s.id)
+    }
+  }
+
   const rows: LedgerRow[] = txns.map((t) => {
     const c = t.classifications[0]
     const amount = Number(t.amountNormalized.toString())
@@ -56,6 +73,7 @@ export default async function LedgerPage({ params }: Props) {
       isUserConfirmed: c?.source === "AI_USER_CONFIRMED" || c?.source === "USER",
       reasoning: c?.reasoning ?? "",
       isChildOfSplit: !!t.splitOfId,
+      openStopId: stopByTxn.get(t.id) ?? null,
     }
   })
 

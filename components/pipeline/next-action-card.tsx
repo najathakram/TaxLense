@@ -108,7 +108,7 @@ function buildStageConfig({
           ? `Locked ${lockedAtStr ?? "—"} · sha256:${lockedSnapshotHash.slice(0, 16)}…`
           : null,
       cta: "Download tax package",
-      href: `${yearBase}/download`,
+      href: `${yearBase}/finalize#download`,
     }
   }
 
@@ -122,10 +122,10 @@ function buildStageConfig({
       buttonVariant: "default",
       title: "Classification complete — review & lock",
       subtitle:
-        "Every transaction is classified and there are no pending STOPs. Run the risk check, then lock the ledger to generate audit-ready outputs.",
+        "Every transaction is classified and there are no pending STOPs. Walk the three-step finalize page (review risk → lock → download).",
       metaLine: `${counts.classifiedTx}/${counts.totalTx} classified · 0 stops pending`,
-      cta: "Review risk & lock",
-      href: `${yearBase}/risk`,
+      cta: "Open finalize",
+      href: `${yearBase}/finalize`,
     }
   }
 
@@ -200,7 +200,7 @@ function buildStageConfig({
         "Read-only view. Reports are still available for download.",
       metaLine: null,
       cta: "Download artifacts",
-      href: `${yearBase}/download`,
+      href: `${yearBase}/finalize#download`,
     }
   }
 
