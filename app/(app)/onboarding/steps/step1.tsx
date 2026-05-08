@@ -20,7 +20,7 @@ type Props = {
 
 type FormValues = {
   year: number
-  entityType: "SOLE_PROP" | "LLC_SINGLE" | "OTHER"
+  entityType: "SOLE_PROP" | "LLC_SINGLE" | "S_CORP" | "OTHER"
   primaryState: string
   accountingMethod: "CASH" | "ACCRUAL"
   firstYear: boolean
@@ -49,7 +49,7 @@ export default function Step1({ data, onNext }: Props) {
     const result = await saveStep1(values)
     setIsLoading(false)
     if (!result.ok) { setServerError(result.error); return }
-    onNext({ year: values.year, entityType: values.entityType as "SOLE_PROP" | "LLC_SINGLE", primaryState: values.primaryState, accountingMethod: values.accountingMethod, firstYear: values.firstYear })
+    onNext({ year: values.year, entityType: values.entityType as "SOLE_PROP" | "LLC_SINGLE" | "S_CORP", primaryState: values.primaryState, accountingMethod: values.accountingMethod, firstYear: values.firstYear })
   }
 
   return (
@@ -72,7 +72,8 @@ export default function Step1({ data, onNext }: Props) {
           {[
             { value: "SOLE_PROP", label: "Sole Proprietor (Schedule C / 1040)" },
             { value: "LLC_SINGLE", label: "Single-Member LLC (disregarded entity)" },
-            { value: "OTHER", label: "Other (S-Corp, partnership, C-Corp…)" },
+            { value: "S_CORP", label: "S-Corporation (Form 1120-S + K-1)" },
+            { value: "OTHER", label: "Multi-member LLC / C-Corp / Partnership (coming soon)" },
           ].map((opt) => (
             <label key={opt.value} className="flex items-center gap-2 cursor-pointer">
               <input
@@ -90,8 +91,18 @@ export default function Step1({ data, onNext }: Props) {
           <Alert className="mt-2">
             <Info className="h-4 w-4" />
             <AlertDescription>
-              S-Corps, partnerships, and C-Corps are supported in <strong>TaxLens V2</strong>.
-              For now, please work with your CPA for these entity types.
+              Multi-member LLC (Form 1065) and C-Corp (Form 1120) are next on the roadmap.
+              For now, please work with your CPA for those entity types.
+            </AlertDescription>
+          </Alert>
+        )}
+        {entityType === "S_CORP" && (
+          <Alert className="mt-2">
+            <Info className="h-4 w-4" />
+            <AlertDescription>
+              S-Corp election: TaxLens will generate <strong>Form 1120-S</strong> and a Schedule K-1
+              per shareholder. Owner W-2 (reasonable comp) is required by §1402;
+              the audit memo flags zero-W-2 owners as an audit-trigger risk.
             </AlertDescription>
           </Alert>
         )}

@@ -109,7 +109,7 @@ export default function ProfileEditClient({ profileData, legalName: initialLegal
       <Section title="Basics" step={1}>
         <dl className="grid grid-cols-2 gap-x-4 gap-y-1 text-sm">
           <dt className="text-muted-foreground">Tax year</dt><dd>{data.year}</dd>
-          <dt className="text-muted-foreground">Entity type</dt><dd>{data.entityType === "SOLE_PROP" ? "Sole Proprietor" : "Single-Member LLC"}</dd>
+          <dt className="text-muted-foreground">Entity type</dt><dd>{data.entityType === "SOLE_PROP" ? "Sole Proprietor" : data.entityType === "LLC_SINGLE" ? "Single-Member LLC" : data.entityType === "S_CORP" ? "S-Corporation" : (data.entityType ?? "—")}</dd>
           <dt className="text-muted-foreground">State</dt><dd>{stateName}</dd>
           <dt className="text-muted-foreground">Accounting</dt><dd>{data.accountingMethod}</dd>
           <dt className="text-muted-foreground">First year</dt><dd>{data.firstYear ? "Yes" : "No"}</dd>

@@ -21,6 +21,14 @@ datasource db {
 enum EntityType {
   SOLE_PROP
   LLC_SINGLE
+  // Phase 2 — S-Corp filing on Form 1120-S, with K-1s per shareholder.
+  S_CORP
+  // Phase 3 — multi-member LLC (partnership), Form 1065 + K-1s per partner.
+  LLC_MULTI
+  // Phase 4 — C-Corp, Form 1120 (no K-1).
+  C_CORP
+  // Reserved for general partnerships (not LLC-wrapped). Stub for now.
+  PARTNERSHIP
 }
 
 enum AccountingMethod {
