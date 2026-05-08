@@ -103,6 +103,8 @@ enum PipelineRunKind {
   AUTO_RESOLVE_STOPS
   // Phase 1 — single autonomous-bookkeeper run.
   CPA_AGENT
+  // Phase A follow-up — re-extract low-confidence PDFs via Sonnet vision.
+  EXTRACT_REPASS
 }
 
 // All 9 classification codes + 2 supplementary (spec §3.1)

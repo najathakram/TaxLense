@@ -16,6 +16,7 @@ import {
   runBulkClassify,
   runAutoResolveStops,
   runCpaAgentAction,
+  runExtractRePass,
   getPipelineRunStatus,
 } from "./actions"
 
@@ -265,6 +266,31 @@ export function PipelineClient({ year, initial }: PipelineClientProps) {
         <StatCard label="Merchant rules" value={stats.merchantRules} />
         <StatCard label="STOPs pending" value={stats.stops} />
       </div>
+
+      {/* Re-extraction (Phase A) — only useful when the original Haiku
+          extraction came back with low confidence on scanned PDFs. */}
+      <Card>
+        <CardContent className="flex items-center justify-between py-4 gap-4">
+          <div className="flex-1 min-w-0">
+            <p className="font-medium text-sm">Re-extract low-confidence PDFs (Sonnet vision)</p>
+            <p className="text-xs text-muted-foreground">
+              Finds StatementImports below 0.85 parse confidence and re-runs Sonnet vision.
+              Transactions de-dupe by idempotencyKey; safe to re-run.
+            </p>
+          </div>
+          <Badge variant="outline" className="text-xs shrink-0">
+            scanned PDFs
+          </Badge>
+          <Button
+            size="sm"
+            variant="outline"
+            disabled={runDisabled}
+            onClick={() => run(() => runExtractRePass(year), "Phase A · Sonnet vision re-extract")}
+          >
+            {runDisabled ? "Running…" : "Re-extract"}
+          </Button>
+        </CardContent>
+      </Card>
 
       {/* Step buttons 1–6 — the legacy multi-stage flow. Kept as an
           "Advanced" disclosure for debugging individual phases; normal
