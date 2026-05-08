@@ -30,7 +30,8 @@ import {
   buildForm1120SPdf,
   buildForm1065Pdf,
   buildForm1120Pdf,
-  buildScheduleK1Pdf,
+  buildScheduleK1PdfPerOwner,
+  slugifyOwnerName,
 } from "./pdf/entityForms"
 import { buildMasterLedger } from "./masterLedger"
 import { buildFinancialStatements } from "./financialStatements"
@@ -58,10 +59,22 @@ async function loadEntityForms(taxYearId: string, entityType: string): Promise<E
   const out: EntityFormFile[] = []
   if (entityType === "S_CORP") {
     out.push({ name: "07_form_1120s_worksheet.pdf", buffer: await buildForm1120SPdf(taxYearId) })
-    out.push({ name: "08_schedule_k1_1120s.pdf", buffer: await buildScheduleK1Pdf(taxYearId, { sourceForm: "1120-S" }) })
+    const k1s = await buildScheduleK1PdfPerOwner(taxYearId, "1120-S")
+    k1s.forEach((k1, i) => {
+      // Name pattern: 08a_k1_<owner-slug>.pdf to keep one prefix while sorting
+      // owners alphabetically inside the ZIP.
+      const idx = String.fromCharCode(0x61 + i) // a, b, c…
+      const slug = slugifyOwnerName(k1.owner.name) || `owner_${i + 1}`
+      out.push({ name: `08${idx}_k1_${slug}.pdf`, buffer: k1.buffer })
+    })
   } else if (entityType === "LLC_MULTI" || entityType === "PARTNERSHIP") {
     out.push({ name: "07_form_1065_worksheet.pdf", buffer: await buildForm1065Pdf(taxYearId) })
-    out.push({ name: "08_schedule_k1_1065.pdf", buffer: await buildScheduleK1Pdf(taxYearId, { sourceForm: "1065" }) })
+    const k1s = await buildScheduleK1PdfPerOwner(taxYearId, "1065")
+    k1s.forEach((k1, i) => {
+      const idx = String.fromCharCode(0x61 + i)
+      const slug = slugifyOwnerName(k1.owner.name) || `partner_${i + 1}`
+      out.push({ name: `08${idx}_k1_${slug}.pdf`, buffer: k1.buffer })
+    })
   } else if (entityType === "C_CORP") {
     // No K-1 — C-Corp shareholders receive 1099-DIV (separate filing flow).
     out.push({ name: "07_form_1120_worksheet.pdf", buffer: await buildForm1120Pdf(taxYearId) })

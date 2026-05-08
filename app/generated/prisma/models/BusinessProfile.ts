@@ -308,6 +308,7 @@ export type BusinessProfileWhereInput = {
   taxYear?: Prisma.XOR<Prisma.TaxYearScalarRelationFilter, Prisma.TaxYearWhereInput>
   knownEntities?: Prisma.KnownEntityListRelationFilter
   trips?: Prisma.TripListRelationFilter
+  owners?: Prisma.OwnerListRelationFilter
 }
 
 export type BusinessProfileOrderByWithRelationInput = {
@@ -333,6 +334,7 @@ export type BusinessProfileOrderByWithRelationInput = {
   taxYear?: Prisma.TaxYearOrderByWithRelationInput
   knownEntities?: Prisma.KnownEntityOrderByRelationAggregateInput
   trips?: Prisma.TripOrderByRelationAggregateInput
+  owners?: Prisma.OwnerOrderByRelationAggregateInput
 }
 
 export type BusinessProfileWhereUniqueInput = Prisma.AtLeast<{
@@ -361,6 +363,7 @@ export type BusinessProfileWhereUniqueInput = Prisma.AtLeast<{
   taxYear?: Prisma.XOR<Prisma.TaxYearScalarRelationFilter, Prisma.TaxYearWhereInput>
   knownEntities?: Prisma.KnownEntityListRelationFilter
   trips?: Prisma.TripListRelationFilter
+  owners?: Prisma.OwnerListRelationFilter
 }, "id" | "taxYearId">
 
 export type BusinessProfileOrderByWithAggregationInput = {
@@ -434,6 +437,7 @@ export type BusinessProfileCreateInput = {
   taxYear: Prisma.TaxYearCreateNestedOneWithoutBusinessProfileInput
   knownEntities?: Prisma.KnownEntityCreateNestedManyWithoutProfileInput
   trips?: Prisma.TripCreateNestedManyWithoutProfileInput
+  owners?: Prisma.OwnerCreateNestedManyWithoutProfileInput
 }
 
 export type BusinessProfileUncheckedCreateInput = {
@@ -457,6 +461,7 @@ export type BusinessProfileUncheckedCreateInput = {
   updatedAt?: Date | string
   knownEntities?: Prisma.KnownEntityUncheckedCreateNestedManyWithoutProfileInput
   trips?: Prisma.TripUncheckedCreateNestedManyWithoutProfileInput
+  owners?: Prisma.OwnerUncheckedCreateNestedManyWithoutProfileInput
 }
 
 export type BusinessProfileUpdateInput = {
@@ -480,6 +485,7 @@ export type BusinessProfileUpdateInput = {
   taxYear?: Prisma.TaxYearUpdateOneRequiredWithoutBusinessProfileNestedInput
   knownEntities?: Prisma.KnownEntityUpdateManyWithoutProfileNestedInput
   trips?: Prisma.TripUpdateManyWithoutProfileNestedInput
+  owners?: Prisma.OwnerUpdateManyWithoutProfileNestedInput
 }
 
 export type BusinessProfileUncheckedUpdateInput = {
@@ -503,6 +509,7 @@ export type BusinessProfileUncheckedUpdateInput = {
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   knownEntities?: Prisma.KnownEntityUncheckedUpdateManyWithoutProfileNestedInput
   trips?: Prisma.TripUncheckedUpdateManyWithoutProfileNestedInput
+  owners?: Prisma.OwnerUncheckedUpdateManyWithoutProfileNestedInput
 }
 
 export type BusinessProfileCreateManyInput = {
@@ -784,6 +791,20 @@ export type BusinessProfileUpdateOneRequiredWithoutTripsNestedInput = {
   update?: Prisma.XOR<Prisma.XOR<Prisma.BusinessProfileUpdateToOneWithWhereWithoutTripsInput, Prisma.BusinessProfileUpdateWithoutTripsInput>, Prisma.BusinessProfileUncheckedUpdateWithoutTripsInput>
 }
 
+export type BusinessProfileCreateNestedOneWithoutOwnersInput = {
+  create?: Prisma.XOR<Prisma.BusinessProfileCreateWithoutOwnersInput, Prisma.BusinessProfileUncheckedCreateWithoutOwnersInput>
+  connectOrCreate?: Prisma.BusinessProfileCreateOrConnectWithoutOwnersInput
+  connect?: Prisma.BusinessProfileWhereUniqueInput
+}
+
+export type BusinessProfileUpdateOneRequiredWithoutOwnersNestedInput = {
+  create?: Prisma.XOR<Prisma.BusinessProfileCreateWithoutOwnersInput, Prisma.BusinessProfileUncheckedCreateWithoutOwnersInput>
+  connectOrCreate?: Prisma.BusinessProfileCreateOrConnectWithoutOwnersInput
+  upsert?: Prisma.BusinessProfileUpsertWithoutOwnersInput
+  connect?: Prisma.BusinessProfileWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.BusinessProfileUpdateToOneWithWhereWithoutOwnersInput, Prisma.BusinessProfileUpdateWithoutOwnersInput>, Prisma.BusinessProfileUncheckedUpdateWithoutOwnersInput>
+}
+
 export type BusinessProfileCreateWithoutUserInput = {
   id?: string
   naicsCode?: string | null
@@ -804,6 +825,7 @@ export type BusinessProfileCreateWithoutUserInput = {
   taxYear: Prisma.TaxYearCreateNestedOneWithoutBusinessProfileInput
   knownEntities?: Prisma.KnownEntityCreateNestedManyWithoutProfileInput
   trips?: Prisma.TripCreateNestedManyWithoutProfileInput
+  owners?: Prisma.OwnerCreateNestedManyWithoutProfileInput
 }
 
 export type BusinessProfileUncheckedCreateWithoutUserInput = {
@@ -826,6 +848,7 @@ export type BusinessProfileUncheckedCreateWithoutUserInput = {
   updatedAt?: Date | string
   knownEntities?: Prisma.KnownEntityUncheckedCreateNestedManyWithoutProfileInput
   trips?: Prisma.TripUncheckedCreateNestedManyWithoutProfileInput
+  owners?: Prisma.OwnerUncheckedCreateNestedManyWithoutProfileInput
 }
 
 export type BusinessProfileCreateOrConnectWithoutUserInput = {
@@ -898,6 +921,7 @@ export type BusinessProfileCreateWithoutTaxYearInput = {
   user: Prisma.UserCreateNestedOneWithoutBusinessProfilesInput
   knownEntities?: Prisma.KnownEntityCreateNestedManyWithoutProfileInput
   trips?: Prisma.TripCreateNestedManyWithoutProfileInput
+  owners?: Prisma.OwnerCreateNestedManyWithoutProfileInput
 }
 
 export type BusinessProfileUncheckedCreateWithoutTaxYearInput = {
@@ -920,6 +944,7 @@ export type BusinessProfileUncheckedCreateWithoutTaxYearInput = {
   updatedAt?: Date | string
   knownEntities?: Prisma.KnownEntityUncheckedCreateNestedManyWithoutProfileInput
   trips?: Prisma.TripUncheckedCreateNestedManyWithoutProfileInput
+  owners?: Prisma.OwnerUncheckedCreateNestedManyWithoutProfileInput
 }
 
 export type BusinessProfileCreateOrConnectWithoutTaxYearInput = {
@@ -958,6 +983,7 @@ export type BusinessProfileUpdateWithoutTaxYearInput = {
   user?: Prisma.UserUpdateOneRequiredWithoutBusinessProfilesNestedInput
   knownEntities?: Prisma.KnownEntityUpdateManyWithoutProfileNestedInput
   trips?: Prisma.TripUpdateManyWithoutProfileNestedInput
+  owners?: Prisma.OwnerUpdateManyWithoutProfileNestedInput
 }
 
 export type BusinessProfileUncheckedUpdateWithoutTaxYearInput = {
@@ -980,6 +1006,7 @@ export type BusinessProfileUncheckedUpdateWithoutTaxYearInput = {
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   knownEntities?: Prisma.KnownEntityUncheckedUpdateManyWithoutProfileNestedInput
   trips?: Prisma.TripUncheckedUpdateManyWithoutProfileNestedInput
+  owners?: Prisma.OwnerUncheckedUpdateManyWithoutProfileNestedInput
 }
 
 export type BusinessProfileCreateWithoutKnownEntitiesInput = {
@@ -1002,6 +1029,7 @@ export type BusinessProfileCreateWithoutKnownEntitiesInput = {
   user: Prisma.UserCreateNestedOneWithoutBusinessProfilesInput
   taxYear: Prisma.TaxYearCreateNestedOneWithoutBusinessProfileInput
   trips?: Prisma.TripCreateNestedManyWithoutProfileInput
+  owners?: Prisma.OwnerCreateNestedManyWithoutProfileInput
 }
 
 export type BusinessProfileUncheckedCreateWithoutKnownEntitiesInput = {
@@ -1024,6 +1052,7 @@ export type BusinessProfileUncheckedCreateWithoutKnownEntitiesInput = {
   createdAt?: Date | string
   updatedAt?: Date | string
   trips?: Prisma.TripUncheckedCreateNestedManyWithoutProfileInput
+  owners?: Prisma.OwnerUncheckedCreateNestedManyWithoutProfileInput
 }
 
 export type BusinessProfileCreateOrConnectWithoutKnownEntitiesInput = {
@@ -1062,6 +1091,7 @@ export type BusinessProfileUpdateWithoutKnownEntitiesInput = {
   user?: Prisma.UserUpdateOneRequiredWithoutBusinessProfilesNestedInput
   taxYear?: Prisma.TaxYearUpdateOneRequiredWithoutBusinessProfileNestedInput
   trips?: Prisma.TripUpdateManyWithoutProfileNestedInput
+  owners?: Prisma.OwnerUpdateManyWithoutProfileNestedInput
 }
 
 export type BusinessProfileUncheckedUpdateWithoutKnownEntitiesInput = {
@@ -1084,6 +1114,7 @@ export type BusinessProfileUncheckedUpdateWithoutKnownEntitiesInput = {
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   trips?: Prisma.TripUncheckedUpdateManyWithoutProfileNestedInput
+  owners?: Prisma.OwnerUncheckedUpdateManyWithoutProfileNestedInput
 }
 
 export type BusinessProfileCreateWithoutTripsInput = {
@@ -1106,6 +1137,7 @@ export type BusinessProfileCreateWithoutTripsInput = {
   user: Prisma.UserCreateNestedOneWithoutBusinessProfilesInput
   taxYear: Prisma.TaxYearCreateNestedOneWithoutBusinessProfileInput
   knownEntities?: Prisma.KnownEntityCreateNestedManyWithoutProfileInput
+  owners?: Prisma.OwnerCreateNestedManyWithoutProfileInput
 }
 
 export type BusinessProfileUncheckedCreateWithoutTripsInput = {
@@ -1128,6 +1160,7 @@ export type BusinessProfileUncheckedCreateWithoutTripsInput = {
   createdAt?: Date | string
   updatedAt?: Date | string
   knownEntities?: Prisma.KnownEntityUncheckedCreateNestedManyWithoutProfileInput
+  owners?: Prisma.OwnerUncheckedCreateNestedManyWithoutProfileInput
 }
 
 export type BusinessProfileCreateOrConnectWithoutTripsInput = {
@@ -1166,6 +1199,7 @@ export type BusinessProfileUpdateWithoutTripsInput = {
   user?: Prisma.UserUpdateOneRequiredWithoutBusinessProfilesNestedInput
   taxYear?: Prisma.TaxYearUpdateOneRequiredWithoutBusinessProfileNestedInput
   knownEntities?: Prisma.KnownEntityUpdateManyWithoutProfileNestedInput
+  owners?: Prisma.OwnerUpdateManyWithoutProfileNestedInput
 }
 
 export type BusinessProfileUncheckedUpdateWithoutTripsInput = {
@@ -1188,6 +1222,115 @@ export type BusinessProfileUncheckedUpdateWithoutTripsInput = {
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   knownEntities?: Prisma.KnownEntityUncheckedUpdateManyWithoutProfileNestedInput
+  owners?: Prisma.OwnerUncheckedUpdateManyWithoutProfileNestedInput
+}
+
+export type BusinessProfileCreateWithoutOwnersInput = {
+  id?: string
+  naicsCode?: string | null
+  entityType?: $Enums.EntityType
+  primaryState?: string
+  businessDescription?: string | null
+  grossReceiptsEstimate?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  accountingMethod?: $Enums.AccountingMethod
+  homeOfficeConfig?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  vehicleConfig?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  inventoryConfig?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  revenueStreams?: Prisma.BusinessProfileCreaterevenueStreamsInput | string[]
+  firstYear?: boolean
+  draftStep?: number
+  incomeSources?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  user: Prisma.UserCreateNestedOneWithoutBusinessProfilesInput
+  taxYear: Prisma.TaxYearCreateNestedOneWithoutBusinessProfileInput
+  knownEntities?: Prisma.KnownEntityCreateNestedManyWithoutProfileInput
+  trips?: Prisma.TripCreateNestedManyWithoutProfileInput
+}
+
+export type BusinessProfileUncheckedCreateWithoutOwnersInput = {
+  id?: string
+  userId: string
+  taxYearId: string
+  naicsCode?: string | null
+  entityType?: $Enums.EntityType
+  primaryState?: string
+  businessDescription?: string | null
+  grossReceiptsEstimate?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  accountingMethod?: $Enums.AccountingMethod
+  homeOfficeConfig?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  vehicleConfig?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  inventoryConfig?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  revenueStreams?: Prisma.BusinessProfileCreaterevenueStreamsInput | string[]
+  firstYear?: boolean
+  draftStep?: number
+  incomeSources?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  knownEntities?: Prisma.KnownEntityUncheckedCreateNestedManyWithoutProfileInput
+  trips?: Prisma.TripUncheckedCreateNestedManyWithoutProfileInput
+}
+
+export type BusinessProfileCreateOrConnectWithoutOwnersInput = {
+  where: Prisma.BusinessProfileWhereUniqueInput
+  create: Prisma.XOR<Prisma.BusinessProfileCreateWithoutOwnersInput, Prisma.BusinessProfileUncheckedCreateWithoutOwnersInput>
+}
+
+export type BusinessProfileUpsertWithoutOwnersInput = {
+  update: Prisma.XOR<Prisma.BusinessProfileUpdateWithoutOwnersInput, Prisma.BusinessProfileUncheckedUpdateWithoutOwnersInput>
+  create: Prisma.XOR<Prisma.BusinessProfileCreateWithoutOwnersInput, Prisma.BusinessProfileUncheckedCreateWithoutOwnersInput>
+  where?: Prisma.BusinessProfileWhereInput
+}
+
+export type BusinessProfileUpdateToOneWithWhereWithoutOwnersInput = {
+  where?: Prisma.BusinessProfileWhereInput
+  data: Prisma.XOR<Prisma.BusinessProfileUpdateWithoutOwnersInput, Prisma.BusinessProfileUncheckedUpdateWithoutOwnersInput>
+}
+
+export type BusinessProfileUpdateWithoutOwnersInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  naicsCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  entityType?: Prisma.EnumEntityTypeFieldUpdateOperationsInput | $Enums.EntityType
+  primaryState?: Prisma.StringFieldUpdateOperationsInput | string
+  businessDescription?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  grossReceiptsEstimate?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  accountingMethod?: Prisma.EnumAccountingMethodFieldUpdateOperationsInput | $Enums.AccountingMethod
+  homeOfficeConfig?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  vehicleConfig?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  inventoryConfig?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  revenueStreams?: Prisma.BusinessProfileUpdaterevenueStreamsInput | string[]
+  firstYear?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  draftStep?: Prisma.IntFieldUpdateOperationsInput | number
+  incomeSources?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  user?: Prisma.UserUpdateOneRequiredWithoutBusinessProfilesNestedInput
+  taxYear?: Prisma.TaxYearUpdateOneRequiredWithoutBusinessProfileNestedInput
+  knownEntities?: Prisma.KnownEntityUpdateManyWithoutProfileNestedInput
+  trips?: Prisma.TripUpdateManyWithoutProfileNestedInput
+}
+
+export type BusinessProfileUncheckedUpdateWithoutOwnersInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  userId?: Prisma.StringFieldUpdateOperationsInput | string
+  taxYearId?: Prisma.StringFieldUpdateOperationsInput | string
+  naicsCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  entityType?: Prisma.EnumEntityTypeFieldUpdateOperationsInput | $Enums.EntityType
+  primaryState?: Prisma.StringFieldUpdateOperationsInput | string
+  businessDescription?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  grossReceiptsEstimate?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  accountingMethod?: Prisma.EnumAccountingMethodFieldUpdateOperationsInput | $Enums.AccountingMethod
+  homeOfficeConfig?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  vehicleConfig?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  inventoryConfig?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  revenueStreams?: Prisma.BusinessProfileUpdaterevenueStreamsInput | string[]
+  firstYear?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  draftStep?: Prisma.IntFieldUpdateOperationsInput | number
+  incomeSources?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  knownEntities?: Prisma.KnownEntityUncheckedUpdateManyWithoutProfileNestedInput
+  trips?: Prisma.TripUncheckedUpdateManyWithoutProfileNestedInput
 }
 
 export type BusinessProfileCreateManyUserInput = {
@@ -1230,6 +1373,7 @@ export type BusinessProfileUpdateWithoutUserInput = {
   taxYear?: Prisma.TaxYearUpdateOneRequiredWithoutBusinessProfileNestedInput
   knownEntities?: Prisma.KnownEntityUpdateManyWithoutProfileNestedInput
   trips?: Prisma.TripUpdateManyWithoutProfileNestedInput
+  owners?: Prisma.OwnerUpdateManyWithoutProfileNestedInput
 }
 
 export type BusinessProfileUncheckedUpdateWithoutUserInput = {
@@ -1252,6 +1396,7 @@ export type BusinessProfileUncheckedUpdateWithoutUserInput = {
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   knownEntities?: Prisma.KnownEntityUncheckedUpdateManyWithoutProfileNestedInput
   trips?: Prisma.TripUncheckedUpdateManyWithoutProfileNestedInput
+  owners?: Prisma.OwnerUncheckedUpdateManyWithoutProfileNestedInput
 }
 
 export type BusinessProfileUncheckedUpdateManyWithoutUserInput = {
@@ -1282,11 +1427,13 @@ export type BusinessProfileUncheckedUpdateManyWithoutUserInput = {
 export type BusinessProfileCountOutputType = {
   knownEntities: number
   trips: number
+  owners: number
 }
 
 export type BusinessProfileCountOutputTypeSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   knownEntities?: boolean | BusinessProfileCountOutputTypeCountKnownEntitiesArgs
   trips?: boolean | BusinessProfileCountOutputTypeCountTripsArgs
+  owners?: boolean | BusinessProfileCountOutputTypeCountOwnersArgs
 }
 
 /**
@@ -1313,6 +1460,13 @@ export type BusinessProfileCountOutputTypeCountTripsArgs<ExtArgs extends runtime
   where?: Prisma.TripWhereInput
 }
 
+/**
+ * BusinessProfileCountOutputType without action
+ */
+export type BusinessProfileCountOutputTypeCountOwnersArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.OwnerWhereInput
+}
+
 
 export type BusinessProfileSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   id?: boolean
@@ -1337,6 +1491,7 @@ export type BusinessProfileSelect<ExtArgs extends runtime.Types.Extensions.Inter
   taxYear?: boolean | Prisma.TaxYearDefaultArgs<ExtArgs>
   knownEntities?: boolean | Prisma.BusinessProfile$knownEntitiesArgs<ExtArgs>
   trips?: boolean | Prisma.BusinessProfile$tripsArgs<ExtArgs>
+  owners?: boolean | Prisma.BusinessProfile$ownersArgs<ExtArgs>
   _count?: boolean | Prisma.BusinessProfileCountOutputTypeDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["businessProfile"]>
 
@@ -1413,6 +1568,7 @@ export type BusinessProfileInclude<ExtArgs extends runtime.Types.Extensions.Inte
   taxYear?: boolean | Prisma.TaxYearDefaultArgs<ExtArgs>
   knownEntities?: boolean | Prisma.BusinessProfile$knownEntitiesArgs<ExtArgs>
   trips?: boolean | Prisma.BusinessProfile$tripsArgs<ExtArgs>
+  owners?: boolean | Prisma.BusinessProfile$ownersArgs<ExtArgs>
   _count?: boolean | Prisma.BusinessProfileCountOutputTypeDefaultArgs<ExtArgs>
 }
 export type BusinessProfileIncludeCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
@@ -1431,6 +1587,7 @@ export type $BusinessProfilePayload<ExtArgs extends runtime.Types.Extensions.Int
     taxYear: Prisma.$TaxYearPayload<ExtArgs>
     knownEntities: Prisma.$KnownEntityPayload<ExtArgs>[]
     trips: Prisma.$TripPayload<ExtArgs>[]
+    owners: Prisma.$OwnerPayload<ExtArgs>[]
   }
   scalars: runtime.Types.Extensions.GetPayloadResult<{
     id: string
@@ -1849,6 +2006,7 @@ export interface Prisma__BusinessProfileClient<T, Null = never, ExtArgs extends 
   taxYear<T extends Prisma.TaxYearDefaultArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.TaxYearDefaultArgs<ExtArgs>>): Prisma.Prisma__TaxYearClient<runtime.Types.Result.GetResult<Prisma.$TaxYearPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
   knownEntities<T extends Prisma.BusinessProfile$knownEntitiesArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.BusinessProfile$knownEntitiesArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$KnownEntityPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   trips<T extends Prisma.BusinessProfile$tripsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.BusinessProfile$tripsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$TripPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+  owners<T extends Prisma.BusinessProfile$ownersArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.BusinessProfile$ownersArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$OwnerPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   /**
    * Attaches callbacks for the resolution and/or rejection of the Promise.
    * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -2342,6 +2500,30 @@ export type BusinessProfile$tripsArgs<ExtArgs extends runtime.Types.Extensions.I
   take?: number
   skip?: number
   distinct?: Prisma.TripScalarFieldEnum | Prisma.TripScalarFieldEnum[]
+}
+
+/**
+ * BusinessProfile.owners
+ */
+export type BusinessProfile$ownersArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the Owner
+   */
+  select?: Prisma.OwnerSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the Owner
+   */
+  omit?: Prisma.OwnerOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.OwnerInclude<ExtArgs> | null
+  where?: Prisma.OwnerWhereInput
+  orderBy?: Prisma.OwnerOrderByWithRelationInput | Prisma.OwnerOrderByWithRelationInput[]
+  cursor?: Prisma.OwnerWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.OwnerScalarFieldEnum | Prisma.OwnerScalarFieldEnum[]
 }
 
 /**
