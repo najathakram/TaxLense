@@ -24,6 +24,22 @@ export interface SerializedAffected {
   amount: number
 }
 
+/**
+ * AI default surfaced to the per-card form so MERCHANT stops open with the
+ * Merchant Intelligence agent's best guess pre-selected. Currently only
+ * populated for MERCHANT — DEPOSIT/TRANSFER/§274(d) leave it null so the
+ * radio stays unselected and the user must pick explicitly (this is what
+ * keeps a $4K returned-deposit from being one accidental click away from
+ * "All business 100%").
+ */
+export type AiSuggestion = {
+  kind: "merchant"
+  choice: "ALL_BUSINESS" | "DURING_TRIPS" | "MIXED_50" | "PERSONAL"
+  confidence: number
+  reasoning: string | null
+  scheduleCLine: string | null
+}
+
 export interface SerializedStop {
   id: string
   category: StopCategory
@@ -34,6 +50,11 @@ export interface SerializedStop {
   merchantKey: string | null
   totalAmount: number
   affected: SerializedAffected[]
+  /** AI's pre-selected default for the form (MERCHANT only). When present,
+   *  the form opens with the corresponding radio chosen and shows a
+   *  one-line "AI suggests …" banner. When null, the radio is unselected
+   *  and Resolve is disabled until the user picks a choice. */
+  aiSuggestion: AiSuggestion | null
   /** Prior answer JSON — present on ANSWERED stops. Used to prefill the form
    *  when the user clicks "Edit answer" on an already-resolved STOP. May
    *  carry the AI auto-resolve shape ({autoResolved: true, code, ...}) which
@@ -59,6 +80,12 @@ export function StopsClient({ year, stops }: { year: number; stops: SerializedSt
   const [progress, setProgress] = useState<Record<string, unknown>>({})
   const [lastError, setLastError] = useState<string | null>(null)
   const [lastResult, setLastResult] = useState<{ resolved: number; skipped: number; errors: number } | null>(null)
+  // Filter: default PENDING-only because that's the actionable list. The
+  // toggle reveals ANSWERED + DEFERRED for history / re-answer flows.
+  // Keeping ANSWERED stops in the same scroll list mixed with PENDING was a
+  // common confusion point — sidebar said "94 pending" while the page showed
+  // 200+ cards.
+  const [showAnswered, setShowAnswered] = useState(false)
   const pollRef = useRef<ReturnType<typeof setInterval> | null>(null)
 
   // Polling: while a run is active, fetch its status every 2s, surface progress,
@@ -107,12 +134,16 @@ export function StopsClient({ year, stops }: { year: number; stops: SerializedSt
 
   const byCat = new Map<StopCategory, SerializedStop[]>()
   for (const c of CATEGORIES) byCat.set(c.key, [])
-  for (const s of stops) byCat.get(s.category)?.push(s)
+  for (const s of stops) {
+    if (!showAnswered && s.state !== "PENDING") continue
+    byCat.get(s.category)?.push(s)
+  }
   for (const [, arr] of byCat) arr.sort((a, b) => b.totalAmount - a.totalAmount)
 
   const pendingCount = (cat: StopCategory) =>
-    byCat.get(cat)?.filter((s) => s.state === "PENDING").length ?? 0
+    stops.filter((s) => s.category === cat && s.state === "PENDING").length
 
+  const answeredCount = stops.filter((s) => s.state !== "PENDING").length
   const totalPending = CATEGORIES.reduce((n, c) => n + pendingCount(c.key), 0)
 
   const autoBusy = activeRun !== null
@@ -134,9 +165,20 @@ export function StopsClient({ year, stops }: { year: number; stops: SerializedSt
 
       {/* Auto-resolve banner */}
       <div className="flex items-center justify-between gap-4 border rounded p-3 bg-muted/30">
-        <div className="text-sm">
+        <div className="text-sm flex items-center gap-3 flex-wrap">
           <span className="font-medium">{totalPending} pending stops</span>
-          <span className="text-muted-foreground ml-2">— AI (Sonnet) will auto-resolve high-confidence items (≥85%)</span>
+          <span className="text-muted-foreground">— AI (Sonnet) will auto-resolve high-confidence items (≥85%)</span>
+          {answeredCount > 0 && (
+            <button
+              type="button"
+              onClick={() => setShowAnswered((v) => !v)}
+              className="text-xs underline text-muted-foreground hover:text-foreground"
+            >
+              {showAnswered
+                ? `Hide ${answeredCount} answered`
+                : `Show ${answeredCount} answered`}
+            </button>
+          )}
         </div>
         <Button size="sm" disabled={autoBusy || totalPending === 0} onClick={onAutoResolve}>
           {autoBusy ? "Resolving…" : "Auto-resolve with AI"}
@@ -395,6 +437,15 @@ function useSubmit(stopId: string) {
   return { pending, error, submit, defer }
 }
 
+type MerchantChoice = "ALL_BUSINESS" | "DURING_TRIPS" | "MIXED_50" | "PERSONAL" | "OTHER"
+const MERCHANT_CHOICE_LABEL: Record<MerchantChoice, string> = {
+  ALL_BUSINESS: "All business 100%",
+  DURING_TRIPS: "Business during confirmed trips only",
+  MIXED_50: "Mixed 50/50",
+  PERSONAL: "Personal",
+  OTHER: "Other — explain",
+}
+
 function MerchantForm({
   stop,
   prior,
@@ -402,24 +453,45 @@ function MerchantForm({
   stop: SerializedStop
   prior: Extract<StopAnswer, { kind: "merchant" }> | null
 }) {
-  const [choice, setChoice] = useState<"ALL_BUSINESS" | "DURING_TRIPS" | "MIXED_50" | "PERSONAL" | "OTHER">(
-    prior?.choice ?? "ALL_BUSINESS",
-  )
+  // Initial choice precedence: prior (re-answer) > AI suggestion > unselected.
+  // We deliberately do NOT fall back to "ALL_BUSINESS" — letting a user
+  // accidentally click "Resolve" on a default they never read was the cause
+  // of "All business 100%" creeping into rows the AI thought were personal.
+  const initialChoice: MerchantChoice | null =
+    prior?.choice ?? stop.aiSuggestion?.choice ?? null
+  const [choice, setChoice] = useState<MerchantChoice | null>(initialChoice)
   const [other, setOther] = useState(prior?.other ?? "")
-  const [line, setLine] = useState<string>(prior?.scheduleCLine ?? "")
+  const [line, setLine] = useState<string>(
+    prior?.scheduleCLine ?? stop.aiSuggestion?.scheduleCLine ?? "",
+  )
   const [applyToSimilar, setApplyToSimilar] = useState(true)
   const { pending, error, submit, defer } = useSubmit(stop.id)
 
+  const ai = stop.aiSuggestion
+  const showAiHint = ai && !prior // hide on re-answer of a previously-set stop
+
   return (
     <div className="space-y-3">
-      <RadioGroup value={choice} onValueChange={(v) => setChoice(v as typeof choice)}>
-        {[
-          ["ALL_BUSINESS", "All business 100%"],
-          ["DURING_TRIPS", "Business during confirmed trips only"],
-          ["MIXED_50", "Mixed 50/50"],
-          ["PERSONAL", "Personal"],
-          ["OTHER", "Other — explain"],
-        ].map(([v, label]) => (
+      {showAiHint && ai && (
+        <div className="rounded-md border border-blue-500/30 bg-blue-500/5 p-2 text-xs">
+          <span className="font-semibold text-blue-500 uppercase tracking-wide">AI suggests</span>{" "}
+          <span className="text-foreground">{MERCHANT_CHOICE_LABEL[ai.choice]}</span>
+          <span className="text-muted-foreground"> · {(ai.confidence * 100).toFixed(0)}% confidence</span>
+          {ai.scheduleCLine && (
+            <span className="text-muted-foreground"> · {ai.scheduleCLine}</span>
+          )}
+          {ai.reasoning && (
+            <p className="mt-1 text-muted-foreground italic line-clamp-2" title={ai.reasoning}>
+              {ai.reasoning}
+            </p>
+          )}
+        </div>
+      )}
+      <RadioGroup
+        value={choice ?? ""}
+        onValueChange={(v) => setChoice(v as MerchantChoice)}
+      >
+        {(Object.entries(MERCHANT_CHOICE_LABEL) as [MerchantChoice, string][]).map(([v, label]) => (
           <label key={v} className="flex items-center gap-2 text-sm">
             <RadioGroupItem value={v} />
             {label}
@@ -453,8 +525,9 @@ function MerchantForm({
       {error && <p className="text-sm text-red-600">{error}</p>}
       <div className="flex gap-2">
         <Button
-          disabled={pending || (choice === "OTHER" && !other.trim())}
+          disabled={pending || choice === null || (choice === "OTHER" && !other.trim())}
           onClick={() =>
+            choice !== null &&
             submit(
               {
                 kind: "merchant",
@@ -466,7 +539,7 @@ function MerchantForm({
             )
           }
         >
-          {pending ? "Resolving…" : "Resolve"}
+          {pending ? "Resolving…" : choice === null ? "Pick an option" : "Resolve"}
         </Button>
         <Button variant="outline" disabled={pending} onClick={defer}>
           Defer
@@ -476,6 +549,8 @@ function MerchantForm({
   )
 }
 
+type TransferChoice = "PERSONAL" | "CONTRACTOR" | "LOAN" | "OTHER"
+
 function TransferForm({
   stop,
   prior,
@@ -483,9 +558,10 @@ function TransferForm({
   stop: SerializedStop
   prior: Extract<StopAnswer, { kind: "transfer" }> | null
 }) {
-  const [choice, setChoice] = useState<"PERSONAL" | "CONTRACTOR" | "LOAN" | "OTHER">(
-    prior?.choice ?? "PERSONAL",
-  )
+  // No AI hint for TRANSFER stops in V1 (MerchantRule doesn't reliably know
+  // who the counterparty is). Leave radio unselected so a Zelle to a name we
+  // can't verify can't be one accidental click away from "Personal".
+  const [choice, setChoice] = useState<TransferChoice | null>(prior?.choice ?? null)
   const [payeeName, setPayeeName] = useState(prior?.payeeName ?? "")
   const [purpose, setPurpose] = useState(prior?.purpose ?? "")
   const [other, setOther] = useState(prior?.other ?? "")
@@ -493,7 +569,10 @@ function TransferForm({
 
   return (
     <div className="space-y-3">
-      <RadioGroup value={choice} onValueChange={(v) => setChoice(v as typeof choice)}>
+      <RadioGroup
+        value={choice ?? ""}
+        onValueChange={(v) => setChoice(v as TransferChoice)}
+      >
         {[
           ["PERSONAL", "Personal (household)"],
           ["CONTRACTOR", "Contractor (business)"],
@@ -518,15 +597,16 @@ function TransferForm({
       {error && <p className="text-sm text-red-600">{error}</p>}
       <div className="flex gap-2">
         <Button
-          disabled={pending}
+          disabled={pending || choice === null}
           onClick={() =>
+            choice !== null &&
             submit(
               { kind: "transfer", choice, payeeName, purpose, other: other || undefined },
               false
             )
           }
         >
-          {pending ? "Resolving…" : "Resolve"}
+          {pending ? "Resolving…" : choice === null ? "Pick an option" : "Resolve"}
         </Button>
         <Button variant="outline" disabled={pending} onClick={defer}>
           Defer
@@ -536,6 +616,16 @@ function TransferForm({
   )
 }
 
+type DepositChoice =
+  | "CLIENT"
+  | "PLATFORM_1099"
+  | "W2"
+  | "OWNER_CONTRIB"
+  | "GIFT"
+  | "LOAN"
+  | "REFUND"
+  | "OTHER"
+
 function DepositForm({
   stop,
   prior,
@@ -543,15 +633,20 @@ function DepositForm({
   stop: SerializedStop
   prior: Extract<StopAnswer, { kind: "deposit" }> | null
 }) {
-  const [choice, setChoice] = useState<
-    "CLIENT" | "PLATFORM_1099" | "W2" | "OWNER_CONTRIB" | "GIFT" | "LOAN" | "REFUND" | "OTHER"
-  >(prior?.choice ?? "CLIENT")
+  // DEPOSIT used to default to "CLIENT" (= BIZ_INCOME). That was dangerous
+  // on returned-deposit / NSF / refund rows — one accidental click would
+  // dump four-figure inflows into gross receipts. Leave unselected so the
+  // user has to read the row and pick.
+  const [choice, setChoice] = useState<DepositChoice | null>(prior?.choice ?? null)
   const [other, setOther] = useState(prior?.other ?? "")
   const { pending, error, submit, defer } = useSubmit(stop.id)
 
   return (
     <div className="space-y-3">
-      <RadioGroup value={choice} onValueChange={(v) => setChoice(v as typeof choice)}>
+      <RadioGroup
+        value={choice ?? ""}
+        onValueChange={(v) => setChoice(v as DepositChoice)}
+      >
         {[
           ["CLIENT", "Client payment"],
           ["PLATFORM_1099", "1099 platform payout"],
@@ -574,10 +669,13 @@ function DepositForm({
       {error && <p className="text-sm text-red-600">{error}</p>}
       <div className="flex gap-2">
         <Button
-          disabled={pending}
-          onClick={() => submit({ kind: "deposit", choice, other: other || undefined }, false)}
+          disabled={pending || choice === null}
+          onClick={() =>
+            choice !== null &&
+            submit({ kind: "deposit", choice, other: other || undefined }, false)
+          }
         >
-          {pending ? "Resolving…" : "Resolve"}
+          {pending ? "Resolving…" : choice === null ? "Pick an option" : "Resolve"}
         </Button>
         <Button variant="outline" disabled={pending} onClick={defer}>
           Defer

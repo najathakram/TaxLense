@@ -287,7 +287,7 @@ export function LedgerClient({ year, rows, accounts }: Props) {
               title={stopsOnly ? "Showing only rows with open STOPs" : "Show only rows with open STOPs"}
             >
               <span aria-hidden className="inline-block w-1.5 h-1.5 rounded-full bg-amber-500" />
-              {stopsOnly ? "Only STOPs" : `STOPs only (${totalWithStops})`}
+              {stopsOnly ? "Only rows with STOPs" : `Rows with open STOPs (${totalWithStops})`}
             </button>
           </div>
         )}

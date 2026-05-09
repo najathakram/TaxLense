@@ -8,6 +8,8 @@ import { TopBar, Sidebar, type SidebarGroup, type SidebarItem } from "@/componen
 import { Banner } from "@/components/v2/primitives"
 import { signOut } from "@/auth"
 import Link from "next/link"
+import { deriveStage, getYearCounts } from "@/lib/taxYear/status"
+import type { TaxYearStatus } from "@/app/generated/prisma/client"
 
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
   const session = await requireAuth()
@@ -27,11 +29,29 @@ export default async function AppLayout({ children }: { children: React.ReactNod
     : null
 
   // Year selector — most recent year for the active user.
-  const activeYear = await prisma.taxYear.findFirst({
+  const activeYearRow = await prisma.taxYear.findFirst({
     where: { userId },
     orderBy: { year: "desc" },
-    select: { year: true, status: true },
+    select: { id: true, year: true, status: true, lockedAt: true },
   })
+
+  // Derive the live stage for the breadcrumb pill so it reflects the current
+  // ledger state (e.g. CLASSIFICATION when row counts say so), not whatever
+  // value happens to be persisted on TaxYear.status. Without this, the pill
+  // would show INGESTION for a year that's already classified-but-not-locked
+  // until the next pipeline mutation triggers recomputeStatus.
+  const activeYearCounts = activeYearRow
+    ? await getYearCounts(activeYearRow.id)
+    : null
+  const derivedActiveStage: TaxYearStatus | null = activeYearRow
+    ? deriveStage(
+        { status: activeYearRow.status, lockedAt: activeYearRow.lockedAt },
+        activeYearCounts!,
+      )
+    : null
+  const activeYear = activeYearRow
+    ? { year: activeYearRow.year, status: derivedActiveStage as TaxYearStatus }
+    : null
 
   const tier = adminCtx ? "ADMIN" : cpaCtx ? "CPA" : "CLIENT"
   const userName = session.user?.name ?? session.user?.email ?? "User"

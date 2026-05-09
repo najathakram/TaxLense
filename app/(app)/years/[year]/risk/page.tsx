@@ -8,6 +8,7 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Button } from "@/components/ui/button"
 import { computeRiskScore, type RiskReport, type RiskSignal } from "@/lib/risk/score"
 import { runLockAssertions, type AssertionRunResult } from "@/lib/validation/assertions"
+import { deriveStage, getYearCounts } from "@/lib/taxYear/status"
 
 interface Props {
   params: Promise<{ year: string }>
@@ -90,10 +91,19 @@ export default async function RiskPage({ params }: Props) {
   })
   if (!taxYear) notFound()
 
-  const [risk, assertions] = await Promise.all([
+  const [risk, assertions, counts] = await Promise.all([
     computeRiskScore(taxYear.id),
     runLockAssertions(taxYear.id),
+    getYearCounts(taxYear.id),
   ])
+
+  // Derive the live stage from row counts so the "Lock Status" pill is honest
+  // even if TaxYear.status hasn't been recomputed since the last classification
+  // pass. Mirrors the year-overview page's chip — both should agree.
+  const derivedStage = deriveStage(
+    { status: taxYear.status, lockedAt: taxYear.lockedAt },
+    counts,
+  )
 
   // Use the same blocker count the score uses internally so the UI doesn't drift.
   // Combine assertion blockers + risk-signal blockers, deduplicated by id.
@@ -137,7 +147,7 @@ export default async function RiskPage({ params }: Props) {
         <Card>
           <CardHeader><CardTitle className="text-sm text-muted-foreground">Lock Status</CardTitle></CardHeader>
           <CardContent>
-            <div className="text-lg font-bold">{taxYear.status}</div>
+            <div className="text-lg font-bold">{derivedStage}</div>
             <Button asChild size="sm" className="mt-2" disabled={hasBlockers}>
               <Link href={`/years/${year}/lock`}>{hasBlockers ? `${blockedCount} blocker${blockedCount === 1 ? "" : "s"}` : "Attempt lock"}</Link>
             </Button>

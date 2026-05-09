@@ -11,8 +11,10 @@
  * === year` rule that A10_YEAR_BOUNDARY enforces, but at query time so
  * existing offenders are excluded from displayed totals.
  *
- * Assertion runners (A10, etc.) intentionally do NOT use this — they need
- * to see ALL rows to detect the leakage. Reports + UI totals always do.
+ * A10 (year-boundary detector) intentionally does NOT use this — its whole
+ * job is to detect the leakage. Every other assertion (A01–A09, A11–A13) and
+ * all reports + UI totals do filter by year window so the numbers shown to
+ * the user agree across pages.
  */
 export function inYearWindow(year: number) {
   return {

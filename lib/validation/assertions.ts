@@ -12,6 +12,7 @@
 import { prisma } from "@/lib/db"
 import type { TransactionCode } from "@/app/generated/prisma/client"
 import { computeDeductibleAmt } from "@/lib/classification/deductible"
+import { inYearWindow } from "@/lib/queries/yearWindow"
 
 export interface AssertionResult {
   id: string
@@ -59,9 +60,23 @@ type LedgerRow = {
   }>
 }
 
+/**
+ * In-year ledger fetch used by A01–A09, A11–A13. Filters to the calendar year
+ * via inYearWindow so the per-assertion totals (A03 deductible, A04 revenue,
+ * A13 deposits) match the dashboard / Schedule C / P&L numbers — without this
+ * filter, out-of-year leakage from cross-boundary statements (a 2024-12 →
+ * 2025-01 PDF, etc.) inflates the totals and the user sees A03=$42K while
+ * the dashboard shows $38K. A10 keeps its own no-filter query because *its
+ * job* is to detect the leakage.
+ */
 async function loadLedger(taxYearId: string) {
+  const ty = await prisma.taxYear.findUnique({
+    where: { id: taxYearId },
+    select: { year: true },
+  })
+  const yearWindow = ty ? inYearWindow(ty.year) : {}
   return prisma.transaction.findMany({
-    where: { taxYearId, isSplit: false, isStale: false },
+    where: { taxYearId, isSplit: false, isStale: false, ...yearWindow },
     include: { classifications: { where: { isCurrent: true }, take: 1 } },
   }) as unknown as Promise<LedgerRow[]>
 }
@@ -176,8 +191,13 @@ export async function A06_PAYMENT_ZERO(taxYearId: string): Promise<AssertionResu
 }
 
 export async function A07_TRANSFER_PAIRED(taxYearId: string): Promise<AssertionResult> {
+  const ty = await prisma.taxYear.findUnique({
+    where: { id: taxYearId },
+    select: { year: true },
+  })
+  const yearWindow = ty ? inYearWindow(ty.year) : {}
   const txns = await prisma.transaction.findMany({
-    where: { taxYearId, isSplit: false, isStale: false },
+    where: { taxYearId, isSplit: false, isStale: false, ...yearWindow },
     include: { classifications: { where: { isCurrent: true }, take: 1 } },
   })
   const transfers = txns.filter((t) => t.classifications[0]?.code === "TRANSFER")
@@ -208,7 +228,10 @@ export async function A08_MEAL_274D(taxYearId: string): Promise<AssertionResult>
     name: "MEALS_* rows have §274(d) attendees + purpose",
     passed: offenders.length === 0,
     blocking: true,
-    details: offenders.length === 0 ? "All meals substantiated" : `${offenders.length} meal rows missing attendees/purpose`,
+    details:
+      offenders.length === 0
+        ? "All meals substantiated"
+        : `${offenders.length} meal row${offenders.length === 1 ? "" : "s"} missing attendees/purpose`,
     offendingTransactionIds: offenders,
   }
 }
@@ -251,8 +274,13 @@ export async function A10_YEAR_BOUNDARY(taxYearId: string): Promise<AssertionRes
 }
 
 export async function A11_REFUND_NET_ZERO(taxYearId: string): Promise<AssertionResult> {
+  const ty = await prisma.taxYear.findUnique({
+    where: { id: taxYearId },
+    select: { year: true },
+  })
+  const yearWindow = ty ? inYearWindow(ty.year) : {}
   const txns = await prisma.transaction.findMany({
-    where: { taxYearId, isSplit: false, isStale: false, isRefundPairedWith: { not: null } },
+    where: { taxYearId, isSplit: false, isStale: false, isRefundPairedWith: { not: null }, ...yearWindow },
     select: { id: true, amountNormalized: true, isRefundPairedWith: true },
   })
   const byPair = new Map<string, number>()
@@ -292,8 +320,13 @@ export async function A12_HOME_OFFICE_SIMPLIFIED(taxYearId: string): Promise<Ass
 export async function A13_DEPOSITS_RECONSTRUCTED(taxYearId: string): Promise<AssertionResult> {
   // Spec §12.1: Σ inflows − paired transfers − classified gifts/loans/refunds − BIZ_INCOME
   // If |delta| > $500 → CRITICAL block
+  const ty = await prisma.taxYear.findUnique({
+    where: { id: taxYearId },
+    select: { year: true },
+  })
+  const yearWindow = ty ? inYearWindow(ty.year) : {}
   const txns = await prisma.transaction.findMany({
-    where: { taxYearId, isSplit: false, isStale: false, amountNormalized: { lt: 0 } }, // inflows only
+    where: { taxYearId, isSplit: false, isStale: false, amountNormalized: { lt: 0 }, ...yearWindow }, // inflows only
     include: { classifications: { where: { isCurrent: true }, take: 1 } },
   })
   let totalInflows = 0
@@ -322,12 +355,20 @@ export async function A13_DEPOSITS_RECONSTRUCTED(taxYearId: string): Promise<Ass
   const explained = pairedTransfers + bizIncome + classifiedNonIncome
   const delta = totalInflows - explained - unclassified
   const passed = unclassified < 500 && Math.abs(delta) < 500
+  // Lead with the actual reason for failure when one is present — without
+  // this, the row reads "Δ 0.00" while still showing ✗, which makes it look
+  // like the assertion is buggy rather than blocked by unclassified inflows.
+  const reason = !passed
+    ? unclassified >= 500
+      ? `${unclassified < 1000 ? "" : "$"}${unclassified.toFixed(2)} of inflows still unclassified`
+      : `inflows don't reconcile (Δ $${delta.toFixed(2)})`
+    : null
   return {
     id: "A13",
     name: "Deposits reconstruction (§12.1)",
     passed,
     blocking: true,
-    details: `Inflows $${totalInflows.toFixed(2)} = transfers $${pairedTransfers.toFixed(2)} + biz income $${bizIncome.toFixed(2)} + other $${classifiedNonIncome.toFixed(2)} + unclassified $${unclassified.toFixed(2)} (Δ ${delta.toFixed(2)})`,
+    details: `${reason ? reason + " — " : ""}Inflows $${totalInflows.toFixed(2)} = transfers $${pairedTransfers.toFixed(2)} + biz income $${bizIncome.toFixed(2)} + other $${classifiedNonIncome.toFixed(2)} + unclassified $${unclassified.toFixed(2)} (Δ ${delta.toFixed(2)})`,
   }
 }
 
