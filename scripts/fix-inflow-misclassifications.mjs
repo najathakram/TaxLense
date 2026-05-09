@@ -25,6 +25,11 @@
 
 import "dotenv/config"
 import pg from "pg"
+import { randomBytes } from "node:crypto"
+
+function newCuidish() {
+  return "cmcleanup" + randomBytes(16).toString("hex")
+}
 
 const isForce = process.argv.includes("--force")
 if (process.env.RUN_INFLOW_CLEANUP !== "true" && !isForce) {
@@ -95,16 +100,25 @@ try {
         `UPDATE "Classification" SET "isCurrent" = false WHERE id = $1`,
         [row.classification_id],
       )
-      // Insert fresh NEEDS_CONTEXT row
+      // Insert fresh NEEDS_CONTEXT row.
+      // Classification is append-only — schema.prisma intentionally omits
+      // @updatedAt (CLAUDE.md "Do NOT add @updatedAt to Classification"),
+      // so the INSERT must NOT reference an updatedAt column. The earlier
+      // version of this script tried to write updatedAt and crashed every
+      // row with PG error 42703 ("column does not exist"). gen_random_uuid()
+      // also doesn't match Prisma's cuid() format used elsewhere, so we
+      // generate the id with a Postgres concat that matches the cuid shape
+      // closely enough for the row-level uniqueness constraint.
       await client.query(
         `INSERT INTO "Classification" (
           id, "transactionId", code, "scheduleCLine", "businessPct", "ircCitations",
-          confidence, "evidenceTier", source, reasoning, "isCurrent", "createdAt", "updatedAt"
+          confidence, "evidenceTier", source, reasoning, "isCurrent", "createdAt"
         ) VALUES (
-          gen_random_uuid()::text, $1, 'NEEDS_CONTEXT', NULL, 0, ARRAY[]::text[],
-          0.0, 3, 'AI', $2, true, NOW(), NOW()
+          $1, $2, 'NEEDS_CONTEXT', NULL, 0, ARRAY[]::text[],
+          0.0, 3, 'AI', $3, true, NOW()
         )`,
         [
+          newCuidish(),
           row.transaction_id,
           `Cleanup: prior code ${row.code} on inflow ${row.amount} demoted to NEEDS_CONTEXT (inflows cannot be deductible). Re-run the autonomous CPA agent to re-classify.`,
         ],
