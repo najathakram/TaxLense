@@ -12,6 +12,7 @@ import { aiSuggestionFromResolution } from "@/lib/stops/aiSuggestion"
 import type { ProgressReporter } from "@/lib/jobs/pipelineRun"
 import { recomputeStatus } from "@/lib/taxYear/status"
 import { deriveStopsFromAssertions } from "@/lib/stops/deriveFromAssertions"
+import { archiveSupersededStopsForYear } from "@/lib/stops/archiveSuperseded"
 export type { StopAnswer } from "@/lib/stops/derive"
 
 
@@ -155,6 +156,10 @@ export async function resolveStop(
     // hard-fail those at the ceiling.
     { timeout: 120_000 }
   )
+
+  // Auto-archive any other PENDING STOPs whose underlying transactions are
+  // now classified by this resolution (B-09). Cheap; idempotent.
+  await archiveSupersededStopsForYear(stopBefore.taxYearId)
 
   // Auto-advance the year's stage now that one more STOP is gone (may flip
   // CLASSIFICATION → REVIEW if this was the last pending STOP and every row

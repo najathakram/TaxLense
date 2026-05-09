@@ -8,6 +8,7 @@ import { MAX_SPLITS_PER_TRANSACTION } from "@/lib/splits/config"
 import { batchCategorizeMerchants } from "@/lib/ai/merchantCategories"
 import { recomputeStatus } from "@/lib/taxYear/status"
 import { fmtUSD } from "@/lib/format/currency"
+import { archiveSupersededStopsForYear } from "@/lib/stops/archiveSuperseded"
 
 export async function fetchMerchantCategories(
   year: number,
@@ -92,7 +93,10 @@ export async function editClassification(year: number, edit: SingleEdit) {
     })
   })
 
-  if (taxYearId) await recomputeStatus(taxYearId)
+  if (taxYearId) {
+    await archiveSupersededStopsForYear(taxYearId)
+    await recomputeStatus(taxYearId)
+  }
   revalidatePath(`/years/${year}`)
   revalidatePath(`/years/${year}/ledger`)
 }
@@ -170,7 +174,10 @@ export async function bulkReclassify(year: number, edit: BulkEdit) {
     { timeout: 60_000 }
   )
 
-  if (taxYearId) await recomputeStatus(taxYearId)
+  if (taxYearId) {
+    await archiveSupersededStopsForYear(taxYearId)
+    await recomputeStatus(taxYearId)
+  }
   revalidatePath(`/years/${year}`)
   revalidatePath(`/years/${year}/ledger`)
   return { updated }
@@ -290,7 +297,10 @@ export async function splitTransaction(year: number, parentId: string, splits: S
     })
   })
 
-  if (taxYearId) await recomputeStatus(taxYearId)
+  if (taxYearId) {
+    await archiveSupersededStopsForYear(taxYearId)
+    await recomputeStatus(taxYearId)
+  }
   revalidatePath(`/years/${year}`)
   revalidatePath(`/years/${year}/ledger`)
 }
@@ -420,7 +430,10 @@ export async function applyReclassification(
     { timeout: 60_000 }
   )
 
-  if (taxYearId) await recomputeStatus(taxYearId)
+  if (taxYearId) {
+    await archiveSupersededStopsForYear(taxYearId)
+    await recomputeStatus(taxYearId)
+  }
   revalidatePath(`/years/${year}`)
   revalidatePath(`/years/${year}/ledger`)
   return { updated, rulesUpdated }
