@@ -12,7 +12,7 @@ import { Label } from "@/components/ui/label"
 import { Switch } from "@/components/ui/switch"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { SCHEDULE_C_LINES } from "@/lib/classification/constants"
-import { resolveStop, deferStop, type StopAnswer } from "./actions"
+import { resolveStop, deferStop, archiveSupersededStops, type StopAnswer } from "./actions"
 import { runAutoResolveStops, getPipelineRunStatus } from "@/app/(app)/years/[year]/pipeline/actions"
 import { FloatingProgress } from "@/components/pipeline/floating-progress"
 
@@ -164,7 +164,7 @@ export function StopsClient({ year, stops }: { year: number; stops: SerializedSt
       />
 
       {/* Auto-resolve banner */}
-      <div className="flex items-center justify-between gap-4 border rounded p-3 bg-muted/30">
+      <div className="flex items-center justify-between gap-4 border rounded p-3 bg-muted/30 flex-wrap">
         <div className="text-sm flex items-center gap-3 flex-wrap">
           <span className="font-medium">{totalPending} pending stops</span>
           <span className="text-muted-foreground">— AI (Sonnet) will auto-resolve high-confidence items (≥85%)</span>
@@ -180,9 +180,15 @@ export function StopsClient({ year, stops }: { year: number; stops: SerializedSt
             </button>
           )}
         </div>
-        <Button size="sm" disabled={autoBusy || totalPending === 0} onClick={onAutoResolve}>
-          {autoBusy ? "Resolving…" : "Auto-resolve with AI"}
-        </Button>
+        <div className="flex gap-2">
+          <ArchiveSupersededButton
+            year={year}
+            disabled={autoBusy || totalPending === 0}
+          />
+          <Button size="sm" disabled={autoBusy || totalPending === 0} onClick={onAutoResolve}>
+            {autoBusy ? "Resolving…" : "Auto-resolve with AI"}
+          </Button>
+        </div>
       </div>
     <Tabs defaultValue="MERCHANT" className="w-full">
       <TabsList className="grid w-full grid-cols-5">
@@ -202,6 +208,56 @@ export function StopsClient({ year, stops }: { year: number; stops: SerializedSt
         </TabsContent>
       ))}
     </Tabs>
+    </div>
+  )
+}
+
+/**
+ * "Archive superseded STOPs" button — clears legacy STOPs whose underlying
+ * transactions now have a current Classification (i.e. the autonomous CPA
+ * agent has already decided them). Use after running the agent if the
+ * inline archival hook didn't fire (Atif's prod ledger surfaced this case).
+ */
+function ArchiveSupersededButton({
+  year,
+  disabled,
+}: {
+  year: number
+  disabled: boolean
+}) {
+  const [busy, setBusy] = useState(false)
+  const [result, setResult] = useState<{ archived: number; skipped: number } | null>(null)
+  const [error, setError] = useState<string | null>(null)
+  return (
+    <div className="flex flex-col items-end gap-1">
+      <Button
+        size="sm"
+        variant="outline"
+        disabled={busy || disabled}
+        onClick={async () => {
+          setBusy(true)
+          setError(null)
+          try {
+            const r = await archiveSupersededStops(year)
+            setResult(r)
+            // Reload so counts on this page update from the server-rendered version.
+            setTimeout(() => window.location.reload(), 800)
+          } catch (e) {
+            setError(e instanceof Error ? e.message : String(e))
+          } finally {
+            setBusy(false)
+          }
+        }}
+        title="Archive STOPs whose transactions are already classified by the autonomous agent"
+      >
+        {busy ? "Archiving…" : "Archive superseded"}
+      </Button>
+      {result && (
+        <span className="text-[11px] text-muted-foreground">
+          {result.archived} archived · {result.skipped} skipped
+        </span>
+      )}
+      {error && <span className="text-[11px] text-red-600">{error}</span>}
     </div>
   )
 }

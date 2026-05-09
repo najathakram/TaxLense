@@ -424,6 +424,107 @@ export async function autoResolveStops(
   return { resolved, skipped, errors, details }
 }
 
+// ---------- archiveSupersededStops ----------
+
+/**
+ * Archive PENDING StopItems whose underlying transactions now have a current
+ * Classification. The autonomous CPA agent owns the canonical classification
+ * for every in-year transaction; once it's classified, any legacy STOP from
+ * the old multi-stage pipeline is by definition superseded — the agent's
+ * decision is the truth.
+ *
+ * The same logic is supposed to run inline at the end of `runCpaAgent`, but
+ * the in-agent hook didn't fire on Atif's prod ledger and 90+ STOPs stayed
+ * PENDING after the agent run completed cleanly. This action lets the user
+ * (or CPA) click a button to clear the legacy STOPs without re-running the
+ * whole agent.
+ *
+ * Returns { archived, skipped } so the UI can show what happened.
+ */
+export async function archiveSupersededStops(year: number): Promise<{
+  archived: number
+  skipped: number
+}> {
+  const userId = await getCurrentUserId()
+  const taxYear = await prisma.taxYear.findUnique({
+    where: { userId_year: { userId, year } },
+    select: { id: true, year: true },
+  })
+  if (!taxYear) throw new Error(`No tax year ${year}`)
+
+  const stops = await prisma.stopItem.findMany({
+    where: { taxYearId: taxYear.id, state: "PENDING" },
+    select: { id: true, transactionIds: true },
+  })
+
+  let archived = 0
+  let skipped = 0
+
+  for (const stop of stops) {
+    if (stop.transactionIds.length === 0) {
+      // Empty STOP — archive as a holdover edge case
+      await prisma.stopItem.update({
+        where: { id: stop.id },
+        data: {
+          state: "ANSWERED",
+          answeredAt: new Date(),
+          userAnswer: {
+            cpaAgentSupersededByButton: true,
+            archivedAt: new Date().toISOString(),
+            reason: "Empty STOP (no transactions) — archived by user.",
+          } as Prisma.InputJsonValue,
+        },
+      })
+      archived++
+      continue
+    }
+
+    const classifiedCount = await prisma.classification.count({
+      where: {
+        transactionId: { in: stop.transactionIds },
+        isCurrent: true,
+      },
+    })
+    if (classifiedCount === 0) {
+      skipped++
+      continue
+    }
+
+    await prisma.stopItem.update({
+      where: { id: stop.id },
+      data: {
+        state: "ANSWERED",
+        answeredAt: new Date(),
+        userAnswer: {
+          cpaAgentSupersededByButton: true,
+          archivedAt: new Date().toISOString(),
+          reason: `${classifiedCount} of ${stop.transactionIds.length} underlying transactions classified — STOP superseded.`,
+        } as Prisma.InputJsonValue,
+      },
+    })
+    archived++
+  }
+
+  await prisma.auditEvent.create({
+    data: {
+      userId,
+      actorType: "USER",
+      eventType: "STOPS_ARCHIVED_AS_SUPERSEDED",
+      entityType: "TaxYear",
+      entityId: taxYear.id,
+      afterState: { archived, skipped, scanned: stops.length } as Prisma.InputJsonValue,
+      rationale: `User clicked "Archive superseded STOPs" — ${archived} archived, ${skipped} skipped (no classifications).`,
+    },
+  })
+
+  await recomputeStatus(taxYear.id)
+  revalidatePath(`/years/${year}`)
+  revalidatePath(`/years/${year}/stops`)
+  revalidatePath(`/years/${year}/risk`)
+
+  return { archived, skipped }
+}
+
 // ---------- deferStop ----------
 
 export async function deferStop(stopId: string) {
