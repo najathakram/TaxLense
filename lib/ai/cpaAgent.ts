@@ -543,6 +543,15 @@ ${notesBlock}
   GRAY with §163(h) until card-purpose confirmed.
 - NEVER classify a merchant as MEALS_50 or MEALS_100 with businessPct=0.
   A 0%-business meal is PERSONAL with §262.
+- INFLOWS (negative amount in our convention — money INTO the account)
+  can NEVER carry a deductible code. WRITE_OFF / WRITE_OFF_COGS /
+  WRITE_OFF_TRAVEL / MEALS_50 / MEALS_100 / GRAY all describe outflows.
+  An inflow on a Wise / payment-processor row is most often a TRANSFER
+  (owner top-up from Chase) or a refund/reversal, not a deduction.
+  When you see an inflow without clear context, prefer TRANSFER (if
+  mid-account-to-account pattern), BIZ_INCOME (if from a customer/
+  marketplace), PERSONAL, or NEEDS_CONTEXT. Never WRITE_OFF on a
+  positive-into-account row.
 - Card payments + transfers between the taxpayer's own accounts are
   already paired (excluded from this chunk). Don't classify them.
 

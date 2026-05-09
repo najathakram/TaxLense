@@ -14,9 +14,15 @@ import type { Transaction, FinancialAccount } from "@/app/generated/prisma/clien
 type TxWithAccount = Transaction & { account: FinancialAccount }
 
 
-const WINDOW_DAYS = 5
+// Widened from 5 → 7 days. ACH transfers initiated late in the day, Wise
+// cross-border top-ups, and weekend gaps push real same-amount pairs outside
+// a 5-day window — Atif's prod ledger left 45 transfers unpaired (A07 lock
+// blocker), many of which were Wise top-ups landing 6 days after the Chase
+// outflow. The exact-cents match remains the strong signal so widening the
+// date doesn't introduce false positives.
+const WINDOW_DAYS = 7
 const STOP_THRESHOLD_CENTS = 50000 // $500.00 in cents
-const TRANSFER_KEYWORDS = /zelle|venmo|transfer|move|xfer|ach|wire/i
+const TRANSFER_KEYWORDS = /zelle|venmo|transfer|move|xfer|ach|wire|wise|topup|top up/i
 
 // --------------------------------------------------------------------------
 // Score a candidate inflow against an outflow (higher = better match)

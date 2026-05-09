@@ -113,6 +113,30 @@ export async function applyMerchantRules(
     let citations = [...rule.ircCitations]
     let reasoning = rule.reasoning ?? `Classified by Merchant Intelligence rule for ${rule.merchantKey}.`
 
+    // Defensive cross-field invariant — same shape as the CPA agent's
+    // round-2 fix. A MerchantRule code like WRITE_OFF or WRITE_OFF_COGS is
+    // valid for the merchant in general, but if THIS row is an inflow
+    // (Wise top-up, refund, transfer reversal, etc.) the code is wrong.
+    // Without this check, a Wise rule of WRITE_OFF_COGS gets stamped on
+    // every Wise row regardless of sign — which is what showed Wise
+    // inflows as "WRITE_OFF" on Atif's prod ledger. Inflows fall through
+    // to NEEDS_CONTEXT so the user / next AI pass sees them.
+    const amtSign = Number(tx.amountNormalized.toString())
+    const isInflow = amtSign < 0
+    const DEDUCTIBLE_FOR_INVARIANT: TransactionCode[] = [
+      "WRITE_OFF",
+      "WRITE_OFF_TRAVEL",
+      "WRITE_OFF_COGS",
+      "MEALS_50",
+      "MEALS_100",
+      "GRAY",
+    ]
+    if (isInflow && DEDUCTIBLE_FOR_INVARIANT.includes(code)) {
+      code = "NEEDS_CONTEXT"
+      pct = 0
+      reasoning = `Inflow row — rule code "${rule.code}" is for outflows; demoted to NEEDS_CONTEXT for review.`
+    }
+
     // Trip override logic (spec §3.2)
     if (rule.appliesTripOverride && !rule.requiresHumanInput) {
       const activeTrip = trips.find((t) => dateInTrip(tx.postedDate, t))
