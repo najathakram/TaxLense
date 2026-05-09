@@ -184,7 +184,13 @@ export async function matchTransfers(taxYearId: string): Promise<MatchTransfersR
     paired++
   }
 
-  // STOP items for unmatched outflows > $500 with transfer-like keywords
+  // STOP items for unmatched outflows > $500 with transfer-like keywords.
+  // De-dupe against existing STOPs first — without this, every Run autonomous
+  // CPA click triggers another matchTransfers pass that creates a NEW STOP
+  // for each unmatched outflow. On Atif's prod ledger 7 outflows became
+  // 7→14→21 STOPs across three clicks. We only create a STOP if the txn
+  // doesn't already have a TRANSFER-category StopItem in any state (PENDING /
+  // ANSWERED / DEFERRED — already-resolved STOPs shouldn't be re-created).
   const pairedOutIds = new Set(pairs.map((p) => p.out.id))
   const unmatchedTransferOutflows = outflows.filter(
     (t) =>
@@ -193,9 +199,18 @@ export async function matchTransfers(taxYearId: string): Promise<MatchTransfersR
       toCents(t.amountNormalized) >= STOP_THRESHOLD_CENTS &&
       TRANSFER_KEYWORDS.test(t.merchantRaw)
   )
+  const existingTransferStops = await prisma.stopItem.findMany({
+    where: { taxYearId, category: "TRANSFER" },
+    select: { transactionIds: true },
+  })
+  const txnsAlreadyHaveStop = new Set<string>()
+  for (const s of existingTransferStops) {
+    for (const id of s.transactionIds) txnsAlreadyHaveStop.add(id)
+  }
 
   let stopItemsCreated = 0
   for (const t of unmatchedTransferOutflows) {
+    if (txnsAlreadyHaveStop.has(t.id)) continue
     const amountFormatted = (toCents(t.amountNormalized) / 100).toFixed(2)
     await prisma.stopItem.create({
       data: {
