@@ -10,6 +10,8 @@
 
 import { prisma } from "@/lib/db"
 import { benchmarksForNaics, type IrsBenchmark } from "./irsBenchmarks"
+import { computeDeductibleAmt } from "@/lib/classification/deductible"
+import { inYearWindow } from "@/lib/queries/yearWindow"
 
 // ---------------------------------------------------------------------------
 // Types
@@ -106,20 +108,6 @@ function monthKey(d: Date): string {
   return `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, "0")}`
 }
 
-function deductibleMultiplier(code: string): number {
-  if (code === "MEALS_50") return 0.5
-  if (code === "MEALS_100") return 1
-  return 1
-}
-
-const DEDUCTIBLE_CODES = new Set([
-  "WRITE_OFF",
-  "WRITE_OFF_TRAVEL",
-  "WRITE_OFF_COGS",
-  "MEALS_50",
-  "MEALS_100",
-])
-
 // ---------------------------------------------------------------------------
 // Core builder
 // ---------------------------------------------------------------------------
@@ -135,13 +123,17 @@ export async function buildAnalytics(taxYearId: string): Promise<AnalyticsDatase
     select: { naicsCode: true, vehicleConfig: true },
   })
 
-  // All non-split transactions with their current classification (if any)
+  // All non-split, IN-YEAR transactions with their current classification.
+  // Without inYearWindow analytics inflated deductions by counting cross-
+  // year-boundary leaked rows (Atif's prod showed $72K analytics vs $38K
+  // dashboard, a $34K discrepancy from ~51 out-of-year rows).
   const txns = await prisma.transaction.findMany({
     where: {
       taxYearId,
       isSplit: false,
       isStale: false,
       isDuplicateOf: null,
+      ...inYearWindow(taxYear.year),
     },
     select: {
       id: true,
@@ -173,15 +165,15 @@ export async function buildAnalytics(taxYearId: string): Promise<AnalyticsDatase
     },
   })
 
-  // Precompute per-txn deductible amount
+  // Precompute per-txn deductible amount via the canonical helper. Using a
+  // local copy of the formula caused the analytics page to disagree with
+  // the risk dashboard / A03 / Schedule C — most painfully, Math.abs on the
+  // amount counted inflows mis-classified as WRITE_OFF as deductions.
   const annotated = txns.map((t) => {
     const amt = Number(t.amountNormalized.toString()) // outflow +, inflow -
     const cls = t.classifications[0] ?? null
     const isInflow = amt < 0
-    const isDeductible = cls ? DEDUCTIBLE_CODES.has(cls.code) : false
-    const deductible = isDeductible
-      ? Math.abs(amt) * (cls!.businessPct / 100) * deductibleMultiplier(cls!.code)
-      : 0
+    const deductible = cls ? computeDeductibleAmt(amt, cls.code, cls.businessPct) : 0
     const isIncome = cls?.code === "BIZ_INCOME" || (isInflow && cls?.code !== "TRANSFER" && cls?.code !== "PAYMENT" && cls?.code !== "PERSONAL")
     const income = cls?.code === "BIZ_INCOME" ? Math.abs(amt) : 0
     return { ...t, amt, cls, deductible, income, isInflow, isIncome }

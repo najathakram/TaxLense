@@ -4,6 +4,7 @@ import { notFound } from "next/navigation"
 import { buildAnalytics } from "@/lib/analytics/build"
 import { AnalyticsDashboard } from "@/components/charts/analytics-dashboard"
 import { Badge } from "@/components/ui/badge"
+import { deriveStage, getYearCounts } from "@/lib/taxYear/status"
 
 interface Props {
   params: Promise<{ year: string }>
@@ -17,9 +18,18 @@ export default async function AnalyticsPage({ params }: Props) {
 
   const taxYear = await prisma.taxYear.findUnique({
     where: { userId_year: { userId, year } },
-    select: { id: true, year: true, status: true },
+    select: { id: true, year: true, status: true, lockedAt: true },
   })
   if (!taxYear) notFound()
+
+  // Derive the live stage so the badge agrees with the year-overview chip.
+  // Reading raw taxYear.status leaves the analytics page reporting "INGESTION"
+  // long after row counts say CLASSIFICATION (same drift Bug #1 fixed elsewhere).
+  const counts = await getYearCounts(taxYear.id)
+  const derivedStage = deriveStage(
+    { status: taxYear.status, lockedAt: taxYear.lockedAt },
+    counts,
+  )
 
   const data = await buildAnalytics(taxYear.id)
 
@@ -32,7 +42,7 @@ export default async function AnalyticsPage({ params }: Props) {
             Tax Year {year} · computed {new Date(data.computedAt).toLocaleString()}
           </p>
         </div>
-        <Badge variant="outline">{taxYear.status}</Badge>
+        <Badge variant="outline">{derivedStage}</Badge>
       </div>
       <AnalyticsDashboard data={data} />
     </div>

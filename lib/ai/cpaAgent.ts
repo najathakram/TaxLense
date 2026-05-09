@@ -324,6 +324,55 @@ export async function runCpaAgent(taxYearId: string, opts: CpaAgentOptions = {})
     }
   }
 
+  // ── Archive legacy PENDING STOPs that this run has now classified ──────
+  //
+  // Critical unblocker: pre-Phase-1 ledgers carry STOPs from the old multi-
+  // stage pipeline. The CPA agent re-classifies the underlying transactions
+  // cleanly, but the StopItem rows persist as PENDING — and each PENDING
+  // STOP is itself a lock blocker (Critical signal). Without this step the
+  // year stays unfileable forever even after the user runs the canonical
+  // CTA.
+  //
+  // We mark every PENDING STOP whose transactions the agent just classified
+  // as ANSWERED with a `cpaAgentArchived: true` userAnswer so the audit
+  // history records that the new agent superseded the old STOP.
+  const classifiedTxIds = new Set(allDecisions.map((d) => d.txId))
+  const pendingStopsForArchive = await prisma.stopItem.findMany({
+    where: { taxYearId, state: "PENDING" },
+    select: { id: true, transactionIds: true },
+  })
+  let archivedStops = 0
+  for (const stop of pendingStopsForArchive) {
+    // Archive only if at least one of the STOP's underlying transactions
+    // was classified by this agent run. Empty STOPs (transactionIds = [])
+    // are also archived since they're holdovers from edge cases.
+    const hasClassifiedTx =
+      stop.transactionIds.length === 0 ||
+      stop.transactionIds.some((id) => classifiedTxIds.has(id))
+    if (!hasClassifiedTx) continue
+    await prisma.stopItem.update({
+      where: { id: stop.id },
+      data: {
+        state: "ANSWERED",
+        answeredAt: new Date(),
+        userAnswer: {
+          cpaAgentArchived: true,
+          archivedAt: new Date().toISOString(),
+          reason: "Superseded by autonomous CPA agent classification",
+        } as Prisma.InputJsonValue,
+      },
+    })
+    archivedStops++
+  }
+  if (archivedStops > 0 && reporter) {
+    await reporter({
+      phase: "cpa_agent",
+      processed: chunks.length,
+      total: chunks.length,
+      label: `Archived ${archivedStops} legacy STOP${archivedStops === 1 ? "" : "s"} superseded by this run`,
+    })
+  }
+
   // ── Phase D — Sanity sweep + audit memo ─────────────────────────────────
 
   if (reporter) {
@@ -345,7 +394,12 @@ export async function runCpaAgent(taxYearId: string, opts: CpaAgentOptions = {})
   })
 
   // Persist the memo as a Document so it surfaces under /clients/<id>/documents.
+  // If creation fails (schema drift, unique-constraint collision, etc.) we
+  // record the failure as an AuditEvent so the user has a surface to diagnose
+  // — silently swallowing the error left users staring at "Other · 0" with
+  // no signal that the run had even completed.
   let memoDocumentId: string | null = null
+  let memoCreateError: string | null = null
   try {
     const memoDoc = await prisma.document.create({
       data: {
@@ -363,7 +417,25 @@ export async function runCpaAgent(taxYearId: string, opts: CpaAgentOptions = {})
     })
     memoDocumentId = memoDoc.id
   } catch (err) {
+    memoCreateError = err instanceof Error ? err.message : String(err)
     console.error("[cpaAgent] failed to persist audit memo as Document:", err)
+    // Surface the failure as its own audit event so the run history shows
+    // *why* no memo appeared. Otherwise the user has no way to tell the
+    // difference between "memo failed" and "agent never ran."
+    await prisma.auditEvent.create({
+      data: {
+        userId: taxYear.userId,
+        actorType: "AI",
+        eventType: "CPA_AGENT_MEMO_FAILED",
+        entityType: "TaxYear",
+        entityId: taxYearId,
+        afterState: {
+          error: memoCreateError,
+          decisionsCount: allDecisions.length,
+        } as Prisma.InputJsonValue,
+        rationale: `Audit memo Document.create threw: ${memoCreateError.slice(0, 300)}`,
+      },
+    })
   }
 
   // Audit event for the run.
@@ -379,6 +451,8 @@ export async function runCpaAgent(taxYearId: string, opts: CpaAgentOptions = {})
         rowsClassified: allDecisions.length,
         leftAsPersonal,
         memoDocumentId,
+        memoCreateError,
+        archivedStops,
         chunks: chunks.length,
       } as Prisma.InputJsonValue,
       rationale: memo.summary.slice(0, 500),
@@ -632,6 +706,32 @@ async function classifyChunkAsCpa(
       finalCode = "PERSONAL"
       finalPct = 0
       finalNotClaimed = finalNotClaimed ?? "Meal with 0% business use cannot be deducted; defaulted to PERSONAL."
+    }
+    // Inflows can NEVER be deductible-coded. The agent saw Wise inflows
+    // (+$1853.15 etc.) and tagged them WRITE_OFF / WRITE_OFF_COGS because
+    // it pattern-matched on "Wise" → supplier rail without checking the
+    // sign of the amount. Force inflows to a non-deductible code so the
+    // analytics + Schedule C totals can't double-count them. NEEDS_CONTEXT
+    // surfaces these to the user instead of silently disappearing them.
+    const inputTx = txns[i]
+    const amtSign =
+      inputTx ? Number(inputTx.amountNormalized.toString()) : 0
+    const isInflow = amtSign < 0
+    const DEDUCTIBLE_FOR_INVARIANT = new Set<TransactionCode>([
+      "WRITE_OFF",
+      "WRITE_OFF_TRAVEL",
+      "WRITE_OFF_COGS",
+      "MEALS_50",
+      "MEALS_100",
+      "GRAY",
+    ])
+    if (isInflow && DEDUCTIBLE_FOR_INVARIANT.has(finalCode)) {
+      // Most Wise inflows are owner top-ups from Chase — TRANSFER is the
+      // best default. But we don't have the pairing here, so default to
+      // NEEDS_CONTEXT so the user sees it. The transfer-pairing pass can
+      // upgrade these later.
+      finalCode = "NEEDS_CONTEXT"
+      finalPct = 0
     }
 
     out.push({
