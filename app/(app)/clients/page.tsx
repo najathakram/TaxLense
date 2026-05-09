@@ -7,6 +7,7 @@ import { getAdminCpaContext } from "@/lib/admin/adminContext"
 import { Section, Card, Btn, Pill, Avi } from "@/components/v2/primitives"
 import { fmtUSD, statusKey } from "@/components/v2/format"
 import { computeDeductibleAmt } from "@/lib/classification/deductible"
+import { deriveStage, getYearCounts } from "@/lib/taxYear/status"
 
 export default async function ClientsPage() {
   await requireAuth()
@@ -34,6 +35,7 @@ export default async function ClientsPage() {
               id: true,
               year: true,
               status: true,
+              lockedAt: true,
             },
           },
         },
@@ -41,6 +43,23 @@ export default async function ClientsPage() {
     },
     orderBy: { createdAt: "desc" },
   })
+
+  // B-02: derive a live status pill for every TaxYear from row counts so the
+  // table stops showing "CREATED" for years that already have classifications.
+  // One small query per (client, year); negligible at the firm-overview scale.
+  const derivedStatusByYearId = new Map<string, string>()
+  await Promise.all(
+    clientRels.flatMap((rel) =>
+      rel.client.taxYears.map(async (ty) => {
+        const counts = await getYearCounts(ty.id)
+        const stage = deriveStage(
+          { status: ty.status, lockedAt: ty.lockedAt },
+          counts,
+        )
+        derivedStatusByYearId.set(ty.id, stage)
+      }),
+    ),
+  )
 
   // For each TaxYear, compute total deductions (using shared formula).
   // We do this once per year here; for 50 clients × 4 years = 200 small queries.
@@ -220,7 +239,7 @@ export default async function ClientsPage() {
                                 border: "1px solid var(--hairline)",
                               }}
                             >
-                              <Pill s={statusKey(ty.status)} />
+                              <Pill s={statusKey(derivedStatusByYearId.get(ty.id) ?? ty.status)} />
                               <div className="num" style={{ marginTop: 4, fontSize: 12, color: "var(--fg-1)" }}>
                                 {fmtUSD(total)}
                               </div>

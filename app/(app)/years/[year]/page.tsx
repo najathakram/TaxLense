@@ -5,7 +5,7 @@ import Link from "next/link"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { NextActionCard } from "@/components/pipeline/next-action-card"
-import { deriveStage } from "@/lib/taxYear/status"
+import { deriveStage, getYearCounts } from "@/lib/taxYear/status"
 import { inYearWindow } from "@/lib/queries/yearWindow"
 
 interface Props {
@@ -69,24 +69,8 @@ export default async function YearPage({ params }: Props) {
     .sort((a, b) => b.missingMonthCount - a.missingMonthCount)
   const totalMissingMonths = accountGaps.reduce((n, a) => n + a.missingMonthCount, 0)
 
-  // Counts driving the NextActionCard hero. Match the denominators used on
-  // the pipeline page so the two views agree on "everything classified."
-  // Excluding duplicates from totalTx mirrors lib/taxYear/status.ts and the
-  // pipeline page's stat cards.
-  const [totalTx, classified, pendingStops] = await Promise.all([
-    prisma.transaction.count({
-      where: { taxYearId: taxYear.id, isDuplicateOf: null },
-    }),
-    prisma.classification.count({
-      where: {
-        transaction: { taxYearId: taxYear.id, isDuplicateOf: null },
-        isCurrent: true,
-      },
-    }),
-    prisma.stopItem.count({
-      where: { taxYearId: taxYear.id, state: "PENDING" },
-    }),
-  ])
+  // Canonical counts (B-04). One helper, one filter — every page agrees.
+  const { totalTx, classifiedTx: classified, pendingStops } = await getYearCounts(taxYear.id)
 
   // Derive the live stage from row counts. Belt-and-suspenders against years
   // where TaxYear.status hasn't been recomputed yet (e.g. read traffic before

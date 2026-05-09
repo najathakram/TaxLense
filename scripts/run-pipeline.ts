@@ -11,6 +11,7 @@ import { matchCardPayments } from "../lib/pairing/payments"
 import { matchRefunds } from "../lib/pairing/refunds"
 import { runMerchantIntelligence } from "../lib/ai/merchantIntelligence"
 import { fmtUSD } from "../lib/format/currency"
+import { recomputeStatus } from "../lib/taxYear/status"
 
 const adapter = new PrismaPg({ connectionString: process.env["DATABASE_URL"]! })
 const prisma = new PrismaClient({ adapter })
@@ -67,6 +68,14 @@ async function main() {
   console.log("Step 6: Applying rules…")
   const applyResult = await applyMerchantRules(id)
   console.log(`  ✓ ${applyResult.classified} classified | ${applyResult.tripOverrides} trip overrides | ${applyResult.skipped} skipped\n`)
+
+  // Recompute the persisted year status so every page (including ones reading
+  // the column directly) stays in sync (B-02). Without this, the dashboard
+  // could keep showing CREATED for a year whose ledger is fully classified.
+  const statusResult = await recomputeStatus(id)
+  if (statusResult?.changed) {
+    console.log(`Status: ${statusResult.previous} → ${statusResult.current}\n`)
+  }
 
   // === VERIFICATION REPORT ===
   console.log("=== VERIFICATION REPORT ===\n")
