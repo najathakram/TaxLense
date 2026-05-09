@@ -687,14 +687,23 @@ async function classifyChunkAsCpa(
     JSON.stringify(inputs, null, 0),
   ].join("")
 
-  const callOnce = async (model: typeof MODEL_PRIMARY | typeof MODEL_OPUS) =>
-    client.messages.create({
+  // Anthropic now refuses non-streaming calls when (max_tokens * estimated
+  // time-per-token) could exceed 10 minutes. CHUNK_MAX_TOKENS=32768 trips
+  // that guard with the error "Streaming is required for operations that
+  // may take longer than 10 minutes." Switch to the streaming SDK and
+  // collect the final Message — same shape, no 10-min ceiling. Atif's
+  // round-5 prod reclassify failed all 15 chunks on this guard before the
+  // switch, leaving 0 rows reclassified.
+  const callOnce = async (model: typeof MODEL_PRIMARY | typeof MODEL_OPUS) => {
+    const stream = client.messages.stream({
       model,
       max_tokens: CHUNK_MAX_TOKENS,
       temperature: 0,
       system: systemPrompt,
       messages: [{ role: "user", content: userMsg }],
     })
+    return stream.finalMessage()
+  }
 
   let res
   try {
