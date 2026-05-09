@@ -12,6 +12,7 @@
 import ExcelJS from "exceljs"
 import { prisma } from "@/lib/db"
 import type { TransactionCode } from "@/app/generated/prisma/client"
+import { fmtUSD } from "@/lib/format/currency"
 
 // ARGB fill colors per spec §10.1 code coloring
 const CODE_FILL: Record<TransactionCode, string> = {
@@ -225,7 +226,7 @@ export async function buildMasterLedger(taxYearId: string): Promise<Buffer> {
       ["Primary State", profile.primaryState],
       ["Business Description", profile.businessDescription ?? ""],
       ["Accounting Method", profile.accountingMethod],
-      ["Gross Receipts Estimate", profile.grossReceiptsEstimate ? `$${Number(profile.grossReceiptsEstimate).toFixed(2)}` : ""],
+      ["Gross Receipts Estimate", profile.grossReceiptsEstimate ? fmtUSD(Number(profile.grossReceiptsEstimate), { cents: true }) : ""],
       ["First Year", profile.firstYear ? "Yes" : "No"],
       ["Revenue Streams", profile.revenueStreams.join(", ")],
       ["Home Office", ho?.has ? `Yes — ${ho.method ?? "SIMPLIFIED"}, ${ho.officeSqft ?? 0} sqft` : "No"],

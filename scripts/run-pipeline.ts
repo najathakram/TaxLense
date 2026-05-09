@@ -10,6 +10,7 @@ import { matchTransfers } from "../lib/pairing/transfers"
 import { matchCardPayments } from "../lib/pairing/payments"
 import { matchRefunds } from "../lib/pairing/refunds"
 import { runMerchantIntelligence } from "../lib/ai/merchantIntelligence"
+import { fmtUSD } from "../lib/format/currency"
 
 const adapter = new PrismaPg({ connectionString: process.env["DATABASE_URL"]! })
 const prisma = new PrismaClient({ adapter })
@@ -98,9 +99,9 @@ async function main() {
   console.log("\n=== SAMPLE CLASSIFICATIONS (latest 20) ===\n")
   sample.forEach((c) => {
     const date = c.transaction.postedDate.toISOString().slice(0, 10)
-    const amt = Number(c.transaction.amountNormalized.toString()).toFixed(2)
+    const amt = fmtUSD(Number(c.transaction.amountNormalized.toString()), { cents: true })
     console.log(
-      `[${date}] ${c.transaction.merchantNormalized ?? c.transaction.merchantRaw} | $${amt}` +
+      `[${date}] ${c.transaction.merchantNormalized ?? c.transaction.merchantRaw} | ${amt}` +
       `\n    code=${c.code} | pct=${c.businessPct} | confidence=${c.confidence.toFixed(2)} | tier=${c.evidenceTier}` +
       `\n    citations=${c.ircCitations.join(", ")}` +
       `\n    reasoning=${(c.reasoning ?? "").slice(0, 120)}`
@@ -132,8 +133,8 @@ async function main() {
       seen.add(t.id)
       if (t.isTransferPairedWith) seen.add(t.isTransferPairedWith)
       const date = t.postedDate.toISOString().slice(0, 10)
-      const amt = Number(t.amountNormalized.toString()).toFixed(2)
-      console.log(`[${date}] ${t.account.nickname ?? t.account.institution} $${amt}: "${t.merchantRaw}" ↔ pair=${t.isTransferPairedWith?.slice(0, 8)}…`)
+      const amt = fmtUSD(Number(t.amountNormalized.toString()), { cents: true })
+      console.log(`[${date}] ${t.account.nickname ?? t.account.institution} ${amt}: "${t.merchantRaw}" ↔ pair=${t.isTransferPairedWith?.slice(0, 8)}…`)
     }
     console.log()
   }
@@ -151,7 +152,7 @@ async function main() {
     console.log("=== TRIP OVERRIDES (WRITE_OFF_TRAVEL) ===\n")
     tripOverrides.forEach((c) => {
       const date = c.transaction.postedDate.toISOString().slice(0, 10)
-      console.log(`[${date}] ${c.transaction.merchantNormalized} | $${Number(c.transaction.amountNormalized.toString()).toFixed(2)}`)
+      console.log(`[${date}] ${c.transaction.merchantNormalized} | ${fmtUSD(Number(c.transaction.amountNormalized.toString()), { cents: true })}`)
       console.log(`  reasoning: ${(c.reasoning ?? "").slice(0, 150)}`)
       console.log()
     })

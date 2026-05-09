@@ -13,6 +13,7 @@ import { prisma } from "@/lib/db"
 import type { TransactionCode } from "@/app/generated/prisma/client"
 import { computeDeductibleAmt } from "@/lib/classification/deductible"
 import { inYearWindow } from "@/lib/queries/yearWindow"
+import { fmtUSD, fmtUSDFromCents } from "@/lib/format/currency"
 
 export interface AssertionResult {
   id: string
@@ -137,7 +138,7 @@ export async function A03_SCHEDULE_C_SUM(taxYearId: string): Promise<AssertionRe
     name: "Schedule C deductible sum is computable from ledger",
     passed: mismatches === 0,
     blocking: true,
-    details: mismatches === 0 ? `Deductions total $${(totalCents / 100).toFixed(2)}` : `${mismatches} rows with invalid deductible`,
+    details: mismatches === 0 ? `Deductions total ${fmtUSDFromCents(totalCents, { cents: true })}` : `${mismatches} rows with invalid deductible`,
   }
 }
 
@@ -163,7 +164,7 @@ export async function A04_REVENUE_SUM(taxYearId: string): Promise<AssertionResul
     name: "BIZ_INCOME rows sum to P&L gross revenue",
     passed: true, // always consistent — this is the definition; surfaces the number
     blocking: false,
-    details: `Gross receipts $${(incomeCents / 100).toFixed(2)}`,
+    details: `Gross receipts ${fmtUSDFromCents(incomeCents, { cents: true })}`,
   }
 }
 
@@ -320,7 +321,7 @@ export async function A12_HOME_OFFICE_SIMPLIFIED(taxYearId: string): Promise<Ass
     name: "Home office simplified method formula",
     passed: sqft > 0,
     blocking: false,
-    details: `Sqft=${sqft}, formula: $${expected} (capped at 300sqft / $1500)`,
+    details: `Sqft=${sqft}, formula: ${fmtUSD(expected)} (capped at 300sqft / $1,500)`,
   }
 }
 
@@ -367,15 +368,15 @@ export async function A13_DEPOSITS_RECONSTRUCTED(taxYearId: string): Promise<Ass
   // like the assertion is buggy rather than blocked by unclassified inflows.
   const reason = !passed
     ? unclassified >= 500
-      ? `${unclassified < 1000 ? "" : "$"}${unclassified.toFixed(2)} of inflows still unclassified`
-      : `inflows don't reconcile (Δ $${delta.toFixed(2)})`
+      ? `${fmtUSD(unclassified, { cents: true })} of inflows still unclassified`
+      : `inflows don't reconcile (Δ ${fmtUSD(delta, { cents: true, signed: true })})`
     : null
   return {
     id: "A13",
     name: "Deposits reconstruction (§12.1)",
     passed,
     blocking: true,
-    details: `${reason ? reason + " — " : ""}Inflows $${totalInflows.toFixed(2)} = transfers $${pairedTransfers.toFixed(2)} + biz income $${bizIncome.toFixed(2)} + other $${classifiedNonIncome.toFixed(2)} + unclassified $${unclassified.toFixed(2)} (Δ ${delta.toFixed(2)})`,
+    details: `${reason ? reason + " — " : ""}Inflows ${fmtUSD(totalInflows, { cents: true })} = transfers ${fmtUSD(pairedTransfers, { cents: true })} + biz income ${fmtUSD(bizIncome, { cents: true })} + other ${fmtUSD(classifiedNonIncome, { cents: true })} + unclassified ${fmtUSD(unclassified, { cents: true })} (Δ ${fmtUSD(delta, { cents: true, signed: true })})`,
   }
 }
 

@@ -10,6 +10,7 @@
 
 import { prisma } from "@/lib/db"
 import type { Transaction, FinancialAccount } from "@/app/generated/prisma/client"
+import { fmtUSD } from "@/lib/format/currency"
 
 type TxWithAccount = Transaction & { account: FinancialAccount }
 
@@ -211,16 +212,19 @@ export async function matchTransfers(taxYearId: string): Promise<MatchTransfersR
   let stopItemsCreated = 0
   for (const t of unmatchedTransferOutflows) {
     if (txnsAlreadyHaveStop.has(t.id)) continue
-    const amountFormatted = (toCents(t.amountNormalized) / 100).toFixed(2)
+    const amountCents = toCents(t.amountNormalized)
+    const amountDollars = amountCents / 100
+    const amountRaw = amountDollars.toFixed(2) // canonical, no commas — for context.amount
+    const amountDisplay = fmtUSD(amountDollars, { cents: true })
     await prisma.stopItem.create({
       data: {
         taxYearId,
         merchantRuleId: null,
         category: "TRANSFER",
-        question: `Unmatched outflow of $${amountFormatted} from ${t.account.nickname ?? t.account.institution} on ${t.postedDate.toISOString().slice(0, 10)}: "${t.merchantRaw}" — no matching inflow found in your other accounts. Who is this?`,
+        question: `Unmatched outflow of ${amountDisplay} from ${t.account.nickname ?? t.account.institution} on ${t.postedDate.toISOString().slice(0, 10)}: "${t.merchantRaw}" — no matching inflow found in your other accounts. Who is this?`,
         context: {
           transactionId: t.id,
-          amount: amountFormatted,
+          amount: amountRaw,
           date: t.postedDate.toISOString().slice(0, 10),
           merchantRaw: t.merchantRaw,
           accountNickname: t.account.nickname ?? t.account.institution,

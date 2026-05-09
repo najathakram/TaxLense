@@ -7,6 +7,7 @@ import type { TransactionCode, ClassificationSource } from "@/app/generated/pris
 import { MAX_SPLITS_PER_TRANSACTION } from "@/lib/splits/config"
 import { batchCategorizeMerchants } from "@/lib/ai/merchantCategories"
 import { recomputeStatus } from "@/lib/taxYear/status"
+import { fmtUSD } from "@/lib/format/currency"
 
 export async function fetchMerchantCategories(
   year: number,
@@ -208,7 +209,7 @@ export async function splitTransaction(year: number, parentId: string, splits: S
     const sumCents = splits.reduce((s, x) => s + Math.round(x.amount * 100), 0)
     if (parentCents !== sumCents) {
       throw new Error(
-        `Split sum (${(sumCents / 100).toFixed(2)}) must equal parent amount (${(parentCents / 100).toFixed(2)})`
+        `Split sum (${fmtUSD(sumCents / 100, { cents: true })}) must equal parent amount (${fmtUSD(parentCents / 100, { cents: true })})`
       )
     }
 

@@ -8,6 +8,7 @@
  */
 
 import type { StatementImport, Transaction } from "@/app/generated/prisma/client"
+import { fmtUSD } from "@/lib/format/currency"
 
 export type ContextualPromptKind =
   | "institution_confirmation"
@@ -110,7 +111,7 @@ export function buildContextualPrompts(args: BuildPromptsArgs): ContextualPrompt
       if (n < 0 && Math.abs(n) >= threshold) {
         prompts.push({
           kind: "unusual_deposit",
-          question: `An inflow of $${Math.abs(n).toFixed(2)} on ${t.postedDate
+          question: `An inflow of ${fmtUSD(Math.abs(n), { cents: true })} on ${t.postedDate
             .toISOString()
             .slice(0, 10)} from "${t.merchantRaw}" is unusually large. Where did it come from?`,
           context: {

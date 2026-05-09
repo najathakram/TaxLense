@@ -44,3 +44,7 @@ next-env.d.ts
 
 # Generated Prisma client — committed so CI doesn't need to re-generate
 # /app/generated/prisma  ← intentionally NOT ignored
+
+# Claude Code internal state (worktrees, locks)
+/.claude/scheduled_tasks.lock
+/.claude/worktrees/

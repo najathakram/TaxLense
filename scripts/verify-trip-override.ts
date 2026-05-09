@@ -11,6 +11,7 @@ import "dotenv/config"
 import { PrismaClient } from "../app/generated/prisma/client"
 import { PrismaPg } from "@prisma/adapter-pg"
 import { applyMerchantRules } from "../lib/classification/apply"
+import { fmtUSD } from "../lib/format/currency"
 
 const adapter = new PrismaPg({ connectionString: process.env["DATABASE_URL"]! })
 const prisma = new PrismaClient({ adapter })
@@ -37,8 +38,8 @@ async function main() {
   console.log("\n=== Current Normalized Merchants ===\n")
   txSample.forEach((t) => {
     const date = t.postedDate.toISOString().slice(0, 10)
-    const amt = Number(t.amountNormalized.toString()).toFixed(2)
-    console.log(`  [${date}] $${amt} | raw="${t.merchantRaw}" → normalized="${t.merchantNormalized}"`)
+    const amt = fmtUSD(Number(t.amountNormalized.toString()), { cents: true })
+    console.log(`  [${date}] ${amt} | raw="${t.merchantRaw}" → normalized="${t.merchantNormalized}"`)
   })
 
   // Clean up any leftover test rules from a previous run
@@ -137,9 +138,9 @@ async function main() {
   console.log("\n=== Classifications (current) ===\n")
   for (const c of classifications) {
     const date = c.transaction.postedDate.toISOString().slice(0, 10)
-    const amt = Number(c.transaction.amountNormalized.toString()).toFixed(2)
+    const amt = fmtUSD(Number(c.transaction.amountNormalized.toString()), { cents: true })
     console.log(
-      `[${date}] ${c.transaction.merchantNormalized ?? c.transaction.merchantRaw} | $${amt}\n` +
+      `[${date}] ${c.transaction.merchantNormalized ?? c.transaction.merchantRaw} | ${amt}\n` +
       `  code=${c.code} | pct=${c.businessPct} | confidence=${c.confidence.toFixed(2)} | tier=${c.evidenceTier}\n` +
       `  citations=${c.ircCitations.join(", ")}\n` +
       `  reasoning=${(c.reasoning ?? "").slice(0, 140)}`

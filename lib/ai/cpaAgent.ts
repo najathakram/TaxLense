@@ -47,6 +47,7 @@ import { inYearWindow } from "@/lib/queries/yearWindow"
 import { getFormSpec } from "@/lib/forms/registry"
 import { uploadDir } from "@/lib/uploads/storage"
 import type { ProgressReporter } from "@/lib/jobs/pipelineRun"
+import { fmtUSD } from "@/lib/format/currency"
 
 const MODEL_PRIMARY = "claude-sonnet-4-6" as const
 const MODEL_OPUS = "claude-opus-4-7" as const
@@ -342,7 +343,7 @@ export async function runCpaAgent(taxYearId: string, opts: CpaAgentOptions = {})
         phase: "cpa_agent",
         processed: chunks.length,
         total: chunks.length,
-        label: `${merchant} → ${d.code}${d.businessPct === 100 ? "" : ` ${d.businessPct}%`}${amount > 0 ? ` · $${amount.toFixed(2)}` : ""}`,
+        label: `${merchant} → ${d.code}${d.businessPct === 100 ? "" : ` ${d.businessPct}%`}${amount > 0 ? ` · ${fmtUSD(amount, { cents: true })}` : ""}`,
         recentDecisions: [...recent],
       })
     }
@@ -910,7 +911,7 @@ async function buildAuditMemo({ taxYearId, decisions, txnsById, profile, client 
   if (mealsNotClaimed > 0) {
     followUps.push({
       kind: "UPLOAD_RECEIPT",
-      promptForUser: `Meals totaling $${mealsNotClaimed.toFixed(2)} are currently NOT claimed because §274(d) substantiation is missing. Upload receipts or add attendees to claim them.`,
+      promptForUser: `Meals totaling ${fmtUSD(mealsNotClaimed, { cents: true })} are currently NOT claimed because §274(d) substantiation is missing. Upload receipts or add attendees to claim them.`,
     })
   }
 
@@ -954,7 +955,7 @@ Return plain text only — no JSON, no markdown.`
     const block = res.content[0]
     if (block && block.type === "text") summary = block.text.trim()
   } catch (err) {
-    summary = `Autonomous bookkeeping run completed: ${decisions.length} classifications, $${totalDeductions.toFixed(2)} total deductions across ${Object.keys(totalsClaimedByLine).length} line${Object.keys(totalsClaimedByLine).length === 1 ? "" : "s"}. ${riskFlags.length} risk flag${riskFlags.length === 1 ? "" : "s"}. Sonnet summary unavailable (${err instanceof Error ? err.message : "unknown error"}).`
+    summary = `Autonomous bookkeeping run completed: ${decisions.length} classifications, ${fmtUSD(totalDeductions, { cents: true })} total deductions across ${Object.keys(totalsClaimedByLine).length} line${Object.keys(totalsClaimedByLine).length === 1 ? "" : "s"}. ${riskFlags.length} risk flag${riskFlags.length === 1 ? "" : "s"}. Sonnet summary unavailable (${err instanceof Error ? err.message : "unknown error"}).`
   }
 
   return {

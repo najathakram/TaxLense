@@ -11,6 +11,7 @@
  * category, it is left alone. Safe to re-run after every Apply Rules pass.
  */
 import { prisma } from "@/lib/db"
+import { fmtUSD } from "@/lib/format/currency"
 
 export interface DeriveStopsResult {
   depositStops: number
@@ -54,13 +55,15 @@ export async function deriveStopsFromAssertions(
       },
     })
     if (existing) continue
-    const abs = Math.abs(Number(tx.amountNormalized.toString())).toFixed(2)
+    const absDollars = Math.abs(Number(tx.amountNormalized.toString()))
+    const abs = absDollars.toFixed(2) // canonical for stop.context — keep machine-readable
+    const absDisplay = fmtUSD(absDollars, { cents: true })
     const dateStr = tx.postedDate.toISOString().slice(0, 10)
     await prisma.stopItem.create({
       data: {
         taxYearId,
         category: "DEPOSIT",
-        question: `Deposit of $${abs} on ${dateStr} from "${tx.merchantRaw}" — what kind of inflow is this? (client payment, 1099 platform, owner contribution, gift, loan, refund, or other)`,
+        question: `Deposit of ${absDisplay} on ${dateStr} from "${tx.merchantRaw}" — what kind of inflow is this? (client payment, 1099 platform, owner contribution, gift, loan, refund, or other)`,
         context: {
           merchant: tx.merchantRaw,
           totalAmount: abs,
@@ -113,13 +116,15 @@ export async function deriveStopsFromAssertions(
     })
     if (existing) continue
 
-    const abs = Math.abs(Number(tx.amountNormalized.toString())).toFixed(2)
+    const absDollars = Math.abs(Number(tx.amountNormalized.toString()))
+    const abs = absDollars.toFixed(2)
+    const absDisplay = fmtUSD(absDollars, { cents: true })
     const dateStr = tx.postedDate.toISOString().slice(0, 10)
     await prisma.stopItem.create({
       data: {
         taxYearId,
         category: "SECTION_274D",
-        question: `Meal on ${dateStr} at "${tx.merchantRaw}" ($${abs}) — who attended and what was the business purpose? §274(d) requires contemporaneous substantiation for any meal deduction.`,
+        question: `Meal on ${dateStr} at "${tx.merchantRaw}" (${absDisplay}) — who attended and what was the business purpose? §274(d) requires contemporaneous substantiation for any meal deduction.`,
         context: {
           merchant: tx.merchantRaw,
           totalAmount: abs,

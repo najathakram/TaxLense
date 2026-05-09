@@ -17,6 +17,7 @@ import { resolveStop, deferStop, archiveSupersededStops, type StopAnswer } from 
 import { runAutoResolveStops, getPipelineRunStatus } from "@/app/(app)/years/[year]/pipeline/actions"
 import { FloatingProgress } from "@/components/pipeline/floating-progress"
 import type { AiSuggestion } from "@/lib/stops/aiSuggestion"
+import { fmtUSD } from "@/lib/format/currency"
 
 export type { AiSuggestion } from "@/lib/stops/aiSuggestion"
 
@@ -271,7 +272,7 @@ function StopCard({ stop }: { stop: SerializedStop }) {
           <CardTitle className="text-base">
             {stop.merchantKey ?? (stop.affected[0]?.merchantRaw ?? "STOP")}{" "}
             <span className="text-sm font-normal text-muted-foreground">
-              · ${stop.totalAmount.toFixed(2)} · {stop.affected.length} txn
+              · {fmtUSD(stop.totalAmount, { cents: true })} · {stop.affected.length} txn
               {stop.affected.length !== 1 ? "s" : ""}
             </span>
           </CardTitle>
@@ -422,7 +423,7 @@ function AffectedTable({ rows }: { rows: SerializedAffected[] }) {
               <td className="p-2">{r.postedDate}</td>
               <td className="p-2">{r.accountNickname}</td>
               <td className="p-2 truncate max-w-xs">{r.merchantRaw}</td>
-              <td className="p-2 text-right">${r.amount.toFixed(2)}</td>
+              <td className="p-2 text-right">{fmtUSD(r.amount, { cents: true })}</td>
             </tr>
           ))}
           {rows.length > 10 && (

@@ -11,6 +11,7 @@ import Anthropic from "@anthropic-ai/sdk"
 import { prisma } from "@/lib/db"
 import { getMemoRule, type MemoType } from "@/lib/rules/memoRules"
 import type { TransactionCode } from "@/app/generated/prisma/client"
+import { fmtUSD } from "@/lib/format/currency"
 
 const client = new Anthropic()
 
@@ -62,9 +63,9 @@ async function gather183Facts(taxYearId: string): Promise<{ facts: string; expos
     `NAICS Code: ${profile?.naicsCode ?? "Not specified"}`,
     `Business Description: ${profile?.businessDescription ?? "Not specified"}`,
     `Tax Year: ${currentYear?.year}`,
-    `Gross Receipts: $${grossRevenue.toFixed(2)}`,
-    `Total Deductions: $${totalDeductions.toFixed(2)}`,
-    `Net Loss: $${Math.max(0, netLoss).toFixed(2)}`,
+    `Gross Receipts: ${fmtUSD(grossRevenue, { cents: true })}`,
+    `Total Deductions: ${fmtUSD(totalDeductions, { cents: true })}`,
+    `Net Loss: ${fmtUSD(Math.max(0, netLoss), { cents: true })}`,
     `Number of tax years with data: ${allYears.length}`,
     `First year in business: ${profile?.firstYear ? "Yes" : "No"}`,
     `Revenue streams: ${profile?.revenueStreams?.join(", ") ?? "Not specified"}`,
@@ -89,14 +90,14 @@ async function gather274n2Facts(taxYearId: string): Promise<{ facts: string; exp
     totalMeals100 += amt
     const sub = c.substantiation as { attendees?: string; purpose?: string } | null
     mealDetails.push(
-      `  ${t.postedDate.toISOString().slice(0, 10)} | ${t.merchantRaw} | $${Number(t.amountNormalized).toFixed(2)} | attendees: ${sub?.attendees ?? "?"} | purpose: ${sub?.purpose ?? "?"}`
+      `  ${t.postedDate.toISOString().slice(0, 10)} | ${t.merchantRaw} | ${fmtUSD(Number(t.amountNormalized), { cents: true })} | attendees: ${sub?.attendees ?? "?"} | purpose: ${sub?.purpose ?? "?"}`
     )
   }
 
   const facts = [
     `Number of MEALS_100 transactions: ${meals100.length}`,
-    `Total 100%-deductible meals claimed: $${totalMeals100.toFixed(2)}`,
-    `Additional 50% amount preserved vs MEALS_50: $${(totalMeals100 * 0.5).toFixed(2)}`,
+    `Total 100%-deductible meals claimed: ${fmtUSD(totalMeals100, { cents: true })}`,
+    `Additional 50% amount preserved vs MEALS_50: ${fmtUSD(totalMeals100 * 0.5, { cents: true })}`,
     "Meal transactions:",
     ...mealDetails,
   ].join("\n")
@@ -131,8 +132,8 @@ async function gather280AFacts(taxYearId: string): Promise<{ facts: string; expo
     `Office Square Footage: ${sqft} sqft`,
     `Total Home Square Footage: ${homeSqft} sqft`,
     `Business Use %: ${homeSqft > 0 ? ((sqft / homeSqft) * 100).toFixed(1) : "N/A"}%`,
-    `Estimated Deduction: $${deduction.toFixed(2)}`,
-    `Gross Receipts (income limitation check): $${grossRevenue.toFixed(2)}`,
+    `Estimated Deduction: ${fmtUSD(deduction, { cents: true })}`,
+    `Gross Receipts (income limitation check): ${fmtUSD(grossRevenue, { cents: true })}`,
     `Business Description: ${profile?.businessDescription ?? "Not specified"}`,
     `Revenue Streams: ${profile?.revenueStreams?.join(", ") ?? "Not specified"}`,
   ].join("\n")
@@ -176,14 +177,14 @@ async function gatherWardrobeFacts(taxYearId: string): Promise<{ facts: string; 
     const c = t.classifications[0]!
     const amt = deductibleAmt(Number(t.amountNormalized), c.code, c.businessPct)
     totalExposure += amt
-    details.push(`  ${t.postedDate.toISOString().slice(0, 10)} | ${t.merchantRaw} | $${Number(t.amountNormalized).toFixed(2)}`)
+    details.push(`  ${t.postedDate.toISOString().slice(0, 10)} | ${t.merchantRaw} | ${fmtUSD(Number(t.amountNormalized), { cents: true })}`)
   }
 
   const facts = [
     `NAICS Code: ${profile?.naicsCode ?? "Not specified"}`,
     `Business Description: ${profile?.businessDescription ?? "Not specified"}`,
     `Wardrobe-related transactions identified: ${deductibleWardrobe.length}`,
-    `Total wardrobe deductions claimed: $${totalExposure.toFixed(2)}`,
+    `Total wardrobe deductions claimed: ${fmtUSD(totalExposure, { cents: true })}`,
     "Transactions:",
     ...details,
   ].join("\n")

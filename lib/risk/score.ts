@@ -14,6 +14,7 @@ import {
   computeDeductibleAmt,
 } from "@/lib/classification/deductible"
 import { inYearWindow } from "@/lib/queries/yearWindow"
+import { fmtUSD } from "@/lib/format/currency"
 
 export type RiskSeverity = "CRITICAL" | "HIGH" | "MEDIUM" | "LOW"
 
@@ -230,7 +231,7 @@ export async function computeRiskScore(taxYearId: string): Promise<RiskReport> {
       id: "INCOME_SHORT",
       severity: shortfall > 1000 ? "CRITICAL" : "HIGH",
       points: 25,
-      title: `Gross receipts below expected by $${shortfall.toFixed(2)}`,
+      title: `Gross receipts below expected by ${fmtUSD(shortfall, { cents: true })}`,
       details: "Missing 1099-K-able platform income suspected",
       blocking: shortfall > 1000,
     })
@@ -248,7 +249,7 @@ export async function computeRiskScore(taxYearId: string): Promise<RiskReport> {
       id: "UNCLASSIFIED_DEPOSITS",
       severity: "CRITICAL",
       points: 0,
-      title: `${unclassifiedDeposits.length} unclassified deposits ($${total.toFixed(2)})`,
+      title: `${unclassifiedDeposits.length} unclassified deposits (${fmtUSD(total, { cents: true })})`,
       details: "Resolve via STOPs before lock",
       blocking: true,
       transactionIds: unclassifiedDeposits.map((r) => r.id),
