@@ -33,9 +33,34 @@ async function getTaxYear(userId: string, year: number) {
   return taxYear
 }
 
+/**
+ * Stuck-run threshold: any RUNNING PipelineRun whose startedAt is older than
+ * this is treated as dead and auto-failed. The CPA agent's largest legit
+ * runtime is ~10 minutes (8 chunks × 60s + memo), so 15 min is comfortably
+ * beyond the normal envelope while still recovering before the user gives
+ * up. Without this detector, a Railway redeploy mid-run leaves the row
+ * stuck "RUNNING" forever and de-dup blocks every subsequent click.
+ */
+const STUCK_RUN_AGE_MS = 15 * 60 * 1000
+
 async function alreadyRunning(taxYearId: string, kind: PipelineRunKind): Promise<string | null> {
   const latest = await getLatestRunByKind(taxYearId, kind)
-  return latest && latest.status === "RUNNING" ? latest.id : null
+  if (!latest || latest.status !== "RUNNING") return null
+  const age = Date.now() - latest.startedAt.getTime()
+  if (age > STUCK_RUN_AGE_MS) {
+    // Auto-fail and let the new click proceed. Records the reason in
+    // lastError so the user can see *why* the prior run died.
+    await prisma.pipelineRun.update({
+      where: { id: latest.id },
+      data: {
+        status: "FAILED",
+        lastError: `Stuck — no completion ${Math.round(age / 60000)} min after start (likely killed by deploy or container restart). Auto-failed so a new run can proceed.`,
+        finishedAt: new Date(),
+      },
+    })
+    return null
+  }
+  return latest.id
 }
 
 /**
