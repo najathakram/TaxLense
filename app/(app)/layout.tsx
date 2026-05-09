@@ -11,6 +11,64 @@ import Link from "next/link"
 import { deriveStage, getYearCounts } from "@/lib/taxYear/status"
 import type { TaxYearStatus } from "@/app/generated/prisma/client"
 
+function pushYearStages(
+  groups: SidebarGroup[],
+  activeYear: { year: number; status: TaxYearStatus },
+  activeClient: { id: string; name: string },
+  pendingStopsCount: number,
+): void {
+  const yearBase = `/years/${activeYear.year}`
+  const stages: Array<{ label: string; items: SidebarItem[] }> = [
+    {
+      label: "INGEST",
+      items: [
+        { label: "Upload",   href: `${yearBase}/upload`,   indent: 1 },
+        { label: "Coverage", href: `${yearBase}/coverage`, indent: 1 },
+      ],
+    },
+    {
+      label: "PROCESS",
+      items: [
+        { label: "Pipeline", href: `${yearBase}/pipeline`, indent: 1 },
+        {
+          label: "STOPs",
+          href: `${yearBase}/stops`,
+          indent: 1,
+          ...(pendingStopsCount > 0
+            ? { badge: { text: pendingStopsCount, color: "var(--tl-amber)", bg: "rgba(244,196,81,0.14)" } }
+            : {}),
+        },
+      ],
+    },
+    {
+      label: "REVIEW",
+      items: [
+        { label: "Ledger",    href: `${yearBase}/ledger`,    indent: 1 },
+        { label: "Risk",      href: `${yearBase}/risk`,      indent: 1 },
+        { label: "Analytics", href: `${yearBase}/analytics`, indent: 1 },
+      ],
+    },
+    {
+      label: "DELIVER",
+      items: [
+        { label: "Finalize", href: `${yearBase}/finalize`, indent: 1 },
+      ],
+    },
+  ]
+
+  groups.push({
+    label: `${activeClient.name.split(" ")[0]} / ${activeYear.year}`,
+    items: [
+      { label: "Year overview", href: yearBase },
+      { label: "Documents",     href: `/clients/${activeClient.id}/documents` },
+    ],
+  })
+
+  for (const s of stages) {
+    groups.push({ label: s.label, items: s.items })
+  }
+}
+
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
   const session = await requireAuth()
   const [clientCtx, cpaCtx, adminCtx, adminCpaCtx] = await Promise.all([
@@ -93,8 +151,14 @@ export default async function AppLayout({ children }: { children: React.ReactNod
         { label: "Settings",  href: "/admin/settings", accent: "var(--tl-purple)" },
       ],
     })
-  } else {
-    // CPA-tier or admin-impersonating-CPA — show the CPA workspace
+  } else if (tier === "CPA" || adminCpaCtx) {
+    // CPA-tier or admin-impersonating-CPA — show the CPA workspace.
+    //
+    // B-10: previously this `else` fired for tier === "CLIENT" too, leaking
+    // CPA-only nav (Inbox / Firm overview / Calendar / All clients) into a
+    // self-serve client's sidebar. Most of those routes 307 to /dashboard
+    // for clients, but /workspace/calendar 200s with a "Coming in V2"
+    // placeholder — a credibility tax on every page load.
     groups.push({
       label: "Workspace",
       items: [
@@ -116,63 +180,26 @@ export default async function AppLayout({ children }: { children: React.ReactNod
     }
 
     if (activeClient && activeYear) {
-      const yearBase = `/years/${activeYear.year}`
-      // Stage-grouped year items (Ingest / Process / Review / Deliver)
-      const stages: Array<{ label: string; items: SidebarItem[] }> = [
-        {
-          label: "INGEST",
-          items: [
-            { label: "Upload",   href: `${yearBase}/upload`,   indent: 1 },
-            { label: "Coverage", href: `${yearBase}/coverage`, indent: 1 },
-          ],
-        },
-        {
-          label: "PROCESS",
-          items: [
-            { label: "Pipeline", href: `${yearBase}/pipeline`, indent: 1 },
-            {
-              label: "STOPs",
-              href: `${yearBase}/stops`,
-              indent: 1,
-              ...(pendingStopsCount > 0
-                ? { badge: { text: pendingStopsCount, color: "var(--tl-amber)", bg: "rgba(244,196,81,0.14)" } }
-                : {}),
-            },
-          ],
-        },
-        {
-          label: "REVIEW",
-          items: [
-            { label: "Ledger",    href: `${yearBase}/ledger`,    indent: 1 },
-            { label: "Risk",      href: `${yearBase}/risk`,      indent: 1 },
-            { label: "Analytics", href: `${yearBase}/analytics`, indent: 1 },
-          ],
-        },
-        {
-          label: "DELIVER",
-          items: [
-            { label: "Finalize", href: `${yearBase}/finalize`, indent: 1 },
-          ],
-        },
-      ]
-
-      groups.push({
-        label: `${activeClient.name.split(" ")[0]} / ${activeYear.year}`,
-        items: [
-          { label: "Year overview", href: yearBase },
-          { label: "Documents",     href: `/clients/${activeClient.id}/documents` },
-        ],
-      })
-
-      // Append each stage as a separate "group" with its own header
-      for (const s of stages) {
-        groups.push({ label: s.label, items: s.items })
-      }
+      pushYearStages(groups, activeYear, activeClient, pendingStopsCount)
     } else if (activeClient) {
       groups.push({
         label: activeClient.name,
         items: [{ label: "Pick a year to expand →", href: `/clients/${activeClient.id}`, accent: "var(--fg-3)" }],
       })
+    }
+  } else {
+    // CLIENT tier — solo taxpayer view. They still need their year stages
+    // (Ingest / Process / Review / Deliver), just without the firm-level
+    // workspace nav (B-10).
+    if (activeYear) {
+      pushYearStages(
+        groups,
+        activeYear,
+        // For CLIENT tier the "active client" is themselves; documents live
+        // under /documents (not /clients/{id}/documents).
+        { id: userId, name: userName },
+        pendingStopsCount,
+      )
     }
   }
 

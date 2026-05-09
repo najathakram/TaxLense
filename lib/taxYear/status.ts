@@ -7,9 +7,10 @@ export interface YearCounts {
   classifiedTx: number
   pendingStops: number
   /** Rows the canonical filter excludes (out-of-year, stale, split-parents,
-   *  duplicates). Useful for a debug breakdown when a CPA asks why
-   *  "536 transactions" turned into "485 on the ledger". */
-  hiddenTx: number
+   *  duplicates). Optional so tests using minimal fixtures still type-check.
+   *  Useful for a debug breakdown when a CPA asks why "536 transactions"
+   *  turned into "485 on the ledger". */
+  hiddenTx?: number
 }
 
 export interface DeriveStageInput {
