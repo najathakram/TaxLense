@@ -212,6 +212,20 @@ export async function runExtractRePass(year: number) {
 export async function runCpaAgentAction(year: number) {
   return enqueue(year, "CPA_AGENT", async (taxYearId, setProgress) => {
     const result = await runCpaAgent(taxYearId, { reportProgress: setProgress })
+    // After the agent commits its decisions, materialize STOP items for
+    // the conditions A08/A13 detect (missing meal substantiation,
+    // unclassified inflows). Without this, the user sees "26 unclassified
+    // deposits" on the Risk page but "0 deposits" on the STOPs queue —
+    // because the agent never emits DEPOSIT-category stops itself.
+    let depositStops = 0
+    let section274dStops = 0
+    try {
+      const dr = await deriveStopsFromAssertions(taxYearId)
+      depositStops = dr.depositStops
+      section274dStops = dr.section274dStops
+    } catch (err) {
+      console.error("[runCpaAgent] deriveStopsFromAssertions failed:", err)
+    }
     return {
       rowsConsidered: result.rowsConsidered,
       rowsClassified: result.rowsClassified,
@@ -219,6 +233,8 @@ export async function runCpaAgentAction(year: number) {
       memoDocumentId: result.memoDocumentId,
       failedChunks: result.failedChunks,
       archivedStops: result.archivedStops,
+      depositStops,
+      section274dStops,
       summary: result.memo.summary,
     }
   })

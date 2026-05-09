@@ -1,6 +1,7 @@
 "use client"
 
 import { useEffect, useRef, useState, useTransition } from "react"
+import { useRouter } from "next/navigation"
 import type { StopCategory, StopState } from "@/app/generated/prisma/client"
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs"
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card"
@@ -15,6 +16,9 @@ import { SCHEDULE_C_LINES } from "@/lib/classification/constants"
 import { resolveStop, deferStop, archiveSupersededStops, type StopAnswer } from "./actions"
 import { runAutoResolveStops, getPipelineRunStatus } from "@/app/(app)/years/[year]/pipeline/actions"
 import { FloatingProgress } from "@/components/pipeline/floating-progress"
+import type { AiSuggestion } from "@/lib/stops/aiSuggestion"
+
+export type { AiSuggestion } from "@/lib/stops/aiSuggestion"
 
 export interface SerializedAffected {
   id: string
@@ -22,22 +26,6 @@ export interface SerializedAffected {
   accountNickname: string | null
   merchantRaw: string
   amount: number
-}
-
-/**
- * AI default surfaced to the per-card form so MERCHANT stops open with the
- * Merchant Intelligence agent's best guess pre-selected. Currently only
- * populated for MERCHANT — DEPOSIT/TRANSFER/§274(d) leave it null so the
- * radio stays unselected and the user must pick explicitly (this is what
- * keeps a $4K returned-deposit from being one accidental click away from
- * "All business 100%").
- */
-export type AiSuggestion = {
-  kind: "merchant"
-  choice: "ALL_BUSINESS" | "DURING_TRIPS" | "MIXED_50" | "PERSONAL"
-  confidence: number
-  reasoning: string | null
-  scheduleCLine: string | null
 }
 
 export interface SerializedStop {
@@ -50,10 +38,14 @@ export interface SerializedStop {
   merchantKey: string | null
   totalAmount: number
   affected: SerializedAffected[]
-  /** AI's pre-selected default for the form (MERCHANT only). When present,
-   *  the form opens with the corresponding radio chosen and shows a
-   *  one-line "AI suggests …" banner. When null, the radio is unselected
-   *  and Resolve is disabled until the user picks a choice. */
+  /** AI's pre-selected default for the form. Populated for MERCHANT,
+   *  TRANSFER, and DEPOSIT stops (anything where we have either a
+   *  persisted Sonnet decision below the auto-resolve threshold, a
+   *  confirmed MerchantRule mapping, or a high-confidence pattern match).
+   *  When present, the form opens with the corresponding radio chosen and
+   *  shows an "AI suggests …" banner — the user can confirm with one
+   *  click instead of reading four blank radios. When null, the radio
+   *  stays unselected and Resolve is disabled until the user picks. */
   aiSuggestion: AiSuggestion | null
   /** Prior answer JSON — present on ANSWERED stops. Used to prefill the form
    *  when the user clicks "Edit answer" on an already-resolved STOP. May
@@ -167,7 +159,7 @@ export function StopsClient({ year, stops }: { year: number; stops: SerializedSt
       <div className="flex items-center justify-between gap-4 border rounded p-3 bg-muted/30 flex-wrap">
         <div className="text-sm flex items-center gap-3 flex-wrap">
           <span className="font-medium">{totalPending} pending stops</span>
-          <span className="text-muted-foreground">— AI (Sonnet) will auto-resolve high-confidence items (≥85%)</span>
+          <span className="text-muted-foreground">— AI (Sonnet) will auto-resolve high-confidence items (≥70%); lower-confidence picks pre-fill the form for one-click confirm.</span>
           {answeredCount > 0 && (
             <button
               type="button"
@@ -470,11 +462,16 @@ function AnswerForm({
 function useSubmit(stopId: string) {
   const [pending, start] = useTransition()
   const [error, setError] = useState<string | null>(null)
+  const router = useRouter()
   const submit = (answer: StopAnswer, applyToSimilar: boolean) => {
     setError(null)
     start(async () => {
       try {
         await resolveStop(stopId, answer, applyToSimilar)
+        // revalidatePath in the action marks the cache stale; router.refresh
+        // forces THIS tab to re-fetch the server-rendered tree so the
+        // ledger / stops counts update without a hard reload.
+        router.refresh()
       } catch (e) {
         setError(e instanceof Error ? e.message : String(e))
       }
@@ -485,6 +482,7 @@ function useSubmit(stopId: string) {
     start(async () => {
       try {
         await deferStop(stopId)
+        router.refresh()
       } catch (e) {
         setError(e instanceof Error ? e.message : String(e))
       }
@@ -513,17 +511,18 @@ function MerchantForm({
   // We deliberately do NOT fall back to "ALL_BUSINESS" — letting a user
   // accidentally click "Resolve" on a default they never read was the cause
   // of "All business 100%" creeping into rows the AI thought were personal.
+  const aiMerchant = stop.aiSuggestion?.kind === "merchant" ? stop.aiSuggestion : null
   const initialChoice: MerchantChoice | null =
-    prior?.choice ?? stop.aiSuggestion?.choice ?? null
+    prior?.choice ?? aiMerchant?.choice ?? null
   const [choice, setChoice] = useState<MerchantChoice | null>(initialChoice)
   const [other, setOther] = useState(prior?.other ?? "")
   const [line, setLine] = useState<string>(
-    prior?.scheduleCLine ?? stop.aiSuggestion?.scheduleCLine ?? "",
+    prior?.scheduleCLine ?? aiMerchant?.scheduleCLine ?? "",
   )
   const [applyToSimilar, setApplyToSimilar] = useState(true)
   const { pending, error, submit, defer } = useSubmit(stop.id)
 
-  const ai = stop.aiSuggestion
+  const ai = aiMerchant
   const showAiHint = ai && !prior // hide on re-answer of a previously-set stop
 
   return (
@@ -606,6 +605,12 @@ function MerchantForm({
 }
 
 type TransferChoice = "PERSONAL" | "CONTRACTOR" | "LOAN" | "OTHER"
+const TRANSFER_CHOICE_LABEL: Record<TransferChoice, string> = {
+  PERSONAL: "Personal (household)",
+  CONTRACTOR: "Contractor (business)",
+  LOAN: "Loan proceeds / repayment",
+  OTHER: "Other — explain",
+}
 
 function TransferForm({
   stop,
@@ -614,27 +619,45 @@ function TransferForm({
   stop: SerializedStop
   prior: Extract<StopAnswer, { kind: "transfer" }> | null
 }) {
-  // No AI hint for TRANSFER stops in V1 (MerchantRule doesn't reliably know
-  // who the counterparty is). Leave radio unselected so a Zelle to a name we
-  // can't verify can't be one accidental click away from "Personal".
-  const [choice, setChoice] = useState<TransferChoice | null>(prior?.choice ?? null)
-  const [payeeName, setPayeeName] = useState(prior?.payeeName ?? "")
-  const [purpose, setPurpose] = useState(prior?.purpose ?? "")
+  // Initial choice precedence: prior (re-answer) > AI suggestion > unselected.
+  // The AI hint is now produced by the centralized deriveAiSuggestion (Wise
+  // top-up → LOAN, Pocketsflow → CONTRACTOR, Apple Cash → PERSONAL) plus
+  // any persisted Sonnet decision below the auto-resolve threshold. Hint
+  // confidence is shown so the user knows when to second-guess the default.
+  const aiTransfer = stop.aiSuggestion?.kind === "transfer" ? stop.aiSuggestion : null
+  const initialChoice: TransferChoice | null =
+    prior?.choice ?? aiTransfer?.choice ?? null
+  const [choice, setChoice] = useState<TransferChoice | null>(initialChoice)
+  const [payeeName, setPayeeName] = useState(
+    prior?.payeeName ?? aiTransfer?.payeeName ?? "",
+  )
+  const [purpose, setPurpose] = useState(
+    prior?.purpose ?? aiTransfer?.purpose ?? "",
+  )
   const [other, setOther] = useState(prior?.other ?? "")
   const { pending, error, submit, defer } = useSubmit(stop.id)
 
+  const showAiHint = aiTransfer && !prior
+
   return (
     <div className="space-y-3">
+      {showAiHint && aiTransfer && (
+        <div className="rounded-md border border-blue-500/30 bg-blue-500/5 p-2 text-xs">
+          <span className="font-semibold text-blue-500 uppercase tracking-wide">AI suggests</span>{" "}
+          <span className="text-foreground">{TRANSFER_CHOICE_LABEL[aiTransfer.choice]}</span>
+          <span className="text-muted-foreground"> · {(aiTransfer.confidence * 100).toFixed(0)}% confidence</span>
+          {aiTransfer.reasoning && (
+            <p className="mt-1 text-muted-foreground italic line-clamp-2" title={aiTransfer.reasoning}>
+              {aiTransfer.reasoning}
+            </p>
+          )}
+        </div>
+      )}
       <RadioGroup
         value={choice ?? ""}
         onValueChange={(v) => setChoice(v as TransferChoice)}
       >
-        {[
-          ["PERSONAL", "Personal (household)"],
-          ["CONTRACTOR", "Contractor (business)"],
-          ["LOAN", "Loan proceeds / repayment"],
-          ["OTHER", "Other — explain"],
-        ].map(([v, label]) => (
+        {(Object.entries(TRANSFER_CHOICE_LABEL) as [TransferChoice, string][]).map(([v, label]) => (
           <label key={v} className="flex items-center gap-2 text-sm">
             <RadioGroupItem value={v} />
             {label}
@@ -681,6 +704,16 @@ type DepositChoice =
   | "LOAN"
   | "REFUND"
   | "OTHER"
+const DEPOSIT_CHOICE_LABEL: Record<DepositChoice, string> = {
+  CLIENT: "Client payment",
+  PLATFORM_1099: "1099 platform payout",
+  W2: "W-2 paycheck",
+  OWNER_CONTRIB: "Owner contribution",
+  GIFT: "Gift",
+  LOAN: "Loan proceeds",
+  REFUND: "Vendor refund",
+  OTHER: "Other — explain",
+}
 
 function DepositForm({
   stop,
@@ -689,30 +722,40 @@ function DepositForm({
   stop: SerializedStop
   prior: Extract<StopAnswer, { kind: "deposit" }> | null
 }) {
-  // DEPOSIT used to default to "CLIENT" (= BIZ_INCOME). That was dangerous
-  // on returned-deposit / NSF / refund rows — one accidental click would
-  // dump four-figure inflows into gross receipts. Leave unselected so the
-  // user has to read the row and pick.
-  const [choice, setChoice] = useState<DepositChoice | null>(prior?.choice ?? null)
+  // Initial choice precedence: prior (re-answer) > AI suggestion > unselected.
+  // The AI hint is now produced by deriveAiSuggestion — Stripe/eBay/PayPal
+  // payouts surface as CLIENT / PLATFORM_1099, refund/reversal patterns
+  // surface as REFUND. Without an AI signal we still leave the radio blank
+  // so a returned-deposit row can't be one accidental click away from
+  // gross receipts.
+  const aiDeposit = stop.aiSuggestion?.kind === "deposit" ? stop.aiSuggestion : null
+  const initialChoice: DepositChoice | null =
+    prior?.choice ?? aiDeposit?.choice ?? null
+  const [choice, setChoice] = useState<DepositChoice | null>(initialChoice)
   const [other, setOther] = useState(prior?.other ?? "")
   const { pending, error, submit, defer } = useSubmit(stop.id)
 
+  const showAiHint = aiDeposit && !prior
+
   return (
     <div className="space-y-3">
+      {showAiHint && aiDeposit && (
+        <div className="rounded-md border border-blue-500/30 bg-blue-500/5 p-2 text-xs">
+          <span className="font-semibold text-blue-500 uppercase tracking-wide">AI suggests</span>{" "}
+          <span className="text-foreground">{DEPOSIT_CHOICE_LABEL[aiDeposit.choice]}</span>
+          <span className="text-muted-foreground"> · {(aiDeposit.confidence * 100).toFixed(0)}% confidence</span>
+          {aiDeposit.reasoning && (
+            <p className="mt-1 text-muted-foreground italic line-clamp-2" title={aiDeposit.reasoning}>
+              {aiDeposit.reasoning}
+            </p>
+          )}
+        </div>
+      )}
       <RadioGroup
         value={choice ?? ""}
         onValueChange={(v) => setChoice(v as DepositChoice)}
       >
-        {[
-          ["CLIENT", "Client payment"],
-          ["PLATFORM_1099", "1099 platform payout"],
-          ["W2", "W-2 paycheck"],
-          ["OWNER_CONTRIB", "Owner contribution"],
-          ["GIFT", "Gift"],
-          ["LOAN", "Loan proceeds"],
-          ["REFUND", "Vendor refund"],
-          ["OTHER", "Other — explain"],
-        ].map(([v, label]) => (
+        {(Object.entries(DEPOSIT_CHOICE_LABEL) as [DepositChoice, string][]).map(([v, label]) => (
           <label key={v} className="flex items-center gap-2 text-sm">
             <RadioGroupItem value={v} />
             {label}

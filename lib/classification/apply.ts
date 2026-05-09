@@ -137,6 +137,29 @@ export async function applyMerchantRules(
       reasoning = `Inflow row — rule code "${rule.code}" is for outflows; demoted to NEEDS_CONTEXT for review.`
     }
 
+    // Defensive scheduleCLine fallback. A deductible code with a null
+    // scheduleCLine is unrunable on Schedule C — the row will compute a
+    // dollar deductible amount but not land on any line, so the audit
+    // packet's per-line totals don't reconcile to A03. Atif's prod ledger
+    // has CASH ADVANCE INTEREST CHARGE and CHASE BANK Monthly Service Fee
+    // both showing "—" for line. Default to Line 27a Other Expenses (the
+    // catch-all the IRS expects), with code-specific overrides for the
+    // categories that have a unique line. The agent can still write a
+    // specific line when it has high signal; this only fires when the
+    // upstream rule left the field blank.
+    let line = rule.scheduleCLine
+    const DEDUCTIBLE_LINE_FALLBACK: Record<string, string> = {
+      WRITE_OFF: "Line 27a Other Expenses",
+      WRITE_OFF_TRAVEL: "Line 24a Travel",
+      WRITE_OFF_COGS: "Part III COGS",
+      MEALS_50: "Line 24b Meals",
+      MEALS_100: "Line 24b Meals",
+      GRAY: "Line 27a Other Expenses",
+    }
+    if (DEDUCTIBLE_FOR_INVARIANT.includes(code) && !line) {
+      line = DEDUCTIBLE_LINE_FALLBACK[code] ?? "Line 27a Other Expenses"
+    }
+
     // Trip override logic (spec §3.2)
     if (rule.appliesTripOverride && !rule.requiresHumanInput) {
       const activeTrip = trips.find((t) => dateInTrip(tx.postedDate, t))
@@ -173,7 +196,7 @@ export async function applyMerchantRules(
       data: {
         transactionId: tx.id,
         code,
-        scheduleCLine: rule.scheduleCLine,
+        scheduleCLine: line,
         businessPct: pct,
         ircCitations: citations,
         confidence: rule.confidence,

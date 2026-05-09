@@ -8,8 +8,10 @@ import { applyMerchantRules } from "@/lib/classification/apply"
 import type { Prisma, ClassificationSource } from "@/app/generated/prisma/client"
 import { deriveFromAnswer, type StopAnswer } from "@/lib/stops/derive"
 import { classifyStopsWithAI, type StopForAI } from "@/lib/ai/autoResolveStops"
+import { aiSuggestionFromResolution } from "@/lib/stops/aiSuggestion"
 import type { ProgressReporter } from "@/lib/jobs/pipelineRun"
 import { recomputeStatus } from "@/lib/taxYear/status"
+import { deriveStopsFromAssertions } from "@/lib/stops/deriveFromAssertions"
 export type { StopAnswer } from "@/lib/stops/derive"
 
 
@@ -177,10 +179,40 @@ export async function resolveStop(
   // classification — which is exactly what we want to replace here.
   if (willPropagate && stopBefore.merchantRule?.merchantKey) {
     const merchantKey = stopBefore.merchantRule.merchantKey
+    const merchantRuleId = stopBefore.merchantRuleId!
     const taxYearId = stopBefore.taxYearId
     after(async () => {
       try {
         await applyMerchantRules(taxYearId, { merchantKey, force: isReAnswer })
+        // After re-classifying matching rows, archive any OTHER PENDING
+        // StopItems pointing at the same MerchantRule — they're now
+        // redundant because the rule itself answers their question.
+        // Without this, the Wise pattern that surfaces 28× would leave
+        // 27 PENDING duplicates after the user resolved the first.
+        const orphans = await prisma.stopItem.findMany({
+          where: {
+            taxYearId,
+            merchantRuleId,
+            state: "PENDING",
+            id: { not: stopId },
+          },
+          select: { id: true },
+        })
+        if (orphans.length > 0) {
+          await prisma.stopItem.updateMany({
+            where: { id: { in: orphans.map((o) => o.id) } },
+            data: {
+              state: "ANSWERED",
+              answeredAt: new Date(),
+              userAnswer: {
+                supersededByRuleUpdate: true,
+                viaStopId: stopId,
+                archivedAt: new Date().toISOString(),
+                reason: `MerchantRule for "${merchantKey}" was confirmed via STOP ${stopId}; this duplicate was auto-archived.`,
+              } as Prisma.InputJsonValue,
+            },
+          })
+        }
         revalidatePath(`/years/${year}/stops`)
         revalidatePath(`/years/${year}/ledger`)
       } catch (err) {
@@ -196,12 +228,17 @@ export async function resolveStop(
 
 export interface AutoResolveResult {
   resolved: number
-  skipped: number   // confidence < 0.85
+  skipped: number   // confidence < threshold
   errors: number
   details: Array<{ merchantKey: string; code: string; confidence: number; status: "resolved" | "skipped" | "error" }>
 }
 
-const AUTO_RESOLVE_CONFIDENCE_THRESHOLD = 0.85
+// Lowered from 0.85 → 0.70 so high-but-not-perfect Sonnet decisions on
+// repetitive patterns (recurring Wise top-ups, recurring Pocketsflow
+// payouts) auto-resolve instead of cluttering the queue. Below 0.70 the
+// suggestion is still persisted to StopItem.aiSuggestion so the user
+// gets a one-click confirm on every STOP — just not an automatic one.
+const AUTO_RESOLVE_CONFIDENCE_THRESHOLD = 0.7
 
 export async function autoResolveStops(
   year: number,
@@ -316,6 +353,24 @@ export async function autoResolveStops(
     }
 
     if (ai.confidence < AUTO_RESOLVE_CONFIDENCE_THRESHOLD) {
+      // Persist the suggestion anyway so the form pre-fills with the AI's
+      // best guess on the next render. Without this the user faces four
+      // blank radios on every STOP that didn't make the auto-resolve
+      // bar — which is what they were complaining about.
+      const suggestion = aiSuggestionFromResolution(
+        stop.category,
+        ai.code,
+        ai.businessPct,
+        ai.scheduleCLine ?? null,
+        ai.confidence,
+        ai.reasoning,
+      )
+      if (suggestion) {
+        await prisma.stopItem.update({
+          where: { id: stop.id },
+          data: { aiSuggestion: suggestion as unknown as Prisma.InputJsonValue },
+        })
+      }
       skipped++
       details.push({ merchantKey: mk, code: ai.code, confidence: ai.confidence, status: "skipped" })
       continue
@@ -412,6 +467,16 @@ export async function autoResolveStops(
         label: `${stopIdx + 1} of ${stops.length} · ${resolved} resolved · ${skipped} skipped · ${errors} error${errors === 1 ? "" : "s"}`,
       })
     }
+  }
+
+  // Auto-resolve emptied a chunk of the queue. Re-derive STOPs from the
+  // current state of the ledger so any inflow that's *still* unclassified
+  // (i.e. now visible because its old MERCHANT/TRANSFER stop is gone)
+  // shows up as a DEPOSIT stop the user can answer. Idempotent.
+  try {
+    await deriveStopsFromAssertions(taxYear.id)
+  } catch (err) {
+    console.error("[autoResolveStops] deriveStopsFromAssertions failed:", err)
   }
 
   // Bulk auto-resolve flips many STOPs in one go — recompute once at the end

@@ -21,11 +21,26 @@ const bandColor: Record<RiskReport["band"], string> = {
   CRITICAL: "bg-red-100 text-red-800 border-red-300",
 }
 
+// Tailwind v4 + dark theme: the bg-*-50 light fills made the title text
+// (which inherits the muted foreground) read as pink-on-pink in the
+// CPA-pulled screenshots. Switch to translucent fills + explicit text
+// color so the title stays high-contrast in both themes. Borders keep
+// the severity color so the visual hierarchy doesn't change.
 const severityColor: Record<RiskSignal["severity"], string> = {
-  CRITICAL: "border-red-500 bg-red-50",
-  HIGH: "border-orange-500 bg-orange-50",
-  MEDIUM: "border-yellow-500 bg-yellow-50",
-  LOW: "border-green-500 bg-green-50",
+  CRITICAL: "border-red-500 bg-red-500/10 text-red-50",
+  HIGH: "border-orange-500 bg-orange-500/10 text-orange-50",
+  MEDIUM: "border-yellow-500 bg-yellow-500/10 text-yellow-50",
+  LOW: "border-green-500 bg-green-500/10 text-green-50",
+}
+
+// Title text gets its own explicit color so it's still readable when
+// rendered on a `text-*-50`-themed card (where the parent text color
+// makes a strong title vanish into the muted gray).
+const severityTitleColor: Record<RiskSignal["severity"], string> = {
+  CRITICAL: "text-red-200",
+  HIGH: "text-orange-200",
+  MEDIUM: "text-yellow-200",
+  LOW: "text-green-200",
 }
 
 function SignalGroup({ title, signals }: { title: string; signals: RiskSignal[] }) {
@@ -37,13 +52,13 @@ function SignalGroup({ title, signals }: { title: string; signals: RiskSignal[] 
         {signals.map((s) => (
           <div key={s.id} className={`rounded border-l-4 p-3 ${severityColor[s.severity]}`}>
             <div className="flex items-center justify-between">
-              <strong className="text-sm">{s.title}</strong>
+              <strong className={`text-sm font-semibold ${severityTitleColor[s.severity]}`}>{s.title}</strong>
               <div className="flex gap-2 text-xs">
                 {s.blocking && <Badge variant="destructive">Blocking</Badge>}
                 {s.points > 0 && <Badge variant="secondary">+{s.points} pts</Badge>}
               </div>
             </div>
-            <p className="mt-1 text-xs text-muted-foreground">{s.details}</p>
+            <p className="mt-1 text-xs text-foreground/80">{s.details}</p>
             {s.transactionIds && s.transactionIds.length > 0 && (
               <p className="mt-1 text-xs">
                 {s.transactionIds.length} affected txn{s.transactionIds.length === 1 ? "" : "s"} —{" "}

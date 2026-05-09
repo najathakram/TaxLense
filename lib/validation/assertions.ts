@@ -147,8 +147,15 @@ export async function A04_REVENUE_SUM(taxYearId: string): Promise<AssertionResul
   for (const r of ledger) {
     const c = r.classifications[0]
     if (c?.code !== "BIZ_INCOME") continue
-    // Inflows are negative in amountNormalized; gross receipts are abs
-    const absCents = Math.round(Math.abs(Number(r.amountNormalized)) * 100)
+    // Match A13's gross-receipts logic exactly: only inflow rows that are
+    // NOT transfer-paired count. Without this filter, A04 picks up rows
+    // the agent miscoded as BIZ_INCOME on the outflow side and disagrees
+    // with A13 by hundreds — which is what the dashboard / Schedule C / risk
+    // page were doing on Atif's prod ledger.
+    const amt = Number(r.amountNormalized)
+    if (amt >= 0) continue // not an inflow
+    if (r.isTransferPairedWith) continue
+    const absCents = Math.round(Math.abs(amt) * 100)
     incomeCents += absCents
   }
   return {

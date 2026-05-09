@@ -669,6 +669,13 @@ model StopItem {
   state          StopState    @default(PENDING)
   userAnswer     Json?
   answeredAt     DateTime?
+  // AI's pre-selected default for the resolution form. Persisted (rather than
+  // derived per-render) so a low-confidence Sonnet pass that didn't auto-resolve
+  // still leaves a default the user can one-click confirm. Shape mirrors the
+  // AiSuggestion union in stops-client.tsx — { kind, choice, confidence, ... }.
+  // Set by the auto-resolve flow and by deriveStopsFromAssertions for newly-
+  // generated DEPOSIT stops; null when no usable signal is available.
+  aiSuggestion   Json?
 
   taxYear      TaxYear       @relation(fields: [taxYearId],      references: [id], onDelete: Cascade)
   merchantRule MerchantRule? @relation(fields: [merchantRuleId], references: [id])
