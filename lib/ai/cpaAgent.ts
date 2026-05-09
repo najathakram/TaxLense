@@ -700,7 +700,20 @@ async function classifyChunkAsCpa(
   try {
     res = await callOnce(MODEL_PRIMARY)
   } catch (err) {
-    console.error("[cpaAgent] classifyChunkAsCpa: API call failed", err instanceof Error ? err.message : err)
+    const msg = err instanceof Error ? err.message : String(err)
+    console.error("[cpaAgent] classifyChunkAsCpa: API call failed", msg)
+    // Anthropic credit / billing errors are terminal for this run — every
+    // subsequent chunk will fail the same way. Re-throw so executePipelineRun
+    // marks the run FAILED and the user sees the real error in the floating
+    // progress panel instead of "0 classifications" with a buried memo.
+    // Same for auth errors (invalid API key).
+    if (
+      /credit balance is too low|insufficient_quota|invalid x-api-key|authentication_error|invalid_api_key/i.test(msg)
+    ) {
+      throw new Error(
+        `Anthropic API unavailable: ${msg.slice(0, 200)}. The autonomous CPA agent cannot run until the API key has credits / is valid.`,
+      )
+    }
     return []
   }
   const block = res.content[0]
