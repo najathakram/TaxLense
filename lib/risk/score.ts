@@ -42,6 +42,11 @@ export interface RiskReport {
   estimatedDeductions: number
   estimatedTaxImpact: number
   estimatedTaxImpactNote: string
+  /** Points contributed by the synthetic "lock blocked floor". 0 when the
+   *  year isn't blocked. Surfaced so the UI can render "21 / 100 (incl. +N
+   *  lock-blocked floor)" as a footnote rather than as a faux risk signal
+   *  in the Critical list (B-18). */
+  lockBlockedFloor: number
 }
 
 const DEDUCTIBLE_CODES = SHARED_DEDUCTIBLE_CODES as readonly TransactionCode[]
@@ -319,20 +324,14 @@ export async function computeRiskScore(taxYearId: string): Promise<RiskReport> {
   // Floor the displayed score at MODERATE (21) when ANY blocker is present.
   // Without this, a return with $35K of unclassified deposits + 51 wrong-year
   // rows can read "1/100 LOW" — the score would lie about audit readiness.
-  // We surface the floor as a synthetic signal so the user can see why.
-  if (lockBlocked && preBlockerScore < 21) {
-    signals.push({
-      id: "LOCK_BLOCKED_FLOOR",
-      severity: "CRITICAL",
-      points: 21 - preBlockerScore,
-      title: `Lock blocked by ${blockerCount} issue${blockerCount === 1 ? "" : "s"}`,
-      details:
-        "Risk score floored at MODERATE until blockers resolve — the underlying signals are listed above; this entry only exists to bring the displayed score in line with reality.",
-      blocking: false,
-    })
-  }
-
-  const score = signals.reduce((s, sig) => s + sig.points, 0)
+  //
+  // B-18: pre-fix this was rendered as a synthetic "Critical · LOCK_BLOCKED_
+  // FLOOR" signal whose details text apologized to the user about UI
+  // semantics. Now we just track the floor amount as a numeric field on
+  // RiskReport; the UI surfaces it as a footnote under the score badge.
+  const lockBlockedFloor =
+    lockBlocked && preBlockerScore < 21 ? 21 - preBlockerScore : 0
+  const score = preBlockerScore + lockBlockedFloor
   const critical = signals.filter((s) => s.severity === "CRITICAL")
   const high = signals.filter((s) => s.severity === "HIGH")
   const medium = signals.filter((s) => s.severity === "MEDIUM")
@@ -354,5 +353,6 @@ export async function computeRiskScore(taxYearId: string): Promise<RiskReport> {
     estimatedTaxImpact,
     estimatedTaxImpactNote:
       "Informational estimate at 25% combined federal + SE + state. Actual impact depends on bracket, QBI, SE tax, and state — consult your CPA.",
+    lockBlockedFloor,
   }
 }

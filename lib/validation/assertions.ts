@@ -210,12 +210,27 @@ export async function A07_TRANSFER_PAIRED(taxYearId: string): Promise<AssertionR
   })
   const transfers = txns.filter((t) => t.classifications[0]?.code === "TRANSFER")
   const unpaired = transfers.filter((t) => !t.isTransferPairedWith).map((t) => t.id)
+  // B-08: when 0 TRANSFER classifications exist this used to render
+  // "0 transfer rows all paired" — a vacuous pass that obscured the fact
+  // there's nothing to verify (e.g. classification hasn't run yet, or the
+  // pairing-pass writes the side-table flag but no Classification row).
+  // Surface that explicitly so a CPA reading the assertions doesn't take
+  // the green check at face value.
+  const passed = unpaired.length === 0
+  let details: string
+  if (transfers.length === 0) {
+    details = "No transfer-coded rows to verify"
+  } else if (passed) {
+    details = `${transfers.length} transfer rows all paired`
+  } else {
+    details = `${unpaired.length} unpaired transfer rows`
+  }
   return {
     id: "A07",
     name: "TRANSFER rows appear in pairs",
-    passed: unpaired.length === 0,
+    passed,
     blocking: true,
-    details: unpaired.length === 0 ? `${transfers.length} transfer rows all paired` : `${unpaired.length} unpaired transfer rows`,
+    details,
     offendingTransactionIds: unpaired,
   }
 }
