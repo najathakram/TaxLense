@@ -82,6 +82,47 @@ function sanitizeCitations(arr: unknown[]): string[] {
     .map((c) => (VALID_CITATIONS.has(c) ? c : "[VERIFY]"))
 }
 
+/**
+ * Build a human-readable preview label for a chunk that's about to be sent
+ * to Sonnet. Shows the date range and up to 4 unique merchant names so the
+ * user can see what's actually in flight during the 30-60s API wait — instead
+ * of a static "Chunk 3 of 8 · 0 decisions" that looks frozen.
+ *
+ * Example output: "Chunk 3 of 8 · 60 txns May 02–May 24 · WISE, EMS, STRIPE, AUTHNET +56"
+ */
+function chunkPreviewLabel(
+  chunkIdx: number,
+  totalChunks: number,
+  chunk: Array<{ postedDate: Date; merchantNormalized: string | null; merchantRaw: string }>,
+): string {
+  if (chunk.length === 0) return `Chunk ${chunkIdx} of ${totalChunks}`
+  const dates = chunk.map((t) => t.postedDate.getTime())
+  const minD = new Date(Math.min(...dates))
+  const maxD = new Date(Math.max(...dates))
+  const fmt = (d: Date) =>
+    d.toLocaleDateString("en-US", { month: "short", day: "2-digit", timeZone: "UTC" })
+  const dateRange = minD.getTime() === maxD.getTime() ? fmt(minD) : `${fmt(minD)}–${fmt(maxD)}`
+
+  const seen = new Set<string>()
+  const samples: string[] = []
+  for (const t of chunk) {
+    const m = (t.merchantNormalized || t.merchantRaw || "").trim()
+    if (!m) continue
+    const short = m.length > 14 ? `${m.slice(0, 13)}…` : m
+    if (seen.has(short)) continue
+    seen.add(short)
+    samples.push(short)
+    if (samples.length >= 4) break
+  }
+  const more = chunk.length - samples.length
+  const merchantBlurb =
+    samples.length === 0
+      ? ""
+      : ` · ${samples.join(", ")}${more > 0 ? ` +${more}` : ""}`
+
+  return `Chunk ${chunkIdx} of ${totalChunks} · ${chunk.length} txns ${dateRange}${merchantBlurb}`
+}
+
 // --- Per-row output schema -------------------------------------------------
 
 interface RowDecision {
@@ -205,6 +246,18 @@ export async function runCpaAgent(taxYearId: string, opts: CpaAgentOptions = {})
   const allDecisions: RowDecision[] = []
   for (let i = 0; i < chunks.length; i++) {
     const chunk = chunks[i]!
+    // Emit a "starting chunk" event BEFORE the Sonnet call so the user sees
+    // what's actually in flight during the long wait (one Sonnet call on 60
+    // rows can take 30-60s). Without this, the panel reads "Chunk 3 of 8 · 0
+    // decisions" the whole time and looks frozen.
+    if (reporter) {
+      await reporter({
+        phase: "cpa_agent",
+        processed: i,
+        total: chunks.length,
+        label: chunkPreviewLabel(i + 1, chunks.length, chunk),
+      })
+    }
     const decisions = await classifyChunkAsCpa(chunk, systemPrompt, client)
     allDecisions.push(...decisions)
     if (reporter) {
@@ -212,7 +265,7 @@ export async function runCpaAgent(taxYearId: string, opts: CpaAgentOptions = {})
         phase: "cpa_agent",
         processed: i + 1,
         total: chunks.length,
-        label: `Chunk ${i + 1} of ${chunks.length} · ${allDecisions.length} decisions`,
+        label: `Chunk ${i + 1} of ${chunks.length} · ${allDecisions.length} decisions so far`,
       })
     }
   }
