@@ -133,6 +133,11 @@ function buildStageConfig({
     if (counts.pendingStops > 0 && counts.classifiedTx >= counts.totalTx) {
       // Special case the plan calls "REVIEW with blockers": classification ran
       // through but stops remain. Push the user at /stops, not at the agent.
+      // When 100% of rows are classified, the autonomous CPA agent has
+      // already decided every underlying transaction — the leftover STOPs
+      // are almost always legacy artifacts from the old multi-stage
+      // pipeline that the in-agent archival hook didn't catch. The /stops
+      // page has an "Archive superseded" button that clears them in bulk.
       return {
         stageLabel: "Stops blocking lock",
         icon: "!",
@@ -142,7 +147,7 @@ function buildStageConfig({
         buttonVariant: "default",
         title: `Resolve ${counts.pendingStops} STOP${counts.pendingStops === 1 ? "" : "s"} to unlock review`,
         subtitle:
-          "Classification finished but the agent flagged transactions it can't decide on its own. Each STOP is one merchant or one rule the user (or CPA) needs to confirm.",
+          "Every transaction is classified — these STOPs are likely legacy artifacts from a prior pipeline run. Click \"Archive superseded\" on the STOPs page to clear all STOPs whose underlying transactions are already classified, then re-check risk.",
         metaLine: `${counts.classifiedTx}/${counts.totalTx} classified · ${counts.pendingStops} stop${counts.pendingStops === 1 ? "" : "s"} pending`,
         cta: "Resolve STOPs",
         href: `${yearBase}/stops`,

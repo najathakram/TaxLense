@@ -31,6 +31,8 @@
  */
 
 import Anthropic from "@anthropic-ai/sdk"
+import { writeFile } from "node:fs/promises"
+import { join } from "node:path"
 import { prisma } from "@/lib/db"
 import type {
   TransactionCode,
@@ -43,15 +45,26 @@ import { normalizeMerchantsForYear } from "@/lib/classification/apply"
 import { aggregateClientNotes } from "@/lib/ai/merchantIntelligence"
 import { inYearWindow } from "@/lib/queries/yearWindow"
 import { getFormSpec } from "@/lib/forms/registry"
+import { uploadDir } from "@/lib/uploads/storage"
 import type { ProgressReporter } from "@/lib/jobs/pipelineRun"
 
 const MODEL_PRIMARY = "claude-sonnet-4-6" as const
 const MODEL_OPUS = "claude-opus-4-7" as const
 
-// Chunk size — number of ledger rows per Sonnet call. Big enough that the
-// model sees neighborhood context; small enough that one bad batch doesn't
-// blow the whole run.
-const CHUNK_SIZE = 60
+// Chunk size — number of ledger rows per Sonnet call. Halved from 60 to 30
+// because at 60 the response (one detailed JSON object per row, ~250 tokens
+// each including reasoning + citations) hit the 8192 max_tokens ceiling and
+// got truncated mid-array. Truncation made JSON parse fail and the whole
+// chunk silently returned []; on Atif's prod ledger this caused the 8-chunk
+// agent run to commit zero classifications even though the floating progress
+// advanced through every chunk and the audit memo got written. 30 keeps
+// response size comfortably under the new 32K ceiling and improves per-chunk
+// visibility for the user.
+const CHUNK_SIZE = 30
+// Output token ceiling — was 8192, raised to 32768. Sonnet supports up to 64K
+// output; this is well within the limit while leaving headroom for very
+// detailed reasoning on tricky rows.
+const CHUNK_MAX_TOKENS = 32768
 
 // Allowed classification codes (mirror lib/ai/merchantIntelligence.ts).
 const VALID_CODES: TransactionCode[] = [
@@ -171,6 +184,14 @@ export interface CpaAgentResult {
   rowsClassified: number
   rowsLeftAsPersonal: number
   memoDocumentId: string | null
+  /** How many chunks failed to return decisions (Sonnet truncation, parse
+   *  fail, etc). Surfaced so the floating-progress completion summary and
+   *  the run audit event can flag a partial run. */
+  failedChunks: number
+  /** How many legacy PENDING StopItems the inline archival hook flipped to
+   *  ANSWERED. On Atif's prod ledger this stayed 0 even after a clean
+   *  agent run — surfacing the count makes the silent failure visible. */
+  archivedStops: number
   memo: AuditMemo
 }
 
@@ -244,6 +265,7 @@ export async function runCpaAgent(taxYearId: string, opts: CpaAgentOptions = {})
   }
 
   const allDecisions: RowDecision[] = []
+  let failedChunks = 0
   for (let i = 0; i < chunks.length; i++) {
     const chunk = chunks[i]!
     // Emit a "starting chunk" event BEFORE the Sonnet call so the user sees
@@ -259,13 +281,15 @@ export async function runCpaAgent(taxYearId: string, opts: CpaAgentOptions = {})
       })
     }
     const decisions = await classifyChunkAsCpa(chunk, systemPrompt, client)
+    if (decisions.length === 0 && chunk.length > 0) failedChunks++
     allDecisions.push(...decisions)
     if (reporter) {
+      const failureSuffix = failedChunks > 0 ? ` · ${failedChunks} chunk${failedChunks === 1 ? "" : "s"} failed` : ""
       await reporter({
         phase: "cpa_agent",
         processed: i + 1,
         total: chunks.length,
-        label: `Chunk ${i + 1} of ${chunks.length} · ${allDecisions.length} decisions so far`,
+        label: `Chunk ${i + 1} of ${chunks.length} · ${allDecisions.length} decisions so far${failureSuffix}`,
       })
     }
   }
@@ -394,13 +418,23 @@ export async function runCpaAgent(taxYearId: string, opts: CpaAgentOptions = {})
   })
 
   // Persist the memo as a Document so it surfaces under /clients/<id>/documents.
-  // If creation fails (schema drift, unique-constraint collision, etc.) we
-  // record the failure as an AuditEvent so the user has a surface to diagnose
-  // — silently swallowing the error left users staring at "Other · 0" with
-  // no signal that the run had even completed.
+  // The memo JSON is written to disk under the year's upload dir so the
+  // existing /api/documents/[id]/file route can stream it back — previously
+  // the filePath was the literal string "(virtual: ...)" which made the
+  // route return 410 "File missing on disk" when the user clicked the doc.
+  // If creation fails (schema drift, unique-constraint collision, file IO,
+  // etc.) we record the failure as an AuditEvent so the user has a surface
+  // to diagnose — silently swallowing the error left users staring at
+  // "Other · 0" with no signal that the run had even completed.
   let memoDocumentId: string | null = null
   let memoCreateError: string | null = null
   try {
+    const memoJson = JSON.stringify(memo, null, 2)
+    const dir = await uploadDir(taxYearId)
+    const stamp = new Date().toISOString().replace(/[:.]/g, "-")
+    const memoFilename = `cpa-agent-memo-${stamp}.json`
+    const memoPath = join(dir, memoFilename)
+    await writeFile(memoPath, memoJson, "utf8")
     const memoDoc = await prisma.document.create({
       data: {
         userId: taxYear.userId,
@@ -408,10 +442,10 @@ export async function runCpaAgent(taxYearId: string, opts: CpaAgentOptions = {})
         category: "OTHER",
         title: `CPA Agent audit memo · ${new Date().toISOString().slice(0, 10)}`,
         description: memo.summary.slice(0, 500),
-        filePath: "(virtual: stored in Document.description + Report.computedTotals)",
-        originalFilename: `cpa-agent-memo-${new Date().toISOString().slice(0, 10)}.json`,
+        filePath: memoPath,
+        originalFilename: memoFilename,
         mimeType: "application/json",
-        sizeBytes: JSON.stringify(memo).length,
+        sizeBytes: Buffer.byteLength(memoJson, "utf8"),
         tags: ["audit-memo", "cpa-agent"],
       },
     })
@@ -464,6 +498,8 @@ export async function runCpaAgent(taxYearId: string, opts: CpaAgentOptions = {})
     rowsClassified: allDecisions.length,
     rowsLeftAsPersonal: leftAsPersonal,
     memoDocumentId,
+    failedChunks,
+    archivedStops,
     memo,
   }
 }
@@ -654,7 +690,7 @@ async function classifyChunkAsCpa(
   const callOnce = async (model: typeof MODEL_PRIMARY | typeof MODEL_OPUS) =>
     client.messages.create({
       model,
-      max_tokens: 8192,
+      max_tokens: CHUNK_MAX_TOKENS,
       temperature: 0,
       system: systemPrompt,
       messages: [{ role: "user", content: userMsg }],
@@ -663,22 +699,46 @@ async function classifyChunkAsCpa(
   let res
   try {
     res = await callOnce(MODEL_PRIMARY)
-  } catch {
+  } catch (err) {
+    console.error("[cpaAgent] classifyChunkAsCpa: API call failed", err instanceof Error ? err.message : err)
     return []
   }
   const block = res.content[0]
-  if (!block || block.type !== "text") return []
+  if (!block || block.type !== "text") {
+    console.error("[cpaAgent] classifyChunkAsCpa: response had no text block", res.stop_reason)
+    return []
+  }
+  // Surface truncation explicitly — was the silent killer on Atif's run. If
+  // Sonnet hit the output cap, log so we know to bump CHUNK_MAX_TOKENS or
+  // shrink CHUNK_SIZE further.
+  if (res.stop_reason === "max_tokens") {
+    console.error(
+      `[cpaAgent] classifyChunkAsCpa: Sonnet hit max_tokens (${CHUNK_MAX_TOKENS}) on ${txns.length}-row chunk — response truncated. Reduce CHUNK_SIZE.`,
+    )
+  }
   const text = block.text
   const start = text.indexOf("[")
   const end = text.lastIndexOf("]")
-  if (start < 0 || end <= start) return []
+  if (start < 0 || end <= start) {
+    console.error(
+      `[cpaAgent] classifyChunkAsCpa: no JSON array brackets in response (stop_reason=${res.stop_reason}, len=${text.length})`,
+    )
+    return []
+  }
   let parsed: unknown[]
   try {
     parsed = JSON.parse(text.slice(start, end + 1)) as unknown[]
-  } catch {
+  } catch (err) {
+    console.error(
+      `[cpaAgent] classifyChunkAsCpa: JSON parse failed (stop_reason=${res.stop_reason}, slice len=${end - start})`,
+      err instanceof Error ? err.message : err,
+    )
     return []
   }
-  if (!Array.isArray(parsed)) return []
+  if (!Array.isArray(parsed)) {
+    console.error("[cpaAgent] classifyChunkAsCpa: parsed value was not an array")
+    return []
+  }
 
   const out: RowDecision[] = []
   for (let i = 0; i < parsed.length && i < txns.length; i++) {

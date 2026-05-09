@@ -217,6 +217,8 @@ export async function runCpaAgentAction(year: number) {
       rowsClassified: result.rowsClassified,
       rowsLeftAsPersonal: result.rowsLeftAsPersonal,
       memoDocumentId: result.memoDocumentId,
+      failedChunks: result.failedChunks,
+      archivedStops: result.archivedStops,
       summary: result.memo.summary,
     }
   })
