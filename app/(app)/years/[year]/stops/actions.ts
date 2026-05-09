@@ -264,8 +264,39 @@ export async function autoResolveStops(
     })
   }
 
-  // Call AI
-  const aiResults = await classifyStopsWithAI(stopsForAI, businessContext)
+  // Call AI — emit a "starting batch" event before each Sonnet call so the
+  // user sees what's actually in flight during the long wait. Without this
+  // the panel reads "0 / N" while a 30-60s API call is grinding away and
+  // it looks indistinguishable from a stuck run.
+  const aiResults = await classifyStopsWithAI(
+    stopsForAI,
+    businessContext,
+    undefined,
+    async ({ batchIdx, totalBatches, batchStops }) => {
+      if (!reportProgress) return
+      const seen = new Set<string>()
+      const samples: string[] = []
+      for (const s of batchStops) {
+        const m = s.merchantKey.trim()
+        if (!m || seen.has(m)) continue
+        seen.add(m)
+        const short = m.length > 16 ? `${m.slice(0, 15)}…` : m
+        samples.push(short)
+        if (samples.length >= 4) break
+      }
+      const more = batchStops.length - samples.length
+      const merchantBlurb =
+        samples.length === 0
+          ? ""
+          : ` · ${samples.join(", ")}${more > 0 ? ` +${more}` : ""}`
+      await reportProgress({
+        phase: "auto_resolve_stops",
+        processed: (batchIdx - 1) * 15,
+        total: stops.length,
+        label: `Batch ${batchIdx} of ${totalBatches} · ${batchStops.length} STOPs${merchantBlurb}`,
+      })
+    },
+  )
   const resultMap = new Map(aiResults.map((r) => [r.stopId, r]))
 
   let resolved = 0

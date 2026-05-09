@@ -71,19 +71,40 @@ Confidence guide:
 Return ONLY a JSON array. No prose, no markdown. Format:
 [{"stopId":"...","code":"...","businessPct":100,"scheduleCLine":"...","ircCitations":["§162"],"confidence":0.95,"reasoning":"...","applyToSimilar":true},...]`
 
+/**
+ * Optional batch-level progress callback. Fires once per AI batch *before*
+ * the Sonnet call so the UI can show what's in flight (the call itself can
+ * take 30-60s and the user otherwise sees a static "0 / N" the whole time).
+ */
+export type BatchProgress = (info: {
+  batchIdx: number
+  totalBatches: number
+  batchStops: StopForAI[]
+}) => Promise<void> | void
+
 export async function classifyStopsWithAI(
   stops: StopForAI[],
   businessContext: string,
   client?: Anthropic,
+  onBatchStart?: BatchProgress,
 ): Promise<StopResolution[]> {
   if (stops.length === 0) return []
   const anthropic = client ?? new Anthropic({ apiKey: process.env["ANTHROPIC_API_KEY"] })
 
   const BATCH = 15
+  const totalBatches = Math.ceil(stops.length / BATCH)
   const results: StopResolution[] = []
 
   for (let i = 0; i < stops.length; i += BATCH) {
     const batch = stops.slice(i, i + BATCH)
+    const batchIdx = Math.floor(i / BATCH) + 1
+    if (onBatchStart) {
+      try {
+        await onBatchStart({ batchIdx, totalBatches, batchStops: batch })
+      } catch {
+        // never fail the AI run because progress reporting failed
+      }
+    }
     const userMsg = `${businessContext ? `Business notes: ${businessContext}\n\n` : ""}Classify these ${batch.length} STOP items:\n${JSON.stringify(batch, null, 0)}`
 
     try {
