@@ -2176,6 +2176,7 @@ export const TaxYearScalarFieldEnum = {
   ruleVersionId: 'ruleVersionId',
   lockedAt: 'lockedAt',
   lockedSnapshotHash: 'lockedSnapshotHash',
+  acceptedRiskOverrides: 'acceptedRiskOverrides',
   createdAt: 'createdAt'
 } as const
 

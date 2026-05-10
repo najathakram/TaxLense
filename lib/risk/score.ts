@@ -154,9 +154,17 @@ export async function computeRiskScore(taxYearId: string): Promise<RiskReport> {
   }
 
   // --- Signal: Schedule C loss year (N² points) ---
-  // Simple approximation: count of recent tax years (including this one) where deductions > income
+  // Count consecutive prior LOCKED years where deductions > income.
+  //
+  // B-22: previously this loop included the in-progress year, so a year
+  // mid-classification ($24K classified income, $38K classified deductions
+  // with $42K of unclassified inflows still pending) registered as a loss
+  // and added a §183 hobby-loss watch warning before classification was
+  // even complete. The fix: only count years that are LOCKED — those have
+  // been finalized and the loss judgment is real.
   let lossYearN = 0
-  for (const ty of lossHistory) {
+  const lockedHistory = lossHistory.filter((y) => y.status === "LOCKED")
+  for (const ty of lockedHistory) {
     const txns = await prisma.transaction.findMany({
       where: { taxYearId: ty.id, isSplit: false, isStale: false, ...inYearWindow(ty.year) },
       include: { classifications: { where: { isCurrent: true }, take: 1 } },
@@ -186,14 +194,30 @@ export async function computeRiskScore(taxYearId: string): Promise<RiskReport> {
     })
   }
 
-  // --- Signal: round-number deductions > 3 ---
-  if (roundNumberRows.length > 3) {
+  // --- Signal: round-number deductions ---
+  // B-24: the trigger threshold was 3 rounds-numbers — too eager. A creator
+  // with $500 Notion + $1000 conference + $2500 photography insurance +
+  // $5000 lens hits 4 round-number deductions in legitimate annual
+  // subscriptions and gets +20 points (= MODERATE). Now we trigger only
+  // when round numbers are >= 8 OR when they make up >= 20% of the row
+  // count of deductible classifications, AND we score by ratio rather
+  // than raw count.
+  const totalDeductibleRowCount = ledger.reduce((n, r) => {
+    const c = r.classifications[0]
+    return n + (c && DEDUCTIBLE_CODES.includes(c.code) ? 1 : 0)
+  }, 0)
+  const roundRatio =
+    totalDeductibleRowCount > 0
+      ? roundNumberRows.length / totalDeductibleRowCount
+      : 0
+  if (roundNumberRows.length >= 8 || roundRatio >= 0.2) {
     signals.push({
       id: "ROUND_NUMBERS",
       severity: "MEDIUM",
-      points: roundNumberRows.length * 5,
-      title: `${roundNumberRows.length} round-number deductions`,
-      details: "Verify these are actual charges, not estimates",
+      // 5 points per 10% of deductions that are round-numbers, capped at 25.
+      points: Math.min(25, Math.round(roundRatio * 50)),
+      title: `${roundNumberRows.length} round-number deductions (${(roundRatio * 100).toFixed(0)}% of deductible rows)`,
+      details: "High proportion of round-number amounts — verify these are actual charges, not estimates",
       blocking: false,
       transactionIds: roundNumberRows,
     })
@@ -228,17 +252,31 @@ export async function computeRiskScore(taxYearId: string): Promise<RiskReport> {
   }
 
   // --- Signal: gross receipts short vs. expected platforms ---
+  // B-23: the previous rule blocked lock when shortfall > $1k, with no
+  // escape hatch. Real reasons for variance: deposits posted in adjacent
+  // years, refunded gigs, currency conversion, partial-year platform
+  // reporting, gig cancellations. Now non-blocking by default; the user
+  // can acknowledge the variance via TaxYear.acceptedRiskOverrides
+  // (confirmIncomeVariance action). Severity stays HIGH so the CPA still
+  // sees it on the risk dashboard.
   const incomeSources = (profile?.incomeSources as Array<{ platform: string; expectedTotal?: number }> | null) ?? []
   const expectedIncome = incomeSources.reduce((sum, s) => sum + (Number(s.expectedTotal) || 0), 0)
-  if (expectedIncome > 0 && grossReceiptsCents / 100 < expectedIncome) {
+  const acceptedOverrides = (
+    (await prisma.taxYear.findUnique({
+      where: { id: taxYearId },
+      select: { acceptedRiskOverrides: true },
+    }))?.acceptedRiskOverrides as Record<string, unknown> | null
+  ) ?? {}
+  const incomeVarianceAccepted = acceptedOverrides["INCOME_SHORT"] === true
+  if (expectedIncome > 0 && grossReceiptsCents / 100 < expectedIncome && !incomeVarianceAccepted) {
     const shortfall = expectedIncome - grossReceiptsCents / 100
     signals.push({
       id: "INCOME_SHORT",
-      severity: shortfall > 1000 ? "CRITICAL" : "HIGH",
+      severity: shortfall > 1000 ? "HIGH" : "MEDIUM",
       points: 25,
       title: `Gross receipts below expected by ${fmtUSD(shortfall, { cents: true })}`,
-      details: "Missing 1099-K-able platform income suspected",
-      blocking: shortfall > 1000,
+      details: "Missing 1099-K-able platform income suspected. Confirm variance on the Risk page if expected.",
+      blocking: false,
     })
   }
 

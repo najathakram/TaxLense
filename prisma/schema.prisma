@@ -299,6 +299,11 @@ model TaxYear {
   ruleVersionId      String?
   lockedAt           DateTime?
   lockedSnapshotHash String?
+  // CPA / user acknowledgements that mute specific risk signals (B-23). Shape:
+  // { "INCOME_SHORT": true, "...": "rationale text" }. Mute is opt-in and
+  // recorded in an AuditEvent; signals stay visible on the dashboard with
+  // an "Acknowledged" badge.
+  acceptedRiskOverrides Json?
   createdAt          DateTime      @default(now())
 
   user              User               @relation(fields: [userId], references: [id], onDelete: Cascade)
