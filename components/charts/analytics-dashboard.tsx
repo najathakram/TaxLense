@@ -200,12 +200,38 @@ export function AnalyticsDashboard({ data }: { data: AnalyticsDataset }) {
       {/* Row 4: top merchants + account donut */}
       <div className="grid gap-4 lg:grid-cols-2">
         <ChartCard title="Top merchants by deductible spend">
-          <ResponsiveContainer width="100%" height={280}>
-            <BarChart data={data.charts.topMerchants} layout="vertical">
+          <ResponsiveContainer width="100%" height={420}>
+            <BarChart
+              data={data.charts.topMerchants.map((m) => ({
+                ...m,
+                // B-16: truncate overflowing labels so the y-axis doesn't
+                // stack three names on top of each other ("WISE INC",
+                // "SENT MONEY TO ZAIN UL...", etc).
+                label:
+                  m.merchantKey.length > 28
+                    ? `${m.merchantKey.slice(0, 27)}…`
+                    : m.merchantKey,
+              }))}
+              layout="vertical"
+              margin={{ top: 8, right: 16, left: 8, bottom: 8 }}
+              barCategoryGap={6}
+            >
               <CartesianGrid strokeDasharray="3 3" />
               <XAxis type="number" tickFormatter={fmtUSD} tick={{ fontSize: 11 }} />
-              <YAxis type="category" dataKey="merchantKey" tick={{ fontSize: 10 }} width={160} />
-              <Tooltip formatter={(v: number) => fmtUSD(v)} />
+              <YAxis
+                type="category"
+                dataKey="label"
+                tick={{ fontSize: 11 }}
+                width={220}
+                interval={0}
+              />
+              <Tooltip
+                formatter={(v: number) => fmtUSD(v)}
+                labelFormatter={(_label, payload) => {
+                  const m = payload?.[0]?.payload as { merchantKey?: string } | undefined
+                  return m?.merchantKey ?? _label
+                }}
+              />
               <Bar dataKey="total" fill="#8b5cf6" />
             </BarChart>
           </ResponsiveContainer>

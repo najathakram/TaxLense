@@ -21,6 +21,7 @@ import { COSTCO_CITI_HEADERS, parseCostcoCiti } from "./costco-citi"
 import { parseRobinhood } from "./robinhood"
 import { parseGeneric } from "./generic"
 import { parseOfxGeneric } from "./ofx-generic"
+import { isWise, parseWise } from "./wise"
 import type { ParseResult } from "../types"
 
 export type InstitutionKey =
@@ -29,6 +30,7 @@ export type InstitutionKey =
   | "amex"
   | "costco-citi"
   | "robinhood"
+  | "wise"
   | "ofx-generic"
   | "generic"
 
@@ -57,6 +59,13 @@ export function detectInstitution(
   // 2. Robinhood: "Trans Code" + "Instrument" headers are unique
   if (hasHeaders(headers, ["Trans Code", "Instrument", "Activity Date"])) {
     return "robinhood"
+  }
+
+  // 2b. Wise: "TransferWise ID" / "Wise ID" or the unique Payer/Payee/Running combo.
+  // Detect before generic so Atif's Wise outflows don't fall through to the
+  // sign-ambiguous generic parser (B-06).
+  if (isWise(headers)) {
+    return "wise"
   }
 
   // 3. Chase CC: "Post Date" + "Type" + "Category" — Chase CC has all three
@@ -102,6 +111,8 @@ export function dispatchCsvParse(
       return parseCostcoCiti(rows)
     case "robinhood":
       return parseRobinhood(rows)
+    case "wise":
+      return parseWise(rows)
     case "generic":
     default:
       return parseGeneric(rows, headers)
@@ -115,6 +126,7 @@ export const INSTITUTION_DISPLAY: Record<InstitutionKey, string> = {
   "amex": "American Express",
   "costco-citi": "Costco Anywhere Visa (Citi)",
   "robinhood": "Robinhood",
+  "wise": "Wise",
   "ofx-generic": "OFX/QFX",
   "generic": "Generic CSV",
 }
