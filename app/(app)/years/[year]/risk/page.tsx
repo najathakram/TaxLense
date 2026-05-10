@@ -10,7 +10,8 @@ import { computeRiskScore, type RiskReport, type RiskSignal } from "@/lib/risk/s
 import { runLockAssertions, type AssertionRunResult } from "@/lib/validation/assertions"
 import { deriveStage, getYearCounts } from "@/lib/taxYear/status"
 import { fmtUSD } from "@/lib/format/currency"
-import { RiskOverrideButton, OVERRIDABLE_SIGNALS } from "./override-button"
+import { RiskOverrideButton } from "./override-button"
+import { OVERRIDABLE_SIGNALS } from "@/lib/risk/overridable"
 
 interface Props {
   params: Promise<{ year: string }>

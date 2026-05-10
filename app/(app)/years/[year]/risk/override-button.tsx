@@ -18,10 +18,9 @@ import { Badge } from "@/components/ui/badge"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog"
 import { Textarea } from "@/components/ui/textarea"
 import { confirmRiskOverride, clearRiskOverride } from "../lock/actions"
-
-export const OVERRIDABLE_SIGNALS: ReadonlySet<string> = new Set([
-  "INCOME_SHORT",
-])
+// Re-exported here so existing risk-page imports keep working; the canonical
+// definition is the server-safe module.
+export { OVERRIDABLE_SIGNALS } from "@/lib/risk/overridable"
 
 export function RiskOverrideButton({
   year,
