@@ -1,0 +1,60 @@
+{
+  "_README": [
+    "Schema template for the Atif TY 2025 ground-truth eval set used by",
+    "scripts/eval-atif.mjs (Q07-Q19). Hand-grade 100 transactions stratified",
+    "by code (15 meals, 15 travel, 15 supplies, 10 contractor, 10 vehicle,",
+    "10 home-office, 10 client/income, 10 transfer, 5 personal). Save as",
+    "atif-ground-truth-2025.json (without `.example`) — that file is",
+    ".gitignore'd because the contents reflect Atif's actual ledger, not",
+    "fixtures appropriate for the public repo.",
+    "",
+    "Each key is a Transaction.id from production. Each value is the",
+    "CPA-graded gold standard. Run scripts/eval-atif.mjs to compare live",
+    "Classifications against this set."
+  ],
+  "<transaction-id-1>": {
+    "code": "MEALS_50",
+    "scheduleCLine": "Line 24b Meals",
+    "businessPct": 100,
+    "evidenceTier": 3,
+    "cohanFlag": false,
+    "notClaimedReason": null,
+    "rationale": "Restaurant in trip window — 50% deductible per §274(n)(1)"
+  },
+  "<transaction-id-2>": {
+    "code": "PERSONAL",
+    "scheduleCLine": null,
+    "businessPct": 0,
+    "evidenceTier": 4,
+    "cohanFlag": false,
+    "notClaimedReason": "no business attendees substantiated",
+    "rationale": "Coffee shop on a weekend, no business pattern — personal"
+  },
+  "<transaction-id-3>": {
+    "code": "WRITE_OFF",
+    "scheduleCLine": "Line 27a Other Expenses",
+    "businessPct": 100,
+    "evidenceTier": 3,
+    "cohanFlag": false,
+    "notClaimedReason": null,
+    "rationale": "Adobe Creative Cloud subscription — ordinary §162 business expense"
+  },
+  "<transaction-id-4>": {
+    "code": "BIZ_INCOME",
+    "scheduleCLine": null,
+    "businessPct": null,
+    "evidenceTier": 2,
+    "cohanFlag": false,
+    "notClaimedReason": null,
+    "rationale": "Stripe payout — gross receipts"
+  },
+  "<transaction-id-5>": {
+    "code": "TRANSFER",
+    "scheduleCLine": null,
+    "businessPct": null,
+    "evidenceTier": 1,
+    "cohanFlag": false,
+    "notClaimedReason": null,
+    "rationale": "Wise outflow paired with checking inflow — internal transfer"
+  }
+}

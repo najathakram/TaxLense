@@ -48,3 +48,8 @@ next-env.d.ts
 # Claude Code internal state (worktrees, locks)
 /.claude/scheduled_tasks.lock
 /.claude/worktrees/
+
+# Eval outputs (live data, not committed)
+/eval/atif-2025-*.json
+/eval/quality_history.csv
+/tests/fixtures/atif-ground-truth-2025.json
