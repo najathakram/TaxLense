@@ -10,6 +10,7 @@ import { computeRiskScore, type RiskReport, type RiskSignal } from "@/lib/risk/s
 import { runLockAssertions, type AssertionRunResult } from "@/lib/validation/assertions"
 import { deriveStage, getYearCounts } from "@/lib/taxYear/status"
 import { fmtUSD } from "@/lib/format/currency"
+import { RiskOverrideButton, OVERRIDABLE_SIGNALS } from "./override-button"
 
 interface Props {
   params: Promise<{ year: string }>
@@ -44,30 +45,58 @@ const severityTitleColor: Record<RiskSignal["severity"], string> = {
   LOW: "text-green-200",
 }
 
-function SignalGroup({ title, signals }: { title: string; signals: RiskSignal[] }) {
+function SignalGroup({
+  title,
+  signals,
+  year,
+  acceptedOverrides,
+}: {
+  title: string
+  signals: RiskSignal[]
+  year: number
+  acceptedOverrides: Record<string, unknown>
+}) {
   if (signals.length === 0) return null
   return (
     <Card>
       <CardHeader><CardTitle className="text-base">{title} ({signals.length})</CardTitle></CardHeader>
       <CardContent className="space-y-2">
-        {signals.map((s) => (
-          <div key={s.id} className={`rounded border-l-4 p-3 ${severityColor[s.severity]}`}>
-            <div className="flex items-center justify-between">
-              <strong className={`text-sm font-semibold ${severityTitleColor[s.severity]}`}>{s.title}</strong>
-              <div className="flex gap-2 text-xs">
-                {s.blocking && <Badge variant="destructive">Blocking</Badge>}
-                {s.points > 0 && <Badge variant="secondary">+{s.points} pts</Badge>}
+        {signals.map((s) => {
+          const overridable = OVERRIDABLE_SIGNALS.has(s.id)
+          const acked = acceptedOverrides[s.id] === true
+          const ackedRationale =
+            typeof acceptedOverrides[`${s.id}_rationale`] === "string"
+              ? (acceptedOverrides[`${s.id}_rationale`] as string)
+              : null
+          return (
+            <div key={s.id} className={`rounded border-l-4 p-3 ${severityColor[s.severity]}`}>
+              <div className="flex items-center justify-between">
+                <strong className={`text-sm font-semibold ${severityTitleColor[s.severity]}`}>{s.title}</strong>
+                <div className="flex gap-2 text-xs">
+                  {s.blocking && <Badge variant="destructive">Blocking</Badge>}
+                  {s.points > 0 && <Badge variant="secondary">+{s.points} pts</Badge>}
+                </div>
               </div>
+              <p className="mt-1 text-xs text-foreground/80">{s.details}</p>
+              {s.transactionIds && s.transactionIds.length > 0 && (
+                <p className="mt-1 text-xs">
+                  {s.transactionIds.length} affected txn{s.transactionIds.length === 1 ? "" : "s"} —{" "}
+                  <Link className="text-blue-600 underline" href={`../ledger`}>view in ledger</Link>
+                </p>
+              )}
+              {overridable && (
+                <div className="mt-2">
+                  <RiskOverrideButton
+                    year={year}
+                    signalId={s.id}
+                    acked={acked}
+                    ackedRationale={ackedRationale}
+                  />
+                </div>
+              )}
             </div>
-            <p className="mt-1 text-xs text-foreground/80">{s.details}</p>
-            {s.transactionIds && s.transactionIds.length > 0 && (
-              <p className="mt-1 text-xs">
-                {s.transactionIds.length} affected txn{s.transactionIds.length === 1 ? "" : "s"} —{" "}
-                <Link className="text-blue-600 underline" href={`../ledger`}>view in ledger</Link>
-              </p>
-            )}
-          </div>
-        ))}
+          )
+        })}
       </CardContent>
     </Card>
   )
@@ -106,6 +135,12 @@ export default async function RiskPage({ params }: Props) {
     include: { businessProfile: true },
   })
   if (!taxYear) notFound()
+
+  // B-23: serialize the overrides JSON for client components. Pre-cast to a
+  // plain Record<string, unknown> so the typed-as-Json field travels safely
+  // through React server-component prop boundaries.
+  const acceptedOverrides =
+    (taxYear.acceptedRiskOverrides as Record<string, unknown> | null) ?? {}
 
   const [risk, assertions, counts] = await Promise.all([
     computeRiskScore(taxYear.id),
@@ -187,10 +222,10 @@ export default async function RiskPage({ params }: Props) {
 
       <div className="grid gap-4 lg:grid-cols-2">
         <div className="space-y-4">
-          <SignalGroup title="Critical" signals={risk.critical} />
-          <SignalGroup title="High" signals={risk.high} />
-          <SignalGroup title="Medium" signals={risk.medium} />
-          <SignalGroup title="Low / Informational" signals={risk.low} />
+          <SignalGroup title="Critical" signals={risk.critical} year={year} acceptedOverrides={acceptedOverrides} />
+          <SignalGroup title="High" signals={risk.high} year={year} acceptedOverrides={acceptedOverrides} />
+          <SignalGroup title="Medium" signals={risk.medium} year={year} acceptedOverrides={acceptedOverrides} />
+          <SignalGroup title="Low / Informational" signals={risk.low} year={year} acceptedOverrides={acceptedOverrides} />
           {risk.critical.length + risk.high.length + risk.medium.length + risk.low.length === 0 && (
             <Alert>
               <AlertTitle>Clean</AlertTitle>
