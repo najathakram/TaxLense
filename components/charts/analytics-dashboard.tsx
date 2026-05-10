@@ -90,16 +90,24 @@ export function AnalyticsDashboard({ data }: { data: AnalyticsDataset }) {
       <div className="grid gap-4 lg:grid-cols-2">
         <ChartCard title="Deduction mix vs industry">
           {/* Atif's prod analytics rendered an empty chart frame (axes only)
-              because most live classifications had null scheduleCLine so the
-              clientShare values were all 0 — only the gray benchmark bars
-              would have appeared, and they're a thin band against an
-              auto-scaled axis dominated by the larger benchmark spread.
-              The cowardice fixes (merchantIntelligence + apply.ts Sch C
-              fallback) populate scheduleCLine more reliably going forward;
-              empty-state messaging clarifies the "no data yet" case. */}
-          {data.charts.deductionMix.every((d) => d.clientShare === 0) ? (
+              because most live classifications had null scheduleCLine — the
+              client bars were all 0 or near-zero against benchmark bars at
+              5-20%. Empty-state triggers when the *total* clientShare is
+              <2% (i.e., <2% of the deductible total maps to ANY benchmark
+              line) — that's the actionable signal that scheduleCLine is
+              not populated. The cpaAgent.ts Sch C fallback (round-7) makes
+              this state recoverable after the next autonomous run. */}
+          {(() => {
+            const totalClientShare = data.charts.deductionMix.reduce(
+              (s, d) => s + d.clientShare,
+              0,
+            )
+            return totalClientShare < 0.02
+          })() ? (
             <div className="h-[280px] flex items-center justify-center text-sm text-muted-foreground text-center px-4">
-              No deduction-mix data yet. Re-run the autonomous CPA so Schedule C lines populate, then revisit.
+              No deduction-mix data yet — most classifications don&apos;t carry a
+              Schedule C line. Re-run the autonomous CPA so the Sch C line
+              fallback populates, then revisit.
             </div>
           ) : (
             <ResponsiveContainer width="100%" height={280}>

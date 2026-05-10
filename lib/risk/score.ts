@@ -281,9 +281,16 @@ export async function computeRiskScore(taxYearId: string): Promise<RiskReport> {
   }
 
   // --- Signal: unclassified deposits (CRITICAL block) ---
+  // Match deriveFromAssertions exactly: exclude transfer- and payment-paired
+  // rows. A paired inflow that's stuck on NEEDS_CONTEXT is a classifier
+  // gap, not a deposit-attribution gap — surfacing those rows under
+  // "unclassified deposits" was driving Atif's blocker count to 93 while
+  // the STOPs page (which respects pairing) showed 0 deposits to resolve.
+  // The Risk and STOPs pages now report the same set.
   const unclassifiedDeposits = ledger.filter((r) => {
     const amt = Number(r.amountNormalized)
     const c = r.classifications[0]
+    if (r.isTransferPairedWith || r.isPaymentPairedWith) return false
     return amt < 0 && (!c || c.code === "NEEDS_CONTEXT")
   })
   if (unclassifiedDeposits.length > 0) {
@@ -293,7 +300,7 @@ export async function computeRiskScore(taxYearId: string): Promise<RiskReport> {
       severity: "CRITICAL",
       points: 0,
       title: `${unclassifiedDeposits.length} unclassified deposits (${fmtUSD(total, { cents: true })})`,
-      details: "Resolve via STOPs before lock",
+      details: "Resolve on the STOPs page (deposits queue) before lock",
       blocking: true,
       transactionIds: unclassifiedDeposits.map((r) => r.id),
     })

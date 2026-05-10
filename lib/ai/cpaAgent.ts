@@ -300,11 +300,43 @@ export async function runCpaAgent(taxYearId: string, opts: CpaAgentOptions = {})
   // the user sees "TIM HORTONS · MEALS_50 100% · $4.50" land one after the
   // next as the AI commits its judgments. Up to 5 most-recent decisions are
   // kept in the progress payload so the UI can render them as a fading stack.
+  //
+  // Sch C Line fallback (mirror of lib/classification/apply.ts:140-161). The
+  // CPA agent's Sonnet output sometimes returns scheduleLine=null for a
+  // deductible code, which makes the row uncountable on Schedule C and
+  // breaks the analytics deduction-mix chart. Atif's prod ledger had
+  // CASH ADVANCE INTEREST CHARGE / CHASE BANK Monthly Service Fee both
+  // showing "—" for line on the live test even though both are
+  // WRITE_OFF 100%. Apply the same fallback here so the agent's writes
+  // match the merchant-rule-apply path.
+  const DEDUCTIBLE_LINE_FALLBACK: Record<string, string> = {
+    WRITE_OFF: "Line 27a Other Expenses",
+    WRITE_OFF_TRAVEL: "Line 24a Travel",
+    WRITE_OFF_COGS: "Part III COGS",
+    MEALS_50: "Line 24b Meals",
+    MEALS_100: "Line 24b Meals",
+    GRAY: "Line 27a Other Expenses",
+  }
+  const DEDUCTIBLE_FOR_FALLBACK = new Set([
+    "WRITE_OFF",
+    "WRITE_OFF_TRAVEL",
+    "WRITE_OFF_COGS",
+    "MEALS_50",
+    "MEALS_100",
+    "GRAY",
+  ])
+
   const txnLookupById = new Map(allTxns.map((t) => [t.id, t]))
   const recent: Array<{ merchant: string; code: string; businessPct: number; amount: number }> = []
   let leftAsPersonal = 0
   let writeIdx = 0
+  let lineFallbackApplied = 0
   for (const d of allDecisions) {
+    let scheduleLineToWrite = d.scheduleLine
+    if (DEDUCTIBLE_FOR_FALLBACK.has(d.code) && !scheduleLineToWrite) {
+      scheduleLineToWrite = DEDUCTIBLE_LINE_FALLBACK[d.code] ?? "Line 27a Other Expenses"
+      lineFallbackApplied++
+    }
     await prisma.$transaction(async (tx) => {
       await tx.classification.updateMany({
         where: { transactionId: d.txId, isCurrent: true },
@@ -314,7 +346,7 @@ export async function runCpaAgent(taxYearId: string, opts: CpaAgentOptions = {})
         data: {
           transactionId: d.txId,
           code: d.code,
-          scheduleCLine: d.scheduleLine,
+          scheduleCLine: scheduleLineToWrite,
           businessPct: d.businessPct,
           ircCitations: d.ircCitations,
           confidence: d.confidence,
