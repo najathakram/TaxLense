@@ -25,10 +25,12 @@ cmds = ["pnpm install --frozen-lockfile"]
 cmds = ["pnpm build"]
 
 [start]
-# Run the post-deploy data-repair chain BEFORE starting Next.js so any
-# Atif-specific scripts (rename, reclassify, backfill) can apply on every
-# Railway deploy. Each script is env-var-gated and idempotent — they no-op
-# when their RUN_* flag is absent. Without this hook, `pnpm post-deploy`
-# was defined in package.json but never invoked, so Atif's data drifted
-# from the latest fixes until Najath manually triggered them.
-cmd = "pnpm post-deploy && pnpm start"
+# Note: pnpm post-deploy is *defined* in package.json but is NOT chained
+# here. Invoking it before `pnpm start` was tried (CPA round 7) and broke
+# the Railway deploy with 502 Bad Gateway because the chain includes
+# scripts that spawn tsx (reclassify-tax-year.mjs) which can hang or
+# exceed the deploy health-check window. Run post-deploy via Railway's
+# one-off run command (or a separate cron service) when you actually want
+# to apply data repairs to a deployed instance — never on the hot path
+# that gates `next start`.
+cmd = "pnpm start"
