@@ -131,13 +131,12 @@ function buildStageConfig({
 
   if (stage === "CLASSIFICATION") {
     if (counts.pendingStops > 0 && counts.classifiedTx >= counts.totalTx) {
-      // Special case the plan calls "REVIEW with blockers": classification ran
-      // through but stops remain. Push the user at /stops, not at the agent.
-      // When 100% of rows are classified, the autonomous CPA agent has
-      // already decided every underlying transaction — the leftover STOPs
-      // are almost always legacy artifacts from the old multi-stage
-      // pipeline that the in-agent archival hook didn't catch. The /stops
-      // page has an "Archive superseded" button that clears them in bulk.
+      // Every row is classified, but STOPs remain — usually because the
+      // user has answers to provide (deposit attribution, transfer
+      // identity, §274(d) substantiation). B-09 wires auto-archive on every
+      // classification commit, so legacy / superseded STOPs no longer need
+      // a manual button click in steady state — the ones that remain are
+      // genuinely waiting on user input.
       return {
         stageLabel: "Stops blocking lock",
         icon: "!",
@@ -147,7 +146,7 @@ function buildStageConfig({
         buttonVariant: "default",
         title: `Resolve ${counts.pendingStops} STOP${counts.pendingStops === 1 ? "" : "s"} to unlock review`,
         subtitle:
-          "Every transaction is classified — these STOPs are likely legacy artifacts from a prior pipeline run. Click \"Archive superseded\" on the STOPs page to clear all STOPs whose underlying transactions are already classified, then re-check risk.",
+          "Every transaction is classified — answer or defer the remaining STOPs (mostly deposit attribution and §274(d) substantiation) and the year is ready to lock.",
         metaLine: `${counts.classifiedTx}/${counts.totalTx} classified · ${counts.pendingStops} stop${counts.pendingStops === 1 ? "" : "s"} pending`,
         cta: "Resolve STOPs",
         href: `${yearBase}/stops`,
