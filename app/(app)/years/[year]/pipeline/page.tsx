@@ -60,6 +60,16 @@ export default async function PipelinePage({ params }: Props) {
     where: { taxYearId: taxYear.id },
   })
 
+  // B-30: count low-confidence PDF imports so the "Re-extract" badge can show
+  // a real number instead of a static "scanned PDFs" label.
+  const lowConfPdfCount = await prisma.statementImport.count({
+    where: {
+      taxYearId: taxYear.id,
+      fileType: "pdf",
+      parseConfidence: { lt: 0.85 },
+    },
+  })
+
   // Distinct backlog counts so steps 7, 8, 9 each show what they would
   // actually consume — not the same "94 stops pending" value three times.
   //
@@ -187,6 +197,7 @@ export default async function PipelinePage({ params }: Props) {
           residualCandidates,
           needsContextCount,
           pendingStops,
+          lowConfPdfCount,
         }}
         receipts={wireReceipts}
       />

@@ -33,7 +33,7 @@ export function NextStopsBanner({ year, pendingStops, classified, totalTx }: Pro
         </div>
         <div className="min-w-0">
           <p className="text-sm font-medium">
-            {pendingStops} transaction{pendingStops === 1 ? "" : "s"} need your call
+            {pendingStops} STOP{pendingStops === 1 ? "" : "s"} need your call
           </p>
           <p className="text-xs text-muted-foreground">
             Classification is complete — resolve STOPs to unlock the lock + finalize step.

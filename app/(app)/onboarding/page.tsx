@@ -81,14 +81,19 @@ export default async function OnboardingPage() {
 
   const initialStep = profile?.draftStep ?? 1
 
+  // B-33: returning users editing one field shouldn't see "this takes
+  // 10–15 minutes" — that's a first-timer onboarding prompt. Show the
+  // long-form intro only when the wizard hasn't been started yet.
+  const isFirstTime = !profile || initialStep === 1
+  const intro = isFirstTime
+    ? "This takes 10–15 minutes. Your answers give the AI the context it needs to correctly classify your transactions. Finished once, reused every year."
+    : `Resuming at step ${initialStep} of 10. Edits save as you go.`
+
   return (
     <div className="p-6 max-w-3xl mx-auto">
       <div className="mb-8">
         <h1 className="text-2xl font-bold text-foreground">Profile Wizard</h1>
-        <p className="text-muted-foreground mt-1">
-          This takes 10–15 minutes. Your answers give the AI the context it needs to correctly
-          classify your transactions. Finished once, reused every year.
-        </p>
+        <p className="text-muted-foreground mt-1">{intro}</p>
       </div>
       <Wizard initialStep={initialStep} initialData={initialData} />
     </div>

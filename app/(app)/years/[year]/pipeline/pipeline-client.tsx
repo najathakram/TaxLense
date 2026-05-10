@@ -36,6 +36,8 @@ interface PipelineStats {
   needsContextCount: number
   /** Step 9 input — StopItems still PENDING. */
   pendingStops: number
+  /** Re-extract banner — PDF imports with parse confidence < 0.85. */
+  lowConfPdfCount: number
 }
 
 interface WireReceipt {
@@ -369,7 +371,7 @@ export function PipelineClient({ year, initial, receipts }: PipelineClientProps)
             </p>
           </div>
           <Badge variant="outline" className="text-xs shrink-0">
-            scanned PDFs
+            {stats.lowConfPdfCount} low-confidence PDF{stats.lowConfPdfCount === 1 ? "" : "s"}
           </Badge>
           <Button
             size="sm"

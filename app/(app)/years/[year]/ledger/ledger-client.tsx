@@ -14,6 +14,15 @@ import { Checkbox } from "@/components/ui/checkbox"
 import { TRANSACTION_CODES, SCHEDULE_C_LINES, codeColorClass } from "@/lib/classification/constants"
 import { AMAZON_MERCHANT_PATTERN, AMAZON_SPLIT_THRESHOLD } from "@/lib/splits/config"
 import { fmtUSD } from "@/lib/format/currency"
+
+// Codes whose Schedule-C deductible is always $0; biz % is meaningless.
+const NON_DEDUCTIBLE_CODES = new Set<TransactionCode>([
+  "NEEDS_CONTEXT",
+  "PERSONAL",
+  "TRANSFER",
+  "PAYMENT",
+  "BIZ_INCOME",
+])
 import {
   editClassification,
   bulkReclassify,
@@ -443,11 +452,20 @@ export function LedgerClient({ year, rows, accounts }: Props) {
                     </select>
                   </div>
                   <div className="p-2 text-right">
-                    <BizPctEditor
-                      value={r.businessPct}
-                      disabled={r.code === "WRITE_OFF_TRAVEL" || pending}
-                      onCommit={(v) => onInlineEdit({ transactionId: r.id, businessPct: v })}
-                    />
+                    {/* B-20: biz % only matters for deductible codes. For
+                        NEEDS_CONTEXT / PERSONAL / TRANSFER / PAYMENT /
+                        BIZ_INCOME the percentage is irrelevant — render an
+                        em-dash so a CPA reading the row doesn't see a
+                        misleading "100%" next to a $0 deductible. */}
+                    {NON_DEDUCTIBLE_CODES.has(r.code) ? (
+                      <span className="text-muted-foreground">—</span>
+                    ) : (
+                      <BizPctEditor
+                        value={r.businessPct}
+                        disabled={r.code === "WRITE_OFF_TRAVEL" || pending}
+                        onCommit={(v) => onInlineEdit({ transactionId: r.id, businessPct: v })}
+                      />
+                    )}
                   </div>
                   <div className="p-2 text-right tabular-nums">{fmtUSD(r.deductibleAmt, { cents: true })}</div>
                   <div className="p-2 text-center">

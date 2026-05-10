@@ -49,6 +49,25 @@ export default async function YearPage({ params }: Props) {
   // the worst offenders to surface as a "missing X months" nudge — without
   // this the user has no signal that COGS may be materially understated
   // until they manually navigate to /coverage.
+  // Compact a 0-indexed list of missing-month integers ([0,1,2,5,6]) into
+  // "Jan–Mar, Jun–Jul" — much more useful than just the count (B-19).
+  const MONTH_NAMES = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
+  function compactMonthRanges(months: number[]): string {
+    if (months.length === 0) return ""
+    const parts: string[] = []
+    let i = 0
+    while (i < months.length) {
+      const start = months[i]!
+      let end = start
+      while (i + 1 < months.length && months[i + 1] === end + 1) {
+        end = months[++i]!
+      }
+      parts.push(start === end ? MONTH_NAMES[start]! : `${MONTH_NAMES[start]}–${MONTH_NAMES[end]}`)
+      i++
+    }
+    return parts.join(", ")
+  }
+
   const accountGaps = taxYear.financialAccounts
     .map((acct) => {
       const monthsWithTx = new Set<number>()
@@ -63,6 +82,7 @@ export default async function YearPage({ params }: Props) {
         type: acct.type,
         txCount: acct.transactions.length,
         missingMonthCount: missing.length,
+        missingRanges: compactMonthRanges(missing),
       }
     })
     .filter((a) => a.txCount > 0 && a.missingMonthCount > 0)
@@ -111,7 +131,7 @@ export default async function YearPage({ params }: Props) {
                   {accountGaps.slice(0, 3).map((a, i) => (
                     <span key={a.id}>
                       {i > 0 ? "; " : ""}
-                      <strong>{a.nickname}</strong> missing {a.missingMonthCount} month{a.missingMonthCount === 1 ? "" : "s"}
+                      <strong>{a.nickname}</strong> missing {a.missingRanges} ({a.missingMonthCount} month{a.missingMonthCount === 1 ? "" : "s"})
                     </span>
                   ))}
                   {accountGaps.length > 3 ? `; +${accountGaps.length - 3} more` : ""}.

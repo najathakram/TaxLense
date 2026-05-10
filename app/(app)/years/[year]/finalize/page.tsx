@@ -393,7 +393,9 @@ function StatusBadge({ status }: { status: SectionStatus }) {
     done: { label: "Done", cls: "bg-emerald-500/15 text-emerald-500 border-emerald-500/30" },
     ready: { label: "Ready", cls: "bg-blue-500/15 text-blue-500 border-blue-500/30" },
     blocked: { label: "Blocked", cls: "bg-amber-500/15 text-amber-500 border-amber-500/30" },
-    disabled: { label: "Locked", cls: "bg-muted text-muted-foreground border-border" },
+    // B-37: was "Locked", which collided with the year-state LOCKED pill.
+    // "Pending" is unambiguous: this card is waiting on a prior step.
+    disabled: { label: "Pending", cls: "bg-muted text-muted-foreground border-border" },
   }
   const { label, cls } = map[status]
   return (
