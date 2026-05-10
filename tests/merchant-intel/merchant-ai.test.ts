@@ -294,18 +294,22 @@ describe("classifyBatch (mocked Anthropic)", () => {
     expect(rules[1]!.applies_trip_override).toBe(true)
   })
 
-  it("enforces confidence < 0.60 → requires_human_input", async () => {
-    const lowConfBatch = {
+  it("confidence < 0.40 defaults to PERSONAL with low-confidence reasoning, not STOP", async () => {
+    // Phase 1 rewrite: replace the 0.60 hard-STOP gate with a 0.40
+    // default-to-PERSONAL band. Confidence 0.45 is now in the "let it through
+    // with the AI's chosen code" zone (auto-resolve at 0.70 still gates auto-
+    // apply). Confidence 0.30 is in the "default to PERSONAL" zone.
+    const veryLowConfBatch = {
       rules: [
         {
           ...makeValidBatchResponse().rules[0],
-          confidence: 0.45,
-          requires_human_input: false, // AI forgot to set this
+          confidence: 0.30,
+          requires_human_input: false,
           human_question: null,
         },
       ],
     }
-    const mockClient = makeMockClient(JSON.stringify(lowConfBatch))
+    const mockClient = makeMockClient(JSON.stringify(veryLowConfBatch))
     const rules = await classifyBatch(
       sampleMerchants.slice(0, 1),
       fakeProfile,
@@ -314,8 +318,34 @@ describe("classifyBatch (mocked Anthropic)", () => {
       fakeRuleVersion,
       mockClient
     )
-    expect(rules[0]!.requires_human_input).toBe(true)
-    expect(rules[0]!.human_question).toBeTruthy()
+    expect(rules[0]!.code).toBe("PERSONAL")
+    expect(rules[0]!.business_pct_default).toBe(0)
+    expect(rules[0]!.requires_human_input).toBe(false)
+    expect(rules[0]!.reasoning).toContain("low-confidence-default")
+  })
+
+  it("0.40 ≤ confidence < 0.60 keeps the AI code (no STOP, no demote)", async () => {
+    const midLowConfBatch = {
+      rules: [
+        {
+          ...makeValidBatchResponse().rules[0],
+          confidence: 0.45,
+          requires_human_input: false,
+          human_question: null,
+        },
+      ],
+    }
+    const mockClient = makeMockClient(JSON.stringify(midLowConfBatch))
+    const rules = await classifyBatch(
+      sampleMerchants.slice(0, 1),
+      fakeProfile,
+      fakeTrips,
+      fakeEntities,
+      fakeRuleVersion,
+      mockClient
+    )
+    expect(rules[0]!.code).toBe(makeValidBatchResponse().rules[0]!.code)
+    expect(rules[0]!.requires_human_input).toBe(false)
   })
 
   it("coerces unknown IRC citations to [VERIFY]", async () => {

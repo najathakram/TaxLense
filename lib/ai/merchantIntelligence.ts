@@ -119,34 +119,66 @@ function enforceCrossFieldInvariants(rule: MerchantRuleOutput): MerchantRuleOutp
     confidence: guarded.confidence,
   }
 
-  // confidence < 0.60 → must be STOP
-  if (r.confidence < 0.60 && !r.requires_human_input) {
-    r.requires_human_input = true
-    r.human_question ??= `Merchant "${r.merchant_key}" — please classify this expense for your business.`
+  // §274(d) categories without trip corroboration → default to PERSONAL with a
+  // clear "not-claimed" reason in `reasoning` rather than emit a STOP. The
+  // CPA-agent Phase 1 rewrite (CLAUDE.md principle 3) wants to surface these
+  // in the audit memo so the user can promote later by uploading a receipt
+  // or attendee record. A STOP for every meal/travel/vehicle row is exactly
+  // the cowardice that drove Atif's queue from "manageable" to "unusable".
+  // Keep the §274(d) STOP only when the model itself flagged uncertainty
+  // (low confidence handled below).
+  if (SECTION_274D_CODES.has(r.code) && !r.applies_trip_override && !r.requires_human_input) {
+    r.code = "PERSONAL"
+    r.schedule_c_line = null
+    r.business_pct_default = 0
+    r.irc_citations = ["§262", "§274(d)"]
+    r.evidence_tier_default = 4
+    r.reasoning =
+      `[default-to-personal] §274(d) category with no trip corroboration and no contemporaneous attendee/purpose record — defaulted to PERSONAL per Phase 1 rule. ` +
+      `Original AI rationale: ${r.reasoning}`
   }
 
-  // requires_human_input but no question → fill in
+  // MEALS_100 → MEALS_50 unless the model is highly confident AND has a real
+  // deliverable rationale. Defaulting to MEALS_50 + position-memo flag in the
+  // reasoning is the conservative-but-claimable answer; emitting a STOP per
+  // meal merchant is what produced 47-stop queues on Atif.
+  // The downstream position-memo pipeline (lib/ai/positionMemo.ts) catches
+  // the §274(n)(2) memo at lock time when exposure is material.
+  if (r.code === "MEALS_100") {
+    r.code = "MEALS_50"
+    r.irc_citations = Array.from(new Set([...r.irc_citations, "§274(n)", "§274(n)(1)"]))
+    r.reasoning =
+      `[demoted-meals-100] AI proposed MEALS_100 but no linked deliverable was substantiated; demoted to MEALS_50 (the §274(n)(1) default). Promote back to MEALS_100 only with a written deliverable + position memo. Original rationale: ${r.reasoning}`
+  }
+
+  // Confidence band handling (replaces the 0.60 hard-STOP gate):
+  //   < 0.40  → truly uncertain. Default to PERSONAL with a not-claimed
+  //             reason; do NOT emit a STOP. CPA can promote in the ledger
+  //             if needed — see CPA agent Phase 1 default-to-PERSONAL policy.
+  //   < 0.60  → fall through with the AI's chosen code. The auto-resolve
+  //             threshold (0.70 in the UI) still keeps these out of the
+  //             auto-apply lane, but they no longer block the CPA on a STOP.
+  if (r.confidence < 0.40 && !r.requires_human_input && r.code !== "PERSONAL") {
+    r.code = "PERSONAL"
+    r.schedule_c_line = null
+    r.business_pct_default = 0
+    r.irc_citations = ["§262"]
+    r.evidence_tier_default = 4
+    r.reasoning =
+      `[low-confidence-default] Model confidence ${r.confidence.toFixed(2)} below the 0.40 floor — defaulted to PERSONAL per Phase 1 rule. ` +
+      `Original AI rationale: ${r.reasoning}`
+  }
+
+  // Anything that explicitly carried `requires_human_input=true` from the
+  // model still gets a STOP, but make sure it has a question to render.
   if (r.requires_human_input && !r.human_question) {
     r.human_question = `Merchant "${r.merchant_key}" — please confirm the business purpose for these charges.`
-  }
-
-  // §274(d) categories without human_input should have requires_human_input = true
-  // (unless applies_trip_override=true — trip window provides corroboration)
-  if (SECTION_274D_CODES.has(r.code) && !r.applies_trip_override && !r.requires_human_input) {
-    r.requires_human_input = true
-    r.human_question ??= `${r.merchant_key} is in a §274(d) category (${r.code}). Who was present and what was the business purpose?`
   }
 
   // Any citation not in rule library → replace with [VERIFY]
   r.irc_citations = r.irc_citations.map((c) =>
     RULE_LIBRARY_CITATIONS.has(c) ? c : "[VERIFY]"
   )
-
-  // MEALS_100 needs a STOP and specific note about deliverable
-  if (r.code === "MEALS_100" && !r.requires_human_input) {
-    r.requires_human_input = true
-    r.human_question ??= `MEALS_100 classification for "${r.merchant_key}" requires a linked deliverable (§274(n)(2) position memo). What content deliverable does this meal produce?`
-  }
 
   return r
 }

@@ -105,14 +105,31 @@ function enforceInvariants(
     confidence: guarded.confidence,
   }
 
-  if (r.confidence < 0.60 && !r.requires_human_input) {
-    r.requires_human_input = true
-    r.human_question ??= "Confidence below 0.60 — need user confirmation on this transaction."
-  }
+  // Phase 1 rewrite: stop emitting STOPs for low-confidence and §274(d)
+  // off-trip rows — default them to PERSONAL with a clear "not-claimed"
+  // reason in `reasoning` instead. This mirrors the merchantIntelligence
+  // change so the residual stage doesn't undo what merchant-stage already
+  // decided. CPA-agent surfaces these in the audit memo for promotion.
   if (SECTION_274D_CODES.has(r.code) && !txInTrip && !r.requires_human_input) {
-    r.requires_human_input = true
-    r.human_question ??= `Code ${r.code} is §274(d) — requires contemporaneous attendees/purpose.`
+    r.code = "PERSONAL"
+    r.schedule_c_line = null
+    r.business_pct = 0
+    r.irc_citations = ["§262", "§274(d)"]
+    r.evidence_tier = 4
+    r.reasoning =
+      `[default-to-personal] §274(d) category outside trip window with no contemporaneous attendee/purpose record — defaulted to PERSONAL per Phase 1 rule. Original residual rationale: ${r.reasoning}`
   }
+
+  if (r.confidence < 0.40 && !r.requires_human_input && r.code !== "PERSONAL") {
+    r.code = "PERSONAL"
+    r.schedule_c_line = null
+    r.business_pct = 0
+    r.irc_citations = ["§262"]
+    r.evidence_tier = 4
+    r.reasoning =
+      `[low-confidence-default] Residual confidence ${r.confidence.toFixed(2)} below 0.40 floor — defaulted to PERSONAL per Phase 1 rule. Original rationale: ${r.reasoning}`
+  }
+
   r.irc_citations = r.irc_citations.map((c) => (RULE_LIBRARY_CITATIONS.has(c) ? c : "[VERIFY]"))
   return r
 }

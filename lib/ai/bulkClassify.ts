@@ -6,7 +6,7 @@
  *
  * Model: claude-sonnet-4-6, temperature 0, max_tokens 8192.
  * Batch size: 20 transactions per call.
- * Confidence threshold: >= 0.78 → auto-apply; < 0.78 → create StopItem.
+ * Confidence threshold: >= 0.70 → auto-apply; < 0.70 → create StopItem.
  *
  * Output is a JSON array aligned by index (same pattern as merchantCategories.ts).
  */
@@ -18,7 +18,7 @@ import type { TransactionCode, Prisma } from "@/app/generated/prisma/client"
 const MODEL = "claude-sonnet-4-6" as const
 const BATCH_SIZE = 20
 const MAX_TOKENS = 8192
-const AUTO_APPLY_THRESHOLD = 0.78
+const AUTO_APPLY_THRESHOLD = 0.70
 
 export interface TxForClassification {
   id: string
@@ -89,8 +89,8 @@ Line 27a Other Expenses, Line 30 Home Office, Part III COGS, N/A
 === CONFIDENCE GUIDE ===
 0.95+  : No ambiguity — clear pattern match
 0.85–0.94 : Strong inference from name + amount + context
-0.78–0.84 : Reasonable inference with minor uncertainty (still auto-applied)
-< 0.78 : Ambiguous — will create a stop for user review
+0.70–0.84 : Reasonable inference with minor uncertainty (still auto-applied)
+< 0.70 : Ambiguous — will create a stop for user review
 ≤ 0.50 : NEEDS_CONTEXT — set this code when confidence ≤ 0.50
 
 === NEVER AUTO-CLASSIFY ===
