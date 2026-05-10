@@ -63,6 +63,7 @@ export const ModelName = {
   Trip: 'Trip',
   Owner: 'Owner',
   FinancialAccount: 'FinancialAccount',
+  AccountYearLink: 'AccountYearLink',
   StatementImport: 'StatementImport',
   ImportSession: 'ImportSession',
   PipelineRun: 'PipelineRun',
@@ -263,6 +264,19 @@ export const FinancialAccountScalarFieldEnum = {
 } as const
 
 export type FinancialAccountScalarFieldEnum = (typeof FinancialAccountScalarFieldEnum)[keyof typeof FinancialAccountScalarFieldEnum]
+
+
+export const AccountYearLinkScalarFieldEnum = {
+  id: 'id',
+  accountId: 'accountId',
+  taxYearId: 'taxYearId',
+  nickname: 'nickname',
+  isClosed: 'isClosed',
+  closedAt: 'closedAt',
+  createdAt: 'createdAt'
+} as const
+
+export type AccountYearLinkScalarFieldEnum = (typeof AccountYearLinkScalarFieldEnum)[keyof typeof AccountYearLinkScalarFieldEnum]
 
 
 export const StatementImportScalarFieldEnum = {

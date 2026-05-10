@@ -102,6 +102,11 @@ export type Owner = Prisma.OwnerModel
  */
 export type FinancialAccount = Prisma.FinancialAccountModel
 /**
+ * Model AccountYearLink
+ * 
+ */
+export type AccountYearLink = Prisma.AccountYearLinkModel
+/**
  * Model StatementImport
  * 
  */
