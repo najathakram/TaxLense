@@ -53,7 +53,12 @@ export default async function DashboardPage() {
       sub="DASHBOARD"
       title="Tax years"
       right={
-        <Link href="/onboarding" style={{ textDecoration: "none" }}>
+        <Link
+          // B-14: route to /years/new (year-creation form) instead of dropping
+          // returning users into the Profile Wizard mid-step.
+          href={taxYearsRaw.length === 0 ? "/onboarding" : "/years/new"}
+          style={{ textDecoration: "none" }}
+        >
           <Btn kind="primary" icon="+">New tax year</Btn>
         </Link>
       }

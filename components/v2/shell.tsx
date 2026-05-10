@@ -6,8 +6,76 @@
 
 import Link from "next/link"
 import { usePathname } from "next/navigation"
+import { useState, useEffect } from "react"
 import type { CSSProperties, ReactNode } from "react"
 import { Avi } from "./primitives"
+import { SearchModal } from "./search-modal"
+
+// ───────── SearchTrigger (B-15) ───────────────────────────────────────
+//
+// The bar in the topbar that opens the ⌘K modal. Functional now — was a
+// decorative <span> pre-fix. Modal lives in a sibling file because it ships
+// useState / useEffect; rendering it conditionally here keeps the topbar
+// small.
+
+function SearchTrigger({ isAdmin }: { isAdmin: boolean }) {
+  const [open, setOpen] = useState(false)
+  // Global ⌘K / Ctrl+K listener — opens the modal from anywhere.
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === "k") {
+        e.preventDefault()
+        setOpen(true)
+      } else if (e.key === "Escape") {
+        setOpen(false)
+      }
+    }
+    window.addEventListener("keydown", handler)
+    return () => window.removeEventListener("keydown", handler)
+  }, [])
+  return (
+    <>
+      <button
+        type="button"
+        onClick={() => setOpen(true)}
+        className="glass"
+        style={{
+          display: "flex",
+          alignItems: "center",
+          gap: 10,
+          padding: "7px 14px",
+          flex: 1,
+          maxWidth: 520,
+          borderRadius: 999,
+          marginLeft: 12,
+          background: "transparent",
+          border: 0,
+          cursor: "pointer",
+          color: "var(--fg-3)",
+          textAlign: "left",
+        }}
+      >
+        <span style={{ color: "var(--fg-3)" }}>⌕</span>
+        <span style={{ fontSize: 13, color: "var(--fg-3)", flex: 1 }}>
+          {isAdmin ? "Search CPAs, clients, years, transactions…" : "Search clients, years, transactions…"}
+        </span>
+        <span
+          style={{
+            fontFamily: "var(--mono)",
+            fontSize: 10,
+            padding: "2px 7px",
+            borderRadius: 6,
+            background: "rgba(255,255,255,0.06)",
+            color: "var(--fg-2)",
+          }}
+        >
+          ⌘K
+        </span>
+      </button>
+      <SearchModal isAdmin={isAdmin} open={open} onOpenChange={setOpen} />
+    </>
+  )
+}
 
 // ───────── TopBar ─────────────────────────────────────────────────────
 
@@ -65,36 +133,7 @@ export function TopBar({ userName, userEmail, tier, impersonatingCpa, logoHref }
         </div>
         <span style={{ fontSize: 16, fontWeight: 700, letterSpacing: -0.3 }}>TaxLens</span>
       </Link>
-      <div
-        className="glass"
-        style={{
-          display: "flex",
-          alignItems: "center",
-          gap: 10,
-          padding: "7px 14px",
-          flex: 1,
-          maxWidth: 520,
-          borderRadius: 999,
-          marginLeft: 12,
-        }}
-      >
-        <span style={{ color: "var(--fg-3)" }}>⌕</span>
-        <span style={{ fontSize: 13, color: "var(--fg-3)", flex: 1 }}>
-          {isAdmin ? "Search CPAs, clients, audit events…" : "Search clients, years, documents…"}
-        </span>
-        <span
-          style={{
-            fontFamily: "var(--mono)",
-            fontSize: 10,
-            padding: "2px 7px",
-            borderRadius: 6,
-            background: "rgba(255,255,255,0.06)",
-            color: "var(--fg-2)",
-          }}
-        >
-          ⌘K
-        </span>
-      </div>
+      <SearchTrigger isAdmin={isAdmin} />
       <div style={{ flex: 1 }} />
       <div
         className="glass"
