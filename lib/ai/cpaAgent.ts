@@ -432,16 +432,27 @@ export async function runCpaAgent(taxYearId: string, opts: CpaAgentOptions = {})
   try {
     const memoJson = JSON.stringify(memo, null, 2)
     const dir = await uploadDir(taxYearId)
-    const stamp = new Date().toISOString().replace(/[:.]/g, "-")
+    const now = new Date()
+    const stamp = now.toISOString().replace(/[:.]/g, "-")
     const memoFilename = `cpa-agent-memo-${stamp}.json`
     const memoPath = join(dir, memoFilename)
     await writeFile(memoPath, memoJson, "utf8")
+    // B-11: include timestamp + decision count + total deductions in the
+    // title so a CPA can tell consecutive runs apart in the Documents tab.
+    // Pre-fix: 8 memos titled "CPA Agent audit memo · 2026-05-09" with no
+    // way to know which one matched the current ledger.
+    const hhmm = now.toISOString().slice(11, 16) // "HH:MM" UTC
+    const memoDecisions = allDecisions.length
+    const memoDeductions = Object.values(memo.totalsClaimedByLine).reduce(
+      (a, b) => a + b,
+      0,
+    )
     const memoDoc = await prisma.document.create({
       data: {
         userId: taxYear.userId,
         taxYearId,
         category: "OTHER",
-        title: `CPA Agent audit memo · ${new Date().toISOString().slice(0, 10)}`,
+        title: `CPA Agent audit memo · ${now.toISOString().slice(0, 10)} ${hhmm} UTC · ${memoDecisions} decisions · ${fmtUSD(memoDeductions, { cents: false })} deducted`,
         description: memo.summary.slice(0, 500),
         filePath: memoPath,
         originalFilename: memoFilename,
