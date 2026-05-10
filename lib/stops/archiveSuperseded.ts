@@ -56,10 +56,18 @@ export async function archiveSupersededStopsForYear(
       continue
     }
 
+    // Only count *real* classifications — NEEDS_CONTEXT is a placeholder
+    // ("AI gave up") and must not supersede a STOP, otherwise the STOP page
+    // shows 0 pending while the transaction is still effectively unclassified
+    // and the lock blocker keeps firing. Atif TY 2025 reproduced this exactly:
+    // Archive Superseded cleared 47 STOPs but the 93-unclassified-deposits
+    // and 141-NEEDS_CONTEXT blockers remained, with no STOPs UI path to
+    // resolve them.
     const classifiedCount = await prisma.classification.count({
       where: {
         transactionId: { in: stop.transactionIds },
         isCurrent: true,
+        code: { notIn: ["NEEDS_CONTEXT"] },
       },
     })
     if (classifiedCount === 0) {

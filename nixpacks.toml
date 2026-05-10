@@ -25,4 +25,10 @@ cmds = ["pnpm install --frozen-lockfile"]
 cmds = ["pnpm build"]
 
 [start]
-cmd = "pnpm start"
+# Run the post-deploy data-repair chain BEFORE starting Next.js so any
+# Atif-specific scripts (rename, reclassify, backfill) can apply on every
+# Railway deploy. Each script is env-var-gated and idempotent — they no-op
+# when their RUN_* flag is absent. Without this hook, `pnpm post-deploy`
+# was defined in package.json but never invoked, so Atif's data drifted
+# from the latest fixes until Najath manually triggered them.
+cmd = "pnpm post-deploy && pnpm start"

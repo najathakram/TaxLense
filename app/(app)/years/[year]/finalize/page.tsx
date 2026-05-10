@@ -12,6 +12,8 @@ import { attemptLock } from "../lock/actions"
 import { LockClient } from "../lock/lock-client"
 import { DownloadClient } from "../download/download-client"
 import { deriveStage, getYearCounts } from "@/lib/taxYear/status"
+import { detectNeededMemos } from "@/lib/ai/positionMemo"
+import { computeLedgerHash } from "@/lib/lock/hash"
 
 interface Props {
   params: Promise<{ year: string }>
@@ -47,17 +49,28 @@ export default async function FinalizePage({ params }: Props) {
 
   const isLocked = taxYear.status === "LOCKED"
 
-  // Run risk + assertions in parallel — these drive the Lock section's
-  // gating + the Risk section's content. Skip when LOCKED to avoid
-  // re-running expensive aggregates after the year is frozen.
-  const [risk, assertions, reports, counts] = await Promise.all([
+  // Run risk + assertions + position-memo detection + drift hash in parallel —
+  // these drive the Lock section's gating + the Risk section's content + the
+  // Download section's "AI memo flag" + the locked-year drift banner.
+  // computeLedgerHash runs always (cheap; ~485-row hash on Atif's prod data
+  // takes <100ms) so the drift banner appears whether or not the year is
+  // locked. Without this, locked years could silently drift after edits and
+  // the master-ledger XLSX would stamp the old hash on new content.
+  const [risk, assertions, reports, counts, neededMemos, currentHash] = await Promise.all([
     isLocked ? null : computeRiskScore(taxYear.id),
     isLocked ? null : runLockAssertions(taxYear.id),
     prisma.report.findMany({
       where: { taxYearId: taxYear.id, isCurrent: true },
     }),
     getYearCounts(taxYear.id),
+    detectNeededMemos(taxYear.id).catch(() => [] as string[]),
+    computeLedgerHash(taxYear.id),
   ])
+
+  const lockedDrift =
+    isLocked &&
+    !!taxYear.lockedSnapshotHash &&
+    currentHash !== taxYear.lockedSnapshotHash
 
   // B-02: render the live derived stage, not the persisted column. Without
   // this, the page header showed "CREATED" on Atif's TY2025 even after 485
@@ -133,6 +146,35 @@ export default async function FinalizePage({ params }: Props) {
           {derivedStatus}
         </Badge>
       </div>
+
+      {/* Drift banner — fires when the live ledger hash diverges from the
+          locked snapshot. CPA-review item: previously a locked-then-edited
+          year produced an XLSX stamped with the OLD hash on NEW content,
+          silently. */}
+      {lockedDrift && (
+        <Alert variant="destructive">
+          <AlertTitle>Ledger has drifted from the locked snapshot</AlertTitle>
+          <AlertDescription className="text-xs space-y-1">
+            <p>
+              The locked snapshot was hashed on{" "}
+              {taxYear.lockedAt?.toISOString().slice(0, 10) ?? "—"} but the live
+              ledger now produces a different SHA-256. This usually means a
+              classification was edited or a transaction was reclassified
+              after lock.
+            </p>
+            <p className="font-mono text-[10px] break-all">
+              locked: {taxYear.lockedSnapshotHash?.slice(0, 24) ?? "—"}…  ·  current:{" "}
+              {currentHash.slice(0, 24)}…
+            </p>
+            <p>
+              Re-generated reports will reflect the current ledger but the
+              snapshot hash stamped in their footers will not match what was
+              locked on the date above. Unlock + relock to refresh the
+              snapshot, or revert the change.
+            </p>
+          </AlertDescription>
+        </Alert>
+      )}
 
       {/* Step rail — numbered circles + section names so the user can see at a
           glance where they are without scrolling. */}
@@ -271,6 +313,21 @@ export default async function FinalizePage({ params }: Props) {
           <p className="text-xs text-muted-foreground">
             Lock the year above to enable downloads.
           </p>
+        )}
+        {/* Position-memo flag — surfaces AI-drafted gray-zone memos so the
+            CPA reviews them before delivering. Without this badge, the
+            §183 / §274(n)(2) / §280A / wardrobe memos were buried in the
+            audit-packet ZIP with no top-level signal. */}
+        {neededMemos.length > 0 && (
+          <Alert>
+            <AlertTitle className="text-sm">
+              {neededMemos.length} AI position memo{neededMemos.length === 1 ? "" : "s"} will be generated
+            </AlertTitle>
+            <AlertDescription className="text-xs">
+              The audit packet will include AI-drafted FACTS / LAW / ANALYSIS / CONCLUSION memos for:{" "}
+              <span className="font-mono">{neededMemos.join(", ")}</span>. Review each memo before delivery — the AI uses citations from the rule library only, but the analysis still requires CPA judgment.
+            </AlertDescription>
+          </Alert>
         )}
         {downloadStatus === "ready" && (
           <div className="space-y-3">

@@ -2,22 +2,30 @@
  * Financial Statements XLSX — spec §10.2
  *
  * Five sheets:
- *   1. General Ledger  — deductible txns sorted by Sch C line then date
- *   2. Schedule C      — one row per line, totals, IRC citations
+ *   1. General Ledger  — deductible txns sorted by primary-form line then date
+ *   2. Tax Return Summary — one row per primary-form line, totals, IRC citations
+ *      (titled "Schedule C" for sole prop / SMLLC, "Form 1120-S" for S-Corp,
+ *      "Form 1065" for partnership/LLC-multi, "Form 1120" for C-Corp).
  *   3. P&L             — Gross Receipts → COGS → Gross Profit → Expenses → Net Income
- *   4. Balance Sheet   — cash-method sole prop: cash assets + equity
- *   5. Schedule C Detail — every deductible txn grouped by line with section headers
+ *   4. Balance Sheet   — cash-method: cash assets + equity (or stockholders' equity for corps)
+ *   5. Tax Return Detail — every deductible txn grouped by line with section headers
+ *
+ * Multi-entity correctness (CPA review round 7): the line set + sheet labels
+ * now come from lib/forms/registry.ts (getFormSpec) instead of hardcoded
+ * SCHEDULE_C_LINES. Without this, S-Corp / partnership / C-Corp clients
+ * produced a Schedule C P&L — wrong financials regardless of the locked
+ * ledger contents.
  */
 
 import ExcelJS from "exceljs"
 import { prisma } from "@/lib/db"
 import type { TransactionCode } from "@/app/generated/prisma/client"
-import { SCHEDULE_C_LINES } from "@/lib/classification/constants"
 import {
   DEDUCTIBLE_CODES as SHARED_DEDUCTIBLE_CODES,
   computeDeductibleAmt,
 } from "@/lib/classification/deductible"
 import { inYearWindow } from "@/lib/queries/yearWindow"
+import { getFormSpec, type FormSpec } from "@/lib/forms/registry"
 
 const DEDUCTIBLE_CODES = SHARED_DEDUCTIBLE_CODES as readonly TransactionCode[]
 
@@ -149,8 +157,19 @@ export async function buildFinancialStatements(taxYearId: string): Promise<Buffe
   glSheet.views = [{ state: "frozen", ySplit: 1 }]
   glSheet.autoFilter = { from: "A1", to: "I1" }
 
-  // Sort by Sch C line order then date
-  const lineOrder = new Map(SCHEDULE_C_LINES.map((l, i) => [l, i]))
+  // Resolve the entity-specific line set + sheet labels via the form
+  // registry so S-Corp / 1065 / 1120 produce their own returns instead of
+  // a Schedule C P&L.
+  const formSpec: FormSpec = getFormSpec(profile?.entityType)
+  const formLines: string[] = formSpec.lines
+  const isScheduleC = formSpec.primaryReturn.includes("Schedule C")
+  const sheetTitle = formSpec.primaryReturn.length > 28
+    ? formSpec.primaryReturn.slice(0, 28)
+    : formSpec.primaryReturn
+  const detailSheetTitle = `${sheetTitle.slice(0, 21)} Detail`
+
+  // Sort by line order then date
+  const lineOrder = new Map(formLines.map((l, i) => [l, i]))
   const sortedDed = [...deductibleTxns].sort((a, b) => {
     const la = lineOrder.get(a.classification.scheduleCLine ?? "N/A") ?? 999
     const lb = lineOrder.get(b.classification.scheduleCLine ?? "N/A") ?? 999
@@ -196,10 +215,10 @@ export async function buildFinancialStatements(taxYearId: string): Promise<Buffe
   glTotalRow.fill = totalFill()
   glTotalRow.getCell("deductible").numFmt = '#,##0.00'
 
-  // ── Sheet 2: Schedule C ──────────────────────────────────────────────────
-  const schSheet = wb.addWorksheet("Schedule C")
+  // ── Sheet 2: Tax-Return Summary (Schedule C / 1120-S / 1065 / 1120) ─────
+  const schSheet = wb.addWorksheet(sheetTitle)
   schSheet.columns = [
-    { header: "Schedule C Line", key: "line", width: 28 },
+    { header: `${formSpec.primaryReturn} Line`, key: "line", width: 32 },
     { header: "Total Deductible ($)", key: "total", width: 20 },
     { header: "# Transactions", key: "count", width: 15 },
     { header: "IRC Citations", key: "irc", width: 50 },
@@ -207,7 +226,7 @@ export async function buildFinancialStatements(taxYearId: string): Promise<Buffe
   applyHeaderRow(schSheet.getRow(1))
   schSheet.views = [{ state: "frozen", ySplit: 1 }]
 
-  for (const line of SCHEDULE_C_LINES) {
+  for (const line of formLines) {
     const lt = lineTotals.get(line)
     if (!lt || lt.total === 0) continue
     const r = schSheet.addRow({
@@ -261,7 +280,13 @@ export async function buildFinancialStatements(taxYearId: string): Promise<Buffe
   addPLRow("", "", "")
   addPLRow("Net Income / (Loss)", netIncome, "Before SE tax and QBI deductions", true, totalFill())
   addPLRow("", "", "")
-  addPLRow("NOTE", "", "This is a cash-method Schedule C summary. Consult your CPA for SE tax, QBI, and state return adjustments.")
+  addPLRow(
+    "NOTE",
+    "",
+    isScheduleC
+      ? "This is a cash-method Schedule C summary. Consult your CPA for SE tax, QBI, and state return adjustments."
+      : `This summary aligns to ${formSpec.primaryReturn}${formSpec.k1 ? " (with K-1 distributions)" : ""}. ${formSpec.requiresOwnerPayroll ? "Owner W-2 / reasonable comp required. " : ""}Consult your CPA for entity-specific SE / payroll / state adjustments.`,
+  )
 
   // ── Sheet 4: Balance Sheet ────────────────────────────────────────────────
   const bsSheet = wb.addWorksheet("Balance Sheet")
@@ -311,12 +336,18 @@ export async function buildFinancialStatements(taxYearId: string): Promise<Buffe
   addBSRow("  Net Income for Year", netIncome)
   addBSRow("Total Equity", netIncome, "", true, subtotalFill())
   addBSRow("", "", "")
-  addBSRow("NOTE", "", "Cash-method sole proprietorship. Equity = net Schedule C income. Balance sheet is informational only.")
+  addBSRow(
+    "NOTE",
+    "",
+    isScheduleC
+      ? "Cash-method sole proprietorship. Equity = net Schedule C income. Balance sheet is informational only."
+      : `Cash-method ${formSpec.displayName}. Equity = net ${formSpec.primaryReturn} income${formSpec.k1 ? " distributed to owners via K-1" : ""}. Balance sheet is informational only.`,
+  )
 
-  // ── Sheet 5: Schedule C Detail ────────────────────────────────────────────
-  const detSheet = wb.addWorksheet("Schedule C Detail")
+  // ── Sheet 5: Tax Return Detail ────────────────────────────────────────────
+  const detSheet = wb.addWorksheet(detailSheetTitle)
   detSheet.columns = [
-    { header: "Sch C Line", key: "line", width: 24 },
+    { header: `${formSpec.primaryReturn} Line`, key: "line", width: 28 },
     { header: "Date", key: "date", width: 12 },
     { header: "Account", key: "account", width: 20 },
     { header: "Merchant", key: "merchant", width: 30 },

@@ -4,11 +4,21 @@
  * Identifies transactions that can't be confidently classified at the merchant
  * level and need single-transaction AI reasoning. Three gates:
  *
- *  (a) Multi-candidate merchant: the MerchantRule is GRAY with confidence < 0.85
- *  (b) Amount outlier: txn amount > 3σ from the mean of same-merchant charges
+ *  (a) Multi-candidate merchant: the MerchantRule is GRAY with confidence < 0.75
+ *  (b) Amount outlier: txn amount > 2σ from the mean of same-merchant charges
  *      (requires ≥5 samples to compute)
- *  (c) Gray + trip-ambiguous: GRAY code, |amount| > $500, posted within ±2 days
+ *  (c) Gray + trip-ambiguous: GRAY code, |amount| > $500, posted within ±5 days
  *      of a confirmed trip boundary (enter or exit day)
+ *
+ * Phase 1 rewrite (Atif TY 2025): the gates were tuned for the Maznah fixture
+ * and pulled too few rows on real production data — and where they did pull,
+ * the §274(d) hard-stop in residualTransaction.ts then over-emitted STOPs.
+ * With residualTransaction now defaulting to PERSONAL instead of STOP, we can
+ * safely *widen* the gates so more rows get a second-pass review:
+ *  - 3σ → 2σ: pulls in moderate outliers (was 6-sigma audit-manual paranoia).
+ *  - GRAY < 0.85 → < 0.75: stops escalating mid-confidence GRAY rules that
+ *    the merchant stage already had a usable answer for.
+ *  - ±2d → ±5d: covers arrival-day eating, return-day hotels, etc.
  *
  * Exclusions: PERSONAL, TRANSFER, PAYMENT, split parents, classifications
  * whose source is USER or AI_USER_CONFIRMED (user already decided).
@@ -25,11 +35,11 @@ export interface ResidualCandidate {
   merchantKey: string
 }
 
-const TRIP_BOUNDARY_DAYS = 2
+const TRIP_BOUNDARY_DAYS = 5
 const TRIP_AMBIGUOUS_MIN_AMOUNT = 500
-const OUTLIER_SIGMA = 3
+const OUTLIER_SIGMA = 2
 const OUTLIER_MIN_SAMPLES = 5
-const MULTI_CANDIDATE_MAX_CONFIDENCE = 0.85
+const MULTI_CANDIDATE_MAX_CONFIDENCE = 0.75
 
 function daysBetween(a: Date, b: Date): number {
   return Math.abs(a.getTime() - b.getTime()) / 86_400_000

@@ -89,32 +89,58 @@ export function AnalyticsDashboard({ data }: { data: AnalyticsDataset }) {
       {/* Row 1: deduction mix + meals ratio */}
       <div className="grid gap-4 lg:grid-cols-2">
         <ChartCard title="Deduction mix vs industry">
-          <ResponsiveContainer width="100%" height={280}>
-            <BarChart data={data.charts.deductionMix}>
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="label" tick={{ fontSize: 11 }} angle={-25} textAnchor="end" height={70} />
-              <YAxis tickFormatter={fmtPct} tick={{ fontSize: 11 }} />
-              <Tooltip formatter={(v: number) => fmtPct(v)} />
-              <Legend wrapperStyle={{ fontSize: 12 }} />
-              <Bar dataKey="clientShare" name="This client" fill="#3b82f6" />
-              <Bar dataKey="benchmarkShare" name="Industry median" fill="#94a3b8" />
-            </BarChart>
-          </ResponsiveContainer>
+          {/* Atif's prod analytics rendered an empty chart frame (axes only)
+              because most live classifications had null scheduleCLine so the
+              clientShare values were all 0 — only the gray benchmark bars
+              would have appeared, and they're a thin band against an
+              auto-scaled axis dominated by the larger benchmark spread.
+              The cowardice fixes (merchantIntelligence + apply.ts Sch C
+              fallback) populate scheduleCLine more reliably going forward;
+              empty-state messaging clarifies the "no data yet" case. */}
+          {data.charts.deductionMix.every((d) => d.clientShare === 0) ? (
+            <div className="h-[280px] flex items-center justify-center text-sm text-muted-foreground text-center px-4">
+              No deduction-mix data yet. Re-run the autonomous CPA so Schedule C lines populate, then revisit.
+            </div>
+          ) : (
+            <ResponsiveContainer width="100%" height={280}>
+              <BarChart data={data.charts.deductionMix}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="label" tick={{ fontSize: 11 }} angle={-25} textAnchor="end" height={70} />
+                <YAxis tickFormatter={fmtPct} tick={{ fontSize: 11 }} />
+                <Tooltip formatter={(v: number) => fmtPct(v)} />
+                <Legend wrapperStyle={{ fontSize: 12 }} />
+                <Bar dataKey="clientShare" name="This client" fill="#3b82f6" />
+                <Bar dataKey="benchmarkShare" name="Industry median" fill="#94a3b8" />
+              </BarChart>
+            </ResponsiveContainer>
+          )}
         </ChartCard>
 
         <ChartCard
           title="Meals as % of receipts"
           warning={highMealsMonth ? `>${(RED_FLAG_THRESHOLDS.mealsRatioOfReceipts * 100).toFixed(0)}% in ${highMealsMonth.month}` : null}
         >
-          <ResponsiveContainer width="100%" height={280}>
-            <LineChart data={data.charts.mealsRatio}>
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="month" tick={{ fontSize: 11 }} />
-              <YAxis tickFormatter={fmtPct} tick={{ fontSize: 11 }} />
-              <Tooltip formatter={(v: number) => fmtPct(v)} />
-              <Line type="monotone" dataKey="ratio" stroke="#ef4444" strokeWidth={2} dot={{ r: 3 }} />
-            </LineChart>
-          </ResponsiveContainer>
+          {data.charts.mealsRatio.length === 0 ||
+          data.charts.mealsRatio.every((m) => m.ratio === 0) ? (
+            <div className="h-[280px] flex items-center justify-center text-sm text-muted-foreground text-center px-4">
+              No meals or no recognized gross receipts in the year yet.
+            </div>
+          ) : (
+            <ResponsiveContainer width="100%" height={280}>
+              <LineChart data={data.charts.mealsRatio}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="month" tick={{ fontSize: 11 }} />
+                {/* Cap displayed Y-axis at 100% even if a single month's ratio
+                    spikes higher (loss-year noise); the actual value is still
+                    shown in the tooltip. Without the cap, Atif's Y-axis went
+                    to 400% on a thin-receipts month and made the rest of the
+                    series unreadable. */}
+                <YAxis tickFormatter={fmtPct} tick={{ fontSize: 11 }} domain={[0, 1]} allowDataOverflow />
+                <Tooltip formatter={(v: number) => fmtPct(v)} />
+                <Line type="monotone" dataKey="ratio" stroke="#ef4444" strokeWidth={2} dot={{ r: 3 }} />
+              </LineChart>
+            </ResponsiveContainer>
+          )}
         </ChartCard>
       </div>
 

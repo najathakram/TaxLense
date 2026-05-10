@@ -81,7 +81,7 @@ describe("selectResidualCandidates", () => {
     expect(mine!.reasons).toContain("MULTI_CANDIDATE")
   })
 
-  it("flags amount outliers (>3σ from same-merchant mean)", async () => {
+  it("flags amount outliers (>2σ from same-merchant mean)", async () => {
     const merchantKey = "TEST_OUTLIER_MERCHANT"
     // 10 charges at exactly $50, one outlier at $200 — with 11 samples this is ~3.16σ
     const amounts = [50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 200]

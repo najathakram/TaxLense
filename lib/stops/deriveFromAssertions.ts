@@ -54,7 +54,18 @@ export async function deriveStopsFromAssertions(
         state: { in: ["PENDING", "ANSWERED"] },
       },
     })
-    if (existing) continue
+    // Skip if there's a real (non-superseded) PENDING/ANSWERED stop. But if
+    // the existing stop was auto-archived as superseded *and* the txn is
+    // still effectively unclassified (NEEDS_CONTEXT), re-emit — the original
+    // archive was based on a placeholder classification, not a real decision.
+    // Without this, Atif's STOPs page stays empty after Archive Superseded
+    // even though 93 deposits + 141 NEEDS_CONTEXT still block lock.
+    if (existing) {
+      const userAnswer = existing.userAnswer as { autoArchivedAsSuperseded?: boolean } | null
+      const isSupersededShell =
+        existing.state === "ANSWERED" && userAnswer?.autoArchivedAsSuperseded === true
+      if (!isSupersededShell) continue
+    }
     const absDollars = Math.abs(Number(tx.amountNormalized.toString()))
     const abs = absDollars.toFixed(2) // canonical for stop.context — keep machine-readable
     const absDisplay = fmtUSD(absDollars, { cents: true })
@@ -114,7 +125,12 @@ export async function deriveStopsFromAssertions(
         state: { in: ["PENDING", "ANSWERED"] },
       },
     })
-    if (existing) continue
+    if (existing) {
+      const userAnswer = existing.userAnswer as { autoArchivedAsSuperseded?: boolean } | null
+      const isSupersededShell =
+        existing.state === "ANSWERED" && userAnswer?.autoArchivedAsSuperseded === true
+      if (!isSupersededShell) continue
+    }
 
     const absDollars = Math.abs(Number(tx.amountNormalized.toString()))
     const abs = absDollars.toFixed(2)
