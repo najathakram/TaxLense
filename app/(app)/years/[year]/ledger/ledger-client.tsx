@@ -13,6 +13,16 @@ import { Label } from "@/components/ui/label"
 import { Checkbox } from "@/components/ui/checkbox"
 import { TRANSACTION_CODES, SCHEDULE_C_LINES, codeColorClass } from "@/lib/classification/constants"
 import { AMAZON_MERCHANT_PATTERN, AMAZON_SPLIT_THRESHOLD } from "@/lib/splits/config"
+import { fmtUSD } from "@/lib/format/currency"
+
+// Codes whose Schedule-C deductible is always $0; biz % is meaningless.
+const NON_DEDUCTIBLE_CODES = new Set<TransactionCode>([
+  "NEEDS_CONTEXT",
+  "PERSONAL",
+  "TRANSFER",
+  "PAYMENT",
+  "BIZ_INCOME",
+])
 import {
   editClassification,
   bulkReclassify,
@@ -293,7 +303,7 @@ export function LedgerClient({ year, rows, accounts }: Props) {
         )}
         <div className="ml-auto text-right">
           <div>{filtered.length} rows</div>
-          <div className="font-semibold">${totalDeductible.toFixed(2)} deductible</div>
+          <div className="font-semibold">{fmtUSD(totalDeductible, { cents: true })} deductible</div>
         </div>
       </div>
 
@@ -409,7 +419,7 @@ export function LedgerClient({ year, rows, accounts }: Props) {
                     {categoryLoading ? <span className="opacity-30">…</span> : (categoryMap[r.merchantNormalized ?? r.merchantRaw] ?? "")}
                   </div>
                   <div className={`p-2 text-right tabular-nums ${r.amount > 0 ? "text-red-600 dark:text-red-400" : "text-green-600 dark:text-green-400"}`}>
-                    {r.amount > 0 ? "-" : "+"}${Math.abs(r.amount).toFixed(2)}
+                    {r.amount > 0 ? "-" : "+"}{fmtUSD(Math.abs(r.amount), { cents: true })}
                   </div>
                   <div className="p-2">
                     <select
@@ -442,13 +452,22 @@ export function LedgerClient({ year, rows, accounts }: Props) {
                     </select>
                   </div>
                   <div className="p-2 text-right">
-                    <BizPctEditor
-                      value={r.businessPct}
-                      disabled={r.code === "WRITE_OFF_TRAVEL" || pending}
-                      onCommit={(v) => onInlineEdit({ transactionId: r.id, businessPct: v })}
-                    />
+                    {/* B-20: biz % only matters for deductible codes. For
+                        NEEDS_CONTEXT / PERSONAL / TRANSFER / PAYMENT /
+                        BIZ_INCOME the percentage is irrelevant — render an
+                        em-dash so a CPA reading the row doesn't see a
+                        misleading "100%" next to a $0 deductible. */}
+                    {NON_DEDUCTIBLE_CODES.has(r.code) ? (
+                      <span className="text-muted-foreground">—</span>
+                    ) : (
+                      <BizPctEditor
+                        value={r.businessPct}
+                        disabled={r.code === "WRITE_OFF_TRAVEL" || pending}
+                        onCommit={(v) => onInlineEdit({ transactionId: r.id, businessPct: v })}
+                      />
+                    )}
                   </div>
-                  <div className="p-2 text-right tabular-nums">${r.deductibleAmt.toFixed(2)}</div>
+                  <div className="p-2 text-right tabular-nums">{fmtUSD(r.deductibleAmt, { cents: true })}</div>
                   <div className="p-2 text-center">
                     <Badge variant="outline">{r.evidenceTier}</Badge>
                   </div>
@@ -658,7 +677,7 @@ function AmazonSplitDialog({
         </DialogHeader>
         <div className="space-y-3 text-sm">
           <p>
-            Parent: <strong>${Math.abs(row.amount).toFixed(2)}</strong> on {row.date}
+            Parent: <strong>{fmtUSD(Math.abs(row.amount), { cents: true })}</strong> on {row.date}
           </p>
           <div className="space-y-2">
             {splits.map((s, i) => (
@@ -721,8 +740,8 @@ function AmazonSplitDialog({
               + Add split
             </Button>
             <div className={valid ? "text-green-600" : "text-red-600"}>
-              Sum: ${(sumCents / 100).toFixed(2)} / ${(parentCents / 100).toFixed(2)} —{" "}
-              Delta: ${((parentCents - sumCents) / 100).toFixed(2)}
+              Sum: {fmtUSD(sumCents / 100, { cents: true })} / {fmtUSD(parentCents / 100, { cents: true })} —{" "}
+              Delta: {fmtUSD((parentCents - sumCents) / 100, { cents: true, signed: true })}
             </div>
           </div>
           {error && <p className="text-xs text-red-600">{error}</p>}

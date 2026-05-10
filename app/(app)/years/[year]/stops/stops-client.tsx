@@ -17,6 +17,7 @@ import { resolveStop, deferStop, archiveSupersededStops, type StopAnswer } from 
 import { runAutoResolveStops, getPipelineRunStatus } from "@/app/(app)/years/[year]/pipeline/actions"
 import { FloatingProgress } from "@/components/pipeline/floating-progress"
 import type { AiSuggestion } from "@/lib/stops/aiSuggestion"
+import { fmtUSD } from "@/lib/format/currency"
 
 export type { AiSuggestion } from "@/lib/stops/aiSuggestion"
 
@@ -138,6 +139,20 @@ export function StopsClient({ year, stops }: { year: number; stops: SerializedSt
   const answeredCount = stops.filter((s) => s.state !== "PENDING").length
   const totalPending = CATEGORIES.reduce((n, c) => n + pendingCount(c.key), 0)
 
+  // B-03: pick the default tab so the user lands on a populated page rather
+  // than "No items in this category." Pre-fix: 47 deposit STOPs would render
+  // as "Merchant (0) — No items" because Merchant was hard-coded as default.
+  // New rule: highest pending-count category wins; ties prefer the order in
+  // CATEGORIES (Merchant > Transfer > Deposit > §274(d) > Period Gap).
+  const defaultTab: StopCategory =
+    CATEGORIES.reduce<{ key: StopCategory; n: number }>(
+      (best, c) => {
+        const n = pendingCount(c.key)
+        return n > best.n ? { key: c.key, n } : best
+      },
+      { key: "MERCHANT", n: 0 },
+    ).key
+
   const autoBusy = activeRun !== null
 
   return (
@@ -182,7 +197,7 @@ export function StopsClient({ year, stops }: { year: number; stops: SerializedSt
           </Button>
         </div>
       </div>
-    <Tabs defaultValue="MERCHANT" className="w-full">
+    <Tabs defaultValue={defaultTab} className="w-full">
       <TabsList className="grid w-full grid-cols-5">
         {CATEGORIES.map((c) => (
           <TabsTrigger key={c.key} value={c.key}>
@@ -271,7 +286,7 @@ function StopCard({ stop }: { stop: SerializedStop }) {
           <CardTitle className="text-base">
             {stop.merchantKey ?? (stop.affected[0]?.merchantRaw ?? "STOP")}{" "}
             <span className="text-sm font-normal text-muted-foreground">
-              · ${stop.totalAmount.toFixed(2)} · {stop.affected.length} txn
+              · {fmtUSD(stop.totalAmount, { cents: true })} · {stop.affected.length} txn
               {stop.affected.length !== 1 ? "s" : ""}
             </span>
           </CardTitle>
@@ -422,7 +437,7 @@ function AffectedTable({ rows }: { rows: SerializedAffected[] }) {
               <td className="p-2">{r.postedDate}</td>
               <td className="p-2">{r.accountNickname}</td>
               <td className="p-2 truncate max-w-xs">{r.merchantRaw}</td>
-              <td className="p-2 text-right">${r.amount.toFixed(2)}</td>
+              <td className="p-2 text-right">{fmtUSD(r.amount, { cents: true })}</td>
             </tr>
           ))}
           {rows.length > 10 && (

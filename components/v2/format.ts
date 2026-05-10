@@ -10,21 +10,10 @@
  */
 
 // ───────── Format helpers ────────────────────────────────────────────
+// Currency + number formatting moved to lib/format/currency.ts (B-01).
+// Re-exported here so existing v2-component imports keep working.
 
-export function fmtUSD(n: number | null | undefined, opts: { cents?: boolean } = {}): string {
-  if (n == null || isNaN(n)) return "—"
-  const sign = n < 0 ? "-" : ""
-  const abs = Math.abs(n)
-  const s = abs.toLocaleString("en-US", {
-    minimumFractionDigits: opts.cents ? 2 : 0,
-    maximumFractionDigits: opts.cents ? 2 : 0,
-  })
-  return `${sign}$${s}`
-}
-
-export function fmtNum(n: number | null | undefined): string {
-  return n == null ? "—" : n.toLocaleString("en-US")
-}
+export { fmtUSD, fmtNum, fmtUSDFromCents } from "@/lib/format/currency"
 
 export function fmtDate(d: Date | string | null | undefined): string {
   if (!d) return "—"

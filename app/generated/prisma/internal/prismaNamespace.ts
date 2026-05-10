@@ -396,6 +396,7 @@ export const ModelName = {
   Trip: 'Trip',
   Owner: 'Owner',
   FinancialAccount: 'FinancialAccount',
+  AccountYearLink: 'AccountYearLink',
   StatementImport: 'StatementImport',
   ImportSession: 'ImportSession',
   PipelineRun: 'PipelineRun',
@@ -421,7 +422,7 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
     omit: GlobalOmitOptions
   }
   meta: {
-    modelProps: "user" | "cpaClient" | "account" | "session" | "verificationToken" | "ruleVersion" | "taxYear" | "businessProfile" | "knownEntity" | "trip" | "owner" | "financialAccount" | "statementImport" | "importSession" | "pipelineRun" | "transaction" | "classification" | "merchantRule" | "stopItem" | "auditEvent" | "report" | "document"
+    modelProps: "user" | "cpaClient" | "account" | "session" | "verificationToken" | "ruleVersion" | "taxYear" | "businessProfile" | "knownEntity" | "trip" | "owner" | "financialAccount" | "accountYearLink" | "statementImport" | "importSession" | "pipelineRun" | "transaction" | "classification" | "merchantRule" | "stopItem" | "auditEvent" | "report" | "document"
     txIsolationLevel: TransactionIsolationLevel
   }
   model: {
@@ -1313,6 +1314,80 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
         }
       }
     }
+    AccountYearLink: {
+      payload: Prisma.$AccountYearLinkPayload<ExtArgs>
+      fields: Prisma.AccountYearLinkFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.AccountYearLinkFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AccountYearLinkPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.AccountYearLinkFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AccountYearLinkPayload>
+        }
+        findFirst: {
+          args: Prisma.AccountYearLinkFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AccountYearLinkPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.AccountYearLinkFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AccountYearLinkPayload>
+        }
+        findMany: {
+          args: Prisma.AccountYearLinkFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AccountYearLinkPayload>[]
+        }
+        create: {
+          args: Prisma.AccountYearLinkCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AccountYearLinkPayload>
+        }
+        createMany: {
+          args: Prisma.AccountYearLinkCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.AccountYearLinkCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AccountYearLinkPayload>[]
+        }
+        delete: {
+          args: Prisma.AccountYearLinkDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AccountYearLinkPayload>
+        }
+        update: {
+          args: Prisma.AccountYearLinkUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AccountYearLinkPayload>
+        }
+        deleteMany: {
+          args: Prisma.AccountYearLinkDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.AccountYearLinkUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.AccountYearLinkUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AccountYearLinkPayload>[]
+        }
+        upsert: {
+          args: Prisma.AccountYearLinkUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AccountYearLinkPayload>
+        }
+        aggregate: {
+          args: Prisma.AccountYearLinkAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateAccountYearLink>
+        }
+        groupBy: {
+          args: Prisma.AccountYearLinkGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AccountYearLinkGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.AccountYearLinkCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AccountYearLinkCountAggregateOutputType> | number
+        }
+      }
+    }
     StatementImport: {
       payload: Prisma.$StatementImportPayload<ExtArgs>
       fields: Prisma.StatementImportFieldRefs
@@ -2176,6 +2251,7 @@ export const TaxYearScalarFieldEnum = {
   ruleVersionId: 'ruleVersionId',
   lockedAt: 'lockedAt',
   lockedSnapshotHash: 'lockedSnapshotHash',
+  acceptedRiskOverrides: 'acceptedRiskOverrides',
   createdAt: 'createdAt'
 } as const
 
@@ -2263,6 +2339,19 @@ export const FinancialAccountScalarFieldEnum = {
 } as const
 
 export type FinancialAccountScalarFieldEnum = (typeof FinancialAccountScalarFieldEnum)[keyof typeof FinancialAccountScalarFieldEnum]
+
+
+export const AccountYearLinkScalarFieldEnum = {
+  id: 'id',
+  accountId: 'accountId',
+  taxYearId: 'taxYearId',
+  nickname: 'nickname',
+  isClosed: 'isClosed',
+  closedAt: 'closedAt',
+  createdAt: 'createdAt'
+} as const
+
+export type AccountYearLinkScalarFieldEnum = (typeof AccountYearLinkScalarFieldEnum)[keyof typeof AccountYearLinkScalarFieldEnum]
 
 
 export const StatementImportScalarFieldEnum = {
@@ -2972,6 +3061,7 @@ export type GlobalOmitConfig = {
   trip?: Prisma.TripOmit
   owner?: Prisma.OwnerOmit
   financialAccount?: Prisma.FinancialAccountOmit
+  accountYearLink?: Prisma.AccountYearLinkOmit
   statementImport?: Prisma.StatementImportOmit
   importSession?: Prisma.ImportSessionOmit
   pipelineRun?: Prisma.PipelineRunOmit

@@ -5,6 +5,8 @@ import { PipelineClient } from "./pipeline-client"
 import { NextStopsBanner } from "@/components/pipeline/next-stops-banner"
 import { buildReceipt, type Receipt } from "@/lib/jobs/receipts"
 import type { PipelineRunKind } from "@/app/generated/prisma/client"
+import { getYearCounts } from "@/lib/taxYear/status"
+import { inYearWindow } from "@/lib/queries/yearWindow"
 
 interface Props {
   params: Promise<{ year: string }>
@@ -23,39 +25,49 @@ export default async function PipelinePage({ params }: Props) {
   if (!taxYear) notFound()
 
   // --- Stats ---
-  const totalTx = await prisma.transaction.count({
-    where: { taxYearId: taxYear.id, isDuplicateOf: null },
-  })
+  // Canonical counts (B-04). The same filter the ledger uses.
+  const counts = await getYearCounts(taxYear.id)
+  const totalTx = counts.totalTx
+  const classified = counts.classifiedTx
+  const stops = counts.pendingStops
+
+  const yearWindow = inYearWindow(taxYear.year)
+  const canonicalTxWhere = {
+    taxYearId: taxYear.id,
+    isDuplicateOf: null,
+    isSplit: false,
+    isStale: false,
+    ...yearWindow,
+  }
 
   const normalizedTx = await prisma.transaction.count({
-    where: { taxYearId: taxYear.id, isDuplicateOf: null, merchantNormalized: { not: null } },
+    where: { ...canonicalTxWhere, merchantNormalized: { not: null } },
   })
 
   const transferPairs = await prisma.transaction.count({
-    where: { taxYearId: taxYear.id, isTransferPairedWith: { not: null } },
+    where: { ...canonicalTxWhere, isTransferPairedWith: { not: null } },
   })
 
   const paymentPairs = await prisma.transaction.count({
-    where: { taxYearId: taxYear.id, isPaymentPairedWith: { not: null } },
+    where: { ...canonicalTxWhere, isPaymentPairedWith: { not: null } },
   })
 
   const refundPairs = await prisma.transaction.count({
-    where: { taxYearId: taxYear.id, isRefundPairedWith: { not: null } },
+    where: { ...canonicalTxWhere, isRefundPairedWith: { not: null } },
   })
 
   const merchantRules = await prisma.merchantRule.count({
     where: { taxYearId: taxYear.id },
   })
 
-  const classified = await prisma.classification.count({
+  // B-30: count low-confidence PDF imports so the "Re-extract" badge can show
+  // a real number instead of a static "scanned PDFs" label.
+  const lowConfPdfCount = await prisma.statementImport.count({
     where: {
-      transaction: { taxYearId: taxYear.id },
-      isCurrent: true,
+      taxYearId: taxYear.id,
+      fileType: "pdf",
+      parseConfidence: { lt: 0.85 },
     },
-  })
-
-  const stops = await prisma.stopItem.count({
-    where: { taxYearId: taxYear.id, state: "PENDING" },
   })
 
   // Distinct backlog counts so steps 7, 8, 9 each show what they would
@@ -73,7 +85,7 @@ export default async function PipelinePage({ params }: Props) {
     }),
     prisma.classification.count({
       where: {
-        transaction: { taxYearId: taxYear.id },
+        transaction: canonicalTxWhere,
         isCurrent: true,
         code: "NEEDS_CONTEXT",
       },
@@ -185,6 +197,7 @@ export default async function PipelinePage({ params }: Props) {
           residualCandidates,
           needsContextCount,
           pendingStops,
+          lowConfPdfCount,
         }}
         receipts={wireReceipts}
       />

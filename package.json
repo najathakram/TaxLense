@@ -5,7 +5,8 @@
   "scripts": {
     "dev": "next dev",
     "build": "prisma generate && next build",
-    "start": "prisma migrate deploy && node scripts/bootstrap.mjs && node scripts/seed-atif.mjs && node scripts/backfill-documents.mjs && node scripts/rename-atif.mjs && node scripts/recompute-tax-year-statuses.mjs && node scripts/reclassify-tax-year.mjs && next start",
+    "start": "prisma migrate deploy && node scripts/bootstrap.mjs && next start",
+    "post-deploy": "node scripts/seed-atif.mjs && node scripts/backfill-documents.mjs && node scripts/rename-atif.mjs && node scripts/recompute-tax-year-statuses.mjs && node scripts/reclassify-tax-year.mjs && node scripts/backfill-account-year-links.mjs && node scripts/fix-wise-sign-bug.mjs",
     "lint": "eslint",
     "seed": "tsx prisma/seed.ts",
     "test": "vitest run",

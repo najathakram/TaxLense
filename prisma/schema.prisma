@@ -299,12 +299,18 @@ model TaxYear {
   ruleVersionId      String?
   lockedAt           DateTime?
   lockedSnapshotHash String?
+  // CPA / user acknowledgements that mute specific risk signals (B-23). Shape:
+  // { "INCOME_SHORT": true, "...": "rationale text" }. Mute is opt-in and
+  // recorded in an AuditEvent; signals stay visible on the dashboard with
+  // an "Acknowledged" badge.
+  acceptedRiskOverrides Json?
   createdAt          DateTime      @default(now())
 
   user              User               @relation(fields: [userId], references: [id], onDelete: Cascade)
   ruleVersion       RuleVersion?       @relation(fields: [ruleVersionId], references: [id])
   businessProfile   BusinessProfile?
   financialAccounts FinancialAccount[]
+  accountYearLinks  AccountYearLink[]
   statementImports  StatementImport[]
   transactions      Transaction[]
   merchantRules     MerchantRule[]
@@ -429,6 +435,12 @@ model Owner {
 model FinancialAccount {
   id                String      @id @default(cuid())
   userId            String
+  // Legacy: each FinancialAccount used to belong to exactly one TaxYear,
+  // which broke continuity for multi-year clients (B-21). The new
+  // AccountYearLink table represents the same account showing up in
+  // multiple years. taxYearId stays for back-compat reads — `pnpm
+  // post-deploy` runs the backfill that creates AccountYearLink rows from
+  // existing data; once every reader migrates we drop the column.
   taxYearId         String
   type              AccountType
   institution       String
@@ -440,6 +452,33 @@ model FinancialAccount {
   taxYear          TaxYear           @relation(fields: [taxYearId], references: [id], onDelete: Cascade)
   statementImports StatementImport[]
   transactions     Transaction[]
+  yearLinks        AccountYearLink[]
+}
+
+// ---------------------------------------------------------------------------
+// ACCOUNT ↔ TAX YEAR LINK (B-21)
+// ---------------------------------------------------------------------------
+// Lets one FinancialAccount belong to multiple tax years without forcing
+// duplicate rows. Backfilled from existing FinancialAccount.taxYearId by
+// scripts/backfill-account-year-links.mjs. New uploads should call
+// linkAccountToYear() so the join table stays current.
+
+model AccountYearLink {
+  id        String   @id @default(cuid())
+  accountId String
+  taxYearId String
+  // Per-year display overrides — useful when a user renames an account
+  // mid-year or closes it. Optional; the FinancialAccount.nickname is the
+  // fallback.
+  nickname  String?
+  isClosed  Boolean  @default(false)
+  closedAt  DateTime?
+  createdAt DateTime @default(now())
+
+  account FinancialAccount @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  taxYear TaxYear          @relation(fields: [taxYearId], references: [id], onDelete: Cascade)
+
+  @@unique([accountId, taxYearId])
 }
 
 // ---------------------------------------------------------------------------

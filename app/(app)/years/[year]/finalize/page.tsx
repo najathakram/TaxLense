@@ -11,6 +11,7 @@ import { runLockAssertions, type AssertionRunResult } from "@/lib/validation/ass
 import { attemptLock } from "../lock/actions"
 import { LockClient } from "../lock/lock-client"
 import { DownloadClient } from "../download/download-client"
+import { deriveStage, getYearCounts } from "@/lib/taxYear/status"
 
 interface Props {
   params: Promise<{ year: string }>
@@ -49,13 +50,22 @@ export default async function FinalizePage({ params }: Props) {
   // Run risk + assertions in parallel — these drive the Lock section's
   // gating + the Risk section's content. Skip when LOCKED to avoid
   // re-running expensive aggregates after the year is frozen.
-  const [risk, assertions, reports] = await Promise.all([
+  const [risk, assertions, reports, counts] = await Promise.all([
     isLocked ? null : computeRiskScore(taxYear.id),
     isLocked ? null : runLockAssertions(taxYear.id),
     prisma.report.findMany({
       where: { taxYearId: taxYear.id, isCurrent: true },
     }),
+    getYearCounts(taxYear.id),
   ])
+
+  // B-02: render the live derived stage, not the persisted column. Without
+  // this, the page header showed "CREATED" on Atif's TY2025 even after 485
+  // classifications had been written.
+  const derivedStatus = deriveStage(
+    { status: taxYear.status, lockedAt: taxYear.lockedAt },
+    counts,
+  )
 
   // Lock-attempt result mirrors the standalone /lock page so Section 2 can
   // show "ready / blocked" without rerunning the assertions chain. Skip when
@@ -120,7 +130,7 @@ export default async function FinalizePage({ params }: Props) {
           </p>
         </div>
         <Badge variant={isLocked ? "default" : "outline"} className="text-xs shrink-0">
-          {taxYear.status}
+          {derivedStatus}
         </Badge>
       </div>
 
@@ -383,7 +393,9 @@ function StatusBadge({ status }: { status: SectionStatus }) {
     done: { label: "Done", cls: "bg-emerald-500/15 text-emerald-500 border-emerald-500/30" },
     ready: { label: "Ready", cls: "bg-blue-500/15 text-blue-500 border-blue-500/30" },
     blocked: { label: "Blocked", cls: "bg-amber-500/15 text-amber-500 border-amber-500/30" },
-    disabled: { label: "Locked", cls: "bg-muted text-muted-foreground border-border" },
+    // B-37: was "Locked", which collided with the year-state LOCKED pill.
+    // "Pending" is unambiguous: this card is waiting on a prior step.
+    disabled: { label: "Pending", cls: "bg-muted text-muted-foreground border-border" },
   }
   const { label, cls } = map[status]
   return (

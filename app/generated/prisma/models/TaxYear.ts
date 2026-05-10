@@ -64,6 +64,7 @@ export type TaxYearCountAggregateOutputType = {
   ruleVersionId: number
   lockedAt: number
   lockedSnapshotHash: number
+  acceptedRiskOverrides: number
   createdAt: number
   _all: number
 }
@@ -107,6 +108,7 @@ export type TaxYearCountAggregateInputType = {
   ruleVersionId?: true
   lockedAt?: true
   lockedSnapshotHash?: true
+  acceptedRiskOverrides?: true
   createdAt?: true
   _all?: true
 }
@@ -205,6 +207,7 @@ export type TaxYearGroupByOutputType = {
   ruleVersionId: string | null
   lockedAt: Date | null
   lockedSnapshotHash: string | null
+  acceptedRiskOverrides: runtime.JsonValue | null
   createdAt: Date
   _count: TaxYearCountAggregateOutputType | null
   _avg: TaxYearAvgAggregateOutputType | null
@@ -239,11 +242,13 @@ export type TaxYearWhereInput = {
   ruleVersionId?: Prisma.StringNullableFilter<"TaxYear"> | string | null
   lockedAt?: Prisma.DateTimeNullableFilter<"TaxYear"> | Date | string | null
   lockedSnapshotHash?: Prisma.StringNullableFilter<"TaxYear"> | string | null
+  acceptedRiskOverrides?: Prisma.JsonNullableFilter<"TaxYear">
   createdAt?: Prisma.DateTimeFilter<"TaxYear"> | Date | string
   user?: Prisma.XOR<Prisma.UserScalarRelationFilter, Prisma.UserWhereInput>
   ruleVersion?: Prisma.XOR<Prisma.RuleVersionNullableScalarRelationFilter, Prisma.RuleVersionWhereInput> | null
   businessProfile?: Prisma.XOR<Prisma.BusinessProfileNullableScalarRelationFilter, Prisma.BusinessProfileWhereInput> | null
   financialAccounts?: Prisma.FinancialAccountListRelationFilter
+  accountYearLinks?: Prisma.AccountYearLinkListRelationFilter
   statementImports?: Prisma.StatementImportListRelationFilter
   transactions?: Prisma.TransactionListRelationFilter
   merchantRules?: Prisma.MerchantRuleListRelationFilter
@@ -262,11 +267,13 @@ export type TaxYearOrderByWithRelationInput = {
   ruleVersionId?: Prisma.SortOrderInput | Prisma.SortOrder
   lockedAt?: Prisma.SortOrderInput | Prisma.SortOrder
   lockedSnapshotHash?: Prisma.SortOrderInput | Prisma.SortOrder
+  acceptedRiskOverrides?: Prisma.SortOrderInput | Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   user?: Prisma.UserOrderByWithRelationInput
   ruleVersion?: Prisma.RuleVersionOrderByWithRelationInput
   businessProfile?: Prisma.BusinessProfileOrderByWithRelationInput
   financialAccounts?: Prisma.FinancialAccountOrderByRelationAggregateInput
+  accountYearLinks?: Prisma.AccountYearLinkOrderByRelationAggregateInput
   statementImports?: Prisma.StatementImportOrderByRelationAggregateInput
   transactions?: Prisma.TransactionOrderByRelationAggregateInput
   merchantRules?: Prisma.MerchantRuleOrderByRelationAggregateInput
@@ -289,11 +296,13 @@ export type TaxYearWhereUniqueInput = Prisma.AtLeast<{
   ruleVersionId?: Prisma.StringNullableFilter<"TaxYear"> | string | null
   lockedAt?: Prisma.DateTimeNullableFilter<"TaxYear"> | Date | string | null
   lockedSnapshotHash?: Prisma.StringNullableFilter<"TaxYear"> | string | null
+  acceptedRiskOverrides?: Prisma.JsonNullableFilter<"TaxYear">
   createdAt?: Prisma.DateTimeFilter<"TaxYear"> | Date | string
   user?: Prisma.XOR<Prisma.UserScalarRelationFilter, Prisma.UserWhereInput>
   ruleVersion?: Prisma.XOR<Prisma.RuleVersionNullableScalarRelationFilter, Prisma.RuleVersionWhereInput> | null
   businessProfile?: Prisma.XOR<Prisma.BusinessProfileNullableScalarRelationFilter, Prisma.BusinessProfileWhereInput> | null
   financialAccounts?: Prisma.FinancialAccountListRelationFilter
+  accountYearLinks?: Prisma.AccountYearLinkListRelationFilter
   statementImports?: Prisma.StatementImportListRelationFilter
   transactions?: Prisma.TransactionListRelationFilter
   merchantRules?: Prisma.MerchantRuleListRelationFilter
@@ -312,6 +321,7 @@ export type TaxYearOrderByWithAggregationInput = {
   ruleVersionId?: Prisma.SortOrderInput | Prisma.SortOrder
   lockedAt?: Prisma.SortOrderInput | Prisma.SortOrder
   lockedSnapshotHash?: Prisma.SortOrderInput | Prisma.SortOrder
+  acceptedRiskOverrides?: Prisma.SortOrderInput | Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   _count?: Prisma.TaxYearCountOrderByAggregateInput
   _avg?: Prisma.TaxYearAvgOrderByAggregateInput
@@ -331,6 +341,7 @@ export type TaxYearScalarWhereWithAggregatesInput = {
   ruleVersionId?: Prisma.StringNullableWithAggregatesFilter<"TaxYear"> | string | null
   lockedAt?: Prisma.DateTimeNullableWithAggregatesFilter<"TaxYear"> | Date | string | null
   lockedSnapshotHash?: Prisma.StringNullableWithAggregatesFilter<"TaxYear"> | string | null
+  acceptedRiskOverrides?: Prisma.JsonNullableWithAggregatesFilter<"TaxYear">
   createdAt?: Prisma.DateTimeWithAggregatesFilter<"TaxYear"> | Date | string
 }
 
@@ -340,11 +351,13 @@ export type TaxYearCreateInput = {
   status?: $Enums.TaxYearStatus
   lockedAt?: Date | string | null
   lockedSnapshotHash?: string | null
+  acceptedRiskOverrides?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   createdAt?: Date | string
   user: Prisma.UserCreateNestedOneWithoutTaxYearsInput
   ruleVersion?: Prisma.RuleVersionCreateNestedOneWithoutTaxYearsInput
   businessProfile?: Prisma.BusinessProfileCreateNestedOneWithoutTaxYearInput
   financialAccounts?: Prisma.FinancialAccountCreateNestedManyWithoutTaxYearInput
+  accountYearLinks?: Prisma.AccountYearLinkCreateNestedManyWithoutTaxYearInput
   statementImports?: Prisma.StatementImportCreateNestedManyWithoutTaxYearInput
   transactions?: Prisma.TransactionCreateNestedManyWithoutTaxYearInput
   merchantRules?: Prisma.MerchantRuleCreateNestedManyWithoutTaxYearInput
@@ -363,9 +376,11 @@ export type TaxYearUncheckedCreateInput = {
   ruleVersionId?: string | null
   lockedAt?: Date | string | null
   lockedSnapshotHash?: string | null
+  acceptedRiskOverrides?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   createdAt?: Date | string
   businessProfile?: Prisma.BusinessProfileUncheckedCreateNestedOneWithoutTaxYearInput
   financialAccounts?: Prisma.FinancialAccountUncheckedCreateNestedManyWithoutTaxYearInput
+  accountYearLinks?: Prisma.AccountYearLinkUncheckedCreateNestedManyWithoutTaxYearInput
   statementImports?: Prisma.StatementImportUncheckedCreateNestedManyWithoutTaxYearInput
   transactions?: Prisma.TransactionUncheckedCreateNestedManyWithoutTaxYearInput
   merchantRules?: Prisma.MerchantRuleUncheckedCreateNestedManyWithoutTaxYearInput
@@ -382,11 +397,13 @@ export type TaxYearUpdateInput = {
   status?: Prisma.EnumTaxYearStatusFieldUpdateOperationsInput | $Enums.TaxYearStatus
   lockedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   lockedSnapshotHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  acceptedRiskOverrides?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   user?: Prisma.UserUpdateOneRequiredWithoutTaxYearsNestedInput
   ruleVersion?: Prisma.RuleVersionUpdateOneWithoutTaxYearsNestedInput
   businessProfile?: Prisma.BusinessProfileUpdateOneWithoutTaxYearNestedInput
   financialAccounts?: Prisma.FinancialAccountUpdateManyWithoutTaxYearNestedInput
+  accountYearLinks?: Prisma.AccountYearLinkUpdateManyWithoutTaxYearNestedInput
   statementImports?: Prisma.StatementImportUpdateManyWithoutTaxYearNestedInput
   transactions?: Prisma.TransactionUpdateManyWithoutTaxYearNestedInput
   merchantRules?: Prisma.MerchantRuleUpdateManyWithoutTaxYearNestedInput
@@ -405,9 +422,11 @@ export type TaxYearUncheckedUpdateInput = {
   ruleVersionId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   lockedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   lockedSnapshotHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  acceptedRiskOverrides?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   businessProfile?: Prisma.BusinessProfileUncheckedUpdateOneWithoutTaxYearNestedInput
   financialAccounts?: Prisma.FinancialAccountUncheckedUpdateManyWithoutTaxYearNestedInput
+  accountYearLinks?: Prisma.AccountYearLinkUncheckedUpdateManyWithoutTaxYearNestedInput
   statementImports?: Prisma.StatementImportUncheckedUpdateManyWithoutTaxYearNestedInput
   transactions?: Prisma.TransactionUncheckedUpdateManyWithoutTaxYearNestedInput
   merchantRules?: Prisma.MerchantRuleUncheckedUpdateManyWithoutTaxYearNestedInput
@@ -426,6 +445,7 @@ export type TaxYearCreateManyInput = {
   ruleVersionId?: string | null
   lockedAt?: Date | string | null
   lockedSnapshotHash?: string | null
+  acceptedRiskOverrides?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   createdAt?: Date | string
 }
 
@@ -435,6 +455,7 @@ export type TaxYearUpdateManyMutationInput = {
   status?: Prisma.EnumTaxYearStatusFieldUpdateOperationsInput | $Enums.TaxYearStatus
   lockedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   lockedSnapshotHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  acceptedRiskOverrides?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
 
@@ -446,6 +467,7 @@ export type TaxYearUncheckedUpdateManyInput = {
   ruleVersionId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   lockedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   lockedSnapshotHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  acceptedRiskOverrides?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
 
@@ -472,6 +494,7 @@ export type TaxYearCountOrderByAggregateInput = {
   ruleVersionId?: Prisma.SortOrder
   lockedAt?: Prisma.SortOrder
   lockedSnapshotHash?: Prisma.SortOrder
+  acceptedRiskOverrides?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
 }
 
@@ -639,6 +662,20 @@ export type TaxYearUpdateOneRequiredWithoutFinancialAccountsNestedInput = {
   update?: Prisma.XOR<Prisma.XOR<Prisma.TaxYearUpdateToOneWithWhereWithoutFinancialAccountsInput, Prisma.TaxYearUpdateWithoutFinancialAccountsInput>, Prisma.TaxYearUncheckedUpdateWithoutFinancialAccountsInput>
 }
 
+export type TaxYearCreateNestedOneWithoutAccountYearLinksInput = {
+  create?: Prisma.XOR<Prisma.TaxYearCreateWithoutAccountYearLinksInput, Prisma.TaxYearUncheckedCreateWithoutAccountYearLinksInput>
+  connectOrCreate?: Prisma.TaxYearCreateOrConnectWithoutAccountYearLinksInput
+  connect?: Prisma.TaxYearWhereUniqueInput
+}
+
+export type TaxYearUpdateOneRequiredWithoutAccountYearLinksNestedInput = {
+  create?: Prisma.XOR<Prisma.TaxYearCreateWithoutAccountYearLinksInput, Prisma.TaxYearUncheckedCreateWithoutAccountYearLinksInput>
+  connectOrCreate?: Prisma.TaxYearCreateOrConnectWithoutAccountYearLinksInput
+  upsert?: Prisma.TaxYearUpsertWithoutAccountYearLinksInput
+  connect?: Prisma.TaxYearWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.TaxYearUpdateToOneWithWhereWithoutAccountYearLinksInput, Prisma.TaxYearUpdateWithoutAccountYearLinksInput>, Prisma.TaxYearUncheckedUpdateWithoutAccountYearLinksInput>
+}
+
 export type TaxYearCreateNestedOneWithoutStatementImportsInput = {
   create?: Prisma.XOR<Prisma.TaxYearCreateWithoutStatementImportsInput, Prisma.TaxYearUncheckedCreateWithoutStatementImportsInput>
   connectOrCreate?: Prisma.TaxYearCreateOrConnectWithoutStatementImportsInput
@@ -759,10 +796,12 @@ export type TaxYearCreateWithoutUserInput = {
   status?: $Enums.TaxYearStatus
   lockedAt?: Date | string | null
   lockedSnapshotHash?: string | null
+  acceptedRiskOverrides?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   createdAt?: Date | string
   ruleVersion?: Prisma.RuleVersionCreateNestedOneWithoutTaxYearsInput
   businessProfile?: Prisma.BusinessProfileCreateNestedOneWithoutTaxYearInput
   financialAccounts?: Prisma.FinancialAccountCreateNestedManyWithoutTaxYearInput
+  accountYearLinks?: Prisma.AccountYearLinkCreateNestedManyWithoutTaxYearInput
   statementImports?: Prisma.StatementImportCreateNestedManyWithoutTaxYearInput
   transactions?: Prisma.TransactionCreateNestedManyWithoutTaxYearInput
   merchantRules?: Prisma.MerchantRuleCreateNestedManyWithoutTaxYearInput
@@ -780,9 +819,11 @@ export type TaxYearUncheckedCreateWithoutUserInput = {
   ruleVersionId?: string | null
   lockedAt?: Date | string | null
   lockedSnapshotHash?: string | null
+  acceptedRiskOverrides?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   createdAt?: Date | string
   businessProfile?: Prisma.BusinessProfileUncheckedCreateNestedOneWithoutTaxYearInput
   financialAccounts?: Prisma.FinancialAccountUncheckedCreateNestedManyWithoutTaxYearInput
+  accountYearLinks?: Prisma.AccountYearLinkUncheckedCreateNestedManyWithoutTaxYearInput
   statementImports?: Prisma.StatementImportUncheckedCreateNestedManyWithoutTaxYearInput
   transactions?: Prisma.TransactionUncheckedCreateNestedManyWithoutTaxYearInput
   merchantRules?: Prisma.MerchantRuleUncheckedCreateNestedManyWithoutTaxYearInput
@@ -830,6 +871,7 @@ export type TaxYearScalarWhereInput = {
   ruleVersionId?: Prisma.StringNullableFilter<"TaxYear"> | string | null
   lockedAt?: Prisma.DateTimeNullableFilter<"TaxYear"> | Date | string | null
   lockedSnapshotHash?: Prisma.StringNullableFilter<"TaxYear"> | string | null
+  acceptedRiskOverrides?: Prisma.JsonNullableFilter<"TaxYear">
   createdAt?: Prisma.DateTimeFilter<"TaxYear"> | Date | string
 }
 
@@ -839,10 +881,12 @@ export type TaxYearCreateWithoutRuleVersionInput = {
   status?: $Enums.TaxYearStatus
   lockedAt?: Date | string | null
   lockedSnapshotHash?: string | null
+  acceptedRiskOverrides?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   createdAt?: Date | string
   user: Prisma.UserCreateNestedOneWithoutTaxYearsInput
   businessProfile?: Prisma.BusinessProfileCreateNestedOneWithoutTaxYearInput
   financialAccounts?: Prisma.FinancialAccountCreateNestedManyWithoutTaxYearInput
+  accountYearLinks?: Prisma.AccountYearLinkCreateNestedManyWithoutTaxYearInput
   statementImports?: Prisma.StatementImportCreateNestedManyWithoutTaxYearInput
   transactions?: Prisma.TransactionCreateNestedManyWithoutTaxYearInput
   merchantRules?: Prisma.MerchantRuleCreateNestedManyWithoutTaxYearInput
@@ -860,9 +904,11 @@ export type TaxYearUncheckedCreateWithoutRuleVersionInput = {
   status?: $Enums.TaxYearStatus
   lockedAt?: Date | string | null
   lockedSnapshotHash?: string | null
+  acceptedRiskOverrides?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   createdAt?: Date | string
   businessProfile?: Prisma.BusinessProfileUncheckedCreateNestedOneWithoutTaxYearInput
   financialAccounts?: Prisma.FinancialAccountUncheckedCreateNestedManyWithoutTaxYearInput
+  accountYearLinks?: Prisma.AccountYearLinkUncheckedCreateNestedManyWithoutTaxYearInput
   statementImports?: Prisma.StatementImportUncheckedCreateNestedManyWithoutTaxYearInput
   transactions?: Prisma.TransactionUncheckedCreateNestedManyWithoutTaxYearInput
   merchantRules?: Prisma.MerchantRuleUncheckedCreateNestedManyWithoutTaxYearInput
@@ -905,10 +951,12 @@ export type TaxYearCreateWithoutBusinessProfileInput = {
   status?: $Enums.TaxYearStatus
   lockedAt?: Date | string | null
   lockedSnapshotHash?: string | null
+  acceptedRiskOverrides?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   createdAt?: Date | string
   user: Prisma.UserCreateNestedOneWithoutTaxYearsInput
   ruleVersion?: Prisma.RuleVersionCreateNestedOneWithoutTaxYearsInput
   financialAccounts?: Prisma.FinancialAccountCreateNestedManyWithoutTaxYearInput
+  accountYearLinks?: Prisma.AccountYearLinkCreateNestedManyWithoutTaxYearInput
   statementImports?: Prisma.StatementImportCreateNestedManyWithoutTaxYearInput
   transactions?: Prisma.TransactionCreateNestedManyWithoutTaxYearInput
   merchantRules?: Prisma.MerchantRuleCreateNestedManyWithoutTaxYearInput
@@ -927,8 +975,10 @@ export type TaxYearUncheckedCreateWithoutBusinessProfileInput = {
   ruleVersionId?: string | null
   lockedAt?: Date | string | null
   lockedSnapshotHash?: string | null
+  acceptedRiskOverrides?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   createdAt?: Date | string
   financialAccounts?: Prisma.FinancialAccountUncheckedCreateNestedManyWithoutTaxYearInput
+  accountYearLinks?: Prisma.AccountYearLinkUncheckedCreateNestedManyWithoutTaxYearInput
   statementImports?: Prisma.StatementImportUncheckedCreateNestedManyWithoutTaxYearInput
   transactions?: Prisma.TransactionUncheckedCreateNestedManyWithoutTaxYearInput
   merchantRules?: Prisma.MerchantRuleUncheckedCreateNestedManyWithoutTaxYearInput
@@ -961,10 +1011,12 @@ export type TaxYearUpdateWithoutBusinessProfileInput = {
   status?: Prisma.EnumTaxYearStatusFieldUpdateOperationsInput | $Enums.TaxYearStatus
   lockedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   lockedSnapshotHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  acceptedRiskOverrides?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   user?: Prisma.UserUpdateOneRequiredWithoutTaxYearsNestedInput
   ruleVersion?: Prisma.RuleVersionUpdateOneWithoutTaxYearsNestedInput
   financialAccounts?: Prisma.FinancialAccountUpdateManyWithoutTaxYearNestedInput
+  accountYearLinks?: Prisma.AccountYearLinkUpdateManyWithoutTaxYearNestedInput
   statementImports?: Prisma.StatementImportUpdateManyWithoutTaxYearNestedInput
   transactions?: Prisma.TransactionUpdateManyWithoutTaxYearNestedInput
   merchantRules?: Prisma.MerchantRuleUpdateManyWithoutTaxYearNestedInput
@@ -983,8 +1035,10 @@ export type TaxYearUncheckedUpdateWithoutBusinessProfileInput = {
   ruleVersionId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   lockedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   lockedSnapshotHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  acceptedRiskOverrides?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   financialAccounts?: Prisma.FinancialAccountUncheckedUpdateManyWithoutTaxYearNestedInput
+  accountYearLinks?: Prisma.AccountYearLinkUncheckedUpdateManyWithoutTaxYearNestedInput
   statementImports?: Prisma.StatementImportUncheckedUpdateManyWithoutTaxYearNestedInput
   transactions?: Prisma.TransactionUncheckedUpdateManyWithoutTaxYearNestedInput
   merchantRules?: Prisma.MerchantRuleUncheckedUpdateManyWithoutTaxYearNestedInput
@@ -1001,10 +1055,12 @@ export type TaxYearCreateWithoutFinancialAccountsInput = {
   status?: $Enums.TaxYearStatus
   lockedAt?: Date | string | null
   lockedSnapshotHash?: string | null
+  acceptedRiskOverrides?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   createdAt?: Date | string
   user: Prisma.UserCreateNestedOneWithoutTaxYearsInput
   ruleVersion?: Prisma.RuleVersionCreateNestedOneWithoutTaxYearsInput
   businessProfile?: Prisma.BusinessProfileCreateNestedOneWithoutTaxYearInput
+  accountYearLinks?: Prisma.AccountYearLinkCreateNestedManyWithoutTaxYearInput
   statementImports?: Prisma.StatementImportCreateNestedManyWithoutTaxYearInput
   transactions?: Prisma.TransactionCreateNestedManyWithoutTaxYearInput
   merchantRules?: Prisma.MerchantRuleCreateNestedManyWithoutTaxYearInput
@@ -1023,8 +1079,10 @@ export type TaxYearUncheckedCreateWithoutFinancialAccountsInput = {
   ruleVersionId?: string | null
   lockedAt?: Date | string | null
   lockedSnapshotHash?: string | null
+  acceptedRiskOverrides?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   createdAt?: Date | string
   businessProfile?: Prisma.BusinessProfileUncheckedCreateNestedOneWithoutTaxYearInput
+  accountYearLinks?: Prisma.AccountYearLinkUncheckedCreateNestedManyWithoutTaxYearInput
   statementImports?: Prisma.StatementImportUncheckedCreateNestedManyWithoutTaxYearInput
   transactions?: Prisma.TransactionUncheckedCreateNestedManyWithoutTaxYearInput
   merchantRules?: Prisma.MerchantRuleUncheckedCreateNestedManyWithoutTaxYearInput
@@ -1057,10 +1115,12 @@ export type TaxYearUpdateWithoutFinancialAccountsInput = {
   status?: Prisma.EnumTaxYearStatusFieldUpdateOperationsInput | $Enums.TaxYearStatus
   lockedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   lockedSnapshotHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  acceptedRiskOverrides?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   user?: Prisma.UserUpdateOneRequiredWithoutTaxYearsNestedInput
   ruleVersion?: Prisma.RuleVersionUpdateOneWithoutTaxYearsNestedInput
   businessProfile?: Prisma.BusinessProfileUpdateOneWithoutTaxYearNestedInput
+  accountYearLinks?: Prisma.AccountYearLinkUpdateManyWithoutTaxYearNestedInput
   statementImports?: Prisma.StatementImportUpdateManyWithoutTaxYearNestedInput
   transactions?: Prisma.TransactionUpdateManyWithoutTaxYearNestedInput
   merchantRules?: Prisma.MerchantRuleUpdateManyWithoutTaxYearNestedInput
@@ -1079,8 +1139,114 @@ export type TaxYearUncheckedUpdateWithoutFinancialAccountsInput = {
   ruleVersionId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   lockedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   lockedSnapshotHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  acceptedRiskOverrides?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   businessProfile?: Prisma.BusinessProfileUncheckedUpdateOneWithoutTaxYearNestedInput
+  accountYearLinks?: Prisma.AccountYearLinkUncheckedUpdateManyWithoutTaxYearNestedInput
+  statementImports?: Prisma.StatementImportUncheckedUpdateManyWithoutTaxYearNestedInput
+  transactions?: Prisma.TransactionUncheckedUpdateManyWithoutTaxYearNestedInput
+  merchantRules?: Prisma.MerchantRuleUncheckedUpdateManyWithoutTaxYearNestedInput
+  stopItems?: Prisma.StopItemUncheckedUpdateManyWithoutTaxYearNestedInput
+  reports?: Prisma.ReportUncheckedUpdateManyWithoutTaxYearNestedInput
+  importSessions?: Prisma.ImportSessionUncheckedUpdateManyWithoutTaxYearNestedInput
+  documents?: Prisma.DocumentUncheckedUpdateManyWithoutTaxYearNestedInput
+  pipelineRuns?: Prisma.PipelineRunUncheckedUpdateManyWithoutTaxYearNestedInput
+}
+
+export type TaxYearCreateWithoutAccountYearLinksInput = {
+  id?: string
+  year: number
+  status?: $Enums.TaxYearStatus
+  lockedAt?: Date | string | null
+  lockedSnapshotHash?: string | null
+  acceptedRiskOverrides?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  createdAt?: Date | string
+  user: Prisma.UserCreateNestedOneWithoutTaxYearsInput
+  ruleVersion?: Prisma.RuleVersionCreateNestedOneWithoutTaxYearsInput
+  businessProfile?: Prisma.BusinessProfileCreateNestedOneWithoutTaxYearInput
+  financialAccounts?: Prisma.FinancialAccountCreateNestedManyWithoutTaxYearInput
+  statementImports?: Prisma.StatementImportCreateNestedManyWithoutTaxYearInput
+  transactions?: Prisma.TransactionCreateNestedManyWithoutTaxYearInput
+  merchantRules?: Prisma.MerchantRuleCreateNestedManyWithoutTaxYearInput
+  stopItems?: Prisma.StopItemCreateNestedManyWithoutTaxYearInput
+  reports?: Prisma.ReportCreateNestedManyWithoutTaxYearInput
+  importSessions?: Prisma.ImportSessionCreateNestedManyWithoutTaxYearInput
+  documents?: Prisma.DocumentCreateNestedManyWithoutTaxYearInput
+  pipelineRuns?: Prisma.PipelineRunCreateNestedManyWithoutTaxYearInput
+}
+
+export type TaxYearUncheckedCreateWithoutAccountYearLinksInput = {
+  id?: string
+  userId: string
+  year: number
+  status?: $Enums.TaxYearStatus
+  ruleVersionId?: string | null
+  lockedAt?: Date | string | null
+  lockedSnapshotHash?: string | null
+  acceptedRiskOverrides?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  createdAt?: Date | string
+  businessProfile?: Prisma.BusinessProfileUncheckedCreateNestedOneWithoutTaxYearInput
+  financialAccounts?: Prisma.FinancialAccountUncheckedCreateNestedManyWithoutTaxYearInput
+  statementImports?: Prisma.StatementImportUncheckedCreateNestedManyWithoutTaxYearInput
+  transactions?: Prisma.TransactionUncheckedCreateNestedManyWithoutTaxYearInput
+  merchantRules?: Prisma.MerchantRuleUncheckedCreateNestedManyWithoutTaxYearInput
+  stopItems?: Prisma.StopItemUncheckedCreateNestedManyWithoutTaxYearInput
+  reports?: Prisma.ReportUncheckedCreateNestedManyWithoutTaxYearInput
+  importSessions?: Prisma.ImportSessionUncheckedCreateNestedManyWithoutTaxYearInput
+  documents?: Prisma.DocumentUncheckedCreateNestedManyWithoutTaxYearInput
+  pipelineRuns?: Prisma.PipelineRunUncheckedCreateNestedManyWithoutTaxYearInput
+}
+
+export type TaxYearCreateOrConnectWithoutAccountYearLinksInput = {
+  where: Prisma.TaxYearWhereUniqueInput
+  create: Prisma.XOR<Prisma.TaxYearCreateWithoutAccountYearLinksInput, Prisma.TaxYearUncheckedCreateWithoutAccountYearLinksInput>
+}
+
+export type TaxYearUpsertWithoutAccountYearLinksInput = {
+  update: Prisma.XOR<Prisma.TaxYearUpdateWithoutAccountYearLinksInput, Prisma.TaxYearUncheckedUpdateWithoutAccountYearLinksInput>
+  create: Prisma.XOR<Prisma.TaxYearCreateWithoutAccountYearLinksInput, Prisma.TaxYearUncheckedCreateWithoutAccountYearLinksInput>
+  where?: Prisma.TaxYearWhereInput
+}
+
+export type TaxYearUpdateToOneWithWhereWithoutAccountYearLinksInput = {
+  where?: Prisma.TaxYearWhereInput
+  data: Prisma.XOR<Prisma.TaxYearUpdateWithoutAccountYearLinksInput, Prisma.TaxYearUncheckedUpdateWithoutAccountYearLinksInput>
+}
+
+export type TaxYearUpdateWithoutAccountYearLinksInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  year?: Prisma.IntFieldUpdateOperationsInput | number
+  status?: Prisma.EnumTaxYearStatusFieldUpdateOperationsInput | $Enums.TaxYearStatus
+  lockedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  lockedSnapshotHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  acceptedRiskOverrides?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  user?: Prisma.UserUpdateOneRequiredWithoutTaxYearsNestedInput
+  ruleVersion?: Prisma.RuleVersionUpdateOneWithoutTaxYearsNestedInput
+  businessProfile?: Prisma.BusinessProfileUpdateOneWithoutTaxYearNestedInput
+  financialAccounts?: Prisma.FinancialAccountUpdateManyWithoutTaxYearNestedInput
+  statementImports?: Prisma.StatementImportUpdateManyWithoutTaxYearNestedInput
+  transactions?: Prisma.TransactionUpdateManyWithoutTaxYearNestedInput
+  merchantRules?: Prisma.MerchantRuleUpdateManyWithoutTaxYearNestedInput
+  stopItems?: Prisma.StopItemUpdateManyWithoutTaxYearNestedInput
+  reports?: Prisma.ReportUpdateManyWithoutTaxYearNestedInput
+  importSessions?: Prisma.ImportSessionUpdateManyWithoutTaxYearNestedInput
+  documents?: Prisma.DocumentUpdateManyWithoutTaxYearNestedInput
+  pipelineRuns?: Prisma.PipelineRunUpdateManyWithoutTaxYearNestedInput
+}
+
+export type TaxYearUncheckedUpdateWithoutAccountYearLinksInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  userId?: Prisma.StringFieldUpdateOperationsInput | string
+  year?: Prisma.IntFieldUpdateOperationsInput | number
+  status?: Prisma.EnumTaxYearStatusFieldUpdateOperationsInput | $Enums.TaxYearStatus
+  ruleVersionId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  lockedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  lockedSnapshotHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  acceptedRiskOverrides?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  businessProfile?: Prisma.BusinessProfileUncheckedUpdateOneWithoutTaxYearNestedInput
+  financialAccounts?: Prisma.FinancialAccountUncheckedUpdateManyWithoutTaxYearNestedInput
   statementImports?: Prisma.StatementImportUncheckedUpdateManyWithoutTaxYearNestedInput
   transactions?: Prisma.TransactionUncheckedUpdateManyWithoutTaxYearNestedInput
   merchantRules?: Prisma.MerchantRuleUncheckedUpdateManyWithoutTaxYearNestedInput
@@ -1097,11 +1263,13 @@ export type TaxYearCreateWithoutStatementImportsInput = {
   status?: $Enums.TaxYearStatus
   lockedAt?: Date | string | null
   lockedSnapshotHash?: string | null
+  acceptedRiskOverrides?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   createdAt?: Date | string
   user: Prisma.UserCreateNestedOneWithoutTaxYearsInput
   ruleVersion?: Prisma.RuleVersionCreateNestedOneWithoutTaxYearsInput
   businessProfile?: Prisma.BusinessProfileCreateNestedOneWithoutTaxYearInput
   financialAccounts?: Prisma.FinancialAccountCreateNestedManyWithoutTaxYearInput
+  accountYearLinks?: Prisma.AccountYearLinkCreateNestedManyWithoutTaxYearInput
   transactions?: Prisma.TransactionCreateNestedManyWithoutTaxYearInput
   merchantRules?: Prisma.MerchantRuleCreateNestedManyWithoutTaxYearInput
   stopItems?: Prisma.StopItemCreateNestedManyWithoutTaxYearInput
@@ -1119,9 +1287,11 @@ export type TaxYearUncheckedCreateWithoutStatementImportsInput = {
   ruleVersionId?: string | null
   lockedAt?: Date | string | null
   lockedSnapshotHash?: string | null
+  acceptedRiskOverrides?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   createdAt?: Date | string
   businessProfile?: Prisma.BusinessProfileUncheckedCreateNestedOneWithoutTaxYearInput
   financialAccounts?: Prisma.FinancialAccountUncheckedCreateNestedManyWithoutTaxYearInput
+  accountYearLinks?: Prisma.AccountYearLinkUncheckedCreateNestedManyWithoutTaxYearInput
   transactions?: Prisma.TransactionUncheckedCreateNestedManyWithoutTaxYearInput
   merchantRules?: Prisma.MerchantRuleUncheckedCreateNestedManyWithoutTaxYearInput
   stopItems?: Prisma.StopItemUncheckedCreateNestedManyWithoutTaxYearInput
@@ -1153,11 +1323,13 @@ export type TaxYearUpdateWithoutStatementImportsInput = {
   status?: Prisma.EnumTaxYearStatusFieldUpdateOperationsInput | $Enums.TaxYearStatus
   lockedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   lockedSnapshotHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  acceptedRiskOverrides?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   user?: Prisma.UserUpdateOneRequiredWithoutTaxYearsNestedInput
   ruleVersion?: Prisma.RuleVersionUpdateOneWithoutTaxYearsNestedInput
   businessProfile?: Prisma.BusinessProfileUpdateOneWithoutTaxYearNestedInput
   financialAccounts?: Prisma.FinancialAccountUpdateManyWithoutTaxYearNestedInput
+  accountYearLinks?: Prisma.AccountYearLinkUpdateManyWithoutTaxYearNestedInput
   transactions?: Prisma.TransactionUpdateManyWithoutTaxYearNestedInput
   merchantRules?: Prisma.MerchantRuleUpdateManyWithoutTaxYearNestedInput
   stopItems?: Prisma.StopItemUpdateManyWithoutTaxYearNestedInput
@@ -1175,9 +1347,11 @@ export type TaxYearUncheckedUpdateWithoutStatementImportsInput = {
   ruleVersionId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   lockedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   lockedSnapshotHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  acceptedRiskOverrides?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   businessProfile?: Prisma.BusinessProfileUncheckedUpdateOneWithoutTaxYearNestedInput
   financialAccounts?: Prisma.FinancialAccountUncheckedUpdateManyWithoutTaxYearNestedInput
+  accountYearLinks?: Prisma.AccountYearLinkUncheckedUpdateManyWithoutTaxYearNestedInput
   transactions?: Prisma.TransactionUncheckedUpdateManyWithoutTaxYearNestedInput
   merchantRules?: Prisma.MerchantRuleUncheckedUpdateManyWithoutTaxYearNestedInput
   stopItems?: Prisma.StopItemUncheckedUpdateManyWithoutTaxYearNestedInput
@@ -1193,11 +1367,13 @@ export type TaxYearCreateWithoutImportSessionsInput = {
   status?: $Enums.TaxYearStatus
   lockedAt?: Date | string | null
   lockedSnapshotHash?: string | null
+  acceptedRiskOverrides?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   createdAt?: Date | string
   user: Prisma.UserCreateNestedOneWithoutTaxYearsInput
   ruleVersion?: Prisma.RuleVersionCreateNestedOneWithoutTaxYearsInput
   businessProfile?: Prisma.BusinessProfileCreateNestedOneWithoutTaxYearInput
   financialAccounts?: Prisma.FinancialAccountCreateNestedManyWithoutTaxYearInput
+  accountYearLinks?: Prisma.AccountYearLinkCreateNestedManyWithoutTaxYearInput
   statementImports?: Prisma.StatementImportCreateNestedManyWithoutTaxYearInput
   transactions?: Prisma.TransactionCreateNestedManyWithoutTaxYearInput
   merchantRules?: Prisma.MerchantRuleCreateNestedManyWithoutTaxYearInput
@@ -1215,9 +1391,11 @@ export type TaxYearUncheckedCreateWithoutImportSessionsInput = {
   ruleVersionId?: string | null
   lockedAt?: Date | string | null
   lockedSnapshotHash?: string | null
+  acceptedRiskOverrides?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   createdAt?: Date | string
   businessProfile?: Prisma.BusinessProfileUncheckedCreateNestedOneWithoutTaxYearInput
   financialAccounts?: Prisma.FinancialAccountUncheckedCreateNestedManyWithoutTaxYearInput
+  accountYearLinks?: Prisma.AccountYearLinkUncheckedCreateNestedManyWithoutTaxYearInput
   statementImports?: Prisma.StatementImportUncheckedCreateNestedManyWithoutTaxYearInput
   transactions?: Prisma.TransactionUncheckedCreateNestedManyWithoutTaxYearInput
   merchantRules?: Prisma.MerchantRuleUncheckedCreateNestedManyWithoutTaxYearInput
@@ -1249,11 +1427,13 @@ export type TaxYearUpdateWithoutImportSessionsInput = {
   status?: Prisma.EnumTaxYearStatusFieldUpdateOperationsInput | $Enums.TaxYearStatus
   lockedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   lockedSnapshotHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  acceptedRiskOverrides?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   user?: Prisma.UserUpdateOneRequiredWithoutTaxYearsNestedInput
   ruleVersion?: Prisma.RuleVersionUpdateOneWithoutTaxYearsNestedInput
   businessProfile?: Prisma.BusinessProfileUpdateOneWithoutTaxYearNestedInput
   financialAccounts?: Prisma.FinancialAccountUpdateManyWithoutTaxYearNestedInput
+  accountYearLinks?: Prisma.AccountYearLinkUpdateManyWithoutTaxYearNestedInput
   statementImports?: Prisma.StatementImportUpdateManyWithoutTaxYearNestedInput
   transactions?: Prisma.TransactionUpdateManyWithoutTaxYearNestedInput
   merchantRules?: Prisma.MerchantRuleUpdateManyWithoutTaxYearNestedInput
@@ -1271,9 +1451,11 @@ export type TaxYearUncheckedUpdateWithoutImportSessionsInput = {
   ruleVersionId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   lockedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   lockedSnapshotHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  acceptedRiskOverrides?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   businessProfile?: Prisma.BusinessProfileUncheckedUpdateOneWithoutTaxYearNestedInput
   financialAccounts?: Prisma.FinancialAccountUncheckedUpdateManyWithoutTaxYearNestedInput
+  accountYearLinks?: Prisma.AccountYearLinkUncheckedUpdateManyWithoutTaxYearNestedInput
   statementImports?: Prisma.StatementImportUncheckedUpdateManyWithoutTaxYearNestedInput
   transactions?: Prisma.TransactionUncheckedUpdateManyWithoutTaxYearNestedInput
   merchantRules?: Prisma.MerchantRuleUncheckedUpdateManyWithoutTaxYearNestedInput
@@ -1289,11 +1471,13 @@ export type TaxYearCreateWithoutPipelineRunsInput = {
   status?: $Enums.TaxYearStatus
   lockedAt?: Date | string | null
   lockedSnapshotHash?: string | null
+  acceptedRiskOverrides?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   createdAt?: Date | string
   user: Prisma.UserCreateNestedOneWithoutTaxYearsInput
   ruleVersion?: Prisma.RuleVersionCreateNestedOneWithoutTaxYearsInput
   businessProfile?: Prisma.BusinessProfileCreateNestedOneWithoutTaxYearInput
   financialAccounts?: Prisma.FinancialAccountCreateNestedManyWithoutTaxYearInput
+  accountYearLinks?: Prisma.AccountYearLinkCreateNestedManyWithoutTaxYearInput
   statementImports?: Prisma.StatementImportCreateNestedManyWithoutTaxYearInput
   transactions?: Prisma.TransactionCreateNestedManyWithoutTaxYearInput
   merchantRules?: Prisma.MerchantRuleCreateNestedManyWithoutTaxYearInput
@@ -1311,9 +1495,11 @@ export type TaxYearUncheckedCreateWithoutPipelineRunsInput = {
   ruleVersionId?: string | null
   lockedAt?: Date | string | null
   lockedSnapshotHash?: string | null
+  acceptedRiskOverrides?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   createdAt?: Date | string
   businessProfile?: Prisma.BusinessProfileUncheckedCreateNestedOneWithoutTaxYearInput
   financialAccounts?: Prisma.FinancialAccountUncheckedCreateNestedManyWithoutTaxYearInput
+  accountYearLinks?: Prisma.AccountYearLinkUncheckedCreateNestedManyWithoutTaxYearInput
   statementImports?: Prisma.StatementImportUncheckedCreateNestedManyWithoutTaxYearInput
   transactions?: Prisma.TransactionUncheckedCreateNestedManyWithoutTaxYearInput
   merchantRules?: Prisma.MerchantRuleUncheckedCreateNestedManyWithoutTaxYearInput
@@ -1345,11 +1531,13 @@ export type TaxYearUpdateWithoutPipelineRunsInput = {
   status?: Prisma.EnumTaxYearStatusFieldUpdateOperationsInput | $Enums.TaxYearStatus
   lockedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   lockedSnapshotHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  acceptedRiskOverrides?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   user?: Prisma.UserUpdateOneRequiredWithoutTaxYearsNestedInput
   ruleVersion?: Prisma.RuleVersionUpdateOneWithoutTaxYearsNestedInput
   businessProfile?: Prisma.BusinessProfileUpdateOneWithoutTaxYearNestedInput
   financialAccounts?: Prisma.FinancialAccountUpdateManyWithoutTaxYearNestedInput
+  accountYearLinks?: Prisma.AccountYearLinkUpdateManyWithoutTaxYearNestedInput
   statementImports?: Prisma.StatementImportUpdateManyWithoutTaxYearNestedInput
   transactions?: Prisma.TransactionUpdateManyWithoutTaxYearNestedInput
   merchantRules?: Prisma.MerchantRuleUpdateManyWithoutTaxYearNestedInput
@@ -1367,9 +1555,11 @@ export type TaxYearUncheckedUpdateWithoutPipelineRunsInput = {
   ruleVersionId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   lockedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   lockedSnapshotHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  acceptedRiskOverrides?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   businessProfile?: Prisma.BusinessProfileUncheckedUpdateOneWithoutTaxYearNestedInput
   financialAccounts?: Prisma.FinancialAccountUncheckedUpdateManyWithoutTaxYearNestedInput
+  accountYearLinks?: Prisma.AccountYearLinkUncheckedUpdateManyWithoutTaxYearNestedInput
   statementImports?: Prisma.StatementImportUncheckedUpdateManyWithoutTaxYearNestedInput
   transactions?: Prisma.TransactionUncheckedUpdateManyWithoutTaxYearNestedInput
   merchantRules?: Prisma.MerchantRuleUncheckedUpdateManyWithoutTaxYearNestedInput
@@ -1385,11 +1575,13 @@ export type TaxYearCreateWithoutTransactionsInput = {
   status?: $Enums.TaxYearStatus
   lockedAt?: Date | string | null
   lockedSnapshotHash?: string | null
+  acceptedRiskOverrides?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   createdAt?: Date | string
   user: Prisma.UserCreateNestedOneWithoutTaxYearsInput
   ruleVersion?: Prisma.RuleVersionCreateNestedOneWithoutTaxYearsInput
   businessProfile?: Prisma.BusinessProfileCreateNestedOneWithoutTaxYearInput
   financialAccounts?: Prisma.FinancialAccountCreateNestedManyWithoutTaxYearInput
+  accountYearLinks?: Prisma.AccountYearLinkCreateNestedManyWithoutTaxYearInput
   statementImports?: Prisma.StatementImportCreateNestedManyWithoutTaxYearInput
   merchantRules?: Prisma.MerchantRuleCreateNestedManyWithoutTaxYearInput
   stopItems?: Prisma.StopItemCreateNestedManyWithoutTaxYearInput
@@ -1407,9 +1599,11 @@ export type TaxYearUncheckedCreateWithoutTransactionsInput = {
   ruleVersionId?: string | null
   lockedAt?: Date | string | null
   lockedSnapshotHash?: string | null
+  acceptedRiskOverrides?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   createdAt?: Date | string
   businessProfile?: Prisma.BusinessProfileUncheckedCreateNestedOneWithoutTaxYearInput
   financialAccounts?: Prisma.FinancialAccountUncheckedCreateNestedManyWithoutTaxYearInput
+  accountYearLinks?: Prisma.AccountYearLinkUncheckedCreateNestedManyWithoutTaxYearInput
   statementImports?: Prisma.StatementImportUncheckedCreateNestedManyWithoutTaxYearInput
   merchantRules?: Prisma.MerchantRuleUncheckedCreateNestedManyWithoutTaxYearInput
   stopItems?: Prisma.StopItemUncheckedCreateNestedManyWithoutTaxYearInput
@@ -1441,11 +1635,13 @@ export type TaxYearUpdateWithoutTransactionsInput = {
   status?: Prisma.EnumTaxYearStatusFieldUpdateOperationsInput | $Enums.TaxYearStatus
   lockedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   lockedSnapshotHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  acceptedRiskOverrides?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   user?: Prisma.UserUpdateOneRequiredWithoutTaxYearsNestedInput
   ruleVersion?: Prisma.RuleVersionUpdateOneWithoutTaxYearsNestedInput
   businessProfile?: Prisma.BusinessProfileUpdateOneWithoutTaxYearNestedInput
   financialAccounts?: Prisma.FinancialAccountUpdateManyWithoutTaxYearNestedInput
+  accountYearLinks?: Prisma.AccountYearLinkUpdateManyWithoutTaxYearNestedInput
   statementImports?: Prisma.StatementImportUpdateManyWithoutTaxYearNestedInput
   merchantRules?: Prisma.MerchantRuleUpdateManyWithoutTaxYearNestedInput
   stopItems?: Prisma.StopItemUpdateManyWithoutTaxYearNestedInput
@@ -1463,9 +1659,11 @@ export type TaxYearUncheckedUpdateWithoutTransactionsInput = {
   ruleVersionId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   lockedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   lockedSnapshotHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  acceptedRiskOverrides?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   businessProfile?: Prisma.BusinessProfileUncheckedUpdateOneWithoutTaxYearNestedInput
   financialAccounts?: Prisma.FinancialAccountUncheckedUpdateManyWithoutTaxYearNestedInput
+  accountYearLinks?: Prisma.AccountYearLinkUncheckedUpdateManyWithoutTaxYearNestedInput
   statementImports?: Prisma.StatementImportUncheckedUpdateManyWithoutTaxYearNestedInput
   merchantRules?: Prisma.MerchantRuleUncheckedUpdateManyWithoutTaxYearNestedInput
   stopItems?: Prisma.StopItemUncheckedUpdateManyWithoutTaxYearNestedInput
@@ -1481,11 +1679,13 @@ export type TaxYearCreateWithoutMerchantRulesInput = {
   status?: $Enums.TaxYearStatus
   lockedAt?: Date | string | null
   lockedSnapshotHash?: string | null
+  acceptedRiskOverrides?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   createdAt?: Date | string
   user: Prisma.UserCreateNestedOneWithoutTaxYearsInput
   ruleVersion?: Prisma.RuleVersionCreateNestedOneWithoutTaxYearsInput
   businessProfile?: Prisma.BusinessProfileCreateNestedOneWithoutTaxYearInput
   financialAccounts?: Prisma.FinancialAccountCreateNestedManyWithoutTaxYearInput
+  accountYearLinks?: Prisma.AccountYearLinkCreateNestedManyWithoutTaxYearInput
   statementImports?: Prisma.StatementImportCreateNestedManyWithoutTaxYearInput
   transactions?: Prisma.TransactionCreateNestedManyWithoutTaxYearInput
   stopItems?: Prisma.StopItemCreateNestedManyWithoutTaxYearInput
@@ -1503,9 +1703,11 @@ export type TaxYearUncheckedCreateWithoutMerchantRulesInput = {
   ruleVersionId?: string | null
   lockedAt?: Date | string | null
   lockedSnapshotHash?: string | null
+  acceptedRiskOverrides?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   createdAt?: Date | string
   businessProfile?: Prisma.BusinessProfileUncheckedCreateNestedOneWithoutTaxYearInput
   financialAccounts?: Prisma.FinancialAccountUncheckedCreateNestedManyWithoutTaxYearInput
+  accountYearLinks?: Prisma.AccountYearLinkUncheckedCreateNestedManyWithoutTaxYearInput
   statementImports?: Prisma.StatementImportUncheckedCreateNestedManyWithoutTaxYearInput
   transactions?: Prisma.TransactionUncheckedCreateNestedManyWithoutTaxYearInput
   stopItems?: Prisma.StopItemUncheckedCreateNestedManyWithoutTaxYearInput
@@ -1537,11 +1739,13 @@ export type TaxYearUpdateWithoutMerchantRulesInput = {
   status?: Prisma.EnumTaxYearStatusFieldUpdateOperationsInput | $Enums.TaxYearStatus
   lockedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   lockedSnapshotHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  acceptedRiskOverrides?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   user?: Prisma.UserUpdateOneRequiredWithoutTaxYearsNestedInput
   ruleVersion?: Prisma.RuleVersionUpdateOneWithoutTaxYearsNestedInput
   businessProfile?: Prisma.BusinessProfileUpdateOneWithoutTaxYearNestedInput
   financialAccounts?: Prisma.FinancialAccountUpdateManyWithoutTaxYearNestedInput
+  accountYearLinks?: Prisma.AccountYearLinkUpdateManyWithoutTaxYearNestedInput
   statementImports?: Prisma.StatementImportUpdateManyWithoutTaxYearNestedInput
   transactions?: Prisma.TransactionUpdateManyWithoutTaxYearNestedInput
   stopItems?: Prisma.StopItemUpdateManyWithoutTaxYearNestedInput
@@ -1559,9 +1763,11 @@ export type TaxYearUncheckedUpdateWithoutMerchantRulesInput = {
   ruleVersionId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   lockedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   lockedSnapshotHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  acceptedRiskOverrides?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   businessProfile?: Prisma.BusinessProfileUncheckedUpdateOneWithoutTaxYearNestedInput
   financialAccounts?: Prisma.FinancialAccountUncheckedUpdateManyWithoutTaxYearNestedInput
+  accountYearLinks?: Prisma.AccountYearLinkUncheckedUpdateManyWithoutTaxYearNestedInput
   statementImports?: Prisma.StatementImportUncheckedUpdateManyWithoutTaxYearNestedInput
   transactions?: Prisma.TransactionUncheckedUpdateManyWithoutTaxYearNestedInput
   stopItems?: Prisma.StopItemUncheckedUpdateManyWithoutTaxYearNestedInput
@@ -1577,11 +1783,13 @@ export type TaxYearCreateWithoutStopItemsInput = {
   status?: $Enums.TaxYearStatus
   lockedAt?: Date | string | null
   lockedSnapshotHash?: string | null
+  acceptedRiskOverrides?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   createdAt?: Date | string
   user: Prisma.UserCreateNestedOneWithoutTaxYearsInput
   ruleVersion?: Prisma.RuleVersionCreateNestedOneWithoutTaxYearsInput
   businessProfile?: Prisma.BusinessProfileCreateNestedOneWithoutTaxYearInput
   financialAccounts?: Prisma.FinancialAccountCreateNestedManyWithoutTaxYearInput
+  accountYearLinks?: Prisma.AccountYearLinkCreateNestedManyWithoutTaxYearInput
   statementImports?: Prisma.StatementImportCreateNestedManyWithoutTaxYearInput
   transactions?: Prisma.TransactionCreateNestedManyWithoutTaxYearInput
   merchantRules?: Prisma.MerchantRuleCreateNestedManyWithoutTaxYearInput
@@ -1599,9 +1807,11 @@ export type TaxYearUncheckedCreateWithoutStopItemsInput = {
   ruleVersionId?: string | null
   lockedAt?: Date | string | null
   lockedSnapshotHash?: string | null
+  acceptedRiskOverrides?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   createdAt?: Date | string
   businessProfile?: Prisma.BusinessProfileUncheckedCreateNestedOneWithoutTaxYearInput
   financialAccounts?: Prisma.FinancialAccountUncheckedCreateNestedManyWithoutTaxYearInput
+  accountYearLinks?: Prisma.AccountYearLinkUncheckedCreateNestedManyWithoutTaxYearInput
   statementImports?: Prisma.StatementImportUncheckedCreateNestedManyWithoutTaxYearInput
   transactions?: Prisma.TransactionUncheckedCreateNestedManyWithoutTaxYearInput
   merchantRules?: Prisma.MerchantRuleUncheckedCreateNestedManyWithoutTaxYearInput
@@ -1633,11 +1843,13 @@ export type TaxYearUpdateWithoutStopItemsInput = {
   status?: Prisma.EnumTaxYearStatusFieldUpdateOperationsInput | $Enums.TaxYearStatus
   lockedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   lockedSnapshotHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  acceptedRiskOverrides?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   user?: Prisma.UserUpdateOneRequiredWithoutTaxYearsNestedInput
   ruleVersion?: Prisma.RuleVersionUpdateOneWithoutTaxYearsNestedInput
   businessProfile?: Prisma.BusinessProfileUpdateOneWithoutTaxYearNestedInput
   financialAccounts?: Prisma.FinancialAccountUpdateManyWithoutTaxYearNestedInput
+  accountYearLinks?: Prisma.AccountYearLinkUpdateManyWithoutTaxYearNestedInput
   statementImports?: Prisma.StatementImportUpdateManyWithoutTaxYearNestedInput
   transactions?: Prisma.TransactionUpdateManyWithoutTaxYearNestedInput
   merchantRules?: Prisma.MerchantRuleUpdateManyWithoutTaxYearNestedInput
@@ -1655,9 +1867,11 @@ export type TaxYearUncheckedUpdateWithoutStopItemsInput = {
   ruleVersionId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   lockedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   lockedSnapshotHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  acceptedRiskOverrides?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   businessProfile?: Prisma.BusinessProfileUncheckedUpdateOneWithoutTaxYearNestedInput
   financialAccounts?: Prisma.FinancialAccountUncheckedUpdateManyWithoutTaxYearNestedInput
+  accountYearLinks?: Prisma.AccountYearLinkUncheckedUpdateManyWithoutTaxYearNestedInput
   statementImports?: Prisma.StatementImportUncheckedUpdateManyWithoutTaxYearNestedInput
   transactions?: Prisma.TransactionUncheckedUpdateManyWithoutTaxYearNestedInput
   merchantRules?: Prisma.MerchantRuleUncheckedUpdateManyWithoutTaxYearNestedInput
@@ -1673,11 +1887,13 @@ export type TaxYearCreateWithoutReportsInput = {
   status?: $Enums.TaxYearStatus
   lockedAt?: Date | string | null
   lockedSnapshotHash?: string | null
+  acceptedRiskOverrides?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   createdAt?: Date | string
   user: Prisma.UserCreateNestedOneWithoutTaxYearsInput
   ruleVersion?: Prisma.RuleVersionCreateNestedOneWithoutTaxYearsInput
   businessProfile?: Prisma.BusinessProfileCreateNestedOneWithoutTaxYearInput
   financialAccounts?: Prisma.FinancialAccountCreateNestedManyWithoutTaxYearInput
+  accountYearLinks?: Prisma.AccountYearLinkCreateNestedManyWithoutTaxYearInput
   statementImports?: Prisma.StatementImportCreateNestedManyWithoutTaxYearInput
   transactions?: Prisma.TransactionCreateNestedManyWithoutTaxYearInput
   merchantRules?: Prisma.MerchantRuleCreateNestedManyWithoutTaxYearInput
@@ -1695,9 +1911,11 @@ export type TaxYearUncheckedCreateWithoutReportsInput = {
   ruleVersionId?: string | null
   lockedAt?: Date | string | null
   lockedSnapshotHash?: string | null
+  acceptedRiskOverrides?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   createdAt?: Date | string
   businessProfile?: Prisma.BusinessProfileUncheckedCreateNestedOneWithoutTaxYearInput
   financialAccounts?: Prisma.FinancialAccountUncheckedCreateNestedManyWithoutTaxYearInput
+  accountYearLinks?: Prisma.AccountYearLinkUncheckedCreateNestedManyWithoutTaxYearInput
   statementImports?: Prisma.StatementImportUncheckedCreateNestedManyWithoutTaxYearInput
   transactions?: Prisma.TransactionUncheckedCreateNestedManyWithoutTaxYearInput
   merchantRules?: Prisma.MerchantRuleUncheckedCreateNestedManyWithoutTaxYearInput
@@ -1729,11 +1947,13 @@ export type TaxYearUpdateWithoutReportsInput = {
   status?: Prisma.EnumTaxYearStatusFieldUpdateOperationsInput | $Enums.TaxYearStatus
   lockedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   lockedSnapshotHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  acceptedRiskOverrides?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   user?: Prisma.UserUpdateOneRequiredWithoutTaxYearsNestedInput
   ruleVersion?: Prisma.RuleVersionUpdateOneWithoutTaxYearsNestedInput
   businessProfile?: Prisma.BusinessProfileUpdateOneWithoutTaxYearNestedInput
   financialAccounts?: Prisma.FinancialAccountUpdateManyWithoutTaxYearNestedInput
+  accountYearLinks?: Prisma.AccountYearLinkUpdateManyWithoutTaxYearNestedInput
   statementImports?: Prisma.StatementImportUpdateManyWithoutTaxYearNestedInput
   transactions?: Prisma.TransactionUpdateManyWithoutTaxYearNestedInput
   merchantRules?: Prisma.MerchantRuleUpdateManyWithoutTaxYearNestedInput
@@ -1751,9 +1971,11 @@ export type TaxYearUncheckedUpdateWithoutReportsInput = {
   ruleVersionId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   lockedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   lockedSnapshotHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  acceptedRiskOverrides?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   businessProfile?: Prisma.BusinessProfileUncheckedUpdateOneWithoutTaxYearNestedInput
   financialAccounts?: Prisma.FinancialAccountUncheckedUpdateManyWithoutTaxYearNestedInput
+  accountYearLinks?: Prisma.AccountYearLinkUncheckedUpdateManyWithoutTaxYearNestedInput
   statementImports?: Prisma.StatementImportUncheckedUpdateManyWithoutTaxYearNestedInput
   transactions?: Prisma.TransactionUncheckedUpdateManyWithoutTaxYearNestedInput
   merchantRules?: Prisma.MerchantRuleUncheckedUpdateManyWithoutTaxYearNestedInput
@@ -1769,11 +1991,13 @@ export type TaxYearCreateWithoutDocumentsInput = {
   status?: $Enums.TaxYearStatus
   lockedAt?: Date | string | null
   lockedSnapshotHash?: string | null
+  acceptedRiskOverrides?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   createdAt?: Date | string
   user: Prisma.UserCreateNestedOneWithoutTaxYearsInput
   ruleVersion?: Prisma.RuleVersionCreateNestedOneWithoutTaxYearsInput
   businessProfile?: Prisma.BusinessProfileCreateNestedOneWithoutTaxYearInput
   financialAccounts?: Prisma.FinancialAccountCreateNestedManyWithoutTaxYearInput
+  accountYearLinks?: Prisma.AccountYearLinkCreateNestedManyWithoutTaxYearInput
   statementImports?: Prisma.StatementImportCreateNestedManyWithoutTaxYearInput
   transactions?: Prisma.TransactionCreateNestedManyWithoutTaxYearInput
   merchantRules?: Prisma.MerchantRuleCreateNestedManyWithoutTaxYearInput
@@ -1791,9 +2015,11 @@ export type TaxYearUncheckedCreateWithoutDocumentsInput = {
   ruleVersionId?: string | null
   lockedAt?: Date | string | null
   lockedSnapshotHash?: string | null
+  acceptedRiskOverrides?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   createdAt?: Date | string
   businessProfile?: Prisma.BusinessProfileUncheckedCreateNestedOneWithoutTaxYearInput
   financialAccounts?: Prisma.FinancialAccountUncheckedCreateNestedManyWithoutTaxYearInput
+  accountYearLinks?: Prisma.AccountYearLinkUncheckedCreateNestedManyWithoutTaxYearInput
   statementImports?: Prisma.StatementImportUncheckedCreateNestedManyWithoutTaxYearInput
   transactions?: Prisma.TransactionUncheckedCreateNestedManyWithoutTaxYearInput
   merchantRules?: Prisma.MerchantRuleUncheckedCreateNestedManyWithoutTaxYearInput
@@ -1825,11 +2051,13 @@ export type TaxYearUpdateWithoutDocumentsInput = {
   status?: Prisma.EnumTaxYearStatusFieldUpdateOperationsInput | $Enums.TaxYearStatus
   lockedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   lockedSnapshotHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  acceptedRiskOverrides?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   user?: Prisma.UserUpdateOneRequiredWithoutTaxYearsNestedInput
   ruleVersion?: Prisma.RuleVersionUpdateOneWithoutTaxYearsNestedInput
   businessProfile?: Prisma.BusinessProfileUpdateOneWithoutTaxYearNestedInput
   financialAccounts?: Prisma.FinancialAccountUpdateManyWithoutTaxYearNestedInput
+  accountYearLinks?: Prisma.AccountYearLinkUpdateManyWithoutTaxYearNestedInput
   statementImports?: Prisma.StatementImportUpdateManyWithoutTaxYearNestedInput
   transactions?: Prisma.TransactionUpdateManyWithoutTaxYearNestedInput
   merchantRules?: Prisma.MerchantRuleUpdateManyWithoutTaxYearNestedInput
@@ -1847,9 +2075,11 @@ export type TaxYearUncheckedUpdateWithoutDocumentsInput = {
   ruleVersionId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   lockedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   lockedSnapshotHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  acceptedRiskOverrides?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   businessProfile?: Prisma.BusinessProfileUncheckedUpdateOneWithoutTaxYearNestedInput
   financialAccounts?: Prisma.FinancialAccountUncheckedUpdateManyWithoutTaxYearNestedInput
+  accountYearLinks?: Prisma.AccountYearLinkUncheckedUpdateManyWithoutTaxYearNestedInput
   statementImports?: Prisma.StatementImportUncheckedUpdateManyWithoutTaxYearNestedInput
   transactions?: Prisma.TransactionUncheckedUpdateManyWithoutTaxYearNestedInput
   merchantRules?: Prisma.MerchantRuleUncheckedUpdateManyWithoutTaxYearNestedInput
@@ -1866,6 +2096,7 @@ export type TaxYearCreateManyUserInput = {
   ruleVersionId?: string | null
   lockedAt?: Date | string | null
   lockedSnapshotHash?: string | null
+  acceptedRiskOverrides?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   createdAt?: Date | string
 }
 
@@ -1875,10 +2106,12 @@ export type TaxYearUpdateWithoutUserInput = {
   status?: Prisma.EnumTaxYearStatusFieldUpdateOperationsInput | $Enums.TaxYearStatus
   lockedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   lockedSnapshotHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  acceptedRiskOverrides?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   ruleVersion?: Prisma.RuleVersionUpdateOneWithoutTaxYearsNestedInput
   businessProfile?: Prisma.BusinessProfileUpdateOneWithoutTaxYearNestedInput
   financialAccounts?: Prisma.FinancialAccountUpdateManyWithoutTaxYearNestedInput
+  accountYearLinks?: Prisma.AccountYearLinkUpdateManyWithoutTaxYearNestedInput
   statementImports?: Prisma.StatementImportUpdateManyWithoutTaxYearNestedInput
   transactions?: Prisma.TransactionUpdateManyWithoutTaxYearNestedInput
   merchantRules?: Prisma.MerchantRuleUpdateManyWithoutTaxYearNestedInput
@@ -1896,9 +2129,11 @@ export type TaxYearUncheckedUpdateWithoutUserInput = {
   ruleVersionId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   lockedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   lockedSnapshotHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  acceptedRiskOverrides?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   businessProfile?: Prisma.BusinessProfileUncheckedUpdateOneWithoutTaxYearNestedInput
   financialAccounts?: Prisma.FinancialAccountUncheckedUpdateManyWithoutTaxYearNestedInput
+  accountYearLinks?: Prisma.AccountYearLinkUncheckedUpdateManyWithoutTaxYearNestedInput
   statementImports?: Prisma.StatementImportUncheckedUpdateManyWithoutTaxYearNestedInput
   transactions?: Prisma.TransactionUncheckedUpdateManyWithoutTaxYearNestedInput
   merchantRules?: Prisma.MerchantRuleUncheckedUpdateManyWithoutTaxYearNestedInput
@@ -1916,6 +2151,7 @@ export type TaxYearUncheckedUpdateManyWithoutUserInput = {
   ruleVersionId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   lockedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   lockedSnapshotHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  acceptedRiskOverrides?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
 
@@ -1926,6 +2162,7 @@ export type TaxYearCreateManyRuleVersionInput = {
   status?: $Enums.TaxYearStatus
   lockedAt?: Date | string | null
   lockedSnapshotHash?: string | null
+  acceptedRiskOverrides?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   createdAt?: Date | string
 }
 
@@ -1935,10 +2172,12 @@ export type TaxYearUpdateWithoutRuleVersionInput = {
   status?: Prisma.EnumTaxYearStatusFieldUpdateOperationsInput | $Enums.TaxYearStatus
   lockedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   lockedSnapshotHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  acceptedRiskOverrides?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   user?: Prisma.UserUpdateOneRequiredWithoutTaxYearsNestedInput
   businessProfile?: Prisma.BusinessProfileUpdateOneWithoutTaxYearNestedInput
   financialAccounts?: Prisma.FinancialAccountUpdateManyWithoutTaxYearNestedInput
+  accountYearLinks?: Prisma.AccountYearLinkUpdateManyWithoutTaxYearNestedInput
   statementImports?: Prisma.StatementImportUpdateManyWithoutTaxYearNestedInput
   transactions?: Prisma.TransactionUpdateManyWithoutTaxYearNestedInput
   merchantRules?: Prisma.MerchantRuleUpdateManyWithoutTaxYearNestedInput
@@ -1956,9 +2195,11 @@ export type TaxYearUncheckedUpdateWithoutRuleVersionInput = {
   status?: Prisma.EnumTaxYearStatusFieldUpdateOperationsInput | $Enums.TaxYearStatus
   lockedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   lockedSnapshotHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  acceptedRiskOverrides?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   businessProfile?: Prisma.BusinessProfileUncheckedUpdateOneWithoutTaxYearNestedInput
   financialAccounts?: Prisma.FinancialAccountUncheckedUpdateManyWithoutTaxYearNestedInput
+  accountYearLinks?: Prisma.AccountYearLinkUncheckedUpdateManyWithoutTaxYearNestedInput
   statementImports?: Prisma.StatementImportUncheckedUpdateManyWithoutTaxYearNestedInput
   transactions?: Prisma.TransactionUncheckedUpdateManyWithoutTaxYearNestedInput
   merchantRules?: Prisma.MerchantRuleUncheckedUpdateManyWithoutTaxYearNestedInput
@@ -1976,6 +2217,7 @@ export type TaxYearUncheckedUpdateManyWithoutRuleVersionInput = {
   status?: Prisma.EnumTaxYearStatusFieldUpdateOperationsInput | $Enums.TaxYearStatus
   lockedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   lockedSnapshotHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  acceptedRiskOverrides?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
 
@@ -1986,6 +2228,7 @@ export type TaxYearUncheckedUpdateManyWithoutRuleVersionInput = {
 
 export type TaxYearCountOutputType = {
   financialAccounts: number
+  accountYearLinks: number
   statementImports: number
   transactions: number
   merchantRules: number
@@ -1998,6 +2241,7 @@ export type TaxYearCountOutputType = {
 
 export type TaxYearCountOutputTypeSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   financialAccounts?: boolean | TaxYearCountOutputTypeCountFinancialAccountsArgs
+  accountYearLinks?: boolean | TaxYearCountOutputTypeCountAccountYearLinksArgs
   statementImports?: boolean | TaxYearCountOutputTypeCountStatementImportsArgs
   transactions?: boolean | TaxYearCountOutputTypeCountTransactionsArgs
   merchantRules?: boolean | TaxYearCountOutputTypeCountMerchantRulesArgs
@@ -2023,6 +2267,13 @@ export type TaxYearCountOutputTypeDefaultArgs<ExtArgs extends runtime.Types.Exte
  */
 export type TaxYearCountOutputTypeCountFinancialAccountsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   where?: Prisma.FinancialAccountWhereInput
+}
+
+/**
+ * TaxYearCountOutputType without action
+ */
+export type TaxYearCountOutputTypeCountAccountYearLinksArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.AccountYearLinkWhereInput
 }
 
 /**
@@ -2090,11 +2341,13 @@ export type TaxYearSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs 
   ruleVersionId?: boolean
   lockedAt?: boolean
   lockedSnapshotHash?: boolean
+  acceptedRiskOverrides?: boolean
   createdAt?: boolean
   user?: boolean | Prisma.UserDefaultArgs<ExtArgs>
   ruleVersion?: boolean | Prisma.TaxYear$ruleVersionArgs<ExtArgs>
   businessProfile?: boolean | Prisma.TaxYear$businessProfileArgs<ExtArgs>
   financialAccounts?: boolean | Prisma.TaxYear$financialAccountsArgs<ExtArgs>
+  accountYearLinks?: boolean | Prisma.TaxYear$accountYearLinksArgs<ExtArgs>
   statementImports?: boolean | Prisma.TaxYear$statementImportsArgs<ExtArgs>
   transactions?: boolean | Prisma.TaxYear$transactionsArgs<ExtArgs>
   merchantRules?: boolean | Prisma.TaxYear$merchantRulesArgs<ExtArgs>
@@ -2114,6 +2367,7 @@ export type TaxYearSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Exten
   ruleVersionId?: boolean
   lockedAt?: boolean
   lockedSnapshotHash?: boolean
+  acceptedRiskOverrides?: boolean
   createdAt?: boolean
   user?: boolean | Prisma.UserDefaultArgs<ExtArgs>
   ruleVersion?: boolean | Prisma.TaxYear$ruleVersionArgs<ExtArgs>
@@ -2127,6 +2381,7 @@ export type TaxYearSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Exten
   ruleVersionId?: boolean
   lockedAt?: boolean
   lockedSnapshotHash?: boolean
+  acceptedRiskOverrides?: boolean
   createdAt?: boolean
   user?: boolean | Prisma.UserDefaultArgs<ExtArgs>
   ruleVersion?: boolean | Prisma.TaxYear$ruleVersionArgs<ExtArgs>
@@ -2140,15 +2395,17 @@ export type TaxYearSelectScalar = {
   ruleVersionId?: boolean
   lockedAt?: boolean
   lockedSnapshotHash?: boolean
+  acceptedRiskOverrides?: boolean
   createdAt?: boolean
 }
 
-export type TaxYearOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "userId" | "year" | "status" | "ruleVersionId" | "lockedAt" | "lockedSnapshotHash" | "createdAt", ExtArgs["result"]["taxYear"]>
+export type TaxYearOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "userId" | "year" | "status" | "ruleVersionId" | "lockedAt" | "lockedSnapshotHash" | "acceptedRiskOverrides" | "createdAt", ExtArgs["result"]["taxYear"]>
 export type TaxYearInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   user?: boolean | Prisma.UserDefaultArgs<ExtArgs>
   ruleVersion?: boolean | Prisma.TaxYear$ruleVersionArgs<ExtArgs>
   businessProfile?: boolean | Prisma.TaxYear$businessProfileArgs<ExtArgs>
   financialAccounts?: boolean | Prisma.TaxYear$financialAccountsArgs<ExtArgs>
+  accountYearLinks?: boolean | Prisma.TaxYear$accountYearLinksArgs<ExtArgs>
   statementImports?: boolean | Prisma.TaxYear$statementImportsArgs<ExtArgs>
   transactions?: boolean | Prisma.TaxYear$transactionsArgs<ExtArgs>
   merchantRules?: boolean | Prisma.TaxYear$merchantRulesArgs<ExtArgs>
@@ -2175,6 +2432,7 @@ export type $TaxYearPayload<ExtArgs extends runtime.Types.Extensions.InternalArg
     ruleVersion: Prisma.$RuleVersionPayload<ExtArgs> | null
     businessProfile: Prisma.$BusinessProfilePayload<ExtArgs> | null
     financialAccounts: Prisma.$FinancialAccountPayload<ExtArgs>[]
+    accountYearLinks: Prisma.$AccountYearLinkPayload<ExtArgs>[]
     statementImports: Prisma.$StatementImportPayload<ExtArgs>[]
     transactions: Prisma.$TransactionPayload<ExtArgs>[]
     merchantRules: Prisma.$MerchantRulePayload<ExtArgs>[]
@@ -2192,6 +2450,7 @@ export type $TaxYearPayload<ExtArgs extends runtime.Types.Extensions.InternalArg
     ruleVersionId: string | null
     lockedAt: Date | null
     lockedSnapshotHash: string | null
+    acceptedRiskOverrides: runtime.JsonValue | null
     createdAt: Date
   }, ExtArgs["result"]["taxYear"]>
   composites: {}
@@ -2591,6 +2850,7 @@ export interface Prisma__TaxYearClient<T, Null = never, ExtArgs extends runtime.
   ruleVersion<T extends Prisma.TaxYear$ruleVersionArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.TaxYear$ruleVersionArgs<ExtArgs>>): Prisma.Prisma__RuleVersionClient<runtime.Types.Result.GetResult<Prisma.$RuleVersionPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
   businessProfile<T extends Prisma.TaxYear$businessProfileArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.TaxYear$businessProfileArgs<ExtArgs>>): Prisma.Prisma__BusinessProfileClient<runtime.Types.Result.GetResult<Prisma.$BusinessProfilePayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
   financialAccounts<T extends Prisma.TaxYear$financialAccountsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.TaxYear$financialAccountsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$FinancialAccountPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+  accountYearLinks<T extends Prisma.TaxYear$accountYearLinksArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.TaxYear$accountYearLinksArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$AccountYearLinkPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   statementImports<T extends Prisma.TaxYear$statementImportsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.TaxYear$statementImportsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$StatementImportPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   transactions<T extends Prisma.TaxYear$transactionsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.TaxYear$transactionsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$TransactionPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   merchantRules<T extends Prisma.TaxYear$merchantRulesArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.TaxYear$merchantRulesArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$MerchantRulePayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
@@ -2635,6 +2895,7 @@ export interface TaxYearFieldRefs {
   readonly ruleVersionId: Prisma.FieldRef<"TaxYear", 'String'>
   readonly lockedAt: Prisma.FieldRef<"TaxYear", 'DateTime'>
   readonly lockedSnapshotHash: Prisma.FieldRef<"TaxYear", 'String'>
+  readonly acceptedRiskOverrides: Prisma.FieldRef<"TaxYear", 'Json'>
   readonly createdAt: Prisma.FieldRef<"TaxYear", 'DateTime'>
 }
     
@@ -3096,6 +3357,30 @@ export type TaxYear$financialAccountsArgs<ExtArgs extends runtime.Types.Extensio
   take?: number
   skip?: number
   distinct?: Prisma.FinancialAccountScalarFieldEnum | Prisma.FinancialAccountScalarFieldEnum[]
+}
+
+/**
+ * TaxYear.accountYearLinks
+ */
+export type TaxYear$accountYearLinksArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the AccountYearLink
+   */
+  select?: Prisma.AccountYearLinkSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the AccountYearLink
+   */
+  omit?: Prisma.AccountYearLinkOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.AccountYearLinkInclude<ExtArgs> | null
+  where?: Prisma.AccountYearLinkWhereInput
+  orderBy?: Prisma.AccountYearLinkOrderByWithRelationInput | Prisma.AccountYearLinkOrderByWithRelationInput[]
+  cursor?: Prisma.AccountYearLinkWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.AccountYearLinkScalarFieldEnum | Prisma.AccountYearLinkScalarFieldEnum[]
 }
 
 /**

@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button"
 import { computeRiskScore, type RiskReport, type RiskSignal } from "@/lib/risk/score"
 import { runLockAssertions, type AssertionRunResult } from "@/lib/validation/assertions"
 import { deriveStage, getYearCounts } from "@/lib/taxYear/status"
+import { fmtUSD } from "@/lib/format/currency"
 
 interface Props {
   params: Promise<{ year: string }>
@@ -144,18 +145,23 @@ export default async function RiskPage({ params }: Props) {
               Lock blocked
             </div>
           )}
+          {risk.lockBlockedFloor > 0 && (
+            <div className="mt-1 text-[10px] font-normal text-muted-foreground">
+              incl. +{risk.lockBlockedFloor} floor while blocked
+            </div>
+          )}
         </div>
       </div>
 
       <div className="grid gap-4 sm:grid-cols-3">
         <Card>
           <CardHeader><CardTitle className="text-sm text-muted-foreground">Estimated Deductions</CardTitle></CardHeader>
-          <CardContent><span className="text-2xl font-bold">${risk.estimatedDeductions.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span></CardContent>
+          <CardContent><span className="text-2xl font-bold">{fmtUSD(risk.estimatedDeductions, { cents: true })}</span></CardContent>
         </Card>
         <Card>
           <CardHeader><CardTitle className="text-sm text-muted-foreground">Estimated Tax Impact</CardTitle></CardHeader>
           <CardContent>
-            <span className="text-2xl font-bold">${risk.estimatedTaxImpact.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+            <span className="text-2xl font-bold">{fmtUSD(risk.estimatedTaxImpact, { cents: true })}</span>
             <p className="mt-1 text-xs text-muted-foreground">{risk.estimatedTaxImpactNote}</p>
           </CardContent>
         </Card>

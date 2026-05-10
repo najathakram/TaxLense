@@ -5,7 +5,7 @@ import Link from "next/link"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { NextActionCard } from "@/components/pipeline/next-action-card"
-import { deriveStage } from "@/lib/taxYear/status"
+import { deriveStage, getYearCounts } from "@/lib/taxYear/status"
 import { inYearWindow } from "@/lib/queries/yearWindow"
 
 interface Props {
@@ -49,6 +49,25 @@ export default async function YearPage({ params }: Props) {
   // the worst offenders to surface as a "missing X months" nudge — without
   // this the user has no signal that COGS may be materially understated
   // until they manually navigate to /coverage.
+  // Compact a 0-indexed list of missing-month integers ([0,1,2,5,6]) into
+  // "Jan–Mar, Jun–Jul" — much more useful than just the count (B-19).
+  const MONTH_NAMES = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
+  function compactMonthRanges(months: number[]): string {
+    if (months.length === 0) return ""
+    const parts: string[] = []
+    let i = 0
+    while (i < months.length) {
+      const start = months[i]!
+      let end = start
+      while (i + 1 < months.length && months[i + 1] === end + 1) {
+        end = months[++i]!
+      }
+      parts.push(start === end ? MONTH_NAMES[start]! : `${MONTH_NAMES[start]}–${MONTH_NAMES[end]}`)
+      i++
+    }
+    return parts.join(", ")
+  }
+
   const accountGaps = taxYear.financialAccounts
     .map((acct) => {
       const monthsWithTx = new Set<number>()
@@ -63,30 +82,15 @@ export default async function YearPage({ params }: Props) {
         type: acct.type,
         txCount: acct.transactions.length,
         missingMonthCount: missing.length,
+        missingRanges: compactMonthRanges(missing),
       }
     })
     .filter((a) => a.txCount > 0 && a.missingMonthCount > 0)
     .sort((a, b) => b.missingMonthCount - a.missingMonthCount)
   const totalMissingMonths = accountGaps.reduce((n, a) => n + a.missingMonthCount, 0)
 
-  // Counts driving the NextActionCard hero. Match the denominators used on
-  // the pipeline page so the two views agree on "everything classified."
-  // Excluding duplicates from totalTx mirrors lib/taxYear/status.ts and the
-  // pipeline page's stat cards.
-  const [totalTx, classified, pendingStops] = await Promise.all([
-    prisma.transaction.count({
-      where: { taxYearId: taxYear.id, isDuplicateOf: null },
-    }),
-    prisma.classification.count({
-      where: {
-        transaction: { taxYearId: taxYear.id, isDuplicateOf: null },
-        isCurrent: true,
-      },
-    }),
-    prisma.stopItem.count({
-      where: { taxYearId: taxYear.id, state: "PENDING" },
-    }),
-  ])
+  // Canonical counts (B-04). One helper, one filter — every page agrees.
+  const { totalTx, classifiedTx: classified, pendingStops } = await getYearCounts(taxYear.id)
 
   // Derive the live stage from row counts. Belt-and-suspenders against years
   // where TaxYear.status hasn't been recomputed yet (e.g. read traffic before
@@ -127,7 +131,7 @@ export default async function YearPage({ params }: Props) {
                   {accountGaps.slice(0, 3).map((a, i) => (
                     <span key={a.id}>
                       {i > 0 ? "; " : ""}
-                      <strong>{a.nickname}</strong> missing {a.missingMonthCount} month{a.missingMonthCount === 1 ? "" : "s"}
+                      <strong>{a.nickname}</strong> missing {a.missingRanges} ({a.missingMonthCount} month{a.missingMonthCount === 1 ? "" : "s"})
                     </span>
                   ))}
                   {accountGaps.length > 3 ? `; +${accountGaps.length - 3} more` : ""}.

@@ -4,6 +4,7 @@ import { notFound } from "next/navigation"
 import { after } from "next/server"
 import { UploadClient } from "./upload-client"
 import { parseImport } from "./actions"
+import { deriveStage, getYearCounts } from "@/lib/taxYear/status"
 
 interface Props {
   params: Promise<{ year: string }>
@@ -22,6 +23,7 @@ export default async function UploadPage({ params }: Props) {
       id: true,
       year: true,
       status: true,
+      lockedAt: true,
       financialAccounts: {
         select: {
           id: true,
@@ -96,11 +98,18 @@ export default async function UploadPage({ params }: Props) {
     })),
   }))
 
+  // B-02: derive the live stage so the badge matches the year hub.
+  const counts = await getYearCounts(taxYear.id)
+  const derivedStatus = deriveStage(
+    { status: taxYear.status, lockedAt: taxYear.lockedAt },
+    counts,
+  )
+
   return (
     <UploadClient
       year={year}
       taxYearId={taxYear.id}
-      taxYearStatus={taxYear.status}
+      taxYearStatus={derivedStatus}
       accounts={accounts}
       session={
         currentSession

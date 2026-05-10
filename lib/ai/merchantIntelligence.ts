@@ -18,6 +18,7 @@ import Anthropic from "@anthropic-ai/sdk"
 import { z } from "zod"
 import { prisma } from "@/lib/db"
 import { applyFeeGuards } from "@/lib/ai/feeGuards"
+import { fmtUSD } from "@/lib/format/currency"
 import type {
   BusinessProfile,
   Trip,
@@ -521,7 +522,7 @@ export async function classifyBatch(
         confidence: 0,
         reasoning: "AI classification failed after retry — manual review required.",
         requires_human_input: true,
-        human_question: `AI could not classify "${m.merchant_key}" (${m.count} transaction${m.count > 1 ? "s" : ""}, $${m.total_amount.toFixed(2)} total). Please classify manually.`,
+        human_question: `AI could not classify "${m.merchant_key}" (${m.count} transaction${m.count > 1 ? "s" : ""}, ${fmtUSD(m.total_amount, { cents: true })} total). Please classify manually.`,
       }))
     }
   }

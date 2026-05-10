@@ -81,6 +81,76 @@ export async function confirmLock(year: number): Promise<void> {
   redirect(`/years/${year}/finalize#lock`)
 }
 
+/**
+ * B-23: muting a non-blocking risk signal (e.g. INCOME_SHORT — gross
+ * receipts came in under expected because of currency conversion or a gig
+ * cancellation). Records the user's rationale on TaxYear.acceptedRiskOverrides
+ * and writes an AuditEvent. Idempotent: re-confirming overwrites the
+ * stored note. Use clearRiskOverride to revert.
+ */
+export async function confirmRiskOverride(
+  year: number,
+  signalId: string,
+  rationale: string,
+): Promise<void> {
+  const { taxYear, userId } = await resolveTaxYear(year)
+  if (!signalId.trim()) throw new Error("signalId required")
+  if (!rationale || rationale.trim().length < 10) {
+    throw new Error("Override rationale required (minimum 10 characters)")
+  }
+
+  const current = (taxYear.acceptedRiskOverrides as Record<string, unknown> | null) ?? {}
+  const next = { ...current, [signalId]: true, [`${signalId}_rationale`]: rationale.trim() }
+
+  await prisma.$transaction(async (tx) => {
+    await tx.taxYear.update({
+      where: { id: taxYear.id },
+      data: { acceptedRiskOverrides: next as never },
+    })
+    await tx.auditEvent.create({
+      data: {
+        userId,
+        actorType: "USER",
+        eventType: "RISK_OVERRIDE_CONFIRMED",
+        entityType: "TaxYear",
+        entityId: taxYear.id,
+        rationale: rationale.trim(),
+        afterState: { signalId },
+      },
+    })
+  })
+
+  revalidatePath(`/years/${year}/risk`)
+  revalidatePath(`/years/${year}/finalize`)
+}
+
+export async function clearRiskOverride(year: number, signalId: string): Promise<void> {
+  const { taxYear, userId } = await resolveTaxYear(year)
+  const current = (taxYear.acceptedRiskOverrides as Record<string, unknown> | null) ?? {}
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const { [signalId]: _, [`${signalId}_rationale`]: __, ...rest } = current
+
+  await prisma.$transaction(async (tx) => {
+    await tx.taxYear.update({
+      where: { id: taxYear.id },
+      data: { acceptedRiskOverrides: rest as never },
+    })
+    await tx.auditEvent.create({
+      data: {
+        userId,
+        actorType: "USER",
+        eventType: "RISK_OVERRIDE_CLEARED",
+        entityType: "TaxYear",
+        entityId: taxYear.id,
+        afterState: { signalId },
+      },
+    })
+  })
+
+  revalidatePath(`/years/${year}/risk`)
+  revalidatePath(`/years/${year}/finalize`)
+}
+
 export async function unlockTaxYear(year: number, rationale: string): Promise<void> {
   const { taxYear, userId } = await resolveTaxYear(year)
   if (taxYear.status !== "LOCKED") throw new Error("Tax year is not locked")

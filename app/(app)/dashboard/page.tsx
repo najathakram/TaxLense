@@ -6,6 +6,7 @@ import { redirect } from "next/navigation"
 import Link from "next/link"
 import { Section, Card, Btn, Pill } from "@/components/v2/primitives"
 import { statusKey } from "@/components/v2/format"
+import { deriveStage, getYearCounts } from "@/lib/taxYear/status"
 
 export default async function DashboardPage() {
   const session = await requireAuth()
@@ -22,20 +23,42 @@ export default async function DashboardPage() {
 
   const userId = await getCurrentUserId()
 
-  const taxYears = await prisma.taxYear.findMany({
+  const taxYearsRaw = await prisma.taxYear.findMany({
     where: { userId },
     orderBy: { year: "desc" },
     include: {
-      _count: { select: { transactions: true, financialAccounts: true } },
+      _count: { select: { financialAccounts: true } },
     },
   })
+
+  // Per-year canonical counts + derived stage (B-02 / B-04). Done in parallel
+  // so the dashboard stays fast even with several years.
+  const taxYears = await Promise.all(
+    taxYearsRaw.map(async (ty) => {
+      const counts = await getYearCounts(ty.id)
+      const derived = deriveStage(
+        { status: ty.status, lockedAt: ty.lockedAt },
+        counts,
+      )
+      return {
+        ...ty,
+        derivedStatus: derived,
+        canonicalCounts: counts,
+      }
+    }),
+  )
 
   return (
     <Section
       sub="DASHBOARD"
       title="Tax years"
       right={
-        <Link href="/onboarding" style={{ textDecoration: "none" }}>
+        <Link
+          // B-14: route to /years/new (year-creation form) instead of dropping
+          // returning users into the Profile Wizard mid-step.
+          href={taxYearsRaw.length === 0 ? "/onboarding" : "/years/new"}
+          style={{ textDecoration: "none" }}
+        >
           <Btn kind="primary" icon="+">New tax year</Btn>
         </Link>
       }
@@ -56,12 +79,12 @@ export default async function DashboardPage() {
                   <div className="num" style={{ fontSize: 28, fontWeight: 800, letterSpacing: -0.5 }}>
                     {ty.year}
                   </div>
-                  <Pill s={statusKey(ty.status)} />
+                  <Pill s={statusKey(ty.derivedStatus)} />
                 </div>
                 <div style={{ fontSize: 12, color: "var(--fg-2)", marginTop: 12 }}>
                   {ty._count.financialAccounts} account
-                  {ty._count.financialAccounts !== 1 ? "s" : ""} · {ty._count.transactions} transaction
-                  {ty._count.transactions !== 1 ? "s" : ""}
+                  {ty._count.financialAccounts !== 1 ? "s" : ""} · {ty.canonicalCounts.totalTx} transaction
+                  {ty.canonicalCounts.totalTx !== 1 ? "s" : ""}
                 </div>
               </Card>
             </Link>

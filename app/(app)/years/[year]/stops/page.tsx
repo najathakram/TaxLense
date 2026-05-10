@@ -3,6 +3,7 @@ import { prisma } from "@/lib/db"
 import { notFound } from "next/navigation"
 import { StopsClient, type SerializedStop, type SerializedAffected } from "./stops-client"
 import { deriveAiSuggestion } from "@/lib/stops/aiSuggestion"
+import { deriveStopsFromAssertions } from "@/lib/stops/deriveFromAssertions"
 
 interface Props {
   params: Promise<{ year: string }>
@@ -19,6 +20,13 @@ export default async function StopsPage({ params }: Props) {
     where: { userId_year: { userId, year } },
   })
   if (!taxYear) notFound()
+
+  // B-07: deterministically materialize DEPOSIT + §274(d) STOPs from
+  // assertion failures on every page load. Idempotent (won't duplicate
+  // existing rows) and runs in <100ms for typical years. Without this, the
+  // Risk page's "Resolve via STOPs before lock" CTA could land the user on
+  // an empty page if the autonomous CPA agent hadn't yet run.
+  await deriveStopsFromAssertions(taxYear.id)
 
   const stops = await prisma.stopItem.findMany({
     where: { taxYearId: taxYear.id },

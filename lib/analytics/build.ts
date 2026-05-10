@@ -12,6 +12,7 @@ import { prisma } from "@/lib/db"
 import { benchmarksForNaics, type IrsBenchmark } from "./irsBenchmarks"
 import { computeDeductibleAmt } from "@/lib/classification/deductible"
 import { inYearWindow } from "@/lib/queries/yearWindow"
+import { getYearTotals } from "@/lib/queries/totals"
 
 // ---------------------------------------------------------------------------
 // Types
@@ -142,6 +143,7 @@ export async function buildAnalytics(taxYearId: string): Promise<AnalyticsDatase
       merchantNormalized: true,
       merchantRaw: true,
       accountId: true,
+      isTransferPairedWith: true,
       account: { select: { institution: true, nickname: true, mask: true, type: true } },
       classifications: {
         where: { isCurrent: true },
@@ -165,22 +167,28 @@ export async function buildAnalytics(taxYearId: string): Promise<AnalyticsDatase
     },
   })
 
-  // Precompute per-txn deductible amount via the canonical helper. Using a
-  // local copy of the formula caused the analytics page to disagree with
-  // the risk dashboard / A03 / Schedule C — most painfully, Math.abs on the
-  // amount counted inflows mis-classified as WRITE_OFF as deductions.
+  // Per-txn annotation for charts. The headline numbers (Gross Receipts /
+  // Total Deductions / Net Profit) come from the canonical getYearTotals so
+  // Analytics, A04, A13, and the Risk dashboard all show the same numbers.
+  // Without this routing the Analytics card showed $24,811 while A04 / Risk
+  // showed $18,313 on Atif's prod data — see lib/queries/totals.ts (B-05).
   const annotated = txns.map((t) => {
     const amt = Number(t.amountNormalized.toString()) // outflow +, inflow -
     const cls = t.classifications[0] ?? null
     const isInflow = amt < 0
     const deductible = cls ? computeDeductibleAmt(amt, cls.code, cls.businessPct) : 0
-    const isIncome = cls?.code === "BIZ_INCOME" || (isInflow && cls?.code !== "TRANSFER" && cls?.code !== "PAYMENT" && cls?.code !== "PERSONAL")
-    const income = cls?.code === "BIZ_INCOME" ? Math.abs(amt) : 0
+    // Match the canonical filter exactly: BIZ_INCOME, inflow, not transfer-paired.
+    const income =
+      cls?.code === "BIZ_INCOME" && isInflow && !t.isTransferPairedWith
+        ? Math.abs(amt)
+        : 0
+    const isIncome = income > 0
     return { ...t, amt, cls, deductible, income, isInflow, isIncome }
   })
 
-  const grossReceipts = annotated.reduce((s, t) => s + t.income, 0)
-  const totalDeductible = annotated.reduce((s, t) => s + t.deductible, 0)
+  const totals = await getYearTotals(taxYearId)
+  const grossReceipts = totals.grossReceiptsCents / 100
+  const totalDeductible = totals.totalDeductibleCents / 100
   const netProfit = grossReceipts - totalDeductible
 
   // ── Chart 1: deduction mix vs benchmarks ───────────────────────────────────

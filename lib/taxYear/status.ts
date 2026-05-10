@@ -1,10 +1,16 @@
 import { prisma } from "@/lib/db"
 import type { TaxYearStatus } from "@/app/generated/prisma/client"
+import { inYearWindow } from "@/lib/queries/yearWindow"
 
 export interface YearCounts {
   totalTx: number
   classifiedTx: number
   pendingStops: number
+  /** Rows the canonical filter excludes (out-of-year, stale, split-parents,
+   *  duplicates). Optional so tests using minimal fixtures still type-check.
+   *  Useful for a debug breakdown when a CPA asks why "536 transactions"
+   *  turned into "485 on the ledger". */
+  hiddenTx?: number
 }
 
 export interface DeriveStageInput {
@@ -45,26 +51,58 @@ export function deriveStage(
 }
 
 /**
- * Three counts that drive every pipeline-stage decision. Matches the
- * denominators already used in app/(app)/years/[year]/pipeline/page.tsx so the
- * stat cards there and the derived stage agree on what "classified" means.
+ * Canonical year-state counts. **Single source of truth** for "how many
+ * transactions / classifications does this year have?" — every status pill,
+ * stat card, and derived stage routes through here.
+ *
+ * Filter rationale (the "ledger filter"):
+ *   isDuplicateOf == null   exclude duplicate rows that the de-dupe pass merged
+ *   isSplit       == false  split parents are represented by their children
+ *   isStale       == false  parser re-extraction superseded these rows
+ *   inYearWindow  == true   posted-date inside the tax year (handles fiscal
+ *                            edges and statement-cut-off carryovers)
+ *
+ * This matches what `/years/[year]/ledger`, `lib/risk/score.ts`, and the
+ * assertions in `lib/validation/assertions.ts` already use. Prior to B-04
+ * the year hub and pipeline page used a looser filter (`isDuplicateOf` only),
+ * which produced a 536 vs 485 mismatch on Atif's prod data.
+ *
+ * `hiddenTx` returns the gap so the risk page can render a breakdown card
+ * ("536 raw / 485 active / 51 hidden").
  */
 export async function getYearCounts(taxYearId: string): Promise<YearCounts> {
-  const [totalTx, classifiedTx, pendingStops] = await Promise.all([
-    prisma.transaction.count({
-      where: { taxYearId, isDuplicateOf: null },
-    }),
+  const taxYear = await prisma.taxYear.findUnique({
+    where: { id: taxYearId },
+    select: { year: true },
+  })
+  const yearWindow = taxYear ? inYearWindow(taxYear.year) : {}
+
+  const canonicalWhere = {
+    taxYearId,
+    isDuplicateOf: null,
+    isSplit: false,
+    isStale: false,
+    ...yearWindow,
+  }
+
+  const [totalTx, rawTx, classifiedTx, pendingStops] = await Promise.all([
+    prisma.transaction.count({ where: canonicalWhere }),
+    prisma.transaction.count({ where: { taxYearId } }),
     prisma.classification.count({
       where: {
-        transaction: { taxYearId, isDuplicateOf: null },
+        transaction: canonicalWhere,
         isCurrent: true,
       },
     }),
-    prisma.stopItem.count({
-      where: { taxYearId, state: "PENDING" },
-    }),
+    prisma.stopItem.count({ where: { taxYearId, state: "PENDING" } }),
   ])
-  return { totalTx, classifiedTx, pendingStops }
+
+  return {
+    totalTx,
+    classifiedTx,
+    pendingStops,
+    hiddenTx: rawTx - totalTx,
+  }
 }
 
 export interface RecomputeResult {

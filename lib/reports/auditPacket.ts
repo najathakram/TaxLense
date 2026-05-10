@@ -22,6 +22,7 @@ import { prisma } from "@/lib/db"
 import { buildMasterLedger } from "./masterLedger"
 import { generateAllPositionMemos } from "@/lib/ai/positionMemo"
 import type { TransactionCode } from "@/app/generated/prisma/client"
+import { fmtUSD } from "@/lib/format/currency"
 
 const DEDUCTIBLE_CODES: TransactionCode[] = [
   "WRITE_OFF",
@@ -218,7 +219,7 @@ export async function buildAuditPacket(taxYearId: string, skipMemos = false): Pr
       const header = [
         `TAXLENS POSITION MEMO`,
         `Type: ${type}`,
-        `Exposure: $${memo.exposure.toFixed(2)}`,
+        `Exposure: ${fmtUSD(memo.exposure, { cents: true })}`,
         `Model: ${memo.modelUsed}`,
         `Generated: ${new Date().toISOString()}`,
         `${"─".repeat(60)}`,

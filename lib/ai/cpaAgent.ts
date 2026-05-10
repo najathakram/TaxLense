@@ -47,6 +47,7 @@ import { inYearWindow } from "@/lib/queries/yearWindow"
 import { getFormSpec } from "@/lib/forms/registry"
 import { uploadDir } from "@/lib/uploads/storage"
 import type { ProgressReporter } from "@/lib/jobs/pipelineRun"
+import { fmtUSD } from "@/lib/format/currency"
 
 const MODEL_PRIMARY = "claude-sonnet-4-6" as const
 const MODEL_OPUS = "claude-opus-4-7" as const
@@ -342,7 +343,7 @@ export async function runCpaAgent(taxYearId: string, opts: CpaAgentOptions = {})
         phase: "cpa_agent",
         processed: chunks.length,
         total: chunks.length,
-        label: `${merchant} → ${d.code}${d.businessPct === 100 ? "" : ` ${d.businessPct}%`}${amount > 0 ? ` · $${amount.toFixed(2)}` : ""}`,
+        label: `${merchant} → ${d.code}${d.businessPct === 100 ? "" : ` ${d.businessPct}%`}${amount > 0 ? ` · ${fmtUSD(amount, { cents: true })}` : ""}`,
         recentDecisions: [...recent],
       })
     }
@@ -431,16 +432,27 @@ export async function runCpaAgent(taxYearId: string, opts: CpaAgentOptions = {})
   try {
     const memoJson = JSON.stringify(memo, null, 2)
     const dir = await uploadDir(taxYearId)
-    const stamp = new Date().toISOString().replace(/[:.]/g, "-")
+    const now = new Date()
+    const stamp = now.toISOString().replace(/[:.]/g, "-")
     const memoFilename = `cpa-agent-memo-${stamp}.json`
     const memoPath = join(dir, memoFilename)
     await writeFile(memoPath, memoJson, "utf8")
+    // B-11: include timestamp + decision count + total deductions in the
+    // title so a CPA can tell consecutive runs apart in the Documents tab.
+    // Pre-fix: 8 memos titled "CPA Agent audit memo · 2026-05-09" with no
+    // way to know which one matched the current ledger.
+    const hhmm = now.toISOString().slice(11, 16) // "HH:MM" UTC
+    const memoDecisions = allDecisions.length
+    const memoDeductions = Object.values(memo.totalsClaimedByLine).reduce(
+      (a, b) => a + b,
+      0,
+    )
     const memoDoc = await prisma.document.create({
       data: {
         userId: taxYear.userId,
         taxYearId,
         category: "OTHER",
-        title: `CPA Agent audit memo · ${new Date().toISOString().slice(0, 10)}`,
+        title: `CPA Agent audit memo · ${now.toISOString().slice(0, 10)} ${hhmm} UTC · ${memoDecisions} decisions · ${fmtUSD(memoDeductions, { cents: false })} deducted`,
         description: memo.summary.slice(0, 500),
         filePath: memoPath,
         originalFilename: memoFilename,
@@ -910,7 +922,7 @@ async function buildAuditMemo({ taxYearId, decisions, txnsById, profile, client 
   if (mealsNotClaimed > 0) {
     followUps.push({
       kind: "UPLOAD_RECEIPT",
-      promptForUser: `Meals totaling $${mealsNotClaimed.toFixed(2)} are currently NOT claimed because §274(d) substantiation is missing. Upload receipts or add attendees to claim them.`,
+      promptForUser: `Meals totaling ${fmtUSD(mealsNotClaimed, { cents: true })} are currently NOT claimed because §274(d) substantiation is missing. Upload receipts or add attendees to claim them.`,
     })
   }
 
@@ -954,7 +966,7 @@ Return plain text only — no JSON, no markdown.`
     const block = res.content[0]
     if (block && block.type === "text") summary = block.text.trim()
   } catch (err) {
-    summary = `Autonomous bookkeeping run completed: ${decisions.length} classifications, $${totalDeductions.toFixed(2)} total deductions across ${Object.keys(totalsClaimedByLine).length} line${Object.keys(totalsClaimedByLine).length === 1 ? "" : "s"}. ${riskFlags.length} risk flag${riskFlags.length === 1 ? "" : "s"}. Sonnet summary unavailable (${err instanceof Error ? err.message : "unknown error"}).`
+    summary = `Autonomous bookkeeping run completed: ${decisions.length} classifications, ${fmtUSD(totalDeductions, { cents: true })} total deductions across ${Object.keys(totalsClaimedByLine).length} line${Object.keys(totalsClaimedByLine).length === 1 ? "" : "s"}. ${riskFlags.length} risk flag${riskFlags.length === 1 ? "" : "s"}. Sonnet summary unavailable (${err instanceof Error ? err.message : "unknown error"}).`
   }
 
   return {
