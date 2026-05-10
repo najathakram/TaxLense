@@ -60,7 +60,7 @@ export function initials(name: string): string {
 // ───────── Status / stage mappers ────────────────────────────────────
 
 export type StatusKey =
-  | "CREATED" | "INGESTION" | "REVIEW" | "LOCKED" | "ARCHIVED"
+  | "CREATED" | "INGESTION" | "CLASSIFICATION" | "REVIEW" | "LOCKED" | "ARCHIVED"
   | "BLOCKER" | "PENDING" | "READY" | "DEADLINE"
   | "OPEN" | "ANSWERED" | "RESOLVED" | "DEFERRED"
   | "active" | "inactive"
@@ -68,7 +68,18 @@ export type StatusKey =
 
 /** Map a TaxYear status string to a Pill key. */
 export function statusKey(status: string): StatusKey {
-  if (status === "CREATED" || status === "INGESTION" || status === "REVIEW" || status === "LOCKED" || status === "ARCHIVED") {
+  // CLASSIFICATION was missing from this allowlist — meaning every Pill that
+  // routed through statusKey rendered as CREATED for years actively being
+  // classified. Spotted on /clients on the post-B-02 deploy: the row pill
+  // said "CREATED" while the breadcrumb said "CLASSIFICATION".
+  if (
+    status === "CREATED" ||
+    status === "INGESTION" ||
+    status === "CLASSIFICATION" ||
+    status === "REVIEW" ||
+    status === "LOCKED" ||
+    status === "ARCHIVED"
+  ) {
     return status as StatusKey
   }
   return "CREATED"

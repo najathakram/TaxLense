@@ -11,11 +11,12 @@ import type { CSSProperties, ReactNode } from "react"
 import { avatarHue, initials, type StatusKey } from "./format"
 
 const STATUS_MAP: Record<string, { label: string; color: string; bg: string; dot: string }> = {
-  CREATED:   { label: "CREATED",   color: "var(--fg-3)",      bg: "rgba(91,98,113,0.18)",   dot: "○" },
-  INGESTION: { label: "INGESTION", color: "var(--tl-blue)",   bg: "rgba(122,166,255,0.16)", dot: "◐" },
-  REVIEW:    { label: "REVIEW",    color: "var(--tl-amber)",  bg: "rgba(244,196,81,0.14)",  dot: "◑" },
-  LOCKED:    { label: "LOCKED",    color: "var(--tl-green)",  bg: "rgba(52,201,138,0.14)",  dot: "●" },
-  ARCHIVED:  { label: "ARCHIVED",  color: "var(--fg-3)",      bg: "rgba(91,98,113,0.18)",   dot: "·" },
+  CREATED:        { label: "CREATED",        color: "var(--fg-3)",      bg: "rgba(91,98,113,0.18)",   dot: "○" },
+  INGESTION:      { label: "INGESTION",      color: "var(--tl-blue)",   bg: "rgba(122,166,255,0.16)", dot: "◐" },
+  CLASSIFICATION: { label: "CLASSIFICATION", color: "var(--tl-blue)",   bg: "rgba(122,166,255,0.16)", dot: "◑" },
+  REVIEW:         { label: "REVIEW",         color: "var(--tl-amber)",  bg: "rgba(244,196,81,0.14)",  dot: "◑" },
+  LOCKED:         { label: "LOCKED",         color: "var(--tl-green)",  bg: "rgba(52,201,138,0.14)",  dot: "●" },
+  ARCHIVED:       { label: "ARCHIVED",       color: "var(--fg-3)",      bg: "rgba(91,98,113,0.18)",   dot: "·" },
   BLOCKER:   { label: "BLOCKER",   color: "var(--tl-red)",    bg: "rgba(255,107,107,0.14)", dot: "●" },
   PENDING:   { label: "PENDING",   color: "var(--tl-amber)",  bg: "rgba(244,196,81,0.14)",  dot: "●" },
   READY:     { label: "READY",     color: "var(--tl-green)",  bg: "rgba(52,201,138,0.14)",  dot: "●" },
