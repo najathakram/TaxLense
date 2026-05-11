@@ -14,6 +14,7 @@ import type { TransactionCode } from "@/app/generated/prisma/client"
 import { computeDeductibleAmt } from "@/lib/classification/deductible"
 import { inYearWindow } from "@/lib/queries/yearWindow"
 import { fmtUSD, fmtUSDFromCents } from "@/lib/format/currency"
+import { isMoneyMoverOutflow } from "@/lib/accounts/kind"
 
 export interface AssertionResult {
   id: string
@@ -209,7 +210,16 @@ export async function A07_TRANSFER_PAIRED(taxYearId: string): Promise<AssertionR
     include: { classifications: { where: { isCurrent: true }, take: 1 } },
   })
   const transfers = txns.filter((t) => t.classifications[0]?.code === "TRANSFER")
-  const unpaired = transfers.filter((t) => !t.isTransferPairedWith).map((t) => t.id)
+  // Money-mover outflows (Wise top-ups, PayPal funding, etc.) are
+  // intentionally unpaired — the destination wallet aggregates balance, so
+  // 1:1 pairing is structurally impossible. lib/pairing/transfers.ts marks
+  // these as TRANSFER without a paired counterpart; A07 must not flag them.
+  const unpaired = transfers
+    .filter((t) => !t.isTransferPairedWith && !isMoneyMoverOutflow(t.merchantRaw))
+    .map((t) => t.id)
+  const moneyMoverCount = transfers.filter(
+    (t) => !t.isTransferPairedWith && isMoneyMoverOutflow(t.merchantRaw),
+  ).length
   // B-08: when 0 TRANSFER classifications exist this used to render
   // "0 transfer rows all paired" — a vacuous pass that obscured the fact
   // there's nothing to verify (e.g. classification hasn't run yet, or the
@@ -221,7 +231,9 @@ export async function A07_TRANSFER_PAIRED(taxYearId: string): Promise<AssertionR
   if (transfers.length === 0) {
     details = "No transfer-coded rows to verify"
   } else if (passed) {
-    details = `${transfers.length} transfer rows all paired`
+    details = moneyMoverCount > 0
+      ? `${transfers.length} transfer rows verified (${moneyMoverCount} money-mover outflows correctly unpaired)`
+      : `${transfers.length} transfer rows all paired`
   } else {
     details = `${unpaired.length} unpaired transfer rows`
   }

@@ -53,6 +53,18 @@ enum AccountType {
   PAYMENT_PROCESSOR
 }
 
+// Account behaviour class. Orthogonal to AccountType (which says "checking
+// vs CC vs brokerage"). MONEY_MOVER means the account is a wallet that
+// aggregates balance — transfers IN don't pair 1:1 with transfers OUT
+// because the wallet itself bridges them. Wise, PayPal, Venmo, Cash App,
+// Stripe Balance, Zelle. Treat outflows FROM a money-mover as the real
+// COGS/expense; outflows TO a money-mover are wallet top-ups (TRANSFER,
+// no pair required). Resolves Atif's Chase→Wise COGS double-counting.
+enum AccountKind {
+  TRADITIONAL
+  MONEY_MOVER
+}
+
 enum ParseStatus {
   PENDING
   SUCCESS
@@ -443,6 +455,11 @@ model FinancialAccount {
   // existing data; once every reader migrates we drop the column.
   taxYearId         String
   type              AccountType
+  // Behaviour class — see AccountKind enum. Money-mover wallets (Wise,
+  // PayPal, Venmo, Stripe, Cash App, Zelle) aggregate balance and don't
+  // require 1:1 transfer pairing. Auto-inferred from `institution` on
+  // create via inferAccountKind() but the user can override.
+  kind              AccountKind @default(TRADITIONAL)
   institution       String
   mask              String?     // Last 4 digits for display
   nickname          String?

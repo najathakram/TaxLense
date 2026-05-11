@@ -52,6 +52,14 @@ export const AccountType = {
 export type AccountType = (typeof AccountType)[keyof typeof AccountType]
 
 
+export const AccountKind = {
+  TRADITIONAL: 'TRADITIONAL',
+  MONEY_MOVER: 'MONEY_MOVER'
+} as const
+
+export type AccountKind = (typeof AccountKind)[keyof typeof AccountKind]
+
+
 export const ParseStatus = {
   PENDING: 'PENDING',
   SUCCESS: 'SUCCESS',

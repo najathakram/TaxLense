@@ -2332,6 +2332,7 @@ export const FinancialAccountScalarFieldEnum = {
   userId: 'userId',
   taxYearId: 'taxYearId',
   type: 'type',
+  kind: 'kind',
   institution: 'institution',
   mask: 'mask',
   nickname: 'nickname',
@@ -2784,6 +2785,20 @@ export type EnumAccountTypeFieldRefInput<$PrismaModel> = FieldRefInputType<$Pris
  * Reference to a field of type 'AccountType[]'
  */
 export type ListEnumAccountTypeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'AccountType[]'>
+    
+
+
+/**
+ * Reference to a field of type 'AccountKind'
+ */
+export type EnumAccountKindFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'AccountKind'>
+    
+
+
+/**
+ * Reference to a field of type 'AccountKind[]'
+ */
+export type ListEnumAccountKindFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'AccountKind[]'>
     
 
 

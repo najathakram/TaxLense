@@ -11,6 +11,7 @@
 import { prisma } from "@/lib/db"
 import type { Transaction, FinancialAccount } from "@/app/generated/prisma/client"
 import { fmtUSD } from "@/lib/format/currency"
+import { isMoneyMoverOutflow } from "@/lib/accounts/kind"
 
 type TxWithAccount = Transaction & { account: FinancialAccount }
 
@@ -62,6 +63,12 @@ function toCents(d: { toString(): string } | null | undefined): number {
 
 export interface MatchTransfersResult {
   paired: number
+  /**
+   * Outflows classified as TRANSFER because they go to a money-mover
+   * wallet (Wise, PayPal, Venmo, etc.) where 1:1 inflow pairing isn't
+   * possible. These are intentionally unpaired; A07 excludes them.
+   */
+  moneyMoverTransfers: number
   stopItemsCreated: number
 }
 
@@ -185,14 +192,55 @@ export async function matchTransfers(taxYearId: string): Promise<MatchTransfersR
     paired++
   }
 
-  // STOP items for unmatched outflows > $500 with transfer-like keywords.
+  // Money-mover sweep — for any unpaired outflow whose merchant text names
+  // a known wallet (Wise, PayPal, Venmo, Cash App, Stripe, Zelle to,
+  // Pocketsflow, Remitly, Revolut), classify as TRANSFER without requiring
+  // a paired inflow on a known account. Why: money-mover wallets aggregate
+  // balance — a single $1,500 Chase→Wise top-up may fund three smaller Wise
+  // outflows over the next month, so 1:1 pairing structurally fails.
+  // Pre-fix: both legs survived as WRITE_OFF_COGS → ~$8K of double-counted
+  // COGS on Atif's ledger.
+  const pairedOutIds = new Set(pairs.map((p) => p.out.id))
+  const moneyMoverOutflows = outflows.filter(
+    (t) =>
+      !pairedOutIds.has(t.id) &&
+      !claimed.has(t.id) &&
+      isMoneyMoverOutflow(t.merchantRaw),
+  )
+  let moneyMoverTransfers = 0
+  for (const t of moneyMoverOutflows) {
+    await prisma.$transaction([
+      prisma.classification.updateMany({
+        where: { transactionId: t.id, isCurrent: true },
+        data: { isCurrent: false },
+      }),
+      prisma.classification.create({
+        data: {
+          transactionId: t.id,
+          code: "TRANSFER",
+          scheduleCLine: null,
+          businessPct: 0,
+          ircCitations: [],
+          confidence: 0.92,
+          evidenceTier: 2,
+          source: "AI_USER_CONFIRMED",
+          reasoning: `Money-mover outflow: destination is a wallet (${t.merchantRaw}); aggregated balance prevents 1:1 pairing. Real expense booked from the wallet's own outflows.`,
+          isCurrent: true,
+        },
+      }),
+    ])
+    claimed.add(t.id)
+    moneyMoverTransfers++
+  }
+
+  // STOP items for unmatched outflows > $500 with transfer-like keywords
+  // (excluding the money-mover sweep above — those are correctly classified).
   // De-dupe against existing STOPs first — without this, every Run autonomous
   // CPA click triggers another matchTransfers pass that creates a NEW STOP
   // for each unmatched outflow. On Atif's prod ledger 7 outflows became
   // 7→14→21 STOPs across three clicks. We only create a STOP if the txn
   // doesn't already have a TRANSFER-category StopItem in any state (PENDING /
   // ANSWERED / DEFERRED — already-resolved STOPs shouldn't be re-created).
-  const pairedOutIds = new Set(pairs.map((p) => p.out.id))
   const unmatchedTransferOutflows = outflows.filter(
     (t) =>
       !pairedOutIds.has(t.id) &&
@@ -236,5 +284,5 @@ export async function matchTransfers(taxYearId: string): Promise<MatchTransfersR
     stopItemsCreated++
   }
 
-  return { paired, stopItemsCreated }
+  return { paired, moneyMoverTransfers, stopItemsCreated }
 }

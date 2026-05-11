@@ -257,6 +257,7 @@ export const FinancialAccountScalarFieldEnum = {
   userId: 'userId',
   taxYearId: 'taxYearId',
   type: 'type',
+  kind: 'kind',
   institution: 'institution',
   mask: 'mask',
   nickname: 'nickname',

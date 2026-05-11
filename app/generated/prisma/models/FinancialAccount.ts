@@ -29,6 +29,7 @@ export type FinancialAccountMinAggregateOutputType = {
   userId: string | null
   taxYearId: string | null
   type: $Enums.AccountType | null
+  kind: $Enums.AccountKind | null
   institution: string | null
   mask: string | null
   nickname: string | null
@@ -40,6 +41,7 @@ export type FinancialAccountMaxAggregateOutputType = {
   userId: string | null
   taxYearId: string | null
   type: $Enums.AccountType | null
+  kind: $Enums.AccountKind | null
   institution: string | null
   mask: string | null
   nickname: string | null
@@ -51,6 +53,7 @@ export type FinancialAccountCountAggregateOutputType = {
   userId: number
   taxYearId: number
   type: number
+  kind: number
   institution: number
   mask: number
   nickname: number
@@ -64,6 +67,7 @@ export type FinancialAccountMinAggregateInputType = {
   userId?: true
   taxYearId?: true
   type?: true
+  kind?: true
   institution?: true
   mask?: true
   nickname?: true
@@ -75,6 +79,7 @@ export type FinancialAccountMaxAggregateInputType = {
   userId?: true
   taxYearId?: true
   type?: true
+  kind?: true
   institution?: true
   mask?: true
   nickname?: true
@@ -86,6 +91,7 @@ export type FinancialAccountCountAggregateInputType = {
   userId?: true
   taxYearId?: true
   type?: true
+  kind?: true
   institution?: true
   mask?: true
   nickname?: true
@@ -170,6 +176,7 @@ export type FinancialAccountGroupByOutputType = {
   userId: string
   taxYearId: string
   type: $Enums.AccountType
+  kind: $Enums.AccountKind
   institution: string
   mask: string | null
   nickname: string | null
@@ -202,6 +209,7 @@ export type FinancialAccountWhereInput = {
   userId?: Prisma.StringFilter<"FinancialAccount"> | string
   taxYearId?: Prisma.StringFilter<"FinancialAccount"> | string
   type?: Prisma.EnumAccountTypeFilter<"FinancialAccount"> | $Enums.AccountType
+  kind?: Prisma.EnumAccountKindFilter<"FinancialAccount"> | $Enums.AccountKind
   institution?: Prisma.StringFilter<"FinancialAccount"> | string
   mask?: Prisma.StringNullableFilter<"FinancialAccount"> | string | null
   nickname?: Prisma.StringNullableFilter<"FinancialAccount"> | string | null
@@ -218,6 +226,7 @@ export type FinancialAccountOrderByWithRelationInput = {
   userId?: Prisma.SortOrder
   taxYearId?: Prisma.SortOrder
   type?: Prisma.SortOrder
+  kind?: Prisma.SortOrder
   institution?: Prisma.SortOrder
   mask?: Prisma.SortOrderInput | Prisma.SortOrder
   nickname?: Prisma.SortOrderInput | Prisma.SortOrder
@@ -237,6 +246,7 @@ export type FinancialAccountWhereUniqueInput = Prisma.AtLeast<{
   userId?: Prisma.StringFilter<"FinancialAccount"> | string
   taxYearId?: Prisma.StringFilter<"FinancialAccount"> | string
   type?: Prisma.EnumAccountTypeFilter<"FinancialAccount"> | $Enums.AccountType
+  kind?: Prisma.EnumAccountKindFilter<"FinancialAccount"> | $Enums.AccountKind
   institution?: Prisma.StringFilter<"FinancialAccount"> | string
   mask?: Prisma.StringNullableFilter<"FinancialAccount"> | string | null
   nickname?: Prisma.StringNullableFilter<"FinancialAccount"> | string | null
@@ -253,6 +263,7 @@ export type FinancialAccountOrderByWithAggregationInput = {
   userId?: Prisma.SortOrder
   taxYearId?: Prisma.SortOrder
   type?: Prisma.SortOrder
+  kind?: Prisma.SortOrder
   institution?: Prisma.SortOrder
   mask?: Prisma.SortOrderInput | Prisma.SortOrder
   nickname?: Prisma.SortOrderInput | Prisma.SortOrder
@@ -270,6 +281,7 @@ export type FinancialAccountScalarWhereWithAggregatesInput = {
   userId?: Prisma.StringWithAggregatesFilter<"FinancialAccount"> | string
   taxYearId?: Prisma.StringWithAggregatesFilter<"FinancialAccount"> | string
   type?: Prisma.EnumAccountTypeWithAggregatesFilter<"FinancialAccount"> | $Enums.AccountType
+  kind?: Prisma.EnumAccountKindWithAggregatesFilter<"FinancialAccount"> | $Enums.AccountKind
   institution?: Prisma.StringWithAggregatesFilter<"FinancialAccount"> | string
   mask?: Prisma.StringNullableWithAggregatesFilter<"FinancialAccount"> | string | null
   nickname?: Prisma.StringNullableWithAggregatesFilter<"FinancialAccount"> | string | null
@@ -279,6 +291,7 @@ export type FinancialAccountScalarWhereWithAggregatesInput = {
 export type FinancialAccountCreateInput = {
   id?: string
   type: $Enums.AccountType
+  kind?: $Enums.AccountKind
   institution: string
   mask?: string | null
   nickname?: string | null
@@ -295,6 +308,7 @@ export type FinancialAccountUncheckedCreateInput = {
   userId: string
   taxYearId: string
   type: $Enums.AccountType
+  kind?: $Enums.AccountKind
   institution: string
   mask?: string | null
   nickname?: string | null
@@ -307,6 +321,7 @@ export type FinancialAccountUncheckedCreateInput = {
 export type FinancialAccountUpdateInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   type?: Prisma.EnumAccountTypeFieldUpdateOperationsInput | $Enums.AccountType
+  kind?: Prisma.EnumAccountKindFieldUpdateOperationsInput | $Enums.AccountKind
   institution?: Prisma.StringFieldUpdateOperationsInput | string
   mask?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   nickname?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -323,6 +338,7 @@ export type FinancialAccountUncheckedUpdateInput = {
   userId?: Prisma.StringFieldUpdateOperationsInput | string
   taxYearId?: Prisma.StringFieldUpdateOperationsInput | string
   type?: Prisma.EnumAccountTypeFieldUpdateOperationsInput | $Enums.AccountType
+  kind?: Prisma.EnumAccountKindFieldUpdateOperationsInput | $Enums.AccountKind
   institution?: Prisma.StringFieldUpdateOperationsInput | string
   mask?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   nickname?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -337,6 +353,7 @@ export type FinancialAccountCreateManyInput = {
   userId: string
   taxYearId: string
   type: $Enums.AccountType
+  kind?: $Enums.AccountKind
   institution: string
   mask?: string | null
   nickname?: string | null
@@ -346,6 +363,7 @@ export type FinancialAccountCreateManyInput = {
 export type FinancialAccountUpdateManyMutationInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   type?: Prisma.EnumAccountTypeFieldUpdateOperationsInput | $Enums.AccountType
+  kind?: Prisma.EnumAccountKindFieldUpdateOperationsInput | $Enums.AccountKind
   institution?: Prisma.StringFieldUpdateOperationsInput | string
   mask?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   nickname?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -357,6 +375,7 @@ export type FinancialAccountUncheckedUpdateManyInput = {
   userId?: Prisma.StringFieldUpdateOperationsInput | string
   taxYearId?: Prisma.StringFieldUpdateOperationsInput | string
   type?: Prisma.EnumAccountTypeFieldUpdateOperationsInput | $Enums.AccountType
+  kind?: Prisma.EnumAccountKindFieldUpdateOperationsInput | $Enums.AccountKind
   institution?: Prisma.StringFieldUpdateOperationsInput | string
   mask?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   nickname?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -378,6 +397,7 @@ export type FinancialAccountCountOrderByAggregateInput = {
   userId?: Prisma.SortOrder
   taxYearId?: Prisma.SortOrder
   type?: Prisma.SortOrder
+  kind?: Prisma.SortOrder
   institution?: Prisma.SortOrder
   mask?: Prisma.SortOrder
   nickname?: Prisma.SortOrder
@@ -389,6 +409,7 @@ export type FinancialAccountMaxOrderByAggregateInput = {
   userId?: Prisma.SortOrder
   taxYearId?: Prisma.SortOrder
   type?: Prisma.SortOrder
+  kind?: Prisma.SortOrder
   institution?: Prisma.SortOrder
   mask?: Prisma.SortOrder
   nickname?: Prisma.SortOrder
@@ -400,6 +421,7 @@ export type FinancialAccountMinOrderByAggregateInput = {
   userId?: Prisma.SortOrder
   taxYearId?: Prisma.SortOrder
   type?: Prisma.SortOrder
+  kind?: Prisma.SortOrder
   institution?: Prisma.SortOrder
   mask?: Prisma.SortOrder
   nickname?: Prisma.SortOrder
@@ -499,6 +521,10 @@ export type EnumAccountTypeFieldUpdateOperationsInput = {
   set?: $Enums.AccountType
 }
 
+export type EnumAccountKindFieldUpdateOperationsInput = {
+  set?: $Enums.AccountKind
+}
+
 export type FinancialAccountCreateNestedOneWithoutYearLinksInput = {
   create?: Prisma.XOR<Prisma.FinancialAccountCreateWithoutYearLinksInput, Prisma.FinancialAccountUncheckedCreateWithoutYearLinksInput>
   connectOrCreate?: Prisma.FinancialAccountCreateOrConnectWithoutYearLinksInput
@@ -544,6 +570,7 @@ export type FinancialAccountUpdateOneRequiredWithoutTransactionsNestedInput = {
 export type FinancialAccountCreateWithoutUserInput = {
   id?: string
   type: $Enums.AccountType
+  kind?: $Enums.AccountKind
   institution: string
   mask?: string | null
   nickname?: string | null
@@ -558,6 +585,7 @@ export type FinancialAccountUncheckedCreateWithoutUserInput = {
   id?: string
   taxYearId: string
   type: $Enums.AccountType
+  kind?: $Enums.AccountKind
   institution: string
   mask?: string | null
   nickname?: string | null
@@ -601,6 +629,7 @@ export type FinancialAccountScalarWhereInput = {
   userId?: Prisma.StringFilter<"FinancialAccount"> | string
   taxYearId?: Prisma.StringFilter<"FinancialAccount"> | string
   type?: Prisma.EnumAccountTypeFilter<"FinancialAccount"> | $Enums.AccountType
+  kind?: Prisma.EnumAccountKindFilter<"FinancialAccount"> | $Enums.AccountKind
   institution?: Prisma.StringFilter<"FinancialAccount"> | string
   mask?: Prisma.StringNullableFilter<"FinancialAccount"> | string | null
   nickname?: Prisma.StringNullableFilter<"FinancialAccount"> | string | null
@@ -610,6 +639,7 @@ export type FinancialAccountScalarWhereInput = {
 export type FinancialAccountCreateWithoutTaxYearInput = {
   id?: string
   type: $Enums.AccountType
+  kind?: $Enums.AccountKind
   institution: string
   mask?: string | null
   nickname?: string | null
@@ -624,6 +654,7 @@ export type FinancialAccountUncheckedCreateWithoutTaxYearInput = {
   id?: string
   userId: string
   type: $Enums.AccountType
+  kind?: $Enums.AccountKind
   institution: string
   mask?: string | null
   nickname?: string | null
@@ -662,6 +693,7 @@ export type FinancialAccountUpdateManyWithWhereWithoutTaxYearInput = {
 export type FinancialAccountCreateWithoutYearLinksInput = {
   id?: string
   type: $Enums.AccountType
+  kind?: $Enums.AccountKind
   institution: string
   mask?: string | null
   nickname?: string | null
@@ -677,6 +709,7 @@ export type FinancialAccountUncheckedCreateWithoutYearLinksInput = {
   userId: string
   taxYearId: string
   type: $Enums.AccountType
+  kind?: $Enums.AccountKind
   institution: string
   mask?: string | null
   nickname?: string | null
@@ -704,6 +737,7 @@ export type FinancialAccountUpdateToOneWithWhereWithoutYearLinksInput = {
 export type FinancialAccountUpdateWithoutYearLinksInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   type?: Prisma.EnumAccountTypeFieldUpdateOperationsInput | $Enums.AccountType
+  kind?: Prisma.EnumAccountKindFieldUpdateOperationsInput | $Enums.AccountKind
   institution?: Prisma.StringFieldUpdateOperationsInput | string
   mask?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   nickname?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -719,6 +753,7 @@ export type FinancialAccountUncheckedUpdateWithoutYearLinksInput = {
   userId?: Prisma.StringFieldUpdateOperationsInput | string
   taxYearId?: Prisma.StringFieldUpdateOperationsInput | string
   type?: Prisma.EnumAccountTypeFieldUpdateOperationsInput | $Enums.AccountType
+  kind?: Prisma.EnumAccountKindFieldUpdateOperationsInput | $Enums.AccountKind
   institution?: Prisma.StringFieldUpdateOperationsInput | string
   mask?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   nickname?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -730,6 +765,7 @@ export type FinancialAccountUncheckedUpdateWithoutYearLinksInput = {
 export type FinancialAccountCreateWithoutStatementImportsInput = {
   id?: string
   type: $Enums.AccountType
+  kind?: $Enums.AccountKind
   institution: string
   mask?: string | null
   nickname?: string | null
@@ -745,6 +781,7 @@ export type FinancialAccountUncheckedCreateWithoutStatementImportsInput = {
   userId: string
   taxYearId: string
   type: $Enums.AccountType
+  kind?: $Enums.AccountKind
   institution: string
   mask?: string | null
   nickname?: string | null
@@ -772,6 +809,7 @@ export type FinancialAccountUpdateToOneWithWhereWithoutStatementImportsInput = {
 export type FinancialAccountUpdateWithoutStatementImportsInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   type?: Prisma.EnumAccountTypeFieldUpdateOperationsInput | $Enums.AccountType
+  kind?: Prisma.EnumAccountKindFieldUpdateOperationsInput | $Enums.AccountKind
   institution?: Prisma.StringFieldUpdateOperationsInput | string
   mask?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   nickname?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -787,6 +825,7 @@ export type FinancialAccountUncheckedUpdateWithoutStatementImportsInput = {
   userId?: Prisma.StringFieldUpdateOperationsInput | string
   taxYearId?: Prisma.StringFieldUpdateOperationsInput | string
   type?: Prisma.EnumAccountTypeFieldUpdateOperationsInput | $Enums.AccountType
+  kind?: Prisma.EnumAccountKindFieldUpdateOperationsInput | $Enums.AccountKind
   institution?: Prisma.StringFieldUpdateOperationsInput | string
   mask?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   nickname?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -798,6 +837,7 @@ export type FinancialAccountUncheckedUpdateWithoutStatementImportsInput = {
 export type FinancialAccountCreateWithoutTransactionsInput = {
   id?: string
   type: $Enums.AccountType
+  kind?: $Enums.AccountKind
   institution: string
   mask?: string | null
   nickname?: string | null
@@ -813,6 +853,7 @@ export type FinancialAccountUncheckedCreateWithoutTransactionsInput = {
   userId: string
   taxYearId: string
   type: $Enums.AccountType
+  kind?: $Enums.AccountKind
   institution: string
   mask?: string | null
   nickname?: string | null
@@ -840,6 +881,7 @@ export type FinancialAccountUpdateToOneWithWhereWithoutTransactionsInput = {
 export type FinancialAccountUpdateWithoutTransactionsInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   type?: Prisma.EnumAccountTypeFieldUpdateOperationsInput | $Enums.AccountType
+  kind?: Prisma.EnumAccountKindFieldUpdateOperationsInput | $Enums.AccountKind
   institution?: Prisma.StringFieldUpdateOperationsInput | string
   mask?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   nickname?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -855,6 +897,7 @@ export type FinancialAccountUncheckedUpdateWithoutTransactionsInput = {
   userId?: Prisma.StringFieldUpdateOperationsInput | string
   taxYearId?: Prisma.StringFieldUpdateOperationsInput | string
   type?: Prisma.EnumAccountTypeFieldUpdateOperationsInput | $Enums.AccountType
+  kind?: Prisma.EnumAccountKindFieldUpdateOperationsInput | $Enums.AccountKind
   institution?: Prisma.StringFieldUpdateOperationsInput | string
   mask?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   nickname?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -867,6 +910,7 @@ export type FinancialAccountCreateManyUserInput = {
   id?: string
   taxYearId: string
   type: $Enums.AccountType
+  kind?: $Enums.AccountKind
   institution: string
   mask?: string | null
   nickname?: string | null
@@ -876,6 +920,7 @@ export type FinancialAccountCreateManyUserInput = {
 export type FinancialAccountUpdateWithoutUserInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   type?: Prisma.EnumAccountTypeFieldUpdateOperationsInput | $Enums.AccountType
+  kind?: Prisma.EnumAccountKindFieldUpdateOperationsInput | $Enums.AccountKind
   institution?: Prisma.StringFieldUpdateOperationsInput | string
   mask?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   nickname?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -890,6 +935,7 @@ export type FinancialAccountUncheckedUpdateWithoutUserInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   taxYearId?: Prisma.StringFieldUpdateOperationsInput | string
   type?: Prisma.EnumAccountTypeFieldUpdateOperationsInput | $Enums.AccountType
+  kind?: Prisma.EnumAccountKindFieldUpdateOperationsInput | $Enums.AccountKind
   institution?: Prisma.StringFieldUpdateOperationsInput | string
   mask?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   nickname?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -903,6 +949,7 @@ export type FinancialAccountUncheckedUpdateManyWithoutUserInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   taxYearId?: Prisma.StringFieldUpdateOperationsInput | string
   type?: Prisma.EnumAccountTypeFieldUpdateOperationsInput | $Enums.AccountType
+  kind?: Prisma.EnumAccountKindFieldUpdateOperationsInput | $Enums.AccountKind
   institution?: Prisma.StringFieldUpdateOperationsInput | string
   mask?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   nickname?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -913,6 +960,7 @@ export type FinancialAccountCreateManyTaxYearInput = {
   id?: string
   userId: string
   type: $Enums.AccountType
+  kind?: $Enums.AccountKind
   institution: string
   mask?: string | null
   nickname?: string | null
@@ -922,6 +970,7 @@ export type FinancialAccountCreateManyTaxYearInput = {
 export type FinancialAccountUpdateWithoutTaxYearInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   type?: Prisma.EnumAccountTypeFieldUpdateOperationsInput | $Enums.AccountType
+  kind?: Prisma.EnumAccountKindFieldUpdateOperationsInput | $Enums.AccountKind
   institution?: Prisma.StringFieldUpdateOperationsInput | string
   mask?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   nickname?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -936,6 +985,7 @@ export type FinancialAccountUncheckedUpdateWithoutTaxYearInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   userId?: Prisma.StringFieldUpdateOperationsInput | string
   type?: Prisma.EnumAccountTypeFieldUpdateOperationsInput | $Enums.AccountType
+  kind?: Prisma.EnumAccountKindFieldUpdateOperationsInput | $Enums.AccountKind
   institution?: Prisma.StringFieldUpdateOperationsInput | string
   mask?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   nickname?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -949,6 +999,7 @@ export type FinancialAccountUncheckedUpdateManyWithoutTaxYearInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   userId?: Prisma.StringFieldUpdateOperationsInput | string
   type?: Prisma.EnumAccountTypeFieldUpdateOperationsInput | $Enums.AccountType
+  kind?: Prisma.EnumAccountKindFieldUpdateOperationsInput | $Enums.AccountKind
   institution?: Prisma.StringFieldUpdateOperationsInput | string
   mask?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   nickname?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -1009,6 +1060,7 @@ export type FinancialAccountSelect<ExtArgs extends runtime.Types.Extensions.Inte
   userId?: boolean
   taxYearId?: boolean
   type?: boolean
+  kind?: boolean
   institution?: boolean
   mask?: boolean
   nickname?: boolean
@@ -1026,6 +1078,7 @@ export type FinancialAccountSelectCreateManyAndReturn<ExtArgs extends runtime.Ty
   userId?: boolean
   taxYearId?: boolean
   type?: boolean
+  kind?: boolean
   institution?: boolean
   mask?: boolean
   nickname?: boolean
@@ -1039,6 +1092,7 @@ export type FinancialAccountSelectUpdateManyAndReturn<ExtArgs extends runtime.Ty
   userId?: boolean
   taxYearId?: boolean
   type?: boolean
+  kind?: boolean
   institution?: boolean
   mask?: boolean
   nickname?: boolean
@@ -1052,13 +1106,14 @@ export type FinancialAccountSelectScalar = {
   userId?: boolean
   taxYearId?: boolean
   type?: boolean
+  kind?: boolean
   institution?: boolean
   mask?: boolean
   nickname?: boolean
   isPrimaryBusiness?: boolean
 }
 
-export type FinancialAccountOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "userId" | "taxYearId" | "type" | "institution" | "mask" | "nickname" | "isPrimaryBusiness", ExtArgs["result"]["financialAccount"]>
+export type FinancialAccountOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "userId" | "taxYearId" | "type" | "kind" | "institution" | "mask" | "nickname" | "isPrimaryBusiness", ExtArgs["result"]["financialAccount"]>
 export type FinancialAccountInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   user?: boolean | Prisma.UserDefaultArgs<ExtArgs>
   taxYear?: boolean | Prisma.TaxYearDefaultArgs<ExtArgs>
@@ -1090,6 +1145,7 @@ export type $FinancialAccountPayload<ExtArgs extends runtime.Types.Extensions.In
     userId: string
     taxYearId: string
     type: $Enums.AccountType
+    kind: $Enums.AccountKind
     institution: string
     mask: string | null
     nickname: string | null
@@ -1526,6 +1582,7 @@ export interface FinancialAccountFieldRefs {
   readonly userId: Prisma.FieldRef<"FinancialAccount", 'String'>
   readonly taxYearId: Prisma.FieldRef<"FinancialAccount", 'String'>
   readonly type: Prisma.FieldRef<"FinancialAccount", 'AccountType'>
+  readonly kind: Prisma.FieldRef<"FinancialAccount", 'AccountKind'>
   readonly institution: Prisma.FieldRef<"FinancialAccount", 'String'>
   readonly mask: Prisma.FieldRef<"FinancialAccount", 'String'>
   readonly nickname: Prisma.FieldRef<"FinancialAccount", 'String'>

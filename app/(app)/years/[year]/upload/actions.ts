@@ -16,6 +16,7 @@ import { getCurrentUserId } from "@/lib/auth"
 import { getClientContext } from "@/lib/cpa/clientContext"
 import { prisma } from "@/lib/db"
 import { parseStatement, fileHash, transactionKey, partitionByTaxYear } from "@/lib/parsers"
+import { inferAccountKind } from "@/lib/accounts/kind"
 import {
   openOrGetSession,
   chargeApiCall,
@@ -553,6 +554,7 @@ export async function createAccount(input: z.infer<typeof CreateAccountSchema>):
       userId,
       taxYearId: taxYear.id,
       type: type as AccountType,
+      kind: inferAccountKind(institution),
       institution,
       nickname: nickname ?? null,
       mask: mask ?? null,
