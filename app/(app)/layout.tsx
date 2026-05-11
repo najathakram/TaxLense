@@ -49,6 +49,14 @@ function pushYearStages(
       ],
     },
     {
+      label: "ENTITY",
+      items: [
+        { label: "Owners",    href: `${yearBase}/owners`,    indent: 1 },
+        { label: "1099s",     href: `${yearBase}/1099s`,     indent: 1 },
+        { label: "Engagement", href: `${yearBase}/engagement`, indent: 1 },
+      ],
+    },
+    {
       label: "DELIVER",
       items: [
         { label: "Finalize", href: `${yearBase}/finalize`, indent: 1 },
