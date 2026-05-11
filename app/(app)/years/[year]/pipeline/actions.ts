@@ -15,6 +15,7 @@ import { selectResidualCandidates } from "@/lib/ai/residualCandidates"
 import { runResidualPass } from "@/lib/ai/residualTransaction"
 import { runBulkClassifyPass } from "@/lib/ai/bulkClassify"
 import { autoResolveStops } from "@/app/(app)/years/[year]/stops/actions"
+import { generateAiProposals } from "@/lib/ai/generateProposals"
 import { deriveStopsFromAssertions } from "@/lib/stops/deriveFromAssertions"
 import { deriveP2pRoundTripStops } from "@/lib/pairing/p2pRoundTrip"
 import {
@@ -73,6 +74,7 @@ async function alreadyRunning(taxYearId: string, kind: PipelineRunKind): Promise
 type RunOp = (
   taxYearId: string,
   setProgress: ProgressReporter,
+  runId: string,
 ) => Promise<unknown>
 
 /**
@@ -104,7 +106,7 @@ async function enqueue(
       // payload without knowing about Prisma's InputJsonValue.
       const reporter: ProgressReporter = (p: PipelineProgress) =>
         setProgress(p as unknown as Prisma.InputJsonValue)
-      const result = await op(taxYear.id, reporter)
+      const result = await op(taxYear.id, reporter, run.id)
       // Auto-promote the year's status based on what's actually in the DB now
       // (e.g. INGESTION → CLASSIFICATION once the first row is classified;
       // CLASSIFICATION → REVIEW once every row is classified and STOPs == 0).
@@ -191,6 +193,23 @@ export async function runBulkClassify(year: number) {
 export async function runAutoResolveStops(year: number) {
   return enqueue(year, "AUTO_RESOLVE_STOPS", async (_taxYearId, setProgress) => {
     return autoResolveStops(year, setProgress)
+  })
+}
+
+/**
+ * Review-first replacement for runAutoResolveStops. Generates an
+ * AI proposal per PENDING stop (with prior-case context) and auto-applies
+ * anything ≥0.85 confidence. The remaining proposals land in /review for
+ * the CPA to approve in bulk.
+ */
+export async function runGenerateAiProposals(year: number) {
+  const userId = await getCurrentUserId()
+  return enqueue(year, "GENERATE_AI_PROPOSALS", async (taxYearId, setProgress, runId) => {
+    return generateAiProposals(taxYearId, {
+      runId,
+      actorUserId: userId,
+      reportProgress: setProgress,
+    })
   })
 }
 

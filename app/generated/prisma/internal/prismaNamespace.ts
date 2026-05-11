@@ -3130,7 +3130,8 @@ export const StopItemScalarFieldEnum = {
   state: 'state',
   userAnswer: 'userAnswer',
   answeredAt: 'answeredAt',
-  aiSuggestion: 'aiSuggestion'
+  aiSuggestion: 'aiSuggestion',
+  aiProposal: 'aiProposal'
 } as const
 
 export type StopItemScalarFieldEnum = (typeof StopItemScalarFieldEnum)[keyof typeof StopItemScalarFieldEnum]

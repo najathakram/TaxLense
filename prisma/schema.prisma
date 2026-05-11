@@ -113,6 +113,10 @@ enum PipelineRunKind {
   RESIDUAL_AI
   BULK_CLASSIFY
   AUTO_RESOLVE_STOPS
+  // Review-first proposal generation — Sonnet writes a recommendation per
+  // pending stop with prior-case context; high-confidence ones auto-apply,
+  // the rest land in /review for human approval.
+  GENERATE_AI_PROPOSALS
   // Phase 1 — single autonomous-bookkeeper run.
   CPA_AGENT
   // Phase A follow-up — re-extract low-confidence PDFs via Sonnet vision.
@@ -876,6 +880,34 @@ model StopItem {
   // Set by the auto-resolve flow and by deriveStopsFromAssertions for newly-
   // generated DEPOSIT stops; null when no usable signal is available.
   aiSuggestion   Json?
+  // Review-first proposal — the richer recommendation produced by the
+  // generateAiProposals flow. Carries the full StopAnswer the AI thinks
+  // should be applied, plus per-stop reasoning, confidence, the prior
+  // similar cases the AI cited, and the generation run id (so the audit
+  // trail ties the proposal back to the run that produced it). Cleared on
+  // re-generate or after explicit approval. Distinct from `aiSuggestion`
+  // (which is just the radio pre-fill) so the review screen has a
+  // dedicated, opinionated payload to render.
+  //
+  // Shape: {
+  //   answer: StopAnswer,           // applied as-is when approved
+  //   code: TransactionCode,        // derived for display
+  //   businessPct: number,
+  //   scheduleCLine: string | null,
+  //   confidence: number,
+  //   reasoning: string,
+  //   priorCases: Array<{
+  //     stopId: string,
+  //     merchantSnippet: string,
+  //     resolvedAs: { code, businessPct, line },
+  //     resolvedAt: string,
+  //     similarity: number,
+  //   }>,
+  //   generatedAt: string,
+  //   generatedRunId: string,
+  //   autoApplied: boolean,         // true when stop was already auto-resolved
+  // }
+  aiProposal     Json?
 
   taxYear      TaxYear       @relation(fields: [taxYearId],      references: [id], onDelete: Cascade)
   merchantRule MerchantRule? @relation(fields: [merchantRuleId], references: [id])

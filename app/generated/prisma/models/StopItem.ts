@@ -56,6 +56,7 @@ export type StopItemCountAggregateOutputType = {
   userAnswer: number
   answeredAt: number
   aiSuggestion: number
+  aiProposal: number
   _all: number
 }
 
@@ -92,6 +93,7 @@ export type StopItemCountAggregateInputType = {
   userAnswer?: true
   answeredAt?: true
   aiSuggestion?: true
+  aiProposal?: true
   _all?: true
 }
 
@@ -179,6 +181,7 @@ export type StopItemGroupByOutputType = {
   userAnswer: runtime.JsonValue | null
   answeredAt: Date | null
   aiSuggestion: runtime.JsonValue | null
+  aiProposal: runtime.JsonValue | null
   _count: StopItemCountAggregateOutputType | null
   _min: StopItemMinAggregateOutputType | null
   _max: StopItemMaxAggregateOutputType | null
@@ -214,6 +217,7 @@ export type StopItemWhereInput = {
   userAnswer?: Prisma.JsonNullableFilter<"StopItem">
   answeredAt?: Prisma.DateTimeNullableFilter<"StopItem"> | Date | string | null
   aiSuggestion?: Prisma.JsonNullableFilter<"StopItem">
+  aiProposal?: Prisma.JsonNullableFilter<"StopItem">
   taxYear?: Prisma.XOR<Prisma.TaxYearScalarRelationFilter, Prisma.TaxYearWhereInput>
   merchantRule?: Prisma.XOR<Prisma.MerchantRuleNullableScalarRelationFilter, Prisma.MerchantRuleWhereInput> | null
 }
@@ -230,6 +234,7 @@ export type StopItemOrderByWithRelationInput = {
   userAnswer?: Prisma.SortOrderInput | Prisma.SortOrder
   answeredAt?: Prisma.SortOrderInput | Prisma.SortOrder
   aiSuggestion?: Prisma.SortOrderInput | Prisma.SortOrder
+  aiProposal?: Prisma.SortOrderInput | Prisma.SortOrder
   taxYear?: Prisma.TaxYearOrderByWithRelationInput
   merchantRule?: Prisma.MerchantRuleOrderByWithRelationInput
 }
@@ -249,6 +254,7 @@ export type StopItemWhereUniqueInput = Prisma.AtLeast<{
   userAnswer?: Prisma.JsonNullableFilter<"StopItem">
   answeredAt?: Prisma.DateTimeNullableFilter<"StopItem"> | Date | string | null
   aiSuggestion?: Prisma.JsonNullableFilter<"StopItem">
+  aiProposal?: Prisma.JsonNullableFilter<"StopItem">
   taxYear?: Prisma.XOR<Prisma.TaxYearScalarRelationFilter, Prisma.TaxYearWhereInput>
   merchantRule?: Prisma.XOR<Prisma.MerchantRuleNullableScalarRelationFilter, Prisma.MerchantRuleWhereInput> | null
 }, "id">
@@ -265,6 +271,7 @@ export type StopItemOrderByWithAggregationInput = {
   userAnswer?: Prisma.SortOrderInput | Prisma.SortOrder
   answeredAt?: Prisma.SortOrderInput | Prisma.SortOrder
   aiSuggestion?: Prisma.SortOrderInput | Prisma.SortOrder
+  aiProposal?: Prisma.SortOrderInput | Prisma.SortOrder
   _count?: Prisma.StopItemCountOrderByAggregateInput
   _max?: Prisma.StopItemMaxOrderByAggregateInput
   _min?: Prisma.StopItemMinOrderByAggregateInput
@@ -285,6 +292,7 @@ export type StopItemScalarWhereWithAggregatesInput = {
   userAnswer?: Prisma.JsonNullableWithAggregatesFilter<"StopItem">
   answeredAt?: Prisma.DateTimeNullableWithAggregatesFilter<"StopItem"> | Date | string | null
   aiSuggestion?: Prisma.JsonNullableWithAggregatesFilter<"StopItem">
+  aiProposal?: Prisma.JsonNullableWithAggregatesFilter<"StopItem">
 }
 
 export type StopItemCreateInput = {
@@ -297,6 +305,7 @@ export type StopItemCreateInput = {
   userAnswer?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   answeredAt?: Date | string | null
   aiSuggestion?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  aiProposal?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   taxYear: Prisma.TaxYearCreateNestedOneWithoutStopItemsInput
   merchantRule?: Prisma.MerchantRuleCreateNestedOneWithoutStopItemsInput
 }
@@ -313,6 +322,7 @@ export type StopItemUncheckedCreateInput = {
   userAnswer?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   answeredAt?: Date | string | null
   aiSuggestion?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  aiProposal?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
 }
 
 export type StopItemUpdateInput = {
@@ -325,6 +335,7 @@ export type StopItemUpdateInput = {
   userAnswer?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   answeredAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   aiSuggestion?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  aiProposal?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   taxYear?: Prisma.TaxYearUpdateOneRequiredWithoutStopItemsNestedInput
   merchantRule?: Prisma.MerchantRuleUpdateOneWithoutStopItemsNestedInput
 }
@@ -341,6 +352,7 @@ export type StopItemUncheckedUpdateInput = {
   userAnswer?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   answeredAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   aiSuggestion?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  aiProposal?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
 }
 
 export type StopItemCreateManyInput = {
@@ -355,6 +367,7 @@ export type StopItemCreateManyInput = {
   userAnswer?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   answeredAt?: Date | string | null
   aiSuggestion?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  aiProposal?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
 }
 
 export type StopItemUpdateManyMutationInput = {
@@ -367,6 +380,7 @@ export type StopItemUpdateManyMutationInput = {
   userAnswer?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   answeredAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   aiSuggestion?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  aiProposal?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
 }
 
 export type StopItemUncheckedUpdateManyInput = {
@@ -381,6 +395,7 @@ export type StopItemUncheckedUpdateManyInput = {
   userAnswer?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   answeredAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   aiSuggestion?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  aiProposal?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
 }
 
 export type StopItemListRelationFilter = {
@@ -405,6 +420,7 @@ export type StopItemCountOrderByAggregateInput = {
   userAnswer?: Prisma.SortOrder
   answeredAt?: Prisma.SortOrder
   aiSuggestion?: Prisma.SortOrder
+  aiProposal?: Prisma.SortOrder
 }
 
 export type StopItemMaxOrderByAggregateInput = {
@@ -538,6 +554,7 @@ export type StopItemCreateWithoutTaxYearInput = {
   userAnswer?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   answeredAt?: Date | string | null
   aiSuggestion?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  aiProposal?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   merchantRule?: Prisma.MerchantRuleCreateNestedOneWithoutStopItemsInput
 }
 
@@ -552,6 +569,7 @@ export type StopItemUncheckedCreateWithoutTaxYearInput = {
   userAnswer?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   answeredAt?: Date | string | null
   aiSuggestion?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  aiProposal?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
 }
 
 export type StopItemCreateOrConnectWithoutTaxYearInput = {
@@ -595,6 +613,7 @@ export type StopItemScalarWhereInput = {
   userAnswer?: Prisma.JsonNullableFilter<"StopItem">
   answeredAt?: Prisma.DateTimeNullableFilter<"StopItem"> | Date | string | null
   aiSuggestion?: Prisma.JsonNullableFilter<"StopItem">
+  aiProposal?: Prisma.JsonNullableFilter<"StopItem">
 }
 
 export type StopItemCreateWithoutMerchantRuleInput = {
@@ -607,6 +626,7 @@ export type StopItemCreateWithoutMerchantRuleInput = {
   userAnswer?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   answeredAt?: Date | string | null
   aiSuggestion?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  aiProposal?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   taxYear: Prisma.TaxYearCreateNestedOneWithoutStopItemsInput
 }
 
@@ -621,6 +641,7 @@ export type StopItemUncheckedCreateWithoutMerchantRuleInput = {
   userAnswer?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   answeredAt?: Date | string | null
   aiSuggestion?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  aiProposal?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
 }
 
 export type StopItemCreateOrConnectWithoutMerchantRuleInput = {
@@ -660,6 +681,7 @@ export type StopItemCreateManyTaxYearInput = {
   userAnswer?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   answeredAt?: Date | string | null
   aiSuggestion?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  aiProposal?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
 }
 
 export type StopItemUpdateWithoutTaxYearInput = {
@@ -672,6 +694,7 @@ export type StopItemUpdateWithoutTaxYearInput = {
   userAnswer?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   answeredAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   aiSuggestion?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  aiProposal?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   merchantRule?: Prisma.MerchantRuleUpdateOneWithoutStopItemsNestedInput
 }
 
@@ -686,6 +709,7 @@ export type StopItemUncheckedUpdateWithoutTaxYearInput = {
   userAnswer?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   answeredAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   aiSuggestion?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  aiProposal?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
 }
 
 export type StopItemUncheckedUpdateManyWithoutTaxYearInput = {
@@ -699,6 +723,7 @@ export type StopItemUncheckedUpdateManyWithoutTaxYearInput = {
   userAnswer?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   answeredAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   aiSuggestion?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  aiProposal?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
 }
 
 export type StopItemCreateManyMerchantRuleInput = {
@@ -712,6 +737,7 @@ export type StopItemCreateManyMerchantRuleInput = {
   userAnswer?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   answeredAt?: Date | string | null
   aiSuggestion?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  aiProposal?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
 }
 
 export type StopItemUpdateWithoutMerchantRuleInput = {
@@ -724,6 +750,7 @@ export type StopItemUpdateWithoutMerchantRuleInput = {
   userAnswer?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   answeredAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   aiSuggestion?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  aiProposal?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   taxYear?: Prisma.TaxYearUpdateOneRequiredWithoutStopItemsNestedInput
 }
 
@@ -738,6 +765,7 @@ export type StopItemUncheckedUpdateWithoutMerchantRuleInput = {
   userAnswer?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   answeredAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   aiSuggestion?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  aiProposal?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
 }
 
 export type StopItemUncheckedUpdateManyWithoutMerchantRuleInput = {
@@ -751,6 +779,7 @@ export type StopItemUncheckedUpdateManyWithoutMerchantRuleInput = {
   userAnswer?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   answeredAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   aiSuggestion?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  aiProposal?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
 }
 
 
@@ -767,6 +796,7 @@ export type StopItemSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs
   userAnswer?: boolean
   answeredAt?: boolean
   aiSuggestion?: boolean
+  aiProposal?: boolean
   taxYear?: boolean | Prisma.TaxYearDefaultArgs<ExtArgs>
   merchantRule?: boolean | Prisma.StopItem$merchantRuleArgs<ExtArgs>
 }, ExtArgs["result"]["stopItem"]>
@@ -783,6 +813,7 @@ export type StopItemSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Exte
   userAnswer?: boolean
   answeredAt?: boolean
   aiSuggestion?: boolean
+  aiProposal?: boolean
   taxYear?: boolean | Prisma.TaxYearDefaultArgs<ExtArgs>
   merchantRule?: boolean | Prisma.StopItem$merchantRuleArgs<ExtArgs>
 }, ExtArgs["result"]["stopItem"]>
@@ -799,6 +830,7 @@ export type StopItemSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Exte
   userAnswer?: boolean
   answeredAt?: boolean
   aiSuggestion?: boolean
+  aiProposal?: boolean
   taxYear?: boolean | Prisma.TaxYearDefaultArgs<ExtArgs>
   merchantRule?: boolean | Prisma.StopItem$merchantRuleArgs<ExtArgs>
 }, ExtArgs["result"]["stopItem"]>
@@ -815,9 +847,10 @@ export type StopItemSelectScalar = {
   userAnswer?: boolean
   answeredAt?: boolean
   aiSuggestion?: boolean
+  aiProposal?: boolean
 }
 
-export type StopItemOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "taxYearId" | "merchantRuleId" | "category" | "question" | "context" | "transactionIds" | "state" | "userAnswer" | "answeredAt" | "aiSuggestion", ExtArgs["result"]["stopItem"]>
+export type StopItemOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "taxYearId" | "merchantRuleId" | "category" | "question" | "context" | "transactionIds" | "state" | "userAnswer" | "answeredAt" | "aiSuggestion" | "aiProposal", ExtArgs["result"]["stopItem"]>
 export type StopItemInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   taxYear?: boolean | Prisma.TaxYearDefaultArgs<ExtArgs>
   merchantRule?: boolean | Prisma.StopItem$merchantRuleArgs<ExtArgs>
@@ -849,6 +882,7 @@ export type $StopItemPayload<ExtArgs extends runtime.Types.Extensions.InternalAr
     userAnswer: runtime.JsonValue | null
     answeredAt: Date | null
     aiSuggestion: runtime.JsonValue | null
+    aiProposal: runtime.JsonValue | null
   }, ExtArgs["result"]["stopItem"]>
   composites: {}
 }
@@ -1285,6 +1319,7 @@ export interface StopItemFieldRefs {
   readonly userAnswer: Prisma.FieldRef<"StopItem", 'Json'>
   readonly answeredAt: Prisma.FieldRef<"StopItem", 'DateTime'>
   readonly aiSuggestion: Prisma.FieldRef<"StopItem", 'Json'>
+  readonly aiProposal: Prisma.FieldRef<"StopItem", 'Json'>
 }
     
 
