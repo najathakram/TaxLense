@@ -31,6 +31,7 @@ export type MerchantChoice =
   | "DURING_TRIPS"
   | "MIXED_50"
   | "PERSONAL"
+  | "OTHER"
 
 export type TransferChoice =
   | "PERSONAL"
@@ -239,7 +240,7 @@ function sanitizePersistedSuggestion(raw: unknown): AiSuggestion | null {
   const confidence = typeof r.confidence === "number" ? r.confidence : 0
   const reasoning = typeof r.reasoning === "string" ? r.reasoning : null
   if (kind === "merchant") {
-    if (!["ALL_BUSINESS", "DURING_TRIPS", "MIXED_50", "PERSONAL"].includes(choice)) {
+    if (!["ALL_BUSINESS", "DURING_TRIPS", "MIXED_50", "PERSONAL", "OTHER"].includes(choice)) {
       return null
     }
     return {
@@ -293,30 +294,37 @@ export function aiSuggestionFromResolution(
 ): AiSuggestion | null {
   switch (category) {
     case "MERCHANT": {
-      let choice: MerchantChoice | null = null
+      let choice: MerchantChoice
       if (code === "WRITE_OFF" || code === "WRITE_OFF_COGS") {
-        choice = businessPct >= 90 ? "ALL_BUSINESS" : businessPct > 0 ? "MIXED_50" : null
+        // 0% business pct on a WRITE_OFF code is contradictory — the AI
+        // is hedging, so flag as OTHER for the user to clarify.
+        choice = businessPct >= 90 ? "ALL_BUSINESS" : businessPct > 0 ? "MIXED_50" : "OTHER"
       } else if (code === "WRITE_OFF_TRAVEL") choice = "DURING_TRIPS"
       else if (code === "MEALS_50" || code === "MEALS_100")
         choice = businessPct >= 90 ? "ALL_BUSINESS" : "MIXED_50"
       else if (code === "PERSONAL") choice = "PERSONAL"
-      if (!choice) return null
+      // NEEDS_CONTEXT (or any unmapped code) → OTHER so the form pre-
+      // selects "Other — explain" instead of leaving every radio blank.
+      // The accompanying reasoning is what the explanation textarea will
+      // pre-fill from in the form components below.
+      else choice = "OTHER"
       return { kind: "merchant", choice, confidence, reasoning, scheduleCLine }
     }
     case "TRANSFER": {
-      let choice: TransferChoice | null = null
+      let choice: TransferChoice
       if (code === "PERSONAL") choice = "PERSONAL"
       else if (code === "WRITE_OFF") choice = "CONTRACTOR"
       else if (code === "TRANSFER") choice = "LOAN"
-      if (!choice) return null
+      else choice = "OTHER"
       return { kind: "transfer", choice, confidence, reasoning }
     }
     case "DEPOSIT": {
-      let choice: DepositChoice | null = null
+      let choice: DepositChoice
       if (code === "BIZ_INCOME") choice = "CLIENT"
       else if (code === "TRANSFER") choice = "OWNER_CONTRIB"
       else if (code === "PERSONAL") choice = "GIFT"
-      if (!choice) return null
+      else if (code === "WRITE_OFF") choice = "REFUND"
+      else choice = "OTHER"
       return { kind: "deposit", choice, confidence, reasoning }
     }
     default:

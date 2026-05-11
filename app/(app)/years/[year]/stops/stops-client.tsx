@@ -162,12 +162,13 @@ export function StopsClient({
           })
         }
         setActiveRun(null)
-        // Send the CPA to the review page where their pending proposals
-        // are listed for bulk approval. Slight delay so the success chip
-        // is briefly visible first.
-        setTimeout(() => {
-          window.location.href = `/years/${year}/stops/review`
-        }, 1500)
+        // Refresh /stops so the cards re-render with the freshly persisted
+        // aiSuggestion: radios get pre-selected per stop, and the
+        // "Other — explain" textarea pre-fills with the AI's reasoning.
+        // The user reviews each card in place and clicks Resolve. The
+        // dedicated /review screen is still accessible via the banner
+        // for users who prefer the bulk-approve UX.
+        setTimeout(() => window.location.reload(), 2500)
       } else if (status.status === "FAILED") {
         setLastError(status.lastError ?? "Generation failed.")
         setActiveRun(null)
@@ -673,7 +674,11 @@ function MerchantForm({
   const initialChoice: MerchantChoice | null =
     prior?.choice ?? aiMerchant?.choice ?? null
   const [choice, setChoice] = useState<MerchantChoice | null>(initialChoice)
-  const [other, setOther] = useState(prior?.other ?? "")
+  // Pre-fill the "Other — explain" textarea from the AI's reasoning when
+  // the AI chose OTHER (which is what NEEDS_CONTEXT now maps to). The
+  // user can edit it before clicking Resolve.
+  const aiOtherText = aiMerchant?.choice === "OTHER" ? aiMerchant.reasoning ?? "" : ""
+  const [other, setOther] = useState(prior?.other ?? aiOtherText)
   const [line, setLine] = useState<string>(
     prior?.scheduleCLine ?? aiMerchant?.scheduleCLine ?? "",
   )
@@ -792,7 +797,10 @@ function TransferForm({
   const [purpose, setPurpose] = useState(
     prior?.purpose ?? aiTransfer?.purpose ?? "",
   )
-  const [other, setOther] = useState(prior?.other ?? "")
+  // Pre-fill "Other — explain" textarea from the AI's reasoning when the
+  // AI mapped this stop to OTHER (i.e. NEEDS_CONTEXT or unmapped code).
+  const aiOtherText = aiTransfer?.choice === "OTHER" ? aiTransfer.reasoning ?? "" : ""
+  const [other, setOther] = useState(prior?.other ?? aiOtherText)
   const { pending, error, submit, defer } = useSubmit(stop.id)
 
   const showAiHint = aiTransfer && !prior
@@ -890,7 +898,10 @@ function DepositForm({
   const initialChoice: DepositChoice | null =
     prior?.choice ?? aiDeposit?.choice ?? null
   const [choice, setChoice] = useState<DepositChoice | null>(initialChoice)
-  const [other, setOther] = useState(prior?.other ?? "")
+  // Pre-fill "Other — explain" textarea from the AI's reasoning when the
+  // AI mapped this stop to OTHER (i.e. NEEDS_CONTEXT or unmapped code).
+  const aiOtherText = aiDeposit?.choice === "OTHER" ? aiDeposit.reasoning ?? "" : ""
+  const [other, setOther] = useState(prior?.other ?? aiOtherText)
   const { pending, error, submit, defer } = useSubmit(stop.id)
 
   const showAiHint = aiDeposit && !prior

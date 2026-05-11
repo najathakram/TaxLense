@@ -251,7 +251,11 @@ function codeToStopAnswer(
   code: TransactionCode,
   businessPct: number,
   scheduleCLine: string | null,
+  reasoning: string,
 ): StopAnswer | null {
+  // Truncate long reasoning to keep the "Other" textarea legible.
+  const otherText = (reasoning ?? "").trim().slice(0, 500) || "AI: no clear category"
+
   switch (category) {
     case "MERCHANT": {
       if (code === "WRITE_OFF" || code === "WRITE_OFF_COGS") {
@@ -266,21 +270,24 @@ function codeToStopAnswer(
           : { kind: "merchant", choice: "MIXED_50" }
       }
       if (code === "PERSONAL") return { kind: "merchant", choice: "PERSONAL" }
-      if (code === "NEEDS_CONTEXT") return null
-      return null
+      // NEEDS_CONTEXT or any unmapped code → OTHER with reasoning so the
+      // form pre-selects the "Other — explain" radio AND prefills the
+      // textarea with the AI's actual rationale. Without this fallback
+      // the proposal was silently dropped on every NEEDS_CONTEXT row.
+      return { kind: "merchant", choice: "OTHER", other: otherText }
     }
     case "TRANSFER": {
       if (code === "PERSONAL") return { kind: "transfer", choice: "PERSONAL" }
       if (code === "WRITE_OFF") return { kind: "transfer", choice: "CONTRACTOR" }
       if (code === "TRANSFER") return { kind: "transfer", choice: "LOAN" }
-      return null
+      return { kind: "transfer", choice: "OTHER", other: otherText }
     }
     case "DEPOSIT": {
       if (code === "BIZ_INCOME") return { kind: "deposit", choice: "CLIENT" }
       if (code === "TRANSFER") return { kind: "deposit", choice: "OWNER_CONTRIB" }
       if (code === "PERSONAL") return { kind: "deposit", choice: "GIFT" }
       if (code === "WRITE_OFF") return { kind: "deposit", choice: "REFUND" }
-      return null
+      return { kind: "deposit", choice: "OTHER", other: otherText }
     }
     default:
       return null
@@ -442,7 +449,13 @@ export async function generateAiProposals(
         }
       })() as TransactionCode
 
-      const answer = codeToStopAnswer(stop.category, code, code === "BIZ_INCOME" ? 0 : code.startsWith("WRITE_OFF") ? 100 : 0, fallbackLineForCode(code))
+      const answer = codeToStopAnswer(
+        stop.category,
+        code,
+        code === "BIZ_INCOME" ? 0 : code.startsWith("WRITE_OFF") ? 100 : 0,
+        fallbackLineForCode(code),
+        heuristic.reasoning ?? "",
+      )
       if (!answer) continue
       const derived = deriveFromAnswer(answer, {
         ruleCode: stop.merchantRule?.code,
@@ -489,21 +502,14 @@ export async function generateAiProposals(
     const confidence = clampConfidence(raw.confidence)
     const ircCitations = raw.ircCitations.length > 0 ? raw.ircCitations : defaultCitationsFor(code)
 
-    const answer = codeToStopAnswer(stop.category, code, businessPct, line)
+    const answer = codeToStopAnswer(stop.category, code, businessPct, line, raw.reasoning)
     if (!answer) {
-      // The AI proposed a code that doesn't map to any choice in this category
-      // (e.g. WRITE_OFF on a DEPOSIT category that doesn't have a refund choice).
-      // Fall through to the heuristic.
-      const heuristic = deriveAiSuggestion(stop)
-      if (heuristic) {
-        const fallbackCode = code
-        const fallbackAnswer = codeToStopAnswer(stop.category, fallbackCode, businessPct, line)
-        if (fallbackAnswer) {
-          // Should be unreachable; keep going below.
-        }
-      }
-      dropReasons[bundle.stopId] = "no_choice_mapping"
-      errors++
+      // codeToStopAnswer now returns OTHER as a last resort for known
+      // categories, so reaching null here means we got an unknown
+      // category (SECTION_274D / PERIOD_GAP — neither has an AI-driven
+      // form path). Skip without erroring; these stops are resolved
+      // out-of-band (uploading a receipt or a missing statement).
+      dropReasons[bundle.stopId] = "category_not_proposable"
       continue
     }
 
