@@ -85,6 +85,13 @@ async function loadEntityForms(taxYearId: string, entityType: string): Promise<E
 export interface BuildTaxPackageOptions {
   /** Bypass the LOCKED check — used by tests only. */
   allowUnlocked?: boolean
+  /**
+   * Override the entity type for this build — used by the Final Dump
+   * panel when the CPA wants to preview/generate as a different entity
+   * without changing the BusinessProfile. AuditEvent records the
+   * override so the audit trail shows the deviation.
+   */
+  entityOverride?: string
 }
 
 export async function buildTaxPackage(
@@ -105,7 +112,7 @@ export async function buildTaxPackage(
     where: { taxYearId },
     select: { entityType: true },
   })
-  const entityType = profile?.entityType ?? "SOLE_PROP"
+  const entityType = options.entityOverride ?? profile?.entityType ?? "SOLE_PROP"
 
   const [
     clientSummary,

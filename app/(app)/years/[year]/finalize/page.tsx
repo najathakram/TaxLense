@@ -14,6 +14,8 @@ import { DownloadClient } from "../download/download-client"
 import { deriveStage, getYearCounts } from "@/lib/taxYear/status"
 import { detectNeededMemos } from "@/lib/ai/positionMemo"
 import { computeLedgerHash } from "@/lib/lock/hash"
+import { loadDeliverableContext } from "@/lib/forms/loadDeliverableContext"
+import { DumpPanel } from "./dump-panel"
 
 interface Props {
   params: Promise<{ year: string }>
@@ -56,7 +58,7 @@ export default async function FinalizePage({ params }: Props) {
   // takes <100ms) so the drift banner appears whether or not the year is
   // locked. Without this, locked years could silently drift after edits and
   // the master-ledger XLSX would stamp the old hash on new content.
-  const [risk, assertions, reports, counts, neededMemos, currentHash] = await Promise.all([
+  const [risk, assertions, reports, counts, neededMemos, currentHash, deliverableCtx] = await Promise.all([
     isLocked ? null : computeRiskScore(taxYear.id),
     isLocked ? null : runLockAssertions(taxYear.id),
     prisma.report.findMany({
@@ -65,6 +67,10 @@ export default async function FinalizePage({ params }: Props) {
     getYearCounts(taxYear.id),
     detectNeededMemos(taxYear.id).catch(() => [] as string[]),
     computeLedgerHash(taxYear.id),
+    // Pre-fetch the data the entity-aware Final Dump panel needs. Single
+    // server-side load → the panel re-evaluates the deliverable list
+    // reactively client-side when the user changes the entity dropdown.
+    loadDeliverableContext(taxYear.id),
   ])
 
   const lockedDrift =
@@ -330,36 +336,51 @@ export default async function FinalizePage({ params }: Props) {
           </Alert>
         )}
         {downloadStatus === "ready" && (
-          <div className="space-y-3">
-            {artifacts.map((a) => {
-              const report = reportMap.get(a.kind)
-              return (
-                <div
-                  key={a.kind}
-                  className="rounded-md border border-border p-3 flex items-start justify-between gap-3"
-                >
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <p className="font-medium text-sm">{a.title}</p>
-                      {report && (
-                        <span className="text-[10px] text-muted-foreground">
-                          last generated {report.generatedAt.toISOString().slice(0, 10)}
-                        </span>
-                      )}
+          <div className="space-y-4">
+            {/* Primary path — entity-aware Final Dump panel. Reactive to
+                entity dropdown; one button produces a per-entity ZIP keyed
+                to the latest IRS rules. */}
+            <DumpPanel year={year} isLocked={isLocked} context={deliverableCtx} />
+
+            {/* Power-user fallback — individual artifact downloads. Useful
+                when the CPA wants only the master ledger or only the audit
+                packet without the full bundle. */}
+            <details className="border rounded">
+              <summary className="cursor-pointer px-3 py-2 text-sm font-medium bg-muted/30">
+                Individual artifacts (advanced)
+              </summary>
+              <div className="space-y-3 p-3">
+                {artifacts.map((a) => {
+                  const report = reportMap.get(a.kind)
+                  return (
+                    <div
+                      key={a.kind}
+                      className="rounded-md border border-border p-3 flex items-start justify-between gap-3"
+                    >
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <p className="font-medium text-sm">{a.title}</p>
+                          {report && (
+                            <span className="text-[10px] text-muted-foreground">
+                              last generated {report.generatedAt.toISOString().slice(0, 10)}
+                            </span>
+                          )}
+                        </div>
+                        <p className="text-xs text-muted-foreground mt-1 leading-relaxed">
+                          {a.description}
+                        </p>
+                      </div>
+                      <DownloadClient
+                        year={year}
+                        kind={a.kind}
+                        filename={a.filename}
+                        disabled={false}
+                      />
                     </div>
-                    <p className="text-xs text-muted-foreground mt-1 leading-relaxed">
-                      {a.description}
-                    </p>
-                  </div>
-                  <DownloadClient
-                    year={year}
-                    kind={a.kind}
-                    filename={a.filename}
-                    disabled={false}
-                  />
-                </div>
-              )
-            })}
+                  )
+                })}
+              </div>
+            </details>
             {taxYear.lockedSnapshotHash && (
               <p className="text-[10px] text-muted-foreground/80 font-mono break-all pt-2">
                 snapshot sha256: {taxYear.lockedSnapshotHash.slice(0, 32)}…
