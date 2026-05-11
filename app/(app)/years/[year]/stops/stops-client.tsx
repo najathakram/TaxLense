@@ -179,7 +179,16 @@ export function StopsClient({
         recentResults={lastResult ? [{
           ok: lastResult.errors === 0,
           label: "Auto-resolve",
-          detail: `${lastResult.resolved} resolved · ${lastResult.skipped} skipped · ${lastResult.errors} errors`,
+          detail: (() => {
+            const head = `${lastResult.resolved} resolved · ${lastResult.skipped} skipped · ${lastResult.errors} errors`
+            const bd = (lastResult as { skipBreakdown?: Record<string, number> }).skipBreakdown
+            if (!bd) return head
+            const parts = Object.entries(bd)
+              .sort((a, b) => b[1] - a[1])
+              .map(([reason, n]) => `${n} ${reason}`)
+              .join(", ")
+            return parts ? `${head} (${parts})` : head
+          })(),
         }] : []}
       />
 

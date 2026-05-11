@@ -7,8 +7,14 @@ import { revalidatePath } from "next/cache"
 import { applyMerchantRules } from "@/lib/classification/apply"
 import type { Prisma, ClassificationSource } from "@/app/generated/prisma/client"
 import { deriveFromAnswer, type StopAnswer } from "@/lib/stops/derive"
-import { classifyStopsWithAI, type StopForAI } from "@/lib/ai/autoResolveStops"
+import {
+  classifyStopsWithAIDetailed,
+  type StopForAI,
+  type DropReason,
+  type BusinessContext,
+} from "@/lib/ai/autoResolveStops"
 import { aiSuggestionFromResolution } from "@/lib/stops/aiSuggestion"
+import { aggregateClientNotes } from "@/lib/ai/merchantIntelligence"
 import type { ProgressReporter } from "@/lib/jobs/pipelineRun"
 import { recomputeStatus } from "@/lib/taxYear/status"
 import { deriveStopsFromAssertions } from "@/lib/stops/deriveFromAssertions"
@@ -233,9 +239,23 @@ export async function resolveStop(
 
 export interface AutoResolveResult {
   resolved: number
-  skipped: number   // confidence < threshold
+  skipped: number   // confidence < threshold OR AI dropped the row
   errors: number
-  details: Array<{ merchantKey: string; code: string; confidence: number; status: "resolved" | "skipped" | "error" }>
+  /**
+   * Per-stop outcome. The new `reason` field surfaces WHY a stop was skipped
+   * (low_confidence, missing_from_response, validation_failed, api_error,
+   * parse_error, unknown_stop_id) so the user can tell whether the AI
+   * actually saw the row or quietly dropped it.
+   */
+  details: Array<{
+    merchantKey: string
+    code: string
+    confidence: number
+    status: "resolved" | "skipped" | "error"
+    reason?: string
+  }>
+  /** Aggregate skip reasons — handy for the floating progress chip. */
+  skipBreakdown?: Record<string, number>
 }
 
 // Lowered from 0.85 → 0.70 so high-but-not-perfect Sonnet decisions on
@@ -292,10 +312,26 @@ export async function autoResolveStops(
     }
   })
 
-  const businessContext = [
-    taxYear.businessProfile?.businessDescription ?? "",
-    `NAICS: ${taxYear.businessProfile?.naicsCode ?? ""}`,
-  ].filter(Boolean).join(". ")
+  // Stitch the per-client onboarding/upload notes into the AI's prompt so
+  // it has the same human context the autonomous agent gets. Without this
+  // the AI was guessing on Pocketsflow / Wise / Stripe direction blind.
+  const clientNotes = await aggregateClientNotes(taxYear.id).catch(() => "")
+
+  // Resolve owner display name — used in the prompt so the AI knows whose
+  // ledger it's looking at instead of the hardcoded "SA Wholesale / Atif"
+  // header that misled every other client's run.
+  const owner = await prisma.user
+    .findUnique({ where: { id: taxYear.userId }, select: { name: true, email: true } })
+    .catch(() => null)
+  const ownerName = owner?.name ?? owner?.email ?? ""
+
+  const ctx: BusinessContext = {
+    description: taxYear.businessProfile?.businessDescription ?? "",
+    naics: taxYear.businessProfile?.naicsCode ?? "",
+    ownerName,
+    year,
+    notes: clientNotes && clientNotes.trim().length > 0 ? clientNotes : undefined,
+  }
 
   if (reportProgress) {
     await reportProgress({
@@ -310,9 +346,13 @@ export async function autoResolveStops(
   // user sees what's actually in flight during the long wait. Without this
   // the panel reads "0 / N" while a 30-60s API call is grinding away and
   // it looks indistinguishable from a stuck run.
-  const aiResults = await classifyStopsWithAI(
+  //
+  // Use the *detailed* variant so we get a per-stopId drop reason map back —
+  // that's what surfaces "X skipped, Y missing, Z api_error" instead of
+  // an opaque single-bucket "skipped" count.
+  const { resolutions: aiResults, drops: aiDrops } = await classifyStopsWithAIDetailed(
     stopsForAI,
-    businessContext,
+    ctx,
     undefined,
     async ({ batchIdx, totalBatches, batchStops }) => {
       if (!reportProgress) return
@@ -345,6 +385,10 @@ export async function autoResolveStops(
   let skipped = 0
   let errors = 0
   const details: AutoResolveResult["details"] = []
+  const skipBreakdown: Record<string, number> = {}
+  const bumpReason = (r: string) => {
+    skipBreakdown[r] = (skipBreakdown[r] ?? 0) + 1
+  }
 
   for (let stopIdx = 0; stopIdx < stops.length; stopIdx++) {
     const stop = stops[stopIdx]!
@@ -352,8 +396,15 @@ export async function autoResolveStops(
     const mk = stop.merchantRule?.merchantKey ?? "UNKNOWN"
 
     if (!ai) {
+      // The AI dropped this row OR never returned it. Persist a heuristic
+      // suggestion so the row at least pre-fills its radio for the user
+      // (instead of staring at four blank options), then surface the real
+      // reason in `details` so the UI can say "Sonnet skipped 5: 3 timed out,
+      // 2 hallucinated stopId" rather than the prior opaque "5 skipped".
+      const reason: DropReason = (aiDrops.get(stop.id) as DropReason | undefined) ?? "missing_from_response"
       skipped++
-      details.push({ merchantKey: mk, code: "?", confidence: 0, status: "skipped" })
+      bumpReason(reason)
+      details.push({ merchantKey: mk, code: "?", confidence: 0, status: "skipped", reason })
       continue
     }
 
@@ -377,7 +428,14 @@ export async function autoResolveStops(
         })
       }
       skipped++
-      details.push({ merchantKey: mk, code: ai.code, confidence: ai.confidence, status: "skipped" })
+      bumpReason("low_confidence")
+      details.push({
+        merchantKey: mk,
+        code: ai.code,
+        confidence: ai.confidence,
+        status: "skipped",
+        reason: "low_confidence",
+      })
       continue
     }
 
@@ -459,9 +517,22 @@ export async function autoResolveStops(
 
       resolved++
       details.push({ merchantKey: mk, code: ai.code, confidence: ai.confidence, status: "resolved" })
-    } catch {
+    } catch (err) {
+      // Capture the real DB / Prisma error so we know if it's a constraint
+      // violation, a bad enum value, or a missing scheduleCLine. The prior
+      // empty `catch {}` swallowed every reason, so debugging "why didn't
+      // this resolve?" was impossible from prod.
       errors++
-      details.push({ merchantKey: mk, code: ai.code, confidence: ai.confidence, status: "error" })
+      const reason = err instanceof Error ? err.message.slice(0, 120) : "unknown_error"
+      bumpReason("db_error")
+      console.error("[autoResolveStops] db write failed for stop", stop.id, err)
+      details.push({
+        merchantKey: mk,
+        code: ai.code,
+        confidence: ai.confidence,
+        status: "error",
+        reason,
+      })
     }
 
     if (reportProgress) {
@@ -491,7 +562,7 @@ export async function autoResolveStops(
   revalidatePath(`/years/${year}`)
   revalidatePath(`/years/${year}/stops`)
   revalidatePath(`/years/${year}/ledger`)
-  return { resolved, skipped, errors, details }
+  return { resolved, skipped, errors, details, skipBreakdown }
 }
 
 // ---------- archiveSupersededStops ----------
