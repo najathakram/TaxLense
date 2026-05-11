@@ -395,6 +395,173 @@ export async function buildFinancialStatements(taxYearId: string): Promise<Buffe
   detTotalRow.fill = totalFill()
   detTotalRow.getCell("deductible").numFmt = '#,##0.00'
 
+  // ── Sheet 6: Cash Flow Statement ─────────────────────────────────────────
+  // Indirect-method cash-flow proxy. For a cash-method taxpayer, operating
+  // cash flow = net income + non-cash adjustments. Since cash-method
+  // bookkeeping doesn't accrue receivables/payables, operating cash flow ≈
+  // net income, with depreciation as the typical add-back. Investing flows
+  // = transfers between owned accounts and asset purchases. Financing flows
+  // = owner contributions and distributions. We report them by category so
+  // a CPA can verify period-over-period cash continuity.
+  const cfSheet = wb.addWorksheet("Cash Flow")
+  cfSheet.columns = [
+    { header: "Section", key: "section", width: 38 },
+    { header: "Amount ($)", key: "amt", width: 18 },
+    { header: "Notes", key: "notes", width: 50 },
+  ]
+  applyHeaderRow(cfSheet.getRow(1))
+
+  const addCfRow = (section: string, amt: number | "", notes = "", bold = false, fill?: ExcelJS.Fill) => {
+    const r = cfSheet.addRow({ section, amt, notes })
+    if (bold) r.font = { bold: true }
+    if (fill) r.fill = fill
+    if (typeof amt === "number") r.getCell("amt").numFmt = '#,##0.00'
+    return r
+  }
+
+  // Sum amounts by classification code for cash-flow categorization.
+  let depreciation = 0
+  for (const [line, lt] of lineTotals) {
+    if (line.toLowerCase().includes("depreciation") || line.includes("Line 13")) {
+      depreciation += lt.total
+    }
+  }
+
+  // Transfers between owned accounts (paired) — already excluded from P&L
+  // but disclosed here for cash-continuity context.
+  const transferTxns = allTxns.filter(
+    (t) => t.classification.code === "TRANSFER" || t.classification.code === "PAYMENT",
+  )
+  const transferTotal = transferTxns.reduce((s, t) => s + Math.abs(t.amountNormalized), 0)
+
+  addCfRow(`CASH FLOW STATEMENT — ${taxYear.year} (Indirect Method)`, "", "", true, sectionFill())
+  addCfRow("OPERATING ACTIVITIES", "", "", true, subtotalFill())
+  addCfRow("  Net Income / (Loss)", netIncome, "From P&L sheet")
+  addCfRow("  + Depreciation (non-cash add-back)", depreciation, "Line 13 / 14 / 16a / 20 totals")
+  const operatingCash = netIncome + depreciation
+  addCfRow("Cash from Operating Activities", operatingCash, "Net + non-cash adjustments", true, subtotalFill())
+  addCfRow("", "", "")
+  addCfRow("INVESTING ACTIVITIES", "", "", true, subtotalFill())
+  addCfRow("  Asset purchases", 0, "Capitalized purchases (deferred to 4562 detail)")
+  addCfRow("Cash from Investing Activities", 0, "", true, subtotalFill())
+  addCfRow("", "", "")
+  addCfRow("FINANCING ACTIVITIES", "", "", true, subtotalFill())
+  addCfRow("  Owner contributions", 0, "Captured separately on Owner records (Phase B)")
+  addCfRow("  Owner distributions", 0, "Captured separately on Owner records (Phase B)")
+  addCfRow("Cash from Financing Activities", 0, "", true, subtotalFill())
+  addCfRow("", "", "")
+  addCfRow("Net change in cash", operatingCash, "Sum of operating + investing + financing", true, totalFill())
+  addCfRow("", "", "")
+  addCfRow("INFORMATIONAL — Inter-account transfers", transferTotal, `${transferTxns.length} paired transfer/payment txns; excluded from P&L by design`)
+  addCfRow(
+    "NOTE",
+    "",
+    "Cash-method indirect cash flow. Investing / financing rely on Owner records (Phase B); update those for full fidelity.",
+  )
+
+  // ── Sheet 7: Trial Balance ───────────────────────────────────────────────
+  // GAAP-style trial balance grouped by account category. For a cash-method
+  // dropshipping taxpayer the "accounts" are: cash by FinancialAccount (asset)
+  // + revenue (income) + each expense category by Schedule C / form line.
+  const tbSheet = wb.addWorksheet("Trial Balance")
+  tbSheet.columns = [
+    { header: "Account", key: "account", width: 40 },
+    { header: "Debit ($)", key: "debit", width: 16 },
+    { header: "Credit ($)", key: "credit", width: 16 },
+    { header: "Net ($)", key: "net", width: 16 },
+  ]
+  applyHeaderRow(tbSheet.getRow(1))
+  tbSheet.views = [{ state: "frozen", ySplit: 1 }]
+
+  const addTbRow = (account: string, debit: number, credit: number, opts?: { bold?: boolean; fill?: ExcelJS.Fill }) => {
+    const r = tbSheet.addRow({
+      account,
+      debit: debit || "",
+      credit: credit || "",
+      net: debit - credit,
+    })
+    if (opts?.bold) r.font = { bold: true }
+    if (opts?.fill) r.fill = opts.fill
+    if (debit) r.getCell("debit").numFmt = '#,##0.00'
+    if (credit) r.getCell("credit").numFmt = '#,##0.00'
+    r.getCell("net").numFmt = '#,##0.00'
+    return r
+  }
+
+  let tbDebits = 0
+  let tbCredits = 0
+  // Header
+  tbSheet.addRow({ account: `TRIAL BALANCE — ${taxYear.year}`, debit: "", credit: "", net: "" }).font = { bold: true }
+
+  // ASSETS section — cash by account (debit balance for positive cash)
+  const assetHeader = tbSheet.addRow({ account: "ASSETS — Cash" })
+  assetHeader.font = { bold: true }
+  assetHeader.fill = sectionFill()
+  for (const acct of accounts) {
+    const netCash = acct.transactions.reduce((s, t) => s - Number(t.amountNormalized), 0)
+    const label = `  ${acct.institution}${acct.mask ? ` …${acct.mask}` : ""} (${acct.type})`
+    if (netCash >= 0) {
+      addTbRow(label, netCash, 0)
+      tbDebits += netCash
+    } else {
+      addTbRow(label, 0, -netCash)
+      tbCredits += -netCash
+    }
+  }
+
+  // REVENUES section (credit balance)
+  const revHeader = tbSheet.addRow({ account: "REVENUE" })
+  revHeader.font = { bold: true }
+  revHeader.fill = sectionFill()
+  if (grossRevenue > 0) {
+    addTbRow("  Gross Receipts (BIZ_INCOME)", 0, grossRevenue)
+    tbCredits += grossRevenue
+  }
+
+  // EXPENSES section (debit balance) — one row per Schedule C / form line
+  const expHeader = tbSheet.addRow({ account: "EXPENSES" })
+  expHeader.font = { bold: true }
+  expHeader.fill = sectionFill()
+  const sortedExpenseLines = [...lineTotals.entries()].sort(
+    (a, b) => (lineOrder.get(a[0]) ?? 999) - (lineOrder.get(b[0]) ?? 999),
+  )
+  for (const [line, lt] of sortedExpenseLines) {
+    if (lt.total === 0) continue
+    addTbRow(`  ${line}`, lt.total, 0)
+    tbDebits += lt.total
+  }
+
+  // EQUITY balancer (plug) — net income flows to retained earnings
+  const equityHeader = tbSheet.addRow({ account: "EQUITY" })
+  equityHeader.font = { bold: true }
+  equityHeader.fill = sectionFill()
+  const equityPlug = tbDebits - tbCredits
+  if (equityPlug >= 0) {
+    addTbRow("  Owner's Equity (balancing)", 0, equityPlug)
+    tbCredits += equityPlug
+  } else {
+    addTbRow("  Owner's Equity (balancing)", -equityPlug, 0)
+    tbDebits += -equityPlug
+  }
+
+  // TOTALS row — must balance (debits == credits)
+  const totalsRow = tbSheet.addRow({
+    account: "TOTALS",
+    debit: tbDebits,
+    credit: tbCredits,
+    net: tbDebits - tbCredits,
+  })
+  totalsRow.font = { bold: true }
+  totalsRow.fill = totalFill()
+  totalsRow.getCell("debit").numFmt = '#,##0.00'
+  totalsRow.getCell("credit").numFmt = '#,##0.00'
+  totalsRow.getCell("net").numFmt = '#,##0.00'
+
+  tbSheet.addRow({ account: "" })
+  tbSheet.addRow({
+    account: "NOTE: Cash-method dropshipping → no AR/AP/Inventory; Owner's Equity is a balancing plug equal to cumulative retained earnings.",
+  })
+
   const buf = await wb.xlsx.writeBuffer()
   return Buffer.from(buf)
 }
