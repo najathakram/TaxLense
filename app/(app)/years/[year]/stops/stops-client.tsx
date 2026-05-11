@@ -68,16 +68,36 @@ const CATEGORIES: { key: StopCategory; label: string }[] = [
 
 const POLL_MS = 2_000
 
+export interface LastAutoSummary {
+  status: string
+  startedAt: string
+  finishedAt: string | null
+  result: {
+    resolved?: number
+    skipped?: number
+    errors?: number
+    skipBreakdown?: Record<string, number>
+    details?: Array<{ merchantKey: string; code: string; confidence: number; status: string; reason?: string }>
+  } | null
+  lastError: string | null
+}
+
 export function StopsClient({
   year,
   stops,
   initialCategory,
+  lastAutoSummary,
 }: {
   year: number
   stops: SerializedStop[]
   /** Optional category to land on when the user deep-links via
    *  ?cat=DEPOSIT (e.g. from Risk dashboard "Resolve deposits queue →"). */
   initialCategory?: string | null
+  /** Server-rendered summary of the most recent AUTO_RESOLVE_STOPS run.
+   *  Persists across page reloads so the user can see why the last
+   *  Auto-resolve attempt didn't drop the count (e.g. "0 resolved, 22
+   *  skipped — 22 low_confidence"). */
+  lastAutoSummary?: LastAutoSummary | null
 }) {
   const [activeRun, setActiveRun] = useState<{ runId: string; label: string } | null>(null)
   const [progress, setProgress] = useState<Record<string, unknown>>({})
@@ -217,6 +237,51 @@ export function StopsClient({
           })(),
         }] : []}
       />
+
+      {/* Persistent "last auto-resolve run" panel — survives the page reload
+          that the floating chip doesn't. Without this, the user pressed
+          Auto-resolve, the chip flashed for 4s, the page reloaded, and they
+          had no way to remember why the count didn't drop. */}
+      {lastAutoSummary && lastAutoSummary.result && (
+        <div className="rounded border bg-muted/20 p-3 text-sm space-y-1">
+          <div className="flex items-center gap-2 flex-wrap">
+            <span className="font-medium">Last auto-resolve run</span>
+            <span className="text-xs text-muted-foreground">
+              {new Date(lastAutoSummary.startedAt).toLocaleString()} ·{" "}
+              {lastAutoSummary.status}
+              {lastAutoSummary.lastError ? ` · ${lastAutoSummary.lastError.slice(0, 80)}` : ""}
+            </span>
+          </div>
+          <div className="text-xs text-muted-foreground">
+            {(() => {
+              const r = lastAutoSummary.result!
+              const head = `${r.resolved ?? 0} resolved · ${r.skipped ?? 0} skipped · ${r.errors ?? 0} errors`
+              const bd = r.skipBreakdown
+              if (!bd) return head
+              const parts = Object.entries(bd)
+                .sort((a, b) => b[1] - a[1])
+                .map(([reason, n]) => `${n} ${reason}`)
+                .join(", ")
+              return parts ? `${head} (${parts})` : head
+            })()}
+          </div>
+          {lastAutoSummary.result.details && lastAutoSummary.result.details.length > 0 && (
+            <details className="text-xs">
+              <summary className="cursor-pointer text-muted-foreground hover:text-foreground">
+                Per-stop detail ({lastAutoSummary.result.details.length})
+              </summary>
+              <ul className="mt-2 space-y-0.5 max-h-48 overflow-auto pl-4 list-disc">
+                {lastAutoSummary.result.details.slice(0, 100).map((d, i) => (
+                  <li key={i} className={d.status === "resolved" ? "text-green-600" : d.status === "error" ? "text-red-500" : "text-amber-500"}>
+                    <span className="font-mono">{d.merchantKey.slice(0, 32)}</span> · {d.code} · {Math.round(d.confidence * 100)}% · {d.status}
+                    {d.reason ? ` (${d.reason})` : ""}
+                  </li>
+                ))}
+              </ul>
+            </details>
+          )}
+        </div>
+      )}
 
       {/* Auto-resolve banner */}
       <div className="flex items-center justify-between gap-4 border rounded p-3 bg-muted/30 flex-wrap">

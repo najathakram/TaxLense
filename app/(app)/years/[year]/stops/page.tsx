@@ -31,6 +31,40 @@ export default async function StopsPage({ params, searchParams }: Props) {
   // an empty page if the autonomous CPA agent hadn't yet run.
   await deriveStopsFromAssertions(taxYear.id)
 
+  // Surface the LATEST AUTO_RESOLVE_STOPS run result + its skipBreakdown so
+  // the user has a persistent record of "what happened the last time I
+  // pressed Auto-resolve with AI." The transient floating-progress chip
+  // disappears on page reload — without this panel, when the user comes
+  // back the next day and sees no progress, they have no way to find out
+  // why the AI bailed (low_confidence / api_error / parse_error).
+  const lastAutoRun = await prisma.pipelineRun.findFirst({
+    where: { taxYearId: taxYear.id, kind: "AUTO_RESOLVE_STOPS" },
+    orderBy: { startedAt: "desc" },
+    select: {
+      id: true,
+      status: true,
+      startedAt: true,
+      finishedAt: true,
+      result: true,
+      lastError: true,
+    },
+  })
+  const lastAutoSummary = lastAutoRun
+    ? {
+        status: lastAutoRun.status,
+        startedAt: lastAutoRun.startedAt.toISOString(),
+        finishedAt: lastAutoRun.finishedAt?.toISOString() ?? null,
+        result: (lastAutoRun.result as {
+          resolved?: number
+          skipped?: number
+          errors?: number
+          skipBreakdown?: Record<string, number>
+          details?: Array<{ merchantKey: string; code: string; confidence: number; status: string; reason?: string }>
+        } | null) ?? null,
+        lastError: lastAutoRun.lastError,
+      }
+    : null
+
   const stops = await prisma.stopItem.findMany({
     where: { taxYearId: taxYear.id },
     include: { merchantRule: true },
@@ -99,7 +133,12 @@ export default async function StopsPage({ params, searchParams }: Props) {
           Answer each item to promote its classification. Answers persist as new Classification rows — prior ones remain in history.
         </p>
       </div>
-      <StopsClient year={year} stops={serialized} initialCategory={initialCategory} />
+      <StopsClient
+        year={year}
+        stops={serialized}
+        initialCategory={initialCategory}
+        lastAutoSummary={lastAutoSummary}
+      />
     </div>
   )
 }
