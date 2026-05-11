@@ -18,6 +18,10 @@ import { redirect } from "next/navigation"
 import { prisma } from "@/lib/db"
 import { revalidatePath } from "next/cache"
 import { getCurrentUserId } from "@/lib/auth"
+import {
+  computeCarryforwardFromYear,
+  persistCarryforwardTo,
+} from "@/lib/carryforward/compute"
 
 export interface CreateTaxYearResult {
   ok: boolean
@@ -89,6 +93,21 @@ export async function createTaxYear(yearStr: string): Promise<CreateTaxYearResul
       },
     })
   })
+
+  // Phase G: if the immediately-prior year is LOCKED, pull its carryforward
+  // into the new year's PriorYearContext so NOL / depreciation / basis /
+  // capital balances flow through automatically. Best-effort.
+  if (priorWithProfile?.status === "LOCKED") {
+    try {
+      const created = await prisma.taxYear.findUniqueOrThrow({
+        where: { userId_year: { userId, year } },
+      })
+      const computed = await computeCarryforwardFromYear(priorWithProfile.id)
+      await persistCarryforwardTo(created.id, priorWithProfile.id, computed)
+    } catch (e) {
+      console.error("[createTaxYear] carryforward population failed:", e)
+    }
+  }
 
   revalidatePath("/dashboard")
   redirect(`/years/${year}/upload`)

@@ -24,6 +24,9 @@ export default async function YearPage({ params }: Props) {
     include: {
       _count: { select: { transactions: true, financialAccounts: true, merchantRules: true } },
       businessProfile: { select: { naicsCode: true, businessDescription: true, entityType: true } },
+      // Phase G: include the carryforward into THIS year (set when prior
+      // year locks OR when this year is created after a prior locked year).
+      priorYearContext: { include: { sourcePriorYear: { select: { year: true } } } },
       financialAccounts: {
         select: {
           id: true,
@@ -177,6 +180,70 @@ export default async function YearPage({ params }: Props) {
             <p><span className="text-muted-foreground">Description:</span> {taxYear.businessProfile.businessDescription}</p>
             <p><span className="text-muted-foreground">NAICS:</span> {taxYear.businessProfile.naicsCode}</p>
             <p><span className="text-muted-foreground">Entity:</span> {taxYear.businessProfile.entityType}</p>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Phase G: Carryforward into this year — populated automatically when
+          the prior year locks OR when this year is created after a prior
+          locked year. Read-only display; corrections require unlocking the
+          prior year (preserves principle 4: append-only). */}
+      {taxYear.priorYearContext && (
+        <Card>
+          <CardHeader>
+            <CardTitle>
+              Carryforward into {year}
+              {taxYear.priorYearContext.sourcePriorYear && (
+                <span className="ml-2 text-xs font-normal text-muted-foreground">
+                  from TY {taxYear.priorYearContext.sourcePriorYear.year}
+                  {taxYear.priorYearContext.sourceLockedHash && (
+                    <span className="font-mono ml-1">
+                      ({taxYear.priorYearContext.sourceLockedHash.slice(0, 12)}…)
+                    </span>
+                  )}
+                </span>
+              )}
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="text-sm space-y-1">
+            {(() => {
+              const c = taxYear.priorYearContext
+              const items: Array<[string, number, string]> = []
+              const nol = Number(c.netOperatingLoss?.toString() ?? "0")
+              if (nol > 0) items.push(["§172 Net Operating Loss carryforward", nol, "indefinite carryforward post-TCJA, 80% taxable-income limit"])
+              const s179 = Number(c.section179Carryover?.toString() ?? "0")
+              if (s179 > 0) items.push(["§179 carryover (deduction exceeded business income limit)", s179, ""])
+              const passive = Number(c.passiveLossCarryforward?.toString() ?? "0")
+              if (passive > 0) items.push(["§469 suspended passive losses", passive, ""])
+              const capS = Number(c.capitalLossShortTerm?.toString() ?? "0")
+              if (capS > 0) items.push(["Short-term capital loss carryforward", capS, "Schedule D"])
+              const capL = Number(c.capitalLossLongTerm?.toString() ?? "0")
+              if (capL > 0) items.push(["Long-term capital loss carryforward", capL, "Schedule D"])
+              const amt = Number(c.amtCreditCarryforward?.toString() ?? "0")
+              if (amt > 0) items.push(["§53 AMT credit carryforward", amt, ""])
+              const qbi = Number(c.qbiLossCarryforward?.toString() ?? "0")
+              if (qbi > 0) items.push(["§199A QBI loss carryforward", qbi, "reduces future QBI components"])
+              const s163j = Number(c.section163jCarryforward?.toString() ?? "0")
+              if (s163j > 0) items.push(["§163(j) interest expense carryforward", s163j, ""])
+              if (items.length === 0) {
+                return <p className="text-muted-foreground">No carryforward amounts from the prior year.</p>
+              }
+              return (
+                <ul className="space-y-1">
+                  {items.map(([label, amount, note]) => (
+                    <li key={label} className="flex items-baseline justify-between gap-3">
+                      <span>{label}{note && <span className="text-xs text-muted-foreground"> · {note}</span>}</span>
+                      <span className="font-mono">${amount.toLocaleString("en-US", { minimumFractionDigits: 2 })}</span>
+                    </li>
+                  ))}
+                </ul>
+              )
+            })()}
+            <p className="text-xs text-muted-foreground pt-2 border-t mt-2">
+              Carryforward computed automatically from the prior year&apos;s locked snapshot
+              (lib/carryforward/compute.ts). Read-only — to amend, unlock the prior year, fix,
+              and re-lock; the new snapshot will repopulate this row.
+            </p>
           </CardContent>
         </Card>
       )}

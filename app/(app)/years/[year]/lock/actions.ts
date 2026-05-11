@@ -8,6 +8,7 @@ import { runLockAssertions, type AssertionRunResult } from "@/lib/validation/ass
 import { computeRiskScore, type RiskReport } from "@/lib/risk/score"
 import { computeLedgerHash } from "@/lib/lock/hash"
 import { recomputeStatus } from "@/lib/taxYear/status"
+import { maybePopulateCarryforwardOnLock } from "@/lib/carryforward/compute"
 
 export interface LockAttemptResult {
   blocked: boolean
@@ -73,6 +74,13 @@ export async function confirmLock(year: number): Promise<void> {
         },
       },
     })
+  })
+
+  // Phase G: if the next year already exists for this taxpayer, populate
+  // its PriorYearContext from the now-locked snapshot. Best-effort; failure
+  // is logged but doesn't roll back the lock.
+  await maybePopulateCarryforwardOnLock(taxYear.id).catch((e) => {
+    console.error("[confirmLock] carryforward propagation failed:", e)
   })
 
   revalidatePath(`/years/${year}`)
