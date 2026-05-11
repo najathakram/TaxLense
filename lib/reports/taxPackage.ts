@@ -33,6 +33,15 @@ import {
   buildScheduleK1PdfPerOwner,
   slugifyOwnerName,
 } from "./pdf/entityForms"
+import {
+  buildScheduleSePdf,
+  buildForm8995Pdf,
+  buildForm1125APdf,
+  buildForm4562Pdf,
+  buildScheduleM1Pdf,
+  buildScheduleM2Pdf,
+  buildScheduleLPdf,
+} from "./pdf/schedules"
 import { buildMasterLedger } from "./masterLedger"
 import { buildFinancialStatements } from "./financialStatements"
 
@@ -67,6 +76,10 @@ async function loadEntityForms(taxYearId: string, entityType: string): Promise<E
       const slug = slugifyOwnerName(k1.owner.name) || `owner_${i + 1}`
       out.push({ name: `08${idx}_k1_${slug}.pdf`, buffer: k1.buffer })
     })
+    // Supplementary schedules — book/tax recon, capital roll-forward, balance sheet
+    out.push({ name: "09_schedule_m1_1120s.pdf", buffer: await buildScheduleM1Pdf(taxYearId, "1120-S") })
+    out.push({ name: "10_schedule_m2_1120s.pdf", buffer: await buildScheduleM2Pdf(taxYearId, "1120-S") })
+    out.push({ name: "11_schedule_l_1120s.pdf",  buffer: await buildScheduleLPdf(taxYearId, "1120-S")  })
   } else if (entityType === "LLC_MULTI" || entityType === "PARTNERSHIP") {
     out.push({ name: "07_form_1065_worksheet.pdf", buffer: await buildForm1065Pdf(taxYearId) })
     const k1s = await buildScheduleK1PdfPerOwner(taxYearId, "1065")
@@ -75,10 +88,26 @@ async function loadEntityForms(taxYearId: string, entityType: string): Promise<E
       const slug = slugifyOwnerName(k1.owner.name) || `partner_${i + 1}`
       out.push({ name: `08${idx}_k1_${slug}.pdf`, buffer: k1.buffer })
     })
+    out.push({ name: "09_schedule_m1_1065.pdf", buffer: await buildScheduleM1Pdf(taxYearId, "1065") })
+    out.push({ name: "10_schedule_m2_1065.pdf", buffer: await buildScheduleM2Pdf(taxYearId, "1065") })
+    out.push({ name: "11_schedule_l_1065.pdf",  buffer: await buildScheduleLPdf(taxYearId, "1065")  })
   } else if (entityType === "C_CORP") {
     // No K-1 — C-Corp shareholders receive 1099-DIV (separate filing flow).
     out.push({ name: "07_form_1120_worksheet.pdf", buffer: await buildForm1120Pdf(taxYearId) })
+    out.push({ name: "09_schedule_m1_1120.pdf", buffer: await buildScheduleM1Pdf(taxYearId, "1120") })
+    out.push({ name: "11_schedule_l_1120.pdf",  buffer: await buildScheduleLPdf(taxYearId, "1120")  })
   }
+
+  // Always-on supplementary schedules (any entity)
+  out.push({ name: "12_form_1125a_cogs.pdf", buffer: await buildForm1125APdf(taxYearId) })
+  out.push({ name: "13_form_4562_depreciation.pdf", buffer: await buildForm4562Pdf(taxYearId) })
+
+  // Sole-prop only: Schedule SE + Form 8995 (QBI)
+  if (entityType === "SOLE_PROP" || entityType === "LLC_SINGLE") {
+    out.push({ name: "14_schedule_se.pdf",   buffer: await buildScheduleSePdf(taxYearId) })
+    out.push({ name: "15_form_8995_qbi.pdf", buffer: await buildForm8995Pdf(taxYearId)  })
+  }
+
   return out
 }
 
