@@ -82,7 +82,16 @@ export function StopsClient({
   const [activeRun, setActiveRun] = useState<{ runId: string; label: string } | null>(null)
   const [progress, setProgress] = useState<Record<string, unknown>>({})
   const [lastError, setLastError] = useState<string | null>(null)
-  const [lastResult, setLastResult] = useState<{ resolved: number; skipped: number; errors: number } | null>(null)
+  // The result shape needs to carry skipBreakdown — the floating progress chip
+  // reads it to render "5 resolved · 17 skipped (12 low_confidence, 5
+  // missing_from_response)" instead of just the headline counters. Without
+  // this typing, the new field was being thrown away when the result landed.
+  const [lastResult, setLastResult] = useState<{
+    resolved: number
+    skipped: number
+    errors: number
+    skipBreakdown?: Record<string, number>
+  } | null>(null)
   // Filter: default PENDING-only because that's the actionable list. The
   // toggle reveals ANSWERED + DEFERRED for history / re-answer flows.
   // Keeping ANSWERED stops in the same scroll list mixed with PENDING was a
@@ -106,10 +115,27 @@ export function StopsClient({
       if (!status) return
       setProgress((status.progress as Record<string, unknown>) ?? {})
       if (status.status === "DONE") {
-        const r = (status.result as { resolved?: number; skipped?: number; errors?: number } | null) ?? null
-        if (r) setLastResult({ resolved: r.resolved ?? 0, skipped: r.skipped ?? 0, errors: r.errors ?? 0 })
+        const r = (status.result as {
+          resolved?: number
+          skipped?: number
+          errors?: number
+          skipBreakdown?: Record<string, number>
+        } | null) ?? null
+        if (r) {
+          setLastResult({
+            resolved: r.resolved ?? 0,
+            skipped: r.skipped ?? 0,
+            errors: r.errors ?? 0,
+            skipBreakdown: r.skipBreakdown,
+          })
+        }
         setActiveRun(null)
-        setTimeout(() => window.location.reload(), 250)
+        // Keep the result chip on screen long enough for the user to actually
+        // read the breakdown (was 250ms — far too short to register "0
+        // resolved, 22 skipped, 22 low_confidence" before the page yanked
+        // itself out). 4s gives time to read; the page then reloads to pull
+        // the fresh server-rendered list of remaining stops.
+        setTimeout(() => window.location.reload(), 4000)
       } else if (status.status === "FAILED") {
         setLastError(status.lastError ?? "Auto-resolve failed.")
         setActiveRun(null)

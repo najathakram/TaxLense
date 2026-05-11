@@ -258,12 +258,39 @@ export interface AutoResolveResult {
   skipBreakdown?: Record<string, number>
 }
 
-// Lowered from 0.85 → 0.70 so high-but-not-perfect Sonnet decisions on
-// repetitive patterns (recurring Wise top-ups, recurring Pocketsflow
-// payouts) auto-resolve instead of cluttering the queue. Below 0.70 the
-// suggestion is still persisted to StopItem.aiSuggestion so the user
-// gets a one-click confirm on every STOP — just not an automatic one.
-const AUTO_RESOLVE_CONFIDENCE_THRESHOLD = 0.7
+// Per-category auto-resolve thresholds.
+//
+// Why per-category: a one-size threshold leaves DEPOSIT stops stuck at
+// "skipped" forever, because deposit descriptions on bank statements are
+// genuinely ambiguous (e.g. "RETURN OF POSTED CHECK / ITEM (RECEIVED ON
+// 06-20)") and Sonnet correctly hedges with confidence in the 0.55–0.70
+// band. A 0.70 floor on deposits means the count never drops, the user
+// keeps mashing "Auto-resolve with AI", and nothing visible happens.
+//
+//   - MERCHANT (0.70): recurring vendors should be obvious; if the AI
+//     can't get to 0.70 here we genuinely need a human read.
+//   - TRANSFER (0.60): wallet movements are usually unambiguous (Wise
+//     top-up, owner draw, card payment) but the model still hedges when
+//     the counterparty is a person's name.
+//   - DEPOSIT (0.55): inflows are the hardest category — the AI is
+//     usually right at 0.55–0.70 (e.g. ACH from a known marketplace),
+//     and even a "wrong" auto-resolve to the heuristic default is better
+//     than 22 stops that never get any work done.
+//   - SECTION_274D / PERIOD_GAP (0.99): never auto-resolve — these need
+//     contemporaneous receipts or a missing-statement upload, neither
+//     of which the AI can synthesize.
+const AUTO_RESOLVE_THRESHOLDS: Record<string, number> = {
+  MERCHANT: 0.7,
+  TRANSFER: 0.6,
+  DEPOSIT: 0.55,
+  SECTION_274D: 0.99,
+  PERIOD_GAP: 0.99,
+}
+const DEFAULT_AUTO_RESOLVE_THRESHOLD = 0.7
+
+function thresholdFor(category: string): number {
+  return AUTO_RESOLVE_THRESHOLDS[category] ?? DEFAULT_AUTO_RESOLVE_THRESHOLD
+}
 
 export async function autoResolveStops(
   year: number,
@@ -408,7 +435,8 @@ export async function autoResolveStops(
       continue
     }
 
-    if (ai.confidence < AUTO_RESOLVE_CONFIDENCE_THRESHOLD) {
+    const threshold = thresholdFor(stop.category)
+    if (ai.confidence < threshold) {
       // Persist the suggestion anyway so the form pre-fills with the AI's
       // best guess on the next render. Without this the user faces four
       // blank radios on every STOP that didn't make the auto-resolve
@@ -434,7 +462,7 @@ export async function autoResolveStops(
         code: ai.code,
         confidence: ai.confidence,
         status: "skipped",
-        reason: "low_confidence",
+        reason: `low_confidence (${ai.confidence.toFixed(2)} < ${threshold})`,
       })
       continue
     }
