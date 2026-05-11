@@ -35,10 +35,11 @@ export default async function DocumentKindPage({ params }: Props) {
   const statuses = await getDocStatuses(taxYear.id)
   const status = statuses.get(spec.slug)!
 
-  // Lineage drill-down — only meaningful for primary tax forms whose lines
-  // map to Schedule C / 1120-S / 1065 / 1120 line set. Skip for workflow
-  // docs (engagement, 8879) and accounting docs (depreciation schedule).
-  const showLineage = spec.group === "TAX" && spec.requiresLock
+  // Lineage drill-down — for any TAX-group form. We compute and render
+  // even when the year isn't locked yet so the viewer shows DIFFERENT
+  // content per slug (each form's line totals from current ledger),
+  // instead of every doc looking identical via the "needs lock" alert.
+  const showLineage = spec.group === "TAX"
   const lineage = showLineage ? await buildLineage(taxYear.id) : []
   const formName = getFormSpec(entityType).primaryReturn
 

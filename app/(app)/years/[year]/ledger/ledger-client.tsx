@@ -67,10 +67,31 @@ interface Props {
 }
 
 export function LedgerClient({ year, rows, accounts }: Props) {
+  // Read URL params on first render so Risk fix-it deep-links
+  // (e.g. /ledger?code=PERSONAL, ?merchant=WISE, ?account=Wise) seed the
+  // filter state. Without this, clicking "Review PERSONAL rows →" landed
+  // the user on the unfiltered 485-row view.
+  const initialParams = (() => {
+    if (typeof window === "undefined") return null
+    return new URLSearchParams(window.location.search)
+  })()
+  const initCode = initialParams?.get("code")?.split(",").filter(Boolean) ?? []
+  const initMerchant = initialParams?.get("merchant") ?? ""
+  const initAccount = initialParams?.get("account") ?? ""
+
   // ---- filter state ----
-  const [accountFilter, setAccountFilter] = useState<Set<string>>(new Set())
-  const [codeFilter, setCodeFilter] = useState<Set<TransactionCode>>(new Set())
-  const [merchantSearch, setMerchantSearch] = useState("")
+  const [accountFilter, setAccountFilter] = useState<Set<string>>(() => {
+    if (!initAccount) return new Set()
+    // Match by account nickname or institution prefix
+    const ids = accounts
+      .filter((a) => (a.nickname ?? "").toLowerCase().includes(initAccount.toLowerCase()))
+      .map((a) => a.id)
+    return new Set(ids)
+  })
+  const [codeFilter, setCodeFilter] = useState<Set<TransactionCode>>(
+    () => new Set(initCode as TransactionCode[]),
+  )
+  const [merchantSearch, setMerchantSearch] = useState(initMerchant)
   const [dateFrom, setDateFrom] = useState("")
   const [dateTo, setDateTo] = useState("")
   // Tier 3.11 — collapse to just rows with an open STOP. Off by default.

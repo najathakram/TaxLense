@@ -19,7 +19,7 @@ async function resolveTaxYear(year: number) {
   const userId = await getCurrentUserId()
   const taxYear = await prisma.taxYear.findUnique({
     where: { userId_year: { userId, year } },
-    select: { id: true, status: true, userId: true },
+    select: { id: true, status: true, userId: true, acceptedRiskOverrides: true },
   })
   if (!taxYear) throw new Error("Tax year not found")
   return { taxYear, userId }
@@ -210,6 +210,136 @@ export async function markW9Requested(
     },
   })
   revalidatePath(`/years/${year}/1099s`)
+  return { ok: true }
+}
+
+/**
+ * Skip a candidate from 1099 issuance — marks the underlying W9Submission
+ * as EXEMPT (no 1099 will be filed), records the rationale in the audit
+ * trail. Use this when:
+ *   - The payee is a corporation per Reg §1.6049-4(c)(1)(ii) (already
+ *     auto-flagged but the CPA wants explicit skip)
+ *   - The payments don't actually qualify (e.g. reimbursements)
+ *   - The CPA chooses to defer to next year's issuance
+ *   - The payee is a foreign person who collects via W-8BEN instead
+ */
+export async function skipCandidate(
+  year: number,
+  payeeName: string,
+  reason: string,
+): Promise<{ ok: true } | { ok: false; error: string }> {
+  const userId = await getCurrentUserId()
+  const { taxYear } = await resolveTaxYear(year)
+  if (taxYear.status === "LOCKED") return { ok: false, error: "Tax year is locked" }
+  if (!reason || reason.trim().length < 5) {
+    return { ok: false, error: "Reason required (minimum 5 characters)" }
+  }
+  await prisma.$transaction(async (tx) => {
+    await tx.w9Submission.upsert({
+      where: { taxYearId_payeeName: { taxYearId: taxYear.id, payeeName } },
+      create: {
+        taxYearId: taxYear.id,
+        payeeName,
+        status: "EXEMPT",
+        notes: `Skipped 1099 issuance: ${reason.trim()}`,
+        isExempt: true,
+      },
+      update: {
+        status: "EXEMPT",
+        notes: `Skipped 1099 issuance: ${reason.trim()}`,
+        isExempt: true,
+      },
+    })
+    // If a Form1099Filing exists already, remove it
+    await tx.form1099Filing.deleteMany({
+      where: { taxYearId: taxYear.id, recipientName: payeeName },
+    })
+    await tx.auditEvent.create({
+      data: {
+        userId,
+        actorType: "USER",
+        eventType: "FORM_1099_NEC_SKIPPED",
+        entityType: "W9Submission",
+        entityId: payeeName,
+        rationale: reason.trim(),
+        afterState: { payeeName, isExempt: true },
+      },
+    })
+  })
+  revalidatePath(`/years/${year}/1099s`)
+  return { ok: true }
+}
+
+/**
+ * Skip the entire 1099-NEC bundle for the year. Sets a TaxYear-level flag
+ * so the dump panel + delivery packet skip 1099s entirely. The CPA might
+ * use this for a year where:
+ *   - All contractor payments were made through a payroll service that
+ *     issues 1099s itself
+ *   - The CPA has elected to handle 1099 filings out-of-band
+ *   - The taxpayer is below any e-file thresholds and prefers manual
+ *
+ * Stored in TaxYear.acceptedRiskOverrides JSON under the key 'skip1099s'
+ * to avoid a new column. Idempotent.
+ */
+export async function skipAll1099s(
+  year: number,
+  reason: string,
+): Promise<{ ok: true } | { ok: false; error: string }> {
+  const userId = await getCurrentUserId()
+  const { taxYear } = await resolveTaxYear(year)
+  if (taxYear.status === "LOCKED") return { ok: false, error: "Tax year is locked" }
+  if (!reason || reason.trim().length < 5) {
+    return { ok: false, error: "Reason required (minimum 5 characters)" }
+  }
+  const current = (taxYear.acceptedRiskOverrides as Record<string, unknown> | null) ?? {}
+  const next = { ...current, skip1099s: true, skip1099s_reason: reason.trim() }
+  await prisma.$transaction(async (tx) => {
+    await tx.taxYear.update({
+      where: { id: taxYear.id },
+      data: { acceptedRiskOverrides: next as never },
+    })
+    await tx.auditEvent.create({
+      data: {
+        userId,
+        actorType: "USER",
+        eventType: "FORM_1099_BUNDLE_SKIPPED",
+        entityType: "TaxYear",
+        entityId: taxYear.id,
+        rationale: reason.trim(),
+      },
+    })
+  })
+  revalidatePath(`/years/${year}/1099s`)
+  revalidatePath(`/years/${year}/finalize`)
+  return { ok: true }
+}
+
+export async function unskipAll1099s(
+  year: number,
+): Promise<{ ok: true } | { ok: false; error: string }> {
+  const userId = await getCurrentUserId()
+  const { taxYear } = await resolveTaxYear(year)
+  const current = (taxYear.acceptedRiskOverrides as Record<string, unknown> | null) ?? {}
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const { skip1099s: _, skip1099s_reason: __, ...rest } = current
+  await prisma.$transaction(async (tx) => {
+    await tx.taxYear.update({
+      where: { id: taxYear.id },
+      data: { acceptedRiskOverrides: rest as never },
+    })
+    await tx.auditEvent.create({
+      data: {
+        userId,
+        actorType: "USER",
+        eventType: "FORM_1099_BUNDLE_UNSKIPPED",
+        entityType: "TaxYear",
+        entityId: taxYear.id,
+      },
+    })
+  })
+  revalidatePath(`/years/${year}/1099s`)
+  revalidatePath(`/years/${year}/finalize`)
   return { ok: true }
 }
 

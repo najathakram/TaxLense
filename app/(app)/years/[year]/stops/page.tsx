@@ -7,10 +7,13 @@ import { deriveStopsFromAssertions } from "@/lib/stops/deriveFromAssertions"
 
 interface Props {
   params: Promise<{ year: string }>
+  searchParams?: Promise<{ cat?: string }>
 }
 
-export default async function StopsPage({ params }: Props) {
+export default async function StopsPage({ params, searchParams }: Props) {
   const { year: yearParam } = await params
+  const sp = (await searchParams) ?? {}
+  const initialCategory = sp.cat ?? null
   const userId = await getCurrentUserId()
 
   const year = parseInt(yearParam, 10)
@@ -96,7 +99,7 @@ export default async function StopsPage({ params }: Props) {
           Answer each item to promote its classification. Answers persist as new Classification rows — prior ones remain in history.
         </p>
       </div>
-      <StopsClient year={year} stops={serialized} />
+      <StopsClient year={year} stops={serialized} initialCategory={initialCategory} />
     </div>
   )
 }

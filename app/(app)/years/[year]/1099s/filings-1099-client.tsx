@@ -17,7 +17,15 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog"
 import { Checkbox } from "@/components/ui/checkbox"
-import { approveCandidate, recordW9, deleteFiling, markW9Requested } from "./actions"
+import {
+  approveCandidate,
+  recordW9,
+  deleteFiling,
+  markW9Requested,
+  skipCandidate,
+  skipAll1099s,
+  unskipAll1099s,
+} from "./actions"
 
 interface Candidate {
   payeeName: string
@@ -62,6 +70,8 @@ interface Props {
   candidates: Candidate[]
   filings: Filing[]
   w9Map: Record<string, W9>
+  skipAll: boolean
+  skipAllReason: string
 }
 
 const TAX_CLASSIFICATIONS = [
@@ -80,11 +90,24 @@ function fmt(n: number) {
   return n.toLocaleString("en-US", { style: "currency", currency: "USD", minimumFractionDigits: 2 })
 }
 
-export function Filings1099Client({ year, isLocked, candidates, filings, w9Map }: Props) {
+export function Filings1099Client({
+  year,
+  isLocked,
+  candidates,
+  filings,
+  w9Map,
+  skipAll,
+  skipAllReason,
+}: Props) {
   const router = useRouter()
   const [editingW9, setEditingW9] = useState<W9 | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [isPending, startTransition] = useTransition()
+  const [skipDialogOpen, setSkipDialogOpen] = useState(false)
+  const [skipReasonText, setSkipReasonText] = useState("")
+  const [skipCandidateName, setSkipCandidateName] = useState<string | null>(null)
+  const [bundleSkipReason, setBundleSkipReason] = useState("")
+  const [bundleSkipDialogOpen, setBundleSkipDialogOpen] = useState(false)
 
   const filingMap = new Map(filings.map((f) => [f.recipientName.toUpperCase(), f]))
 
@@ -209,6 +232,43 @@ export function Filings1099Client({ year, isLocked, candidates, filings, w9Map }
         </Alert>
       )}
 
+      {/* Bundle-level skip banner */}
+      {skipAll ? (
+        <Alert>
+          <AlertDescription className="flex items-center justify-between gap-3 flex-wrap">
+            <span>
+              <strong>1099-NEC bundle skipped for {year}.</strong>{" "}
+              <span className="text-muted-foreground">{skipAllReason}</span>
+            </span>
+            <Button
+              size="sm"
+              variant="outline"
+              disabled={isPending || isLocked}
+              onClick={() => {
+                startTransition(async () => {
+                  const res = await unskipAll1099s(year)
+                  if (!res.ok) setError(res.error)
+                  else router.refresh()
+                })
+              }}
+            >
+              Re-enable 1099 issuance
+            </Button>
+          </AlertDescription>
+        </Alert>
+      ) : (
+        <div className="flex justify-end">
+          <Button
+            size="sm"
+            variant="ghost"
+            disabled={isLocked}
+            onClick={() => setBundleSkipDialogOpen(true)}
+          >
+            Skip 1099s entirely for {year}
+          </Button>
+        </div>
+      )}
+
       {/* Candidate list */}
       <Card>
         <CardHeader>
@@ -275,6 +335,19 @@ export function Filings1099Client({ year, isLocked, candidates, filings, w9Map }
                             Mark requested
                           </Button>
                         )}
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={() => {
+                            setSkipCandidateName(c.payeeName)
+                            setSkipReasonText("")
+                            setSkipDialogOpen(true)
+                          }}
+                          disabled={isLocked}
+                          title="Mark this payee as exempt from 1099 issuance"
+                        >
+                          Skip
+                        </Button>
                         <Button
                           size="sm"
                           onClick={() => approve(c)}
@@ -352,6 +425,109 @@ export function Filings1099Client({ year, isLocked, candidates, filings, w9Map }
       </Card>
 
       {/* W-9 capture dialog */}
+      {/* Per-candidate skip dialog */}
+      <Dialog open={skipDialogOpen} onOpenChange={(v) => !v && setSkipDialogOpen(false)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>
+              Skip 1099 issuance for {skipCandidateName}
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3">
+            <p className="text-sm text-muted-foreground">
+              Records this payee as exempt from 1099-NEC issuance for {year}. Use when the payee is
+              a corporation (Reg §1.6049-4(c)(1)(ii)), foreign person (W-8BEN instead), or the
+              payments don&apos;t qualify (e.g. reimbursements).
+            </p>
+            <Textarea
+              placeholder="Reason — e.g. 'C-Corp per W-9 line 3', 'Foreign payee, W-8BEN on file', 'Reimbursements only'"
+              rows={3}
+              value={skipReasonText}
+              onChange={(e) => setSkipReasonText(e.target.value)}
+            />
+          </div>
+          <DialogFooter>
+            <Button
+              variant="ghost"
+              onClick={() => setSkipDialogOpen(false)}
+              disabled={isPending}
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={() => {
+                if (!skipCandidateName) return
+                startTransition(async () => {
+                  const res = await skipCandidate(year, skipCandidateName, skipReasonText.trim())
+                  if (!res.ok) {
+                    setError(res.error)
+                    return
+                  }
+                  setSkipDialogOpen(false)
+                  setSkipCandidateName(null)
+                  setSkipReasonText("")
+                  router.refresh()
+                })
+              }}
+              disabled={isPending || skipReasonText.trim().length < 5}
+            >
+              {isPending ? "Skipping…" : "Skip 1099"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Bundle-level skip dialog */}
+      <Dialog open={bundleSkipDialogOpen} onOpenChange={(v) => !v && setBundleSkipDialogOpen(false)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Skip 1099-NEC bundle for {year}</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3">
+            <p className="text-sm text-muted-foreground">
+              Suppresses 1099-NEC generation for the entire year. Use when:
+            </p>
+            <ul className="text-sm list-disc pl-5 space-y-1 text-muted-foreground">
+              <li>Payroll service (Gusto, ADP) issues 1099s on the taxpayer&apos;s behalf</li>
+              <li>CPA handles 1099 filing out-of-band</li>
+              <li>All contractor payments fall under exempt categories</li>
+            </ul>
+            <Textarea
+              placeholder="Reason — minimum 5 characters (e.g. 'Gusto payroll handles 1099-NEC issuance')"
+              rows={3}
+              value={bundleSkipReason}
+              onChange={(e) => setBundleSkipReason(e.target.value)}
+            />
+          </div>
+          <DialogFooter>
+            <Button
+              variant="ghost"
+              onClick={() => setBundleSkipDialogOpen(false)}
+              disabled={isPending}
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={() => {
+                startTransition(async () => {
+                  const res = await skipAll1099s(year, bundleSkipReason.trim())
+                  if (!res.ok) {
+                    setError(res.error)
+                    return
+                  }
+                  setBundleSkipDialogOpen(false)
+                  setBundleSkipReason("")
+                  router.refresh()
+                })
+              }}
+              disabled={isPending || bundleSkipReason.trim().length < 5}
+            >
+              {isPending ? "Skipping…" : "Skip 1099 bundle"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
       <Dialog open={!!editingW9} onOpenChange={(v) => !v && setEditingW9(null)}>
         <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
           <DialogHeader>

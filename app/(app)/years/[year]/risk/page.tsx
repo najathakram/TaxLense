@@ -13,6 +13,7 @@ import { fmtUSD } from "@/lib/format/currency"
 import { RiskOverrideButton } from "./override-button"
 import { OVERRIDABLE_SIGNALS } from "@/lib/risk/overridable"
 import { FixItButton } from "./fix-it-button"
+import { deriveStopsFromAssertions } from "@/lib/stops/deriveFromAssertions"
 
 interface Props {
   params: Promise<{ year: string }>
@@ -149,6 +150,15 @@ export default async function RiskPage({ params }: Props) {
   // through React server-component prop boundaries.
   const acceptedOverrides =
     (taxYear.acceptedRiskOverrides as Record<string, unknown> | null) ?? {}
+
+  // Auto-derive STOPs from current ledger state on every Risk-page load.
+  // Without this, "Resolve deposits queue →" deep-links into an empty STOPs
+  // page when the autonomous CPA agent hasn't been re-run after manual
+  // ledger edits (the case after the user reclassifies via bulk actions).
+  // deriveStopsFromAssertions is idempotent and runs in <100ms.
+  await deriveStopsFromAssertions(taxYear.id).catch((e) => {
+    console.error("[risk] deriveStopsFromAssertions failed:", e)
+  })
 
   const [risk, assertions, counts] = await Promise.all([
     computeRiskScore(taxYear.id),

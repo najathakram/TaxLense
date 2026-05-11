@@ -45,13 +45,20 @@ export default async function MemosIndexPage({ params }: Props) {
       ) : (
         <div className="grid gap-3 md:grid-cols-2">
           {memos.map((m) => (
-            <Link key={m} href={`/years/${year}/memos/${encodeURIComponent(m)}`}>
-              <Card className="hover:bg-accent/50 cursor-pointer">
-                <CardContent className="p-4">
-                  <div className="font-medium text-sm">{MEMO_LABELS[m] ?? m}</div>
-                  <div className="text-xs text-muted-foreground mt-1">{m}</div>
-                </CardContent>
-              </Card>
+            // Use anchor directly with Card-like styling rather than
+            // <Link><Card>...</Card></Link>. The wrapped Card pattern was
+            // swallowing the click event somewhere in the shadcn Card +
+            // CardContent layer; users tapped the card and the URL never
+            // changed. Plain anchor with className-only styling avoids it.
+            <Link
+              key={m}
+              href={`/years/${year}/memos/${encodeURIComponent(m)}`}
+              className="block rounded-xl border bg-card text-card-foreground shadow-sm hover:bg-accent/50 transition cursor-pointer no-underline"
+            >
+              <div className="p-4">
+                <div className="font-medium text-sm">{MEMO_LABELS[m] ?? m}</div>
+                <div className="text-xs text-muted-foreground mt-1">{m}</div>
+              </div>
             </Link>
           ))}
         </div>

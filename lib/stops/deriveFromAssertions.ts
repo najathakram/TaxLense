@@ -46,26 +46,20 @@ export async function deriveStopsFromAssertions(
   })
 
   for (const tx of unclassifiedInflows) {
-    const existing = await prisma.stopItem.findFirst({
+    // Only skip if a real PENDING stop exists. ANSWERED stops are stale
+    // (the txn is still unclassified — meaning the prior answer didn't
+    // stick), so we re-emit a fresh PENDING. Without this, Atif's STOPs
+    // page stayed empty after Archive Superseded even though 63 deposits
+    // were still NEEDS_CONTEXT in the ledger.
+    const existingPending = await prisma.stopItem.findFirst({
       where: {
         taxYearId,
         category: "DEPOSIT",
         transactionIds: { has: tx.id },
-        state: { in: ["PENDING", "ANSWERED"] },
+        state: "PENDING",
       },
     })
-    // Skip if there's a real (non-superseded) PENDING/ANSWERED stop. But if
-    // the existing stop was auto-archived as superseded *and* the txn is
-    // still effectively unclassified (NEEDS_CONTEXT), re-emit — the original
-    // archive was based on a placeholder classification, not a real decision.
-    // Without this, Atif's STOPs page stays empty after Archive Superseded
-    // even though 93 deposits + 141 NEEDS_CONTEXT still block lock.
-    if (existing) {
-      const userAnswer = existing.userAnswer as { autoArchivedAsSuperseded?: boolean } | null
-      const isSupersededShell =
-        existing.state === "ANSWERED" && userAnswer?.autoArchivedAsSuperseded === true
-      if (!isSupersededShell) continue
-    }
+    if (existingPending) continue
     const absDollars = Math.abs(Number(tx.amountNormalized.toString()))
     const abs = absDollars.toFixed(2) // canonical for stop.context — keep machine-readable
     const absDisplay = fmtUSD(absDollars, { cents: true })
@@ -117,20 +111,15 @@ export async function deriveStopsFromAssertions(
     const purposeOk = !!sub?.purpose && sub.purpose.trim().length >= 2
     if (attendeesOk && purposeOk) continue
 
-    const existing = await prisma.stopItem.findFirst({
+    const existingPending = await prisma.stopItem.findFirst({
       where: {
         taxYearId,
         category: "SECTION_274D",
         transactionIds: { has: tx.id },
-        state: { in: ["PENDING", "ANSWERED"] },
+        state: "PENDING",
       },
     })
-    if (existing) {
-      const userAnswer = existing.userAnswer as { autoArchivedAsSuperseded?: boolean } | null
-      const isSupersededShell =
-        existing.state === "ANSWERED" && userAnswer?.autoArchivedAsSuperseded === true
-      if (!isSupersededShell) continue
-    }
+    if (existingPending) continue
 
     const absDollars = Math.abs(Number(tx.amountNormalized.toString()))
     const abs = absDollars.toFixed(2)

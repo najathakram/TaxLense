@@ -43,16 +43,16 @@ export function DocumentsIndex({ year, slugs, statuses, registry }: Props) {
           const st = statusBySlug[s]
           if (!m) return null
           return (
-            <Link key={s} href={`/years/${year}/documents/${s}`}>
-              <Card className="hover:bg-accent/50 transition cursor-pointer">
-                <CardContent className="p-4">
-                  <div className="font-medium text-sm">{m.displayName}</div>
-                  <div className="text-xs text-muted-foreground mt-1">{m.authority}</div>
-                  <div className="text-[10px] mt-2">
-                    {st?.isStale ? "stale" : st?.hasReport ? "generated" : "not generated yet"}
-                  </div>
-                </CardContent>
-              </Card>
+            <Link
+              key={s}
+              href={`/years/${year}/documents/${s}`}
+              className="block rounded-xl border bg-card text-card-foreground shadow-sm hover:bg-accent/50 transition cursor-pointer no-underline p-4"
+            >
+              <div className="font-medium text-sm">{m.displayName}</div>
+              <div className="text-xs text-muted-foreground mt-1">{m.authority}</div>
+              <div className="text-[10px] mt-2">
+                {st?.isStale ? "stale" : st?.hasReport ? "generated" : "not generated yet"}
+              </div>
             </Link>
           )
         })}

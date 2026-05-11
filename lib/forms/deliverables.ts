@@ -90,6 +90,11 @@ export interface DeliverableContext {
   owners: OwnerSummary
   /** True if assertion run currently passes (all blocking checks ok). */
   assertionsPass: boolean
+  /** True if the CPA has explicitly skipped 1099 issuance for the year
+   *  (TaxYear.acceptedRiskOverrides.skip1099s). When set, the dump panel
+   *  marks 1099-NEC / 1099-MISC / 1096 as skipped with the supplied reason. */
+  skip1099s?: boolean
+  skip1099sReason?: string
 }
 
 // ── TY2025 thresholds (per IRS guidance) ─────────────────────────────────────
@@ -584,6 +589,50 @@ function informationReturnsBundle(ctx: DeliverableContext): Deliverable[] {
     (c) => c.totalDollars >= FORM_1099_NEC_THRESHOLD_DOLLARS,
   )
   const missingTinCount = candidates.filter((c) => c.missingTin).length
+
+  // CPA may explicitly skip the 1099 bundle (payroll service handles it,
+  // out-of-band filing, etc). When skipped, every 1099 form shows as
+  // 'skipped (CPA elected)' with the reason inline.
+  if (ctx.skip1099s) {
+    const reason = ctx.skip1099sReason || "CPA elected to skip 1099 issuance"
+    const skipReason = `Skipped: ${reason}`
+    return [
+      {
+        formId: "form-1099-nec",
+        displayName: "Form 1099-NEC (Nonemployee Compensation)",
+        group: "INFO_RETURN",
+        triggered: false,
+        required: false,
+        skipReason,
+        blockers: [],
+        authority: "IRC §6041A; Reg §1.6041-1; Form 1099-NEC Instructions Rev. January 2025",
+        formRevision: "Rev. January 2025",
+      },
+      {
+        formId: "form-1099-misc",
+        displayName: "Form 1099-MISC (Rents, Royalties, Other)",
+        group: "INFO_RETURN",
+        triggered: false,
+        required: false,
+        skipReason,
+        blockers: [],
+        authority: "IRC §6041; Reg §1.6041-1; Form 1099-MISC Instructions Rev. January 2025",
+        formRevision: "Rev. January 2025",
+      },
+      {
+        formId: "form-1096",
+        displayName: "Form 1096 (Annual Summary & Transmittal)",
+        group: "INFO_RETURN",
+        triggered: false,
+        required: false,
+        skipReason,
+        blockers: [],
+        authority: "IRC §6011; T.D. 9972",
+        formRevision: "Rev. 2025",
+      },
+    ]
+  }
+
   return [
     {
       formId: "form-1099-nec",

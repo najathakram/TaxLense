@@ -133,7 +133,21 @@ export async function bulkReclassify(year: number, edit: BulkEdit) {
         if (!taxYearId) taxYearId = txn.taxYearId
 
         const code = edit.code ?? current?.code ?? "NEEDS_CONTEXT"
-        const pct = edit.businessPct ?? current?.businessPct ?? 0
+        // Auto-zero biz pct when reclassifying to a non-deductible code so
+        // A05/A06 don't fire. Without this: bulk-reclassify Pocketsflow rows
+        // → PERSONAL keeps the prior 100% pct, A05 immediately fires
+        // "5 PERSONAL rows have non-zero pct" requiring a second pass.
+        const NON_DEDUCT_CODES: TransactionCode[] = [
+          "PERSONAL",
+          "PAYMENT",
+          "TRANSFER",
+          "BIZ_INCOME",
+          "NEEDS_CONTEXT",
+        ]
+        const codeForcesPct0 = edit.code != null && NON_DEDUCT_CODES.includes(edit.code)
+        const pct = codeForcesPct0
+          ? 0
+          : edit.businessPct ?? current?.businessPct ?? 0
         const source: ClassificationSource = edit.confirm ? "AI_USER_CONFIRMED" : "USER"
 
         await tx.classification.updateMany({

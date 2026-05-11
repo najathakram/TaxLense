@@ -68,7 +68,17 @@ const CATEGORIES: { key: StopCategory; label: string }[] = [
 
 const POLL_MS = 2_000
 
-export function StopsClient({ year, stops }: { year: number; stops: SerializedStop[] }) {
+export function StopsClient({
+  year,
+  stops,
+  initialCategory,
+}: {
+  year: number
+  stops: SerializedStop[]
+  /** Optional category to land on when the user deep-links via
+   *  ?cat=DEPOSIT (e.g. from Risk dashboard "Resolve deposits queue →"). */
+  initialCategory?: string | null
+}) {
   const [activeRun, setActiveRun] = useState<{ runId: string; label: string } | null>(null)
   const [progress, setProgress] = useState<Record<string, unknown>>({})
   const [lastError, setLastError] = useState<string | null>(null)
@@ -144,7 +154,10 @@ export function StopsClient({ year, stops }: { year: number; stops: SerializedSt
   // as "Merchant (0) — No items" because Merchant was hard-coded as default.
   // New rule: highest pending-count category wins; ties prefer the order in
   // CATEGORIES (Merchant > Transfer > Deposit > §274(d) > Period Gap).
+  // initialCategory wins (URL ?cat=X deep-link from Risk fix-it). Otherwise
+  // the highest-pending-count category — see B-03 above.
   const defaultTab: StopCategory =
+    (initialCategory && CATEGORIES.find((c) => c.key === initialCategory)?.key) ||
     CATEGORIES.reduce<{ key: StopCategory; n: number }>(
       (best, c) => {
         const n = pendingCount(c.key)

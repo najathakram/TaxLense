@@ -54,6 +54,8 @@ export function DumpPanel({ year, isLocked, context: initialContext }: Props) {
       ledger: initialContext.ledger,
       owners: initialContext.owners,
       assertionsPass: initialContext.assertionsPass,
+      skip1099s: initialContext.skip1099s,
+      skip1099sReason: initialContext.skip1099sReason,
     }),
     [initialContext, entityType],
   )

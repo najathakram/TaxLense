@@ -28,6 +28,9 @@ export interface LoadedDeliverableContext {
   assertionsPass: boolean
   /** Pre-rendered status text for the panel header. */
   assertionStatusText: string
+  /** Bundle-level 1099 skip flag (TaxYear.acceptedRiskOverrides.skip1099s). */
+  skip1099s: boolean
+  skip1099sReason: string
 }
 
 export async function loadDeliverableContext(
@@ -35,9 +38,13 @@ export async function loadDeliverableContext(
 ): Promise<LoadedDeliverableContext> {
   const ty = await prisma.taxYear.findUniqueOrThrow({
     where: { id: taxYearId },
-    select: { id: true, year: true },
+    select: { id: true, year: true, acceptedRiskOverrides: true },
   })
   const yearWindow = inYearWindow(ty.year)
+  const overrides = (ty.acceptedRiskOverrides as Record<string, unknown> | null) ?? {}
+  const skip1099s = overrides.skip1099s === true
+  const skip1099sReason =
+    typeof overrides.skip1099s_reason === "string" ? overrides.skip1099s_reason : ""
 
   const [profile, txns, assertions] = await Promise.all([
     prisma.businessProfile.findUnique({
@@ -168,5 +175,7 @@ export async function loadDeliverableContext(
     owners,
     assertionsPass: assertions.blockingFailures.length === 0,
     assertionStatusText,
+    skip1099s,
+    skip1099sReason,
   }
 }

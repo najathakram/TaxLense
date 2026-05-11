@@ -17,6 +17,7 @@ import { computeLedgerHash } from "@/lib/lock/hash"
 import { loadDeliverableContext } from "@/lib/forms/loadDeliverableContext"
 import { DumpPanel } from "./dump-panel"
 import { LockHistory, type LockHistoryEvent } from "@/components/lock-history"
+import { deriveStopsFromAssertions } from "@/lib/stops/deriveFromAssertions"
 
 interface Props {
   params: Promise<{ year: string }>
@@ -59,6 +60,12 @@ export default async function FinalizePage({ params }: Props) {
   // takes <100ms) so the drift banner appears whether or not the year is
   // locked. Without this, locked years could silently drift after edits and
   // the master-ledger XLSX would stamp the old hash on new content.
+  // Auto-derive STOPs so the "Resolve STOPs" link doesn't land on an empty
+  // queue when the user reclassified manually but never re-ran the agent.
+  await deriveStopsFromAssertions(taxYear.id).catch((e) => {
+    console.error("[finalize] deriveStopsFromAssertions failed:", e)
+  })
+
   const [risk, assertions, reports, counts, neededMemos, currentHash, deliverableCtx, lockEvents] = await Promise.all([
     isLocked ? null : computeRiskScore(taxYear.id),
     isLocked ? null : runLockAssertions(taxYear.id),

@@ -53,6 +53,11 @@ export default async function Filings1099Page({ params }: Props) {
     sourceTransactionIds: f.sourceTransactionIds,
   }))
 
+  // Pull bundle-level skip flag (stored in TaxYear.acceptedRiskOverrides).
+  const overrides = (taxYear.acceptedRiskOverrides as Record<string, unknown> | null) ?? {}
+  const skipAll = overrides.skip1099s === true
+  const skipReason = typeof overrides.skip1099s_reason === "string" ? overrides.skip1099s_reason : ""
+
   return (
     <Filings1099Client
       year={year}
@@ -60,6 +65,8 @@ export default async function Filings1099Page({ params }: Props) {
       candidates={candidates}
       filings={filingsForClient}
       w9Map={w9Map}
+      skipAll={skipAll}
+      skipAllReason={skipReason}
     />
   )
 }
