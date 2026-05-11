@@ -6,6 +6,7 @@ import { getCurrentCpaContext } from "@/lib/cpa/clientContext"
 import { getAdminCpaContext } from "@/lib/admin/adminContext"
 import { Section, Card, KPI, Pill, Avi } from "@/components/v2/primitives"
 import { fmtUSD, relTime } from "@/components/v2/format"
+import { summarizeLockBlockersBatch } from "@/lib/lock/status"
 
 export default async function WorkspacePage() {
   await requireAuth()
@@ -41,7 +42,13 @@ export default async function WorkspacePage() {
     },
   })
 
-  // Build inbox items grouped by severity
+  // Build inbox items grouped by severity.
+  //
+  // Readiness rule (B-fix-inbox): a year is BLOCKER if it has any blocking
+  // assertion failure OR any blocking critical-risk-signal — NOT just by
+  // pending-STOP count. The pre-fix logic let years through as READY while
+  // Risk dashboard correctly reported them as BLOCKED, eroding trust. We now
+  // delegate to lib/lock/status.ts so Inbox, Year cards, Finalize all agree.
   type InboxItem = {
     sev: "BLOCKER" | "PENDING" | "READY" | "DEADLINE"
     clientId: string
@@ -54,24 +61,60 @@ export default async function WorkspacePage() {
   }
   const inbox: InboxItem[] = []
 
+  // Collect all (taxYearId, pendingStops) pairs eligible for the lock-status
+  // check. Only REVIEW years can plausibly be READY — earlier statuses (CREATED
+  // / INGESTION / CLASSIFICATION) aren't lock-ready by definition; LOCKED is
+  // already done. For non-REVIEW years we still surface PENDING STOP rows.
+  const stopCountsByYear = new Map<string, number>()
+  for (const rel of clientRels) {
+    for (const ty of rel.client.taxYears) {
+      stopCountsByYear.set(
+        ty.id,
+        await prisma.stopItem.count({ where: { taxYearId: ty.id, state: "PENDING" } }),
+      )
+    }
+  }
+
+  const reviewYears = clientRels.flatMap((rel) =>
+    rel.client.taxYears
+      .filter((ty) => ty.status === "REVIEW")
+      .map((ty) => ({ taxYearId: ty.id, pendingStops: stopCountsByYear.get(ty.id) ?? 0 })),
+  )
+  const lockSummaries = await summarizeLockBlockersBatch(reviewYears)
+
   for (const rel of clientRels) {
     const c = rel.client
     for (const ty of c.taxYears) {
-      const pendingStops = await prisma.stopItem.count({ where: { taxYearId: ty.id, state: "PENDING" } })
-      const blockers = await prisma.stopItem.count({
-        where: { taxYearId: ty.id, state: "PENDING", category: { in: ["DEPOSIT", "SECTION_274D", "PERIOD_GAP"] } },
-      })
+      const pendingStops = stopCountsByYear.get(ty.id) ?? 0
+      const summary = lockSummaries.get(ty.id) // only set for REVIEW years
 
-      if (blockers > 0) {
+      // Authoritative blocker = any blocking assertion failure OR critical
+      // blocking risk signal. Fallback (non-REVIEW year) = high-priority STOPs.
+      const isBlocked = summary
+        ? summary.blocked
+        : pendingStops > 0 &&
+          (await prisma.stopItem.count({
+            where: {
+              taxYearId: ty.id,
+              state: "PENDING",
+              category: { in: ["DEPOSIT", "SECTION_274D", "PERIOD_GAP"] },
+            },
+          })) > 0
+
+      const blockerCount = summary?.blockerCount ?? 0
+      if (isBlocked) {
+        const reason = summary?.reasons.slice(0, 2).join("; ")
         inbox.push({
           sev: "BLOCKER",
           clientId: c.id,
           clientName: c.name ?? c.email,
           clientEmail: c.email,
           year: ty.year,
-          msg: `${blockers} blocker${blockers > 1 ? "s" : ""} — resolve before lock`,
-          target: `/years/${ty.year}/stops`,
-          age: ty.id ? new Date() : new Date(),
+          msg: summary
+            ? `${blockerCount} blocker${blockerCount > 1 ? "s" : ""} — ${reason}`
+            : `${pendingStops} STOP${pendingStops > 1 ? "s" : ""} — resolve before lock`,
+          target: summary ? `/years/${ty.year}/risk` : `/years/${ty.year}/stops`,
+          age: new Date(),
         })
       }
       if (pendingStops > 0) {
@@ -86,15 +129,17 @@ export default async function WorkspacePage() {
           age: new Date(),
         })
       }
-      if (ty.status === "REVIEW" && pendingStops === 0) {
+      // READY only when REVIEW AND zero pending STOPs AND lock-status helper
+      // confirms no blocking issues. Previously this fired on STOP count alone.
+      if (ty.status === "REVIEW" && pendingStops === 0 && summary && !summary.blocked) {
         inbox.push({
           sev: "READY",
           clientId: c.id,
           clientName: c.name ?? c.email,
           clientEmail: c.email,
           year: ty.year,
-          msg: "Ready to lock — no pending STOPs",
-          target: `/years/${ty.year}/lock`,
+          msg: "Ready to lock — assertions pass, no blocking risk signals",
+          target: `/years/${ty.year}/finalize`,
           age: new Date(),
         })
       }
