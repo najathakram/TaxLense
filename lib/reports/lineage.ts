@@ -9,6 +9,11 @@
  * Powers the lineage drill-down panel on /documents/[kind]. Pure read; no
  * AI; reads from the same Classification rows the master ledger uses so
  * "one number, one place" holds (B-08 invariant).
+ *
+ * When given a docSlug, the lineage is filtered to only the lines/codes
+ * that doc is responsible for — Form 1125-A only shows COGS rows; Form
+ * 8829 only home office; Schedule SE only the net-SE figure; etc. Without
+ * filtering, every doc rendered the same generic ledger summary.
  */
 
 import { prisma } from "@/lib/db"
@@ -30,7 +35,45 @@ export interface LineageRow {
   }>
 }
 
-export async function buildLineage(taxYearId: string): Promise<LineageRow[]> {
+/**
+ * Per-doc filter — returns true if a classification line is RELEVANT to
+ * the given doc slug. When the slug is unknown (or it's the primary entity
+ * worksheet), all lines pass through.
+ */
+function lineMatchesDoc(line: string, docSlug?: string): boolean {
+  if (!docSlug) return true
+  const l = line.toLowerCase()
+  switch (docSlug) {
+    case "form-1125a-cogs":
+      // Cost of Goods Sold detail — only Part III COGS / WRITE_OFF_COGS rows
+      return l.includes("cogs") || l.includes("part iii")
+    case "form-8829":
+      // Home office expenses
+      return l.includes("home office") || l.includes("line 30")
+    case "form-4562-depreciation":
+    case "depreciation-schedule":
+      return l.includes("depreciation") || l.includes("line 13") || l.includes("§179") || l.includes("§168")
+    case "schedule-se":
+      // SE tax is computed from Schedule C net — show all deductible lines
+      return true
+    case "form-8995-qbi":
+      // QBI is 20% of net QBI — show all deductible lines (drives net)
+      return true
+    case "form-1125-e":
+      // Compensation of officers — Line 7 (1120-S) / 12 (1120) / 10 (1065 partner pmts)
+      return l.includes("compensation") || l.includes("officer") || l.includes("line 7") ||
+             l.includes("line 10") || l.includes("line 12")
+    case "form-1099-nec":
+      return l.includes("contract labor") || l.includes("line 11")
+    default:
+      return true
+  }
+}
+
+export async function buildLineage(
+  taxYearId: string,
+  docSlug?: string,
+): Promise<LineageRow[]> {
   const ty = await prisma.taxYear.findUniqueOrThrow({
     where: { id: taxYearId },
     select: { id: true, year: true },
@@ -66,6 +109,9 @@ export async function buildLineage(taxYearId: string): Promise<LineageRow[]> {
       continue
     }
     const line = c.scheduleCLine ?? "(no line)"
+    // Per-doc filter — drop rows that aren't relevant to the active doc.
+    // E.g., Form 1125-A only shows COGS rows; Form 8829 only home office.
+    if (!lineMatchesDoc(line, docSlug)) continue
     if (!byLine.has(line)) {
       byLine.set(line, { line, total: 0, txCount: 0, txns: [] })
     }

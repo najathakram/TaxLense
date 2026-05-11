@@ -140,12 +140,24 @@ export default async function AppLayout({ children }: { children: React.ReactNod
       })
     : []
 
-  // Pending stops on active client + year (used as a sidebar badge)
-  const pendingStopsCount = activeYear
-    ? await prisma.stopItem.count({
-        where: { taxYear: { userId, year: activeYear.year }, state: "PENDING" },
+  // Pending stops on active client + year (used as a sidebar badge).
+  // Auto-derive first so the sidebar count reflects current ledger state
+  // (otherwise the badge shows stale 0 until the user navigates to /stops).
+  let pendingStopsCount = 0
+  if (activeYear) {
+    const ty = await prisma.taxYear.findUnique({
+      where: { userId_year: { userId, year: activeYear.year } },
+      select: { id: true },
+    })
+    if (ty) {
+      // Best-effort; failure shouldn't break layout render.
+      const { deriveStopsFromAssertions } = await import("@/lib/stops/deriveFromAssertions")
+      await deriveStopsFromAssertions(ty.id).catch(() => {})
+      pendingStopsCount = await prisma.stopItem.count({
+        where: { taxYearId: ty.id, state: "PENDING" },
       })
-    : 0
+    }
+  }
 
   // Build sidebar groups depending on tier
   const groups: SidebarGroup[] = []

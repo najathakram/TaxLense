@@ -399,7 +399,11 @@ export function PipelineClient({ year, initial, receipts }: PipelineClientProps)
           {steps.map((step) => {
             const isRunning = activeRun?.label === step.label
             const liveStatus: "done" | "ready" | "idle" | "running" = isRunning ? "running" : step.status
-            const stepDisabled = runDisabled || liveStatus === "idle" || liveStatus === "done"
+            // Was: stepDisabled = runDisabled || idle || done — but the
+            // button labelled "Re-run" was DISABLED when status==='done',
+            // making clicks silently no-op. Now: only disable when no
+            // input exists (idle) or another action is in flight.
+            const stepDisabled = runDisabled || liveStatus === "idle"
             const receipt = receipts[step.receiptKind]
             return (
               <Card key={step.id} className={liveStatus === "done" ? "opacity-70" : undefined}>
@@ -452,7 +456,10 @@ export function PipelineClient({ year, initial, receipts }: PipelineClientProps)
           {aiSteps.map((step) => {
             const isRunning = activeRun?.label === step.label
             const liveStatus: "done" | "ready" | "idle" | "running" = isRunning ? "running" : step.status
-            const stepDisabled = runDisabled || liveStatus === "idle" || liveStatus === "done"
+            // Same fix as the deterministic-steps section above — Re-run
+            // button must remain enabled when status==='done', else the
+            // labelled button is silently disabled and clicks no-op.
+            const stepDisabled = runDisabled || liveStatus === "idle"
             const receipt = receipts[step.receiptKind]
             return (
               <Card key={step.id} className={liveStatus === "done" ? "opacity-70" : undefined}>

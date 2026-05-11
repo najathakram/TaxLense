@@ -39,8 +39,10 @@ export default async function DocumentKindPage({ params }: Props) {
   // even when the year isn't locked yet so the viewer shows DIFFERENT
   // content per slug (each form's line totals from current ledger),
   // instead of every doc looking identical via the "needs lock" alert.
+  // Pass spec.slug so lineage is FILTERED to lines relevant to the doc
+  // being viewed (Form 1125-A → only COGS; Form 8829 → only home office).
   const showLineage = spec.group === "TAX"
-  const lineage = showLineage ? await buildLineage(taxYear.id) : []
+  const lineage = showLineage ? await buildLineage(taxYear.id, spec.slug) : []
   const formName = getFormSpec(entityType).primaryReturn
 
   return (
