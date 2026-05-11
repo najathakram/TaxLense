@@ -30,12 +30,24 @@ export type OwnerAvgAggregateOutputType = {
   ownershipPct: runtime.Decimal | null
   w2Wages: runtime.Decimal | null
   guaranteedPayments: runtime.Decimal | null
+  capitalContribution: runtime.Decimal | null
+  distributions: runtime.Decimal | null
+  stockBasis: runtime.Decimal | null
+  debtBasis: runtime.Decimal | null
+  partnerCapitalStart: runtime.Decimal | null
+  bookTaxDelta: runtime.Decimal | null
 }
 
 export type OwnerSumAggregateOutputType = {
   ownershipPct: runtime.Decimal | null
   w2Wages: runtime.Decimal | null
   guaranteedPayments: runtime.Decimal | null
+  capitalContribution: runtime.Decimal | null
+  distributions: runtime.Decimal | null
+  stockBasis: runtime.Decimal | null
+  debtBasis: runtime.Decimal | null
+  partnerCapitalStart: runtime.Decimal | null
+  bookTaxDelta: runtime.Decimal | null
 }
 
 export type OwnerMinAggregateOutputType = {
@@ -43,13 +55,28 @@ export type OwnerMinAggregateOutputType = {
   profileId: string | null
   kind: string | null
   name: string | null
+  email: string | null
   ssnLast4: string | null
   ein: string | null
   ownershipPct: runtime.Decimal | null
   w2Wages: runtime.Decimal | null
   guaranteedPayments: runtime.Decimal | null
+  addressLine1: string | null
+  addressLine2: string | null
+  city: string | null
+  stateRegion: string | null
+  postalCode: string | null
+  countryCode: string | null
+  capitalContribution: runtime.Decimal | null
+  distributions: runtime.Decimal | null
+  stockBasis: runtime.Decimal | null
+  debtBasis: runtime.Decimal | null
+  partnerCapitalStart: runtime.Decimal | null
+  bookTaxDelta: runtime.Decimal | null
   notes: string | null
+  isActive: boolean | null
   createdAt: Date | null
+  updatedAt: Date | null
 }
 
 export type OwnerMaxAggregateOutputType = {
@@ -57,13 +84,28 @@ export type OwnerMaxAggregateOutputType = {
   profileId: string | null
   kind: string | null
   name: string | null
+  email: string | null
   ssnLast4: string | null
   ein: string | null
   ownershipPct: runtime.Decimal | null
   w2Wages: runtime.Decimal | null
   guaranteedPayments: runtime.Decimal | null
+  addressLine1: string | null
+  addressLine2: string | null
+  city: string | null
+  stateRegion: string | null
+  postalCode: string | null
+  countryCode: string | null
+  capitalContribution: runtime.Decimal | null
+  distributions: runtime.Decimal | null
+  stockBasis: runtime.Decimal | null
+  debtBasis: runtime.Decimal | null
+  partnerCapitalStart: runtime.Decimal | null
+  bookTaxDelta: runtime.Decimal | null
   notes: string | null
+  isActive: boolean | null
   createdAt: Date | null
+  updatedAt: Date | null
 }
 
 export type OwnerCountAggregateOutputType = {
@@ -71,13 +113,28 @@ export type OwnerCountAggregateOutputType = {
   profileId: number
   kind: number
   name: number
+  email: number
   ssnLast4: number
   ein: number
   ownershipPct: number
   w2Wages: number
   guaranteedPayments: number
+  addressLine1: number
+  addressLine2: number
+  city: number
+  stateRegion: number
+  postalCode: number
+  countryCode: number
+  capitalContribution: number
+  distributions: number
+  stockBasis: number
+  debtBasis: number
+  partnerCapitalStart: number
+  bookTaxDelta: number
   notes: number
+  isActive: number
   createdAt: number
+  updatedAt: number
   _all: number
 }
 
@@ -86,12 +143,24 @@ export type OwnerAvgAggregateInputType = {
   ownershipPct?: true
   w2Wages?: true
   guaranteedPayments?: true
+  capitalContribution?: true
+  distributions?: true
+  stockBasis?: true
+  debtBasis?: true
+  partnerCapitalStart?: true
+  bookTaxDelta?: true
 }
 
 export type OwnerSumAggregateInputType = {
   ownershipPct?: true
   w2Wages?: true
   guaranteedPayments?: true
+  capitalContribution?: true
+  distributions?: true
+  stockBasis?: true
+  debtBasis?: true
+  partnerCapitalStart?: true
+  bookTaxDelta?: true
 }
 
 export type OwnerMinAggregateInputType = {
@@ -99,13 +168,28 @@ export type OwnerMinAggregateInputType = {
   profileId?: true
   kind?: true
   name?: true
+  email?: true
   ssnLast4?: true
   ein?: true
   ownershipPct?: true
   w2Wages?: true
   guaranteedPayments?: true
+  addressLine1?: true
+  addressLine2?: true
+  city?: true
+  stateRegion?: true
+  postalCode?: true
+  countryCode?: true
+  capitalContribution?: true
+  distributions?: true
+  stockBasis?: true
+  debtBasis?: true
+  partnerCapitalStart?: true
+  bookTaxDelta?: true
   notes?: true
+  isActive?: true
   createdAt?: true
+  updatedAt?: true
 }
 
 export type OwnerMaxAggregateInputType = {
@@ -113,13 +197,28 @@ export type OwnerMaxAggregateInputType = {
   profileId?: true
   kind?: true
   name?: true
+  email?: true
   ssnLast4?: true
   ein?: true
   ownershipPct?: true
   w2Wages?: true
   guaranteedPayments?: true
+  addressLine1?: true
+  addressLine2?: true
+  city?: true
+  stateRegion?: true
+  postalCode?: true
+  countryCode?: true
+  capitalContribution?: true
+  distributions?: true
+  stockBasis?: true
+  debtBasis?: true
+  partnerCapitalStart?: true
+  bookTaxDelta?: true
   notes?: true
+  isActive?: true
   createdAt?: true
+  updatedAt?: true
 }
 
 export type OwnerCountAggregateInputType = {
@@ -127,13 +226,28 @@ export type OwnerCountAggregateInputType = {
   profileId?: true
   kind?: true
   name?: true
+  email?: true
   ssnLast4?: true
   ein?: true
   ownershipPct?: true
   w2Wages?: true
   guaranteedPayments?: true
+  addressLine1?: true
+  addressLine2?: true
+  city?: true
+  stateRegion?: true
+  postalCode?: true
+  countryCode?: true
+  capitalContribution?: true
+  distributions?: true
+  stockBasis?: true
+  debtBasis?: true
+  partnerCapitalStart?: true
+  bookTaxDelta?: true
   notes?: true
+  isActive?: true
   createdAt?: true
+  updatedAt?: true
   _all?: true
 }
 
@@ -228,13 +342,28 @@ export type OwnerGroupByOutputType = {
   profileId: string
   kind: string
   name: string
+  email: string | null
   ssnLast4: string | null
   ein: string | null
   ownershipPct: runtime.Decimal
   w2Wages: runtime.Decimal | null
   guaranteedPayments: runtime.Decimal | null
+  addressLine1: string | null
+  addressLine2: string | null
+  city: string | null
+  stateRegion: string | null
+  postalCode: string | null
+  countryCode: string
+  capitalContribution: runtime.Decimal | null
+  distributions: runtime.Decimal | null
+  stockBasis: runtime.Decimal | null
+  debtBasis: runtime.Decimal | null
+  partnerCapitalStart: runtime.Decimal | null
+  bookTaxDelta: runtime.Decimal | null
   notes: string | null
+  isActive: boolean
   createdAt: Date
+  updatedAt: Date
   _count: OwnerCountAggregateOutputType | null
   _avg: OwnerAvgAggregateOutputType | null
   _sum: OwnerSumAggregateOutputType | null
@@ -265,13 +394,28 @@ export type OwnerWhereInput = {
   profileId?: Prisma.StringFilter<"Owner"> | string
   kind?: Prisma.StringFilter<"Owner"> | string
   name?: Prisma.StringFilter<"Owner"> | string
+  email?: Prisma.StringNullableFilter<"Owner"> | string | null
   ssnLast4?: Prisma.StringNullableFilter<"Owner"> | string | null
   ein?: Prisma.StringNullableFilter<"Owner"> | string | null
   ownershipPct?: Prisma.DecimalFilter<"Owner"> | runtime.Decimal | runtime.DecimalJsLike | number | string
   w2Wages?: Prisma.DecimalNullableFilter<"Owner"> | runtime.Decimal | runtime.DecimalJsLike | number | string | null
   guaranteedPayments?: Prisma.DecimalNullableFilter<"Owner"> | runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  addressLine1?: Prisma.StringNullableFilter<"Owner"> | string | null
+  addressLine2?: Prisma.StringNullableFilter<"Owner"> | string | null
+  city?: Prisma.StringNullableFilter<"Owner"> | string | null
+  stateRegion?: Prisma.StringNullableFilter<"Owner"> | string | null
+  postalCode?: Prisma.StringNullableFilter<"Owner"> | string | null
+  countryCode?: Prisma.StringFilter<"Owner"> | string
+  capitalContribution?: Prisma.DecimalNullableFilter<"Owner"> | runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  distributions?: Prisma.DecimalNullableFilter<"Owner"> | runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  stockBasis?: Prisma.DecimalNullableFilter<"Owner"> | runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  debtBasis?: Prisma.DecimalNullableFilter<"Owner"> | runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  partnerCapitalStart?: Prisma.DecimalNullableFilter<"Owner"> | runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  bookTaxDelta?: Prisma.DecimalNullableFilter<"Owner"> | runtime.Decimal | runtime.DecimalJsLike | number | string | null
   notes?: Prisma.StringNullableFilter<"Owner"> | string | null
+  isActive?: Prisma.BoolFilter<"Owner"> | boolean
   createdAt?: Prisma.DateTimeFilter<"Owner"> | Date | string
+  updatedAt?: Prisma.DateTimeFilter<"Owner"> | Date | string
   profile?: Prisma.XOR<Prisma.BusinessProfileScalarRelationFilter, Prisma.BusinessProfileWhereInput>
 }
 
@@ -280,13 +424,28 @@ export type OwnerOrderByWithRelationInput = {
   profileId?: Prisma.SortOrder
   kind?: Prisma.SortOrder
   name?: Prisma.SortOrder
+  email?: Prisma.SortOrderInput | Prisma.SortOrder
   ssnLast4?: Prisma.SortOrderInput | Prisma.SortOrder
   ein?: Prisma.SortOrderInput | Prisma.SortOrder
   ownershipPct?: Prisma.SortOrder
   w2Wages?: Prisma.SortOrderInput | Prisma.SortOrder
   guaranteedPayments?: Prisma.SortOrderInput | Prisma.SortOrder
+  addressLine1?: Prisma.SortOrderInput | Prisma.SortOrder
+  addressLine2?: Prisma.SortOrderInput | Prisma.SortOrder
+  city?: Prisma.SortOrderInput | Prisma.SortOrder
+  stateRegion?: Prisma.SortOrderInput | Prisma.SortOrder
+  postalCode?: Prisma.SortOrderInput | Prisma.SortOrder
+  countryCode?: Prisma.SortOrder
+  capitalContribution?: Prisma.SortOrderInput | Prisma.SortOrder
+  distributions?: Prisma.SortOrderInput | Prisma.SortOrder
+  stockBasis?: Prisma.SortOrderInput | Prisma.SortOrder
+  debtBasis?: Prisma.SortOrderInput | Prisma.SortOrder
+  partnerCapitalStart?: Prisma.SortOrderInput | Prisma.SortOrder
+  bookTaxDelta?: Prisma.SortOrderInput | Prisma.SortOrder
   notes?: Prisma.SortOrderInput | Prisma.SortOrder
+  isActive?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
+  updatedAt?: Prisma.SortOrder
   profile?: Prisma.BusinessProfileOrderByWithRelationInput
 }
 
@@ -298,13 +457,28 @@ export type OwnerWhereUniqueInput = Prisma.AtLeast<{
   profileId?: Prisma.StringFilter<"Owner"> | string
   kind?: Prisma.StringFilter<"Owner"> | string
   name?: Prisma.StringFilter<"Owner"> | string
+  email?: Prisma.StringNullableFilter<"Owner"> | string | null
   ssnLast4?: Prisma.StringNullableFilter<"Owner"> | string | null
   ein?: Prisma.StringNullableFilter<"Owner"> | string | null
   ownershipPct?: Prisma.DecimalFilter<"Owner"> | runtime.Decimal | runtime.DecimalJsLike | number | string
   w2Wages?: Prisma.DecimalNullableFilter<"Owner"> | runtime.Decimal | runtime.DecimalJsLike | number | string | null
   guaranteedPayments?: Prisma.DecimalNullableFilter<"Owner"> | runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  addressLine1?: Prisma.StringNullableFilter<"Owner"> | string | null
+  addressLine2?: Prisma.StringNullableFilter<"Owner"> | string | null
+  city?: Prisma.StringNullableFilter<"Owner"> | string | null
+  stateRegion?: Prisma.StringNullableFilter<"Owner"> | string | null
+  postalCode?: Prisma.StringNullableFilter<"Owner"> | string | null
+  countryCode?: Prisma.StringFilter<"Owner"> | string
+  capitalContribution?: Prisma.DecimalNullableFilter<"Owner"> | runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  distributions?: Prisma.DecimalNullableFilter<"Owner"> | runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  stockBasis?: Prisma.DecimalNullableFilter<"Owner"> | runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  debtBasis?: Prisma.DecimalNullableFilter<"Owner"> | runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  partnerCapitalStart?: Prisma.DecimalNullableFilter<"Owner"> | runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  bookTaxDelta?: Prisma.DecimalNullableFilter<"Owner"> | runtime.Decimal | runtime.DecimalJsLike | number | string | null
   notes?: Prisma.StringNullableFilter<"Owner"> | string | null
+  isActive?: Prisma.BoolFilter<"Owner"> | boolean
   createdAt?: Prisma.DateTimeFilter<"Owner"> | Date | string
+  updatedAt?: Prisma.DateTimeFilter<"Owner"> | Date | string
   profile?: Prisma.XOR<Prisma.BusinessProfileScalarRelationFilter, Prisma.BusinessProfileWhereInput>
 }, "id">
 
@@ -313,13 +487,28 @@ export type OwnerOrderByWithAggregationInput = {
   profileId?: Prisma.SortOrder
   kind?: Prisma.SortOrder
   name?: Prisma.SortOrder
+  email?: Prisma.SortOrderInput | Prisma.SortOrder
   ssnLast4?: Prisma.SortOrderInput | Prisma.SortOrder
   ein?: Prisma.SortOrderInput | Prisma.SortOrder
   ownershipPct?: Prisma.SortOrder
   w2Wages?: Prisma.SortOrderInput | Prisma.SortOrder
   guaranteedPayments?: Prisma.SortOrderInput | Prisma.SortOrder
+  addressLine1?: Prisma.SortOrderInput | Prisma.SortOrder
+  addressLine2?: Prisma.SortOrderInput | Prisma.SortOrder
+  city?: Prisma.SortOrderInput | Prisma.SortOrder
+  stateRegion?: Prisma.SortOrderInput | Prisma.SortOrder
+  postalCode?: Prisma.SortOrderInput | Prisma.SortOrder
+  countryCode?: Prisma.SortOrder
+  capitalContribution?: Prisma.SortOrderInput | Prisma.SortOrder
+  distributions?: Prisma.SortOrderInput | Prisma.SortOrder
+  stockBasis?: Prisma.SortOrderInput | Prisma.SortOrder
+  debtBasis?: Prisma.SortOrderInput | Prisma.SortOrder
+  partnerCapitalStart?: Prisma.SortOrderInput | Prisma.SortOrder
+  bookTaxDelta?: Prisma.SortOrderInput | Prisma.SortOrder
   notes?: Prisma.SortOrderInput | Prisma.SortOrder
+  isActive?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
+  updatedAt?: Prisma.SortOrder
   _count?: Prisma.OwnerCountOrderByAggregateInput
   _avg?: Prisma.OwnerAvgOrderByAggregateInput
   _max?: Prisma.OwnerMaxOrderByAggregateInput
@@ -335,26 +524,56 @@ export type OwnerScalarWhereWithAggregatesInput = {
   profileId?: Prisma.StringWithAggregatesFilter<"Owner"> | string
   kind?: Prisma.StringWithAggregatesFilter<"Owner"> | string
   name?: Prisma.StringWithAggregatesFilter<"Owner"> | string
+  email?: Prisma.StringNullableWithAggregatesFilter<"Owner"> | string | null
   ssnLast4?: Prisma.StringNullableWithAggregatesFilter<"Owner"> | string | null
   ein?: Prisma.StringNullableWithAggregatesFilter<"Owner"> | string | null
   ownershipPct?: Prisma.DecimalWithAggregatesFilter<"Owner"> | runtime.Decimal | runtime.DecimalJsLike | number | string
   w2Wages?: Prisma.DecimalNullableWithAggregatesFilter<"Owner"> | runtime.Decimal | runtime.DecimalJsLike | number | string | null
   guaranteedPayments?: Prisma.DecimalNullableWithAggregatesFilter<"Owner"> | runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  addressLine1?: Prisma.StringNullableWithAggregatesFilter<"Owner"> | string | null
+  addressLine2?: Prisma.StringNullableWithAggregatesFilter<"Owner"> | string | null
+  city?: Prisma.StringNullableWithAggregatesFilter<"Owner"> | string | null
+  stateRegion?: Prisma.StringNullableWithAggregatesFilter<"Owner"> | string | null
+  postalCode?: Prisma.StringNullableWithAggregatesFilter<"Owner"> | string | null
+  countryCode?: Prisma.StringWithAggregatesFilter<"Owner"> | string
+  capitalContribution?: Prisma.DecimalNullableWithAggregatesFilter<"Owner"> | runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  distributions?: Prisma.DecimalNullableWithAggregatesFilter<"Owner"> | runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  stockBasis?: Prisma.DecimalNullableWithAggregatesFilter<"Owner"> | runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  debtBasis?: Prisma.DecimalNullableWithAggregatesFilter<"Owner"> | runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  partnerCapitalStart?: Prisma.DecimalNullableWithAggregatesFilter<"Owner"> | runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  bookTaxDelta?: Prisma.DecimalNullableWithAggregatesFilter<"Owner"> | runtime.Decimal | runtime.DecimalJsLike | number | string | null
   notes?: Prisma.StringNullableWithAggregatesFilter<"Owner"> | string | null
+  isActive?: Prisma.BoolWithAggregatesFilter<"Owner"> | boolean
   createdAt?: Prisma.DateTimeWithAggregatesFilter<"Owner"> | Date | string
+  updatedAt?: Prisma.DateTimeWithAggregatesFilter<"Owner"> | Date | string
 }
 
 export type OwnerCreateInput = {
   id?: string
   kind: string
   name: string
+  email?: string | null
   ssnLast4?: string | null
   ein?: string | null
   ownershipPct: runtime.Decimal | runtime.DecimalJsLike | number | string
   w2Wages?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
   guaranteedPayments?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  addressLine1?: string | null
+  addressLine2?: string | null
+  city?: string | null
+  stateRegion?: string | null
+  postalCode?: string | null
+  countryCode?: string
+  capitalContribution?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  distributions?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  stockBasis?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  debtBasis?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  partnerCapitalStart?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  bookTaxDelta?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
   notes?: string | null
+  isActive?: boolean
   createdAt?: Date | string
+  updatedAt?: Date | string
   profile: Prisma.BusinessProfileCreateNestedOneWithoutOwnersInput
 }
 
@@ -363,26 +582,56 @@ export type OwnerUncheckedCreateInput = {
   profileId: string
   kind: string
   name: string
+  email?: string | null
   ssnLast4?: string | null
   ein?: string | null
   ownershipPct: runtime.Decimal | runtime.DecimalJsLike | number | string
   w2Wages?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
   guaranteedPayments?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  addressLine1?: string | null
+  addressLine2?: string | null
+  city?: string | null
+  stateRegion?: string | null
+  postalCode?: string | null
+  countryCode?: string
+  capitalContribution?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  distributions?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  stockBasis?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  debtBasis?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  partnerCapitalStart?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  bookTaxDelta?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
   notes?: string | null
+  isActive?: boolean
   createdAt?: Date | string
+  updatedAt?: Date | string
 }
 
 export type OwnerUpdateInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   kind?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.StringFieldUpdateOperationsInput | string
+  email?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   ssnLast4?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   ein?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   ownershipPct?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   w2Wages?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
   guaranteedPayments?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  addressLine1?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  addressLine2?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  stateRegion?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  postalCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  countryCode?: Prisma.StringFieldUpdateOperationsInput | string
+  capitalContribution?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  distributions?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  stockBasis?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  debtBasis?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  partnerCapitalStart?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  bookTaxDelta?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
   notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   profile?: Prisma.BusinessProfileUpdateOneRequiredWithoutOwnersNestedInput
 }
 
@@ -391,13 +640,28 @@ export type OwnerUncheckedUpdateInput = {
   profileId?: Prisma.StringFieldUpdateOperationsInput | string
   kind?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.StringFieldUpdateOperationsInput | string
+  email?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   ssnLast4?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   ein?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   ownershipPct?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   w2Wages?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
   guaranteedPayments?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  addressLine1?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  addressLine2?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  stateRegion?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  postalCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  countryCode?: Prisma.StringFieldUpdateOperationsInput | string
+  capitalContribution?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  distributions?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  stockBasis?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  debtBasis?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  partnerCapitalStart?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  bookTaxDelta?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
   notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
 
 export type OwnerCreateManyInput = {
@@ -405,26 +669,56 @@ export type OwnerCreateManyInput = {
   profileId: string
   kind: string
   name: string
+  email?: string | null
   ssnLast4?: string | null
   ein?: string | null
   ownershipPct: runtime.Decimal | runtime.DecimalJsLike | number | string
   w2Wages?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
   guaranteedPayments?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  addressLine1?: string | null
+  addressLine2?: string | null
+  city?: string | null
+  stateRegion?: string | null
+  postalCode?: string | null
+  countryCode?: string
+  capitalContribution?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  distributions?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  stockBasis?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  debtBasis?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  partnerCapitalStart?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  bookTaxDelta?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
   notes?: string | null
+  isActive?: boolean
   createdAt?: Date | string
+  updatedAt?: Date | string
 }
 
 export type OwnerUpdateManyMutationInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   kind?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.StringFieldUpdateOperationsInput | string
+  email?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   ssnLast4?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   ein?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   ownershipPct?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   w2Wages?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
   guaranteedPayments?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  addressLine1?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  addressLine2?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  stateRegion?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  postalCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  countryCode?: Prisma.StringFieldUpdateOperationsInput | string
+  capitalContribution?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  distributions?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  stockBasis?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  debtBasis?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  partnerCapitalStart?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  bookTaxDelta?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
   notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
 
 export type OwnerUncheckedUpdateManyInput = {
@@ -432,13 +726,28 @@ export type OwnerUncheckedUpdateManyInput = {
   profileId?: Prisma.StringFieldUpdateOperationsInput | string
   kind?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.StringFieldUpdateOperationsInput | string
+  email?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   ssnLast4?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   ein?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   ownershipPct?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   w2Wages?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
   guaranteedPayments?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  addressLine1?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  addressLine2?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  stateRegion?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  postalCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  countryCode?: Prisma.StringFieldUpdateOperationsInput | string
+  capitalContribution?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  distributions?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  stockBasis?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  debtBasis?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  partnerCapitalStart?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  bookTaxDelta?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
   notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
 
 export type OwnerListRelationFilter = {
@@ -456,19 +765,40 @@ export type OwnerCountOrderByAggregateInput = {
   profileId?: Prisma.SortOrder
   kind?: Prisma.SortOrder
   name?: Prisma.SortOrder
+  email?: Prisma.SortOrder
   ssnLast4?: Prisma.SortOrder
   ein?: Prisma.SortOrder
   ownershipPct?: Prisma.SortOrder
   w2Wages?: Prisma.SortOrder
   guaranteedPayments?: Prisma.SortOrder
+  addressLine1?: Prisma.SortOrder
+  addressLine2?: Prisma.SortOrder
+  city?: Prisma.SortOrder
+  stateRegion?: Prisma.SortOrder
+  postalCode?: Prisma.SortOrder
+  countryCode?: Prisma.SortOrder
+  capitalContribution?: Prisma.SortOrder
+  distributions?: Prisma.SortOrder
+  stockBasis?: Prisma.SortOrder
+  debtBasis?: Prisma.SortOrder
+  partnerCapitalStart?: Prisma.SortOrder
+  bookTaxDelta?: Prisma.SortOrder
   notes?: Prisma.SortOrder
+  isActive?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
+  updatedAt?: Prisma.SortOrder
 }
 
 export type OwnerAvgOrderByAggregateInput = {
   ownershipPct?: Prisma.SortOrder
   w2Wages?: Prisma.SortOrder
   guaranteedPayments?: Prisma.SortOrder
+  capitalContribution?: Prisma.SortOrder
+  distributions?: Prisma.SortOrder
+  stockBasis?: Prisma.SortOrder
+  debtBasis?: Prisma.SortOrder
+  partnerCapitalStart?: Prisma.SortOrder
+  bookTaxDelta?: Prisma.SortOrder
 }
 
 export type OwnerMaxOrderByAggregateInput = {
@@ -476,13 +806,28 @@ export type OwnerMaxOrderByAggregateInput = {
   profileId?: Prisma.SortOrder
   kind?: Prisma.SortOrder
   name?: Prisma.SortOrder
+  email?: Prisma.SortOrder
   ssnLast4?: Prisma.SortOrder
   ein?: Prisma.SortOrder
   ownershipPct?: Prisma.SortOrder
   w2Wages?: Prisma.SortOrder
   guaranteedPayments?: Prisma.SortOrder
+  addressLine1?: Prisma.SortOrder
+  addressLine2?: Prisma.SortOrder
+  city?: Prisma.SortOrder
+  stateRegion?: Prisma.SortOrder
+  postalCode?: Prisma.SortOrder
+  countryCode?: Prisma.SortOrder
+  capitalContribution?: Prisma.SortOrder
+  distributions?: Prisma.SortOrder
+  stockBasis?: Prisma.SortOrder
+  debtBasis?: Prisma.SortOrder
+  partnerCapitalStart?: Prisma.SortOrder
+  bookTaxDelta?: Prisma.SortOrder
   notes?: Prisma.SortOrder
+  isActive?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
+  updatedAt?: Prisma.SortOrder
 }
 
 export type OwnerMinOrderByAggregateInput = {
@@ -490,19 +835,40 @@ export type OwnerMinOrderByAggregateInput = {
   profileId?: Prisma.SortOrder
   kind?: Prisma.SortOrder
   name?: Prisma.SortOrder
+  email?: Prisma.SortOrder
   ssnLast4?: Prisma.SortOrder
   ein?: Prisma.SortOrder
   ownershipPct?: Prisma.SortOrder
   w2Wages?: Prisma.SortOrder
   guaranteedPayments?: Prisma.SortOrder
+  addressLine1?: Prisma.SortOrder
+  addressLine2?: Prisma.SortOrder
+  city?: Prisma.SortOrder
+  stateRegion?: Prisma.SortOrder
+  postalCode?: Prisma.SortOrder
+  countryCode?: Prisma.SortOrder
+  capitalContribution?: Prisma.SortOrder
+  distributions?: Prisma.SortOrder
+  stockBasis?: Prisma.SortOrder
+  debtBasis?: Prisma.SortOrder
+  partnerCapitalStart?: Prisma.SortOrder
+  bookTaxDelta?: Prisma.SortOrder
   notes?: Prisma.SortOrder
+  isActive?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
+  updatedAt?: Prisma.SortOrder
 }
 
 export type OwnerSumOrderByAggregateInput = {
   ownershipPct?: Prisma.SortOrder
   w2Wages?: Prisma.SortOrder
   guaranteedPayments?: Prisma.SortOrder
+  capitalContribution?: Prisma.SortOrder
+  distributions?: Prisma.SortOrder
+  stockBasis?: Prisma.SortOrder
+  debtBasis?: Prisma.SortOrder
+  partnerCapitalStart?: Prisma.SortOrder
+  bookTaxDelta?: Prisma.SortOrder
 }
 
 export type OwnerCreateNestedManyWithoutProfileInput = {
@@ -559,26 +925,56 @@ export type OwnerCreateWithoutProfileInput = {
   id?: string
   kind: string
   name: string
+  email?: string | null
   ssnLast4?: string | null
   ein?: string | null
   ownershipPct: runtime.Decimal | runtime.DecimalJsLike | number | string
   w2Wages?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
   guaranteedPayments?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  addressLine1?: string | null
+  addressLine2?: string | null
+  city?: string | null
+  stateRegion?: string | null
+  postalCode?: string | null
+  countryCode?: string
+  capitalContribution?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  distributions?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  stockBasis?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  debtBasis?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  partnerCapitalStart?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  bookTaxDelta?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
   notes?: string | null
+  isActive?: boolean
   createdAt?: Date | string
+  updatedAt?: Date | string
 }
 
 export type OwnerUncheckedCreateWithoutProfileInput = {
   id?: string
   kind: string
   name: string
+  email?: string | null
   ssnLast4?: string | null
   ein?: string | null
   ownershipPct: runtime.Decimal | runtime.DecimalJsLike | number | string
   w2Wages?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
   guaranteedPayments?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  addressLine1?: string | null
+  addressLine2?: string | null
+  city?: string | null
+  stateRegion?: string | null
+  postalCode?: string | null
+  countryCode?: string
+  capitalContribution?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  distributions?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  stockBasis?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  debtBasis?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  partnerCapitalStart?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  bookTaxDelta?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
   notes?: string | null
+  isActive?: boolean
   createdAt?: Date | string
+  updatedAt?: Date | string
 }
 
 export type OwnerCreateOrConnectWithoutProfileInput = {
@@ -615,65 +1011,140 @@ export type OwnerScalarWhereInput = {
   profileId?: Prisma.StringFilter<"Owner"> | string
   kind?: Prisma.StringFilter<"Owner"> | string
   name?: Prisma.StringFilter<"Owner"> | string
+  email?: Prisma.StringNullableFilter<"Owner"> | string | null
   ssnLast4?: Prisma.StringNullableFilter<"Owner"> | string | null
   ein?: Prisma.StringNullableFilter<"Owner"> | string | null
   ownershipPct?: Prisma.DecimalFilter<"Owner"> | runtime.Decimal | runtime.DecimalJsLike | number | string
   w2Wages?: Prisma.DecimalNullableFilter<"Owner"> | runtime.Decimal | runtime.DecimalJsLike | number | string | null
   guaranteedPayments?: Prisma.DecimalNullableFilter<"Owner"> | runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  addressLine1?: Prisma.StringNullableFilter<"Owner"> | string | null
+  addressLine2?: Prisma.StringNullableFilter<"Owner"> | string | null
+  city?: Prisma.StringNullableFilter<"Owner"> | string | null
+  stateRegion?: Prisma.StringNullableFilter<"Owner"> | string | null
+  postalCode?: Prisma.StringNullableFilter<"Owner"> | string | null
+  countryCode?: Prisma.StringFilter<"Owner"> | string
+  capitalContribution?: Prisma.DecimalNullableFilter<"Owner"> | runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  distributions?: Prisma.DecimalNullableFilter<"Owner"> | runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  stockBasis?: Prisma.DecimalNullableFilter<"Owner"> | runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  debtBasis?: Prisma.DecimalNullableFilter<"Owner"> | runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  partnerCapitalStart?: Prisma.DecimalNullableFilter<"Owner"> | runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  bookTaxDelta?: Prisma.DecimalNullableFilter<"Owner"> | runtime.Decimal | runtime.DecimalJsLike | number | string | null
   notes?: Prisma.StringNullableFilter<"Owner"> | string | null
+  isActive?: Prisma.BoolFilter<"Owner"> | boolean
   createdAt?: Prisma.DateTimeFilter<"Owner"> | Date | string
+  updatedAt?: Prisma.DateTimeFilter<"Owner"> | Date | string
 }
 
 export type OwnerCreateManyProfileInput = {
   id?: string
   kind: string
   name: string
+  email?: string | null
   ssnLast4?: string | null
   ein?: string | null
   ownershipPct: runtime.Decimal | runtime.DecimalJsLike | number | string
   w2Wages?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
   guaranteedPayments?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  addressLine1?: string | null
+  addressLine2?: string | null
+  city?: string | null
+  stateRegion?: string | null
+  postalCode?: string | null
+  countryCode?: string
+  capitalContribution?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  distributions?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  stockBasis?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  debtBasis?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  partnerCapitalStart?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  bookTaxDelta?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
   notes?: string | null
+  isActive?: boolean
   createdAt?: Date | string
+  updatedAt?: Date | string
 }
 
 export type OwnerUpdateWithoutProfileInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   kind?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.StringFieldUpdateOperationsInput | string
+  email?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   ssnLast4?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   ein?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   ownershipPct?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   w2Wages?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
   guaranteedPayments?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  addressLine1?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  addressLine2?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  stateRegion?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  postalCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  countryCode?: Prisma.StringFieldUpdateOperationsInput | string
+  capitalContribution?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  distributions?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  stockBasis?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  debtBasis?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  partnerCapitalStart?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  bookTaxDelta?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
   notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
 
 export type OwnerUncheckedUpdateWithoutProfileInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   kind?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.StringFieldUpdateOperationsInput | string
+  email?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   ssnLast4?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   ein?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   ownershipPct?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   w2Wages?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
   guaranteedPayments?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  addressLine1?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  addressLine2?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  stateRegion?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  postalCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  countryCode?: Prisma.StringFieldUpdateOperationsInput | string
+  capitalContribution?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  distributions?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  stockBasis?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  debtBasis?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  partnerCapitalStart?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  bookTaxDelta?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
   notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
 
 export type OwnerUncheckedUpdateManyWithoutProfileInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   kind?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.StringFieldUpdateOperationsInput | string
+  email?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   ssnLast4?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   ein?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   ownershipPct?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   w2Wages?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
   guaranteedPayments?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  addressLine1?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  addressLine2?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  stateRegion?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  postalCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  countryCode?: Prisma.StringFieldUpdateOperationsInput | string
+  capitalContribution?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  distributions?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  stockBasis?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  debtBasis?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  partnerCapitalStart?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  bookTaxDelta?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
   notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
 
 
@@ -683,13 +1154,28 @@ export type OwnerSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = 
   profileId?: boolean
   kind?: boolean
   name?: boolean
+  email?: boolean
   ssnLast4?: boolean
   ein?: boolean
   ownershipPct?: boolean
   w2Wages?: boolean
   guaranteedPayments?: boolean
+  addressLine1?: boolean
+  addressLine2?: boolean
+  city?: boolean
+  stateRegion?: boolean
+  postalCode?: boolean
+  countryCode?: boolean
+  capitalContribution?: boolean
+  distributions?: boolean
+  stockBasis?: boolean
+  debtBasis?: boolean
+  partnerCapitalStart?: boolean
+  bookTaxDelta?: boolean
   notes?: boolean
+  isActive?: boolean
   createdAt?: boolean
+  updatedAt?: boolean
   profile?: boolean | Prisma.BusinessProfileDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["owner"]>
 
@@ -698,13 +1184,28 @@ export type OwnerSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Extensi
   profileId?: boolean
   kind?: boolean
   name?: boolean
+  email?: boolean
   ssnLast4?: boolean
   ein?: boolean
   ownershipPct?: boolean
   w2Wages?: boolean
   guaranteedPayments?: boolean
+  addressLine1?: boolean
+  addressLine2?: boolean
+  city?: boolean
+  stateRegion?: boolean
+  postalCode?: boolean
+  countryCode?: boolean
+  capitalContribution?: boolean
+  distributions?: boolean
+  stockBasis?: boolean
+  debtBasis?: boolean
+  partnerCapitalStart?: boolean
+  bookTaxDelta?: boolean
   notes?: boolean
+  isActive?: boolean
   createdAt?: boolean
+  updatedAt?: boolean
   profile?: boolean | Prisma.BusinessProfileDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["owner"]>
 
@@ -713,13 +1214,28 @@ export type OwnerSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensi
   profileId?: boolean
   kind?: boolean
   name?: boolean
+  email?: boolean
   ssnLast4?: boolean
   ein?: boolean
   ownershipPct?: boolean
   w2Wages?: boolean
   guaranteedPayments?: boolean
+  addressLine1?: boolean
+  addressLine2?: boolean
+  city?: boolean
+  stateRegion?: boolean
+  postalCode?: boolean
+  countryCode?: boolean
+  capitalContribution?: boolean
+  distributions?: boolean
+  stockBasis?: boolean
+  debtBasis?: boolean
+  partnerCapitalStart?: boolean
+  bookTaxDelta?: boolean
   notes?: boolean
+  isActive?: boolean
   createdAt?: boolean
+  updatedAt?: boolean
   profile?: boolean | Prisma.BusinessProfileDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["owner"]>
 
@@ -728,16 +1244,31 @@ export type OwnerSelectScalar = {
   profileId?: boolean
   kind?: boolean
   name?: boolean
+  email?: boolean
   ssnLast4?: boolean
   ein?: boolean
   ownershipPct?: boolean
   w2Wages?: boolean
   guaranteedPayments?: boolean
+  addressLine1?: boolean
+  addressLine2?: boolean
+  city?: boolean
+  stateRegion?: boolean
+  postalCode?: boolean
+  countryCode?: boolean
+  capitalContribution?: boolean
+  distributions?: boolean
+  stockBasis?: boolean
+  debtBasis?: boolean
+  partnerCapitalStart?: boolean
+  bookTaxDelta?: boolean
   notes?: boolean
+  isActive?: boolean
   createdAt?: boolean
+  updatedAt?: boolean
 }
 
-export type OwnerOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "profileId" | "kind" | "name" | "ssnLast4" | "ein" | "ownershipPct" | "w2Wages" | "guaranteedPayments" | "notes" | "createdAt", ExtArgs["result"]["owner"]>
+export type OwnerOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "profileId" | "kind" | "name" | "email" | "ssnLast4" | "ein" | "ownershipPct" | "w2Wages" | "guaranteedPayments" | "addressLine1" | "addressLine2" | "city" | "stateRegion" | "postalCode" | "countryCode" | "capitalContribution" | "distributions" | "stockBasis" | "debtBasis" | "partnerCapitalStart" | "bookTaxDelta" | "notes" | "isActive" | "createdAt" | "updatedAt", ExtArgs["result"]["owner"]>
 export type OwnerInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   profile?: boolean | Prisma.BusinessProfileDefaultArgs<ExtArgs>
 }
@@ -758,13 +1289,18 @@ export type $OwnerPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs 
     profileId: string
     /**
      * * OFFICER (S-Corp officer-shareholder) | SHAREHOLDER (S-Corp non-officer) |
-     *    *  GENERAL_PARTNER | LIMITED_PARTNER | MEMBER (multi-member LLC)
+     *    *  GENERAL_PARTNER | LIMITED_PARTNER | MEMBER (multi-member LLC) |
+     *    *  PROPRIETOR (sole prop / SMLLC — auto-created from BusinessProfile)
      */
     kind: string
     /**
      * * Display name as it should appear on the K-1.
      */
     name: string
+    /**
+     * * Email — required for K-1 / engagement letter / 8879 secure-link delivery.
+     */
+    email: string | null
     /**
      * * Last 4 of SSN — full SSN never stored.
      */
@@ -786,10 +1322,41 @@ export type $OwnerPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs 
      */
     guaranteedPayments: runtime.Decimal | null
     /**
+     * * Mailing address — K-1 box A recipient, 1099 issuance, engagement
+     *    *  letter mailing.
+     */
+    addressLine1: string | null
+    addressLine2: string | null
+    city: string | null
+    stateRegion: string | null
+    postalCode: string | null
+    countryCode: string
+    /**
+     * * Capital contribution (cumulative) and distributions during the year —
+     *    *  drive Schedule M-2 / K-1 capital roll-forward.
+     */
+    capitalContribution: runtime.Decimal | null
+    distributions: runtime.Decimal | null
+    /**
+     * * S-Corp specific: stock + debt basis at start of year (per shareholder).
+     *    *  Source for §1366 / §1367 basis tracking carried forward via
+     *    *  PriorYearContext.shareholderBasis.
+     */
+    stockBasis: runtime.Decimal | null
+    debtBasis: runtime.Decimal | null
+    /**
+     * * Partnership specific: §704(b) capital balance at year-start (per
+     *    *  partner) + §704(c) built-in gain/loss on contributed property.
+     */
+    partnerCapitalStart: runtime.Decimal | null
+    bookTaxDelta: runtime.Decimal | null
+    /**
      * * Free-text CPA notes — capital account roll-forward, special allocations.
      */
     notes: string | null
+    isActive: boolean
     createdAt: Date
+    updatedAt: Date
   }, ExtArgs["result"]["owner"]>
   composites: {}
 }
@@ -1218,13 +1785,28 @@ export interface OwnerFieldRefs {
   readonly profileId: Prisma.FieldRef<"Owner", 'String'>
   readonly kind: Prisma.FieldRef<"Owner", 'String'>
   readonly name: Prisma.FieldRef<"Owner", 'String'>
+  readonly email: Prisma.FieldRef<"Owner", 'String'>
   readonly ssnLast4: Prisma.FieldRef<"Owner", 'String'>
   readonly ein: Prisma.FieldRef<"Owner", 'String'>
   readonly ownershipPct: Prisma.FieldRef<"Owner", 'Decimal'>
   readonly w2Wages: Prisma.FieldRef<"Owner", 'Decimal'>
   readonly guaranteedPayments: Prisma.FieldRef<"Owner", 'Decimal'>
+  readonly addressLine1: Prisma.FieldRef<"Owner", 'String'>
+  readonly addressLine2: Prisma.FieldRef<"Owner", 'String'>
+  readonly city: Prisma.FieldRef<"Owner", 'String'>
+  readonly stateRegion: Prisma.FieldRef<"Owner", 'String'>
+  readonly postalCode: Prisma.FieldRef<"Owner", 'String'>
+  readonly countryCode: Prisma.FieldRef<"Owner", 'String'>
+  readonly capitalContribution: Prisma.FieldRef<"Owner", 'Decimal'>
+  readonly distributions: Prisma.FieldRef<"Owner", 'Decimal'>
+  readonly stockBasis: Prisma.FieldRef<"Owner", 'Decimal'>
+  readonly debtBasis: Prisma.FieldRef<"Owner", 'Decimal'>
+  readonly partnerCapitalStart: Prisma.FieldRef<"Owner", 'Decimal'>
+  readonly bookTaxDelta: Prisma.FieldRef<"Owner", 'Decimal'>
   readonly notes: Prisma.FieldRef<"Owner", 'String'>
+  readonly isActive: Prisma.FieldRef<"Owner", 'Boolean'>
   readonly createdAt: Prisma.FieldRef<"Owner", 'DateTime'>
+  readonly updatedAt: Prisma.FieldRef<"Owner", 'DateTime'>
 }
     
 

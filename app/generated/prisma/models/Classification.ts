@@ -289,6 +289,7 @@ export type ClassificationWhereInput = {
   createdAt?: Prisma.DateTimeFilter<"Classification"> | Date | string
   createdByUserId?: Prisma.StringNullableFilter<"Classification"> | string | null
   transaction?: Prisma.XOR<Prisma.TransactionScalarRelationFilter, Prisma.TransactionWhereInput>
+  cpaNotes?: Prisma.ClassificationNoteListRelationFilter
 }
 
 export type ClassificationOrderByWithRelationInput = {
@@ -307,6 +308,7 @@ export type ClassificationOrderByWithRelationInput = {
   createdAt?: Prisma.SortOrder
   createdByUserId?: Prisma.SortOrderInput | Prisma.SortOrder
   transaction?: Prisma.TransactionOrderByWithRelationInput
+  cpaNotes?: Prisma.ClassificationNoteOrderByRelationAggregateInput
 }
 
 export type ClassificationWhereUniqueInput = Prisma.AtLeast<{
@@ -328,6 +330,7 @@ export type ClassificationWhereUniqueInput = Prisma.AtLeast<{
   createdAt?: Prisma.DateTimeFilter<"Classification"> | Date | string
   createdByUserId?: Prisma.StringNullableFilter<"Classification"> | string | null
   transaction?: Prisma.XOR<Prisma.TransactionScalarRelationFilter, Prisma.TransactionWhereInput>
+  cpaNotes?: Prisma.ClassificationNoteListRelationFilter
 }, "id">
 
 export type ClassificationOrderByWithAggregationInput = {
@@ -387,6 +390,7 @@ export type ClassificationCreateInput = {
   createdAt?: Date | string
   createdByUserId?: string | null
   transaction: Prisma.TransactionCreateNestedOneWithoutClassificationsInput
+  cpaNotes?: Prisma.ClassificationNoteCreateNestedManyWithoutClassificationInput
 }
 
 export type ClassificationUncheckedCreateInput = {
@@ -404,6 +408,7 @@ export type ClassificationUncheckedCreateInput = {
   isCurrent?: boolean
   createdAt?: Date | string
   createdByUserId?: string | null
+  cpaNotes?: Prisma.ClassificationNoteUncheckedCreateNestedManyWithoutClassificationInput
 }
 
 export type ClassificationUpdateInput = {
@@ -421,6 +426,7 @@ export type ClassificationUpdateInput = {
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   createdByUserId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   transaction?: Prisma.TransactionUpdateOneRequiredWithoutClassificationsNestedInput
+  cpaNotes?: Prisma.ClassificationNoteUpdateManyWithoutClassificationNestedInput
 }
 
 export type ClassificationUncheckedUpdateInput = {
@@ -438,6 +444,7 @@ export type ClassificationUncheckedUpdateInput = {
   isCurrent?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   createdByUserId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  cpaNotes?: Prisma.ClassificationNoteUncheckedUpdateManyWithoutClassificationNestedInput
 }
 
 export type ClassificationCreateManyInput = {
@@ -559,6 +566,11 @@ export type ClassificationSumOrderByAggregateInput = {
   evidenceTier?: Prisma.SortOrder
 }
 
+export type ClassificationScalarRelationFilter = {
+  is?: Prisma.ClassificationWhereInput
+  isNot?: Prisma.ClassificationWhereInput
+}
+
 export type ClassificationCreateNestedManyWithoutTransactionInput = {
   create?: Prisma.XOR<Prisma.ClassificationCreateWithoutTransactionInput, Prisma.ClassificationUncheckedCreateWithoutTransactionInput> | Prisma.ClassificationCreateWithoutTransactionInput[] | Prisma.ClassificationUncheckedCreateWithoutTransactionInput[]
   connectOrCreate?: Prisma.ClassificationCreateOrConnectWithoutTransactionInput | Prisma.ClassificationCreateOrConnectWithoutTransactionInput[]
@@ -626,6 +638,20 @@ export type EnumClassificationSourceFieldUpdateOperationsInput = {
   set?: $Enums.ClassificationSource
 }
 
+export type ClassificationCreateNestedOneWithoutCpaNotesInput = {
+  create?: Prisma.XOR<Prisma.ClassificationCreateWithoutCpaNotesInput, Prisma.ClassificationUncheckedCreateWithoutCpaNotesInput>
+  connectOrCreate?: Prisma.ClassificationCreateOrConnectWithoutCpaNotesInput
+  connect?: Prisma.ClassificationWhereUniqueInput
+}
+
+export type ClassificationUpdateOneRequiredWithoutCpaNotesNestedInput = {
+  create?: Prisma.XOR<Prisma.ClassificationCreateWithoutCpaNotesInput, Prisma.ClassificationUncheckedCreateWithoutCpaNotesInput>
+  connectOrCreate?: Prisma.ClassificationCreateOrConnectWithoutCpaNotesInput
+  upsert?: Prisma.ClassificationUpsertWithoutCpaNotesInput
+  connect?: Prisma.ClassificationWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.ClassificationUpdateToOneWithWhereWithoutCpaNotesInput, Prisma.ClassificationUpdateWithoutCpaNotesInput>, Prisma.ClassificationUncheckedUpdateWithoutCpaNotesInput>
+}
+
 export type ClassificationCreateWithoutTransactionInput = {
   id?: string
   code: $Enums.TransactionCode
@@ -640,6 +666,7 @@ export type ClassificationCreateWithoutTransactionInput = {
   isCurrent?: boolean
   createdAt?: Date | string
   createdByUserId?: string | null
+  cpaNotes?: Prisma.ClassificationNoteCreateNestedManyWithoutClassificationInput
 }
 
 export type ClassificationUncheckedCreateWithoutTransactionInput = {
@@ -656,6 +683,7 @@ export type ClassificationUncheckedCreateWithoutTransactionInput = {
   isCurrent?: boolean
   createdAt?: Date | string
   createdByUserId?: string | null
+  cpaNotes?: Prisma.ClassificationNoteUncheckedCreateNestedManyWithoutClassificationInput
 }
 
 export type ClassificationCreateOrConnectWithoutTransactionInput = {
@@ -704,6 +732,90 @@ export type ClassificationScalarWhereInput = {
   createdByUserId?: Prisma.StringNullableFilter<"Classification"> | string | null
 }
 
+export type ClassificationCreateWithoutCpaNotesInput = {
+  id?: string
+  code: $Enums.TransactionCode
+  scheduleCLine?: string | null
+  businessPct: number
+  ircCitations?: Prisma.ClassificationCreateircCitationsInput | string[]
+  confidence: number
+  evidenceTier: number
+  source: $Enums.ClassificationSource
+  reasoning?: string | null
+  substantiation?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  isCurrent?: boolean
+  createdAt?: Date | string
+  createdByUserId?: string | null
+  transaction: Prisma.TransactionCreateNestedOneWithoutClassificationsInput
+}
+
+export type ClassificationUncheckedCreateWithoutCpaNotesInput = {
+  id?: string
+  transactionId: string
+  code: $Enums.TransactionCode
+  scheduleCLine?: string | null
+  businessPct: number
+  ircCitations?: Prisma.ClassificationCreateircCitationsInput | string[]
+  confidence: number
+  evidenceTier: number
+  source: $Enums.ClassificationSource
+  reasoning?: string | null
+  substantiation?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  isCurrent?: boolean
+  createdAt?: Date | string
+  createdByUserId?: string | null
+}
+
+export type ClassificationCreateOrConnectWithoutCpaNotesInput = {
+  where: Prisma.ClassificationWhereUniqueInput
+  create: Prisma.XOR<Prisma.ClassificationCreateWithoutCpaNotesInput, Prisma.ClassificationUncheckedCreateWithoutCpaNotesInput>
+}
+
+export type ClassificationUpsertWithoutCpaNotesInput = {
+  update: Prisma.XOR<Prisma.ClassificationUpdateWithoutCpaNotesInput, Prisma.ClassificationUncheckedUpdateWithoutCpaNotesInput>
+  create: Prisma.XOR<Prisma.ClassificationCreateWithoutCpaNotesInput, Prisma.ClassificationUncheckedCreateWithoutCpaNotesInput>
+  where?: Prisma.ClassificationWhereInput
+}
+
+export type ClassificationUpdateToOneWithWhereWithoutCpaNotesInput = {
+  where?: Prisma.ClassificationWhereInput
+  data: Prisma.XOR<Prisma.ClassificationUpdateWithoutCpaNotesInput, Prisma.ClassificationUncheckedUpdateWithoutCpaNotesInput>
+}
+
+export type ClassificationUpdateWithoutCpaNotesInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  code?: Prisma.EnumTransactionCodeFieldUpdateOperationsInput | $Enums.TransactionCode
+  scheduleCLine?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  businessPct?: Prisma.IntFieldUpdateOperationsInput | number
+  ircCitations?: Prisma.ClassificationUpdateircCitationsInput | string[]
+  confidence?: Prisma.FloatFieldUpdateOperationsInput | number
+  evidenceTier?: Prisma.IntFieldUpdateOperationsInput | number
+  source?: Prisma.EnumClassificationSourceFieldUpdateOperationsInput | $Enums.ClassificationSource
+  reasoning?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  substantiation?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  isCurrent?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  createdByUserId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  transaction?: Prisma.TransactionUpdateOneRequiredWithoutClassificationsNestedInput
+}
+
+export type ClassificationUncheckedUpdateWithoutCpaNotesInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  transactionId?: Prisma.StringFieldUpdateOperationsInput | string
+  code?: Prisma.EnumTransactionCodeFieldUpdateOperationsInput | $Enums.TransactionCode
+  scheduleCLine?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  businessPct?: Prisma.IntFieldUpdateOperationsInput | number
+  ircCitations?: Prisma.ClassificationUpdateircCitationsInput | string[]
+  confidence?: Prisma.FloatFieldUpdateOperationsInput | number
+  evidenceTier?: Prisma.IntFieldUpdateOperationsInput | number
+  source?: Prisma.EnumClassificationSourceFieldUpdateOperationsInput | $Enums.ClassificationSource
+  reasoning?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  substantiation?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  isCurrent?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  createdByUserId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+}
+
 export type ClassificationCreateManyTransactionInput = {
   id?: string
   code: $Enums.TransactionCode
@@ -734,6 +846,7 @@ export type ClassificationUpdateWithoutTransactionInput = {
   isCurrent?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   createdByUserId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  cpaNotes?: Prisma.ClassificationNoteUpdateManyWithoutClassificationNestedInput
 }
 
 export type ClassificationUncheckedUpdateWithoutTransactionInput = {
@@ -750,6 +863,7 @@ export type ClassificationUncheckedUpdateWithoutTransactionInput = {
   isCurrent?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   createdByUserId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  cpaNotes?: Prisma.ClassificationNoteUncheckedUpdateManyWithoutClassificationNestedInput
 }
 
 export type ClassificationUncheckedUpdateManyWithoutTransactionInput = {
@@ -769,6 +883,35 @@ export type ClassificationUncheckedUpdateManyWithoutTransactionInput = {
 }
 
 
+/**
+ * Count Type ClassificationCountOutputType
+ */
+
+export type ClassificationCountOutputType = {
+  cpaNotes: number
+}
+
+export type ClassificationCountOutputTypeSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  cpaNotes?: boolean | ClassificationCountOutputTypeCountCpaNotesArgs
+}
+
+/**
+ * ClassificationCountOutputType without action
+ */
+export type ClassificationCountOutputTypeDefaultArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the ClassificationCountOutputType
+   */
+  select?: Prisma.ClassificationCountOutputTypeSelect<ExtArgs> | null
+}
+
+/**
+ * ClassificationCountOutputType without action
+ */
+export type ClassificationCountOutputTypeCountCpaNotesArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.ClassificationNoteWhereInput
+}
+
 
 export type ClassificationSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   id?: boolean
@@ -786,6 +929,8 @@ export type ClassificationSelect<ExtArgs extends runtime.Types.Extensions.Intern
   createdAt?: boolean
   createdByUserId?: boolean
   transaction?: boolean | Prisma.TransactionDefaultArgs<ExtArgs>
+  cpaNotes?: boolean | Prisma.Classification$cpaNotesArgs<ExtArgs>
+  _count?: boolean | Prisma.ClassificationCountOutputTypeDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["classification"]>
 
 export type ClassificationSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
@@ -844,6 +989,8 @@ export type ClassificationSelectScalar = {
 export type ClassificationOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "transactionId" | "code" | "scheduleCLine" | "businessPct" | "ircCitations" | "confidence" | "evidenceTier" | "source" | "reasoning" | "substantiation" | "isCurrent" | "createdAt" | "createdByUserId", ExtArgs["result"]["classification"]>
 export type ClassificationInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   transaction?: boolean | Prisma.TransactionDefaultArgs<ExtArgs>
+  cpaNotes?: boolean | Prisma.Classification$cpaNotesArgs<ExtArgs>
+  _count?: boolean | Prisma.ClassificationCountOutputTypeDefaultArgs<ExtArgs>
 }
 export type ClassificationIncludeCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   transaction?: boolean | Prisma.TransactionDefaultArgs<ExtArgs>
@@ -856,6 +1003,7 @@ export type $ClassificationPayload<ExtArgs extends runtime.Types.Extensions.Inte
   name: "Classification"
   objects: {
     transaction: Prisma.$TransactionPayload<ExtArgs>
+    cpaNotes: Prisma.$ClassificationNotePayload<ExtArgs>[]
   }
   scalars: runtime.Types.Extensions.GetPayloadResult<{
     id: string
@@ -1267,6 +1415,7 @@ readonly fields: ClassificationFieldRefs;
 export interface Prisma__ClassificationClient<T, Null = never, ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
   readonly [Symbol.toStringTag]: "PrismaPromise"
   transaction<T extends Prisma.TransactionDefaultArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.TransactionDefaultArgs<ExtArgs>>): Prisma.Prisma__TransactionClient<runtime.Types.Result.GetResult<Prisma.$TransactionPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
+  cpaNotes<T extends Prisma.Classification$cpaNotesArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Classification$cpaNotesArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$ClassificationNotePayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   /**
    * Attaches callbacks for the resolution and/or rejection of the Promise.
    * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -1708,6 +1857,30 @@ export type ClassificationDeleteManyArgs<ExtArgs extends runtime.Types.Extension
    * Limit how many Classifications to delete.
    */
   limit?: number
+}
+
+/**
+ * Classification.cpaNotes
+ */
+export type Classification$cpaNotesArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the ClassificationNote
+   */
+  select?: Prisma.ClassificationNoteSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the ClassificationNote
+   */
+  omit?: Prisma.ClassificationNoteOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.ClassificationNoteInclude<ExtArgs> | null
+  where?: Prisma.ClassificationNoteWhereInput
+  orderBy?: Prisma.ClassificationNoteOrderByWithRelationInput | Prisma.ClassificationNoteOrderByWithRelationInput[]
+  cursor?: Prisma.ClassificationNoteWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.ClassificationNoteScalarFieldEnum | Prisma.ClassificationNoteScalarFieldEnum[]
 }
 
 /**

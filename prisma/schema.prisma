@@ -184,6 +184,52 @@ enum UserRole {
 // Document categories per the redesign brief §4.4. STATEMENT is reserved for
 // rare hand-uploaded raw statements that don't go through the parser pipeline;
 // the canonical statement record is StatementImport.
+// Owner relationship to the entity. SHAREHOLDER for S/C-Corp; PARTNER for
+// LLC-multi/Partnership; PROPRIETOR for SOLE_PROP/LLC_SINGLE (the taxpayer
+// themselves, single record auto-created on profile completion).
+enum OwnerRole {
+  PROPRIETOR
+  SHAREHOLDER
+  PARTNER
+}
+
+// Form 8879 / engagement letter signature state.
+enum SignatureStatus {
+  NOT_REQUESTED
+  REQUESTED
+  SIGNED
+  DECLINED
+  EXPIRED
+}
+
+// Where in the file/return lifecycle the year sits. Tracked separately from
+// TaxYearStatus (CREATED → INGESTION → CLASSIFICATION → REVIEW → LOCKED) —
+// LOCKED + filing-status fork into the engagement workflow.
+enum FilingStatus {
+  NOT_STARTED
+  ENGAGEMENT_SIGNED
+  TAXPAYER_8879_SIGNED
+  EFILED
+  ACCEPTED_BY_IRS
+  REJECTED_BY_IRS
+  PAPER_FILED
+  REFUND_RECEIVED
+  BALANCE_PAID
+}
+
+// W-9 collection state per contractor. PENDING_REQUEST → email sent;
+// RECEIVED → TIN on file; OVERRIDE_PERSONAL_INFO → CPA explicitly waived
+// (e.g., corporation exempt under Reg §1.6049-4(c)(1)(ii)).
+enum W9Status {
+  NOT_REQUESTED
+  REQUESTED
+  RECEIVED
+  EXEMPT
+}
+
+// Document categories per the redesign brief §4.4. STATEMENT is reserved for
+// rare hand-uploaded raw statements that don't go through the parser pipeline;
+// the canonical statement record is StatementImport.
 enum DocumentCategory {
   STATEMENT
   TAX_FORM_RECEIVED
@@ -239,6 +285,13 @@ model User {
 
   // A14 attestations the user (typically CPA) has made
   inactiveMonthAttestations AccountInactiveMonth[]
+
+  // Phase 6 — engagement / filing
+  engagementLettersAsCpa EngagementLetter[]    @relation("EngagementLetterCpa")
+  filingMilestones       FilingMilestone[]     @relation("FilingMilestoneUser")
+
+  // Phase 7 — per-classification notes authored
+  classificationNotes    ClassificationNote[]  @relation("ClassificationNoteAuthor")
 }
 
 model CpaClient {
@@ -343,6 +396,21 @@ model TaxYear {
   pipelineRuns      PipelineRun[]
   inactiveMonths    AccountInactiveMonth[]
 
+  // Phase 4 — carryforward (this year's PriorYearContext + back-references
+  // from any years that consumed THIS year's locked snapshot). Owners
+  // attach to BusinessProfile, not TaxYear directly.
+  priorYearContext  PriorYearContext?  @relation("PYC_taxYear")
+  consumedByContexts PriorYearContext[] @relation("PYC_sourceYear")
+
+  // Phase 6 — engagement / 8879 / filing milestones
+  engagementLetter  EngagementLetter?
+  form8879          Form8879?
+  filingMilestones  FilingMilestone[]
+
+  // Phase 2.3 — 1099 issuance
+  w9Submissions     W9Submission[]
+  form1099Filings   Form1099Filing[]
+
   @@unique([userId, year])
 }
 
@@ -428,10 +496,13 @@ model Owner {
   id           String   @id @default(cuid())
   profileId    String
   /** OFFICER (S-Corp officer-shareholder) | SHAREHOLDER (S-Corp non-officer) |
-   *  GENERAL_PARTNER | LIMITED_PARTNER | MEMBER (multi-member LLC) */
+   *  GENERAL_PARTNER | LIMITED_PARTNER | MEMBER (multi-member LLC) |
+   *  PROPRIETOR (sole prop / SMLLC — auto-created from BusinessProfile) */
   kind         String
   /** Display name as it should appear on the K-1. */
   name         String
+  /** Email — required for K-1 / engagement letter / 8879 secure-link delivery. */
+  email        String?
   /** Last 4 of SSN — full SSN never stored. */
   ssnLast4     String?
   /** EIN if the owner is an entity (e.g., a trust holding S-Corp stock). */
@@ -442,13 +513,42 @@ model Owner {
   w2Wages      Decimal? @db.Decimal(15, 2)
   /** Partnership general-partner guaranteed payments (1065 line 10). */
   guaranteedPayments Decimal? @db.Decimal(15, 2)
+
+  /** Mailing address — K-1 box A recipient, 1099 issuance, engagement
+   *  letter mailing. */
+  addressLine1 String?
+  addressLine2 String?
+  city         String?
+  stateRegion  String?
+  postalCode   String?
+  countryCode  String   @default("US")
+
+  /** Capital contribution (cumulative) and distributions during the year —
+   *  drive Schedule M-2 / K-1 capital roll-forward. */
+  capitalContribution Decimal? @db.Decimal(15, 2)
+  distributions       Decimal? @db.Decimal(15, 2)
+
+  /** S-Corp specific: stock + debt basis at start of year (per shareholder).
+   *  Source for §1366 / §1367 basis tracking carried forward via
+   *  PriorYearContext.shareholderBasis. */
+  stockBasis Decimal? @db.Decimal(15, 2)
+  debtBasis  Decimal? @db.Decimal(15, 2)
+
+  /** Partnership specific: §704(b) capital balance at year-start (per
+   *  partner) + §704(c) built-in gain/loss on contributed property. */
+  partnerCapitalStart Decimal? @db.Decimal(15, 2)
+  bookTaxDelta        Decimal? @db.Decimal(15, 2)
+
   /** Free-text CPA notes — capital account roll-forward, special allocations. */
   notes        String?
+  isActive     Boolean  @default(true)
   createdAt    DateTime @default(now())
+  updatedAt    DateTime @default(now()) @updatedAt
 
   profile BusinessProfile @relation(fields: [profileId], references: [id], onDelete: Cascade)
 
   @@index([profileId])
+  @@index([profileId, kind])
 }
 
 // ---------------------------------------------------------------------------
@@ -718,6 +818,9 @@ model Classification {
 
   transaction Transaction @relation(fields: [transactionId], references: [id])
 
+  // Phase 7 — CPA notes attached to this classification (append-only).
+  cpaNotes    ClassificationNote[]
+
   // Spec §5.1 index
   @@index([transactionId, isCurrent])
 }
@@ -867,4 +970,228 @@ model Document {
   @@index([userId, category])
   @@index([taxYearId])
   @@index([uploadedByUserId, uploadedAt(sort: Desc)])
+}
+
+// ===========================================================================
+// PHASE 4 — CARRYFORWARD ENGINE (PriorYearContext)
+// ===========================================================================
+//
+// One row per TaxYear (created automatically when a TaxYear is locked OR
+// when the next year's TaxYear is created). Captures everything the next
+// year needs from the prior year's locked snapshot.
+//
+// sourcePriorYearId nullable — first year for a taxpayer has no source.
+// sourceLockedHash captures the prior year's lockedSnapshotHash so we can
+// detect drift if the prior year is unlocked-and-relocked (the carryforward
+// becomes stale and must be regenerated).
+
+model PriorYearContext {
+  id                       String   @id @default(cuid())
+  // The year THIS context FEEDS (i.e. the consuming year).
+  taxYearId                String   @unique
+  // Where the carryforward DATA came FROM (the prior year). Null for first
+  // year of a taxpayer's history.
+  sourcePriorYearId        String?
+  sourceLockedHash         String?
+  // §172 NOL carryforward (cumulative). Post-TCJA: no carryback, indefinite
+  // carryforward, 80% taxable-income limitation.
+  netOperatingLoss         Decimal? @db.Decimal(15, 2)
+  // §179 carryover where deduction exceeded business income limit.
+  section179Carryover      Decimal? @db.Decimal(15, 2)
+  // §469 suspended passive losses.
+  passiveLossCarryforward  Decimal? @db.Decimal(15, 2)
+  // Capital loss carryforwards — short and long term separated for Schedule D.
+  capitalLossShortTerm     Decimal? @db.Decimal(15, 2)
+  capitalLossLongTerm      Decimal? @db.Decimal(15, 2)
+  // §170(d) charitable carryforward by source year (5-year sunset).
+  charitableCarryforward   Json?
+  // §53 minimum tax (AMT) credit carryforward.
+  amtCreditCarryforward    Decimal? @db.Decimal(15, 2)
+  // §199A negative QBI carries forward as 199A loss.
+  qbiLossCarryforward      Decimal? @db.Decimal(15, 2)
+  // §163(j) interest expense carryforward (excess business interest).
+  section163jCarryforward  Decimal? @db.Decimal(15, 2)
+  // Per-asset depreciation schedule (basis, method, life, years remaining,
+  // accumulated depreciation). Shape: array of { assetId, description, ... }.
+  depreciationSchedule     Json?
+  // S-Corp shareholder basis (per-owner stock + debt basis).
+  shareholderBasis         Json?
+  // Partnership outside basis + §704(b) capital per partner.
+  partnerCapital           Json?
+  // Suspended losses by owner (S-Corp basis-limited; partnership at-risk).
+  suspendedLosses          Json?
+  computedAt               DateTime @default(now())
+
+  taxYear                  TaxYear  @relation("PYC_taxYear",       fields: [taxYearId],         references: [id], onDelete: Cascade)
+  sourcePriorYear          TaxYear? @relation("PYC_sourceYear",    fields: [sourcePriorYearId], references: [id])
+}
+
+// ===========================================================================
+// PHASE 6 — ENGAGEMENT WORKFLOW (Engagement Letter, Form 8879, Filing Status)
+// ===========================================================================
+
+// Engagement letter — captured per TaxYear. CPA drafts → client signs via
+// secure link (signing flow uses signatureToken). Signed PDF stored at
+// signedPdfPath. Required-but-not-blocking for lock today; gating may be
+// promoted later via a setting.
+model EngagementLetter {
+  id              String          @id @default(cuid())
+  taxYearId       String          @unique
+  // Markdown body — rendered at PDF time + presented to client.
+  bodyMarkdown    String
+  cpaUserId       String
+  cpaSignedAt     DateTime?
+  // Client-side signature flow.
+  clientSignedAt  DateTime?
+  clientName      String?
+  clientEmail     String?
+  signatureStatus SignatureStatus @default(NOT_REQUESTED)
+  // Token used in the magic-link the client receives. URL-safe random.
+  signatureToken  String?         @unique
+  signedPdfPath   String?
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+
+  taxYear         TaxYear         @relation(fields: [taxYearId], references: [id], onDelete: Cascade)
+  cpa             User            @relation("EngagementLetterCpa", fields: [cpaUserId], references: [id])
+}
+
+// Form 8879 — IRS e-file signature authorization. Auto-populated from the
+// locked Schedule C totals + taxpayer info, then signed by taxpayer.
+// Per Pub 1345, §1.3 — must be signed before the ERO transmits the return.
+// In our V1 we generate the form; transmission happens externally.
+model Form8879 {
+  id               String          @id @default(cuid())
+  taxYearId        String          @unique
+  // Snapshot of return totals — signed by taxpayer affirms these numbers.
+  totalIncomeUsd   Decimal         @db.Decimal(15, 2)
+  taxableIncomeUsd Decimal         @db.Decimal(15, 2)
+  totalTaxUsd      Decimal         @db.Decimal(15, 2)
+  refundOrAmtDue   Decimal         @db.Decimal(15, 2)
+  // ERO PIN — the EFIN-holder's chosen 5-digit PIN per Pub 1345.
+  eroPin           String?
+  // Taxpayer self-select PIN — 5 digits, cannot be all zeros (Pub 1345).
+  taxpayerPin      String?
+  spousePin        String?
+  signatureStatus  SignatureStatus @default(NOT_REQUESTED)
+  signatureToken   String?         @unique
+  signedAt         DateTime?
+  signedPdfPath    String?
+  createdAt        DateTime        @default(now())
+  updatedAt        DateTime        @updatedAt
+
+  taxYear          TaxYear         @relation(fields: [taxYearId], references: [id], onDelete: Cascade)
+}
+
+// Filing status — discrete milestones from 'engagement signed' through
+// 'IRS-accepted' to 'refund received'. Append-only history, latest by
+// (taxYearId, occurredAt).
+model FilingMilestone {
+  id           String       @id @default(cuid())
+  taxYearId    String
+  status       FilingStatus
+  occurredAt   DateTime     @default(now())
+  recordedBy   String       // userId
+  notes        String?
+  // External system reference (e.g. Drake software acceptance ID).
+  externalRef  String?
+
+  taxYear      TaxYear      @relation(fields: [taxYearId], references: [id], onDelete: Cascade)
+  user         User         @relation("FilingMilestoneUser", fields: [recordedBy], references: [id])
+
+  @@index([taxYearId, occurredAt(sort: Desc)])
+}
+
+// ===========================================================================
+// PHASE 2.3 — 1099 ISSUANCE (W-9 capture + 1099-NEC filing tracking)
+// ===========================================================================
+
+// W-9 form on file for a contractor recipient. One row per (TaxYear, payee
+// name) — the same person paid in 2024 and 2025 has two W-9 rows (W-9 is
+// a year-specific snapshot per IRS instructions).
+
+model W9Submission {
+  id              String   @id @default(cuid())
+  taxYearId       String
+  // Payee identification
+  payeeName       String
+  businessName    String?
+  taxClassification String? // "Individual/sole proprietor", "C Corp", etc.
+  // TIN — SSN (individual) or EIN (entity). Encrypted at app layer.
+  tin             String?
+  isEntityCorporation Boolean @default(false)
+  isExempt        Boolean  @default(false)
+  exemptCode      String?
+  // Address
+  addressLine1    String?
+  addressLine2    String?
+  city            String?
+  stateRegion     String?
+  postalCode      String?
+  // Workflow state
+  status          W9Status @default(NOT_REQUESTED)
+  requestedAt     DateTime?
+  receivedAt      DateTime?
+  // Captured PDF / image of the signed W-9 (path on disk or storage).
+  signedW9Path    String?
+  // Contact channel for the request
+  payeeEmail      String?
+  // Free-text — link to the contractor row in the agent's understanding,
+  // override notes, etc.
+  notes           String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  taxYear         TaxYear  @relation(fields: [taxYearId], references: [id], onDelete: Cascade)
+
+  @@unique([taxYearId, payeeName])
+  @@index([taxYearId, status])
+}
+
+// 1099-NEC filing record — one row per (TaxYear, recipient). Created when
+// the CPA approves the candidate list on /years/[year]/1099s.
+model Form1099Filing {
+  id                 String   @id @default(cuid())
+  taxYearId          String
+  // Recipient (mirrors W9Submission for snapshot purposes).
+  recipientName      String
+  recipientTin       String?
+  recipientAddress   Json?
+  // Box amounts. NEC Box 1 is the typical case (nonemployee comp).
+  box1NonemployeeComp Decimal? @db.Decimal(15, 2)
+  box4FederalTaxWithheld Decimal? @db.Decimal(15, 2)
+  // Filing path: PAPER → 1096 + Copy A mailed; ELECTRONIC → IRIS upload.
+  filingPath         String   @default("PAPER")
+  filedAt            DateTime?
+  // External reference (IRIS submission ID, FIRE acknowledgement, etc.).
+  externalAck        String?
+  // Source transaction IDs that aggregated to this 1099 — for audit.
+  sourceTransactionIds String[]
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+
+  taxYear            TaxYear  @relation(fields: [taxYearId], references: [id], onDelete: Cascade)
+
+  @@unique([taxYearId, recipientName])
+  @@index([taxYearId])
+}
+
+// ===========================================================================
+// PHASE 7 — QUALITY-OF-LIFE: per-classification CPA notes
+// ===========================================================================
+//
+// Free-text notes by the CPA on a specific Classification — separate from
+// substantiation (which is the §274(d) record). Surfaced as 💬 indicator
+// on ledger row hover. Append-only — edits create a new row.
+model ClassificationNote {
+  id               String   @id @default(cuid())
+  classificationId String
+  authorUserId     String
+  body             String
+  createdAt        DateTime @default(now())
+
+  classification   Classification @relation(fields: [classificationId], references: [id], onDelete: Cascade)
+  author           User           @relation("ClassificationNoteAuthor", fields: [authorUserId], references: [id])
+
+  @@index([classificationId, createdAt(sort: Desc)])
 }

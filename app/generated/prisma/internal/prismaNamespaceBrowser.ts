@@ -74,7 +74,14 @@ export const ModelName = {
   StopItem: 'StopItem',
   AuditEvent: 'AuditEvent',
   Report: 'Report',
-  Document: 'Document'
+  Document: 'Document',
+  PriorYearContext: 'PriorYearContext',
+  EngagementLetter: 'EngagementLetter',
+  Form8879: 'Form8879',
+  FilingMilestone: 'FilingMilestone',
+  W9Submission: 'W9Submission',
+  Form1099Filing: 'Form1099Filing',
+  ClassificationNote: 'ClassificationNote'
 } as const
 
 export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -241,13 +248,28 @@ export const OwnerScalarFieldEnum = {
   profileId: 'profileId',
   kind: 'kind',
   name: 'name',
+  email: 'email',
   ssnLast4: 'ssnLast4',
   ein: 'ein',
   ownershipPct: 'ownershipPct',
   w2Wages: 'w2Wages',
   guaranteedPayments: 'guaranteedPayments',
+  addressLine1: 'addressLine1',
+  addressLine2: 'addressLine2',
+  city: 'city',
+  stateRegion: 'stateRegion',
+  postalCode: 'postalCode',
+  countryCode: 'countryCode',
+  capitalContribution: 'capitalContribution',
+  distributions: 'distributions',
+  stockBasis: 'stockBasis',
+  debtBasis: 'debtBasis',
+  partnerCapitalStart: 'partnerCapitalStart',
+  bookTaxDelta: 'bookTaxDelta',
   notes: 'notes',
-  createdAt: 'createdAt'
+  isActive: 'isActive',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
 } as const
 
 export type OwnerScalarFieldEnum = (typeof OwnerScalarFieldEnum)[keyof typeof OwnerScalarFieldEnum]
@@ -497,6 +519,141 @@ export const DocumentScalarFieldEnum = {
 } as const
 
 export type DocumentScalarFieldEnum = (typeof DocumentScalarFieldEnum)[keyof typeof DocumentScalarFieldEnum]
+
+
+export const PriorYearContextScalarFieldEnum = {
+  id: 'id',
+  taxYearId: 'taxYearId',
+  sourcePriorYearId: 'sourcePriorYearId',
+  sourceLockedHash: 'sourceLockedHash',
+  netOperatingLoss: 'netOperatingLoss',
+  section179Carryover: 'section179Carryover',
+  passiveLossCarryforward: 'passiveLossCarryforward',
+  capitalLossShortTerm: 'capitalLossShortTerm',
+  capitalLossLongTerm: 'capitalLossLongTerm',
+  charitableCarryforward: 'charitableCarryforward',
+  amtCreditCarryforward: 'amtCreditCarryforward',
+  qbiLossCarryforward: 'qbiLossCarryforward',
+  section163jCarryforward: 'section163jCarryforward',
+  depreciationSchedule: 'depreciationSchedule',
+  shareholderBasis: 'shareholderBasis',
+  partnerCapital: 'partnerCapital',
+  suspendedLosses: 'suspendedLosses',
+  computedAt: 'computedAt'
+} as const
+
+export type PriorYearContextScalarFieldEnum = (typeof PriorYearContextScalarFieldEnum)[keyof typeof PriorYearContextScalarFieldEnum]
+
+
+export const EngagementLetterScalarFieldEnum = {
+  id: 'id',
+  taxYearId: 'taxYearId',
+  bodyMarkdown: 'bodyMarkdown',
+  cpaUserId: 'cpaUserId',
+  cpaSignedAt: 'cpaSignedAt',
+  clientSignedAt: 'clientSignedAt',
+  clientName: 'clientName',
+  clientEmail: 'clientEmail',
+  signatureStatus: 'signatureStatus',
+  signatureToken: 'signatureToken',
+  signedPdfPath: 'signedPdfPath',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type EngagementLetterScalarFieldEnum = (typeof EngagementLetterScalarFieldEnum)[keyof typeof EngagementLetterScalarFieldEnum]
+
+
+export const Form8879ScalarFieldEnum = {
+  id: 'id',
+  taxYearId: 'taxYearId',
+  totalIncomeUsd: 'totalIncomeUsd',
+  taxableIncomeUsd: 'taxableIncomeUsd',
+  totalTaxUsd: 'totalTaxUsd',
+  refundOrAmtDue: 'refundOrAmtDue',
+  eroPin: 'eroPin',
+  taxpayerPin: 'taxpayerPin',
+  spousePin: 'spousePin',
+  signatureStatus: 'signatureStatus',
+  signatureToken: 'signatureToken',
+  signedAt: 'signedAt',
+  signedPdfPath: 'signedPdfPath',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type Form8879ScalarFieldEnum = (typeof Form8879ScalarFieldEnum)[keyof typeof Form8879ScalarFieldEnum]
+
+
+export const FilingMilestoneScalarFieldEnum = {
+  id: 'id',
+  taxYearId: 'taxYearId',
+  status: 'status',
+  occurredAt: 'occurredAt',
+  recordedBy: 'recordedBy',
+  notes: 'notes',
+  externalRef: 'externalRef'
+} as const
+
+export type FilingMilestoneScalarFieldEnum = (typeof FilingMilestoneScalarFieldEnum)[keyof typeof FilingMilestoneScalarFieldEnum]
+
+
+export const W9SubmissionScalarFieldEnum = {
+  id: 'id',
+  taxYearId: 'taxYearId',
+  payeeName: 'payeeName',
+  businessName: 'businessName',
+  taxClassification: 'taxClassification',
+  tin: 'tin',
+  isEntityCorporation: 'isEntityCorporation',
+  isExempt: 'isExempt',
+  exemptCode: 'exemptCode',
+  addressLine1: 'addressLine1',
+  addressLine2: 'addressLine2',
+  city: 'city',
+  stateRegion: 'stateRegion',
+  postalCode: 'postalCode',
+  status: 'status',
+  requestedAt: 'requestedAt',
+  receivedAt: 'receivedAt',
+  signedW9Path: 'signedW9Path',
+  payeeEmail: 'payeeEmail',
+  notes: 'notes',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type W9SubmissionScalarFieldEnum = (typeof W9SubmissionScalarFieldEnum)[keyof typeof W9SubmissionScalarFieldEnum]
+
+
+export const Form1099FilingScalarFieldEnum = {
+  id: 'id',
+  taxYearId: 'taxYearId',
+  recipientName: 'recipientName',
+  recipientTin: 'recipientTin',
+  recipientAddress: 'recipientAddress',
+  box1NonemployeeComp: 'box1NonemployeeComp',
+  box4FederalTaxWithheld: 'box4FederalTaxWithheld',
+  filingPath: 'filingPath',
+  filedAt: 'filedAt',
+  externalAck: 'externalAck',
+  sourceTransactionIds: 'sourceTransactionIds',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type Form1099FilingScalarFieldEnum = (typeof Form1099FilingScalarFieldEnum)[keyof typeof Form1099FilingScalarFieldEnum]
+
+
+export const ClassificationNoteScalarFieldEnum = {
+  id: 'id',
+  classificationId: 'classificationId',
+  authorUserId: 'authorUserId',
+  body: 'body',
+  createdAt: 'createdAt'
+} as const
+
+export type ClassificationNoteScalarFieldEnum = (typeof ClassificationNoteScalarFieldEnum)[keyof typeof ClassificationNoteScalarFieldEnum]
 
 
 export const SortOrder = {

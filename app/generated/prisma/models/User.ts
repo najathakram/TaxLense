@@ -235,6 +235,9 @@ export type UserWhereInput = {
   cpaClients?: Prisma.CpaClientListRelationFilter
   cpaOf?: Prisma.CpaClientListRelationFilter
   inactiveMonthAttestations?: Prisma.AccountInactiveMonthListRelationFilter
+  engagementLettersAsCpa?: Prisma.EngagementLetterListRelationFilter
+  filingMilestones?: Prisma.FilingMilestoneListRelationFilter
+  classificationNotes?: Prisma.ClassificationNoteListRelationFilter
 }
 
 export type UserOrderByWithRelationInput = {
@@ -261,6 +264,9 @@ export type UserOrderByWithRelationInput = {
   cpaClients?: Prisma.CpaClientOrderByRelationAggregateInput
   cpaOf?: Prisma.CpaClientOrderByRelationAggregateInput
   inactiveMonthAttestations?: Prisma.AccountInactiveMonthOrderByRelationAggregateInput
+  engagementLettersAsCpa?: Prisma.EngagementLetterOrderByRelationAggregateInput
+  filingMilestones?: Prisma.FilingMilestoneOrderByRelationAggregateInput
+  classificationNotes?: Prisma.ClassificationNoteOrderByRelationAggregateInput
 }
 
 export type UserWhereUniqueInput = Prisma.AtLeast<{
@@ -290,6 +296,9 @@ export type UserWhereUniqueInput = Prisma.AtLeast<{
   cpaClients?: Prisma.CpaClientListRelationFilter
   cpaOf?: Prisma.CpaClientListRelationFilter
   inactiveMonthAttestations?: Prisma.AccountInactiveMonthListRelationFilter
+  engagementLettersAsCpa?: Prisma.EngagementLetterListRelationFilter
+  filingMilestones?: Prisma.FilingMilestoneListRelationFilter
+  classificationNotes?: Prisma.ClassificationNoteListRelationFilter
 }, "id" | "email">
 
 export type UserOrderByWithAggregationInput = {
@@ -348,6 +357,9 @@ export type UserCreateInput = {
   cpaClients?: Prisma.CpaClientCreateNestedManyWithoutCpaInput
   cpaOf?: Prisma.CpaClientCreateNestedManyWithoutClientInput
   inactiveMonthAttestations?: Prisma.AccountInactiveMonthCreateNestedManyWithoutUserInput
+  engagementLettersAsCpa?: Prisma.EngagementLetterCreateNestedManyWithoutCpaInput
+  filingMilestones?: Prisma.FilingMilestoneCreateNestedManyWithoutUserInput
+  classificationNotes?: Prisma.ClassificationNoteCreateNestedManyWithoutAuthorInput
 }
 
 export type UserUncheckedCreateInput = {
@@ -374,6 +386,9 @@ export type UserUncheckedCreateInput = {
   cpaClients?: Prisma.CpaClientUncheckedCreateNestedManyWithoutCpaInput
   cpaOf?: Prisma.CpaClientUncheckedCreateNestedManyWithoutClientInput
   inactiveMonthAttestations?: Prisma.AccountInactiveMonthUncheckedCreateNestedManyWithoutUserInput
+  engagementLettersAsCpa?: Prisma.EngagementLetterUncheckedCreateNestedManyWithoutCpaInput
+  filingMilestones?: Prisma.FilingMilestoneUncheckedCreateNestedManyWithoutUserInput
+  classificationNotes?: Prisma.ClassificationNoteUncheckedCreateNestedManyWithoutAuthorInput
 }
 
 export type UserUpdateInput = {
@@ -400,6 +415,9 @@ export type UserUpdateInput = {
   cpaClients?: Prisma.CpaClientUpdateManyWithoutCpaNestedInput
   cpaOf?: Prisma.CpaClientUpdateManyWithoutClientNestedInput
   inactiveMonthAttestations?: Prisma.AccountInactiveMonthUpdateManyWithoutUserNestedInput
+  engagementLettersAsCpa?: Prisma.EngagementLetterUpdateManyWithoutCpaNestedInput
+  filingMilestones?: Prisma.FilingMilestoneUpdateManyWithoutUserNestedInput
+  classificationNotes?: Prisma.ClassificationNoteUpdateManyWithoutAuthorNestedInput
 }
 
 export type UserUncheckedUpdateInput = {
@@ -426,6 +444,9 @@ export type UserUncheckedUpdateInput = {
   cpaClients?: Prisma.CpaClientUncheckedUpdateManyWithoutCpaNestedInput
   cpaOf?: Prisma.CpaClientUncheckedUpdateManyWithoutClientNestedInput
   inactiveMonthAttestations?: Prisma.AccountInactiveMonthUncheckedUpdateManyWithoutUserNestedInput
+  engagementLettersAsCpa?: Prisma.EngagementLetterUncheckedUpdateManyWithoutCpaNestedInput
+  filingMilestones?: Prisma.FilingMilestoneUncheckedUpdateManyWithoutUserNestedInput
+  classificationNotes?: Prisma.ClassificationNoteUncheckedUpdateManyWithoutAuthorNestedInput
 }
 
 export type UserCreateManyInput = {
@@ -730,6 +751,48 @@ export type UserUpdateOneWithoutDocumentsUploadedNestedInput = {
   update?: Prisma.XOR<Prisma.XOR<Prisma.UserUpdateToOneWithWhereWithoutDocumentsUploadedInput, Prisma.UserUpdateWithoutDocumentsUploadedInput>, Prisma.UserUncheckedUpdateWithoutDocumentsUploadedInput>
 }
 
+export type UserCreateNestedOneWithoutEngagementLettersAsCpaInput = {
+  create?: Prisma.XOR<Prisma.UserCreateWithoutEngagementLettersAsCpaInput, Prisma.UserUncheckedCreateWithoutEngagementLettersAsCpaInput>
+  connectOrCreate?: Prisma.UserCreateOrConnectWithoutEngagementLettersAsCpaInput
+  connect?: Prisma.UserWhereUniqueInput
+}
+
+export type UserUpdateOneRequiredWithoutEngagementLettersAsCpaNestedInput = {
+  create?: Prisma.XOR<Prisma.UserCreateWithoutEngagementLettersAsCpaInput, Prisma.UserUncheckedCreateWithoutEngagementLettersAsCpaInput>
+  connectOrCreate?: Prisma.UserCreateOrConnectWithoutEngagementLettersAsCpaInput
+  upsert?: Prisma.UserUpsertWithoutEngagementLettersAsCpaInput
+  connect?: Prisma.UserWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.UserUpdateToOneWithWhereWithoutEngagementLettersAsCpaInput, Prisma.UserUpdateWithoutEngagementLettersAsCpaInput>, Prisma.UserUncheckedUpdateWithoutEngagementLettersAsCpaInput>
+}
+
+export type UserCreateNestedOneWithoutFilingMilestonesInput = {
+  create?: Prisma.XOR<Prisma.UserCreateWithoutFilingMilestonesInput, Prisma.UserUncheckedCreateWithoutFilingMilestonesInput>
+  connectOrCreate?: Prisma.UserCreateOrConnectWithoutFilingMilestonesInput
+  connect?: Prisma.UserWhereUniqueInput
+}
+
+export type UserUpdateOneRequiredWithoutFilingMilestonesNestedInput = {
+  create?: Prisma.XOR<Prisma.UserCreateWithoutFilingMilestonesInput, Prisma.UserUncheckedCreateWithoutFilingMilestonesInput>
+  connectOrCreate?: Prisma.UserCreateOrConnectWithoutFilingMilestonesInput
+  upsert?: Prisma.UserUpsertWithoutFilingMilestonesInput
+  connect?: Prisma.UserWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.UserUpdateToOneWithWhereWithoutFilingMilestonesInput, Prisma.UserUpdateWithoutFilingMilestonesInput>, Prisma.UserUncheckedUpdateWithoutFilingMilestonesInput>
+}
+
+export type UserCreateNestedOneWithoutClassificationNotesInput = {
+  create?: Prisma.XOR<Prisma.UserCreateWithoutClassificationNotesInput, Prisma.UserUncheckedCreateWithoutClassificationNotesInput>
+  connectOrCreate?: Prisma.UserCreateOrConnectWithoutClassificationNotesInput
+  connect?: Prisma.UserWhereUniqueInput
+}
+
+export type UserUpdateOneRequiredWithoutClassificationNotesNestedInput = {
+  create?: Prisma.XOR<Prisma.UserCreateWithoutClassificationNotesInput, Prisma.UserUncheckedCreateWithoutClassificationNotesInput>
+  connectOrCreate?: Prisma.UserCreateOrConnectWithoutClassificationNotesInput
+  upsert?: Prisma.UserUpsertWithoutClassificationNotesInput
+  connect?: Prisma.UserWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.UserUpdateToOneWithWhereWithoutClassificationNotesInput, Prisma.UserUpdateWithoutClassificationNotesInput>, Prisma.UserUncheckedUpdateWithoutClassificationNotesInput>
+}
+
 export type UserCreateWithoutCpaClientsInput = {
   id?: string
   name?: string | null
@@ -753,6 +816,9 @@ export type UserCreateWithoutCpaClientsInput = {
   documentsUploaded?: Prisma.DocumentCreateNestedManyWithoutUploadedByInput
   cpaOf?: Prisma.CpaClientCreateNestedManyWithoutClientInput
   inactiveMonthAttestations?: Prisma.AccountInactiveMonthCreateNestedManyWithoutUserInput
+  engagementLettersAsCpa?: Prisma.EngagementLetterCreateNestedManyWithoutCpaInput
+  filingMilestones?: Prisma.FilingMilestoneCreateNestedManyWithoutUserInput
+  classificationNotes?: Prisma.ClassificationNoteCreateNestedManyWithoutAuthorInput
 }
 
 export type UserUncheckedCreateWithoutCpaClientsInput = {
@@ -778,6 +844,9 @@ export type UserUncheckedCreateWithoutCpaClientsInput = {
   documentsUploaded?: Prisma.DocumentUncheckedCreateNestedManyWithoutUploadedByInput
   cpaOf?: Prisma.CpaClientUncheckedCreateNestedManyWithoutClientInput
   inactiveMonthAttestations?: Prisma.AccountInactiveMonthUncheckedCreateNestedManyWithoutUserInput
+  engagementLettersAsCpa?: Prisma.EngagementLetterUncheckedCreateNestedManyWithoutCpaInput
+  filingMilestones?: Prisma.FilingMilestoneUncheckedCreateNestedManyWithoutUserInput
+  classificationNotes?: Prisma.ClassificationNoteUncheckedCreateNestedManyWithoutAuthorInput
 }
 
 export type UserCreateOrConnectWithoutCpaClientsInput = {
@@ -808,6 +877,9 @@ export type UserCreateWithoutCpaOfInput = {
   documentsUploaded?: Prisma.DocumentCreateNestedManyWithoutUploadedByInput
   cpaClients?: Prisma.CpaClientCreateNestedManyWithoutCpaInput
   inactiveMonthAttestations?: Prisma.AccountInactiveMonthCreateNestedManyWithoutUserInput
+  engagementLettersAsCpa?: Prisma.EngagementLetterCreateNestedManyWithoutCpaInput
+  filingMilestones?: Prisma.FilingMilestoneCreateNestedManyWithoutUserInput
+  classificationNotes?: Prisma.ClassificationNoteCreateNestedManyWithoutAuthorInput
 }
 
 export type UserUncheckedCreateWithoutCpaOfInput = {
@@ -833,6 +905,9 @@ export type UserUncheckedCreateWithoutCpaOfInput = {
   documentsUploaded?: Prisma.DocumentUncheckedCreateNestedManyWithoutUploadedByInput
   cpaClients?: Prisma.CpaClientUncheckedCreateNestedManyWithoutCpaInput
   inactiveMonthAttestations?: Prisma.AccountInactiveMonthUncheckedCreateNestedManyWithoutUserInput
+  engagementLettersAsCpa?: Prisma.EngagementLetterUncheckedCreateNestedManyWithoutCpaInput
+  filingMilestones?: Prisma.FilingMilestoneUncheckedCreateNestedManyWithoutUserInput
+  classificationNotes?: Prisma.ClassificationNoteUncheckedCreateNestedManyWithoutAuthorInput
 }
 
 export type UserCreateOrConnectWithoutCpaOfInput = {
@@ -874,6 +949,9 @@ export type UserUpdateWithoutCpaClientsInput = {
   documentsUploaded?: Prisma.DocumentUpdateManyWithoutUploadedByNestedInput
   cpaOf?: Prisma.CpaClientUpdateManyWithoutClientNestedInput
   inactiveMonthAttestations?: Prisma.AccountInactiveMonthUpdateManyWithoutUserNestedInput
+  engagementLettersAsCpa?: Prisma.EngagementLetterUpdateManyWithoutCpaNestedInput
+  filingMilestones?: Prisma.FilingMilestoneUpdateManyWithoutUserNestedInput
+  classificationNotes?: Prisma.ClassificationNoteUpdateManyWithoutAuthorNestedInput
 }
 
 export type UserUncheckedUpdateWithoutCpaClientsInput = {
@@ -899,6 +977,9 @@ export type UserUncheckedUpdateWithoutCpaClientsInput = {
   documentsUploaded?: Prisma.DocumentUncheckedUpdateManyWithoutUploadedByNestedInput
   cpaOf?: Prisma.CpaClientUncheckedUpdateManyWithoutClientNestedInput
   inactiveMonthAttestations?: Prisma.AccountInactiveMonthUncheckedUpdateManyWithoutUserNestedInput
+  engagementLettersAsCpa?: Prisma.EngagementLetterUncheckedUpdateManyWithoutCpaNestedInput
+  filingMilestones?: Prisma.FilingMilestoneUncheckedUpdateManyWithoutUserNestedInput
+  classificationNotes?: Prisma.ClassificationNoteUncheckedUpdateManyWithoutAuthorNestedInput
 }
 
 export type UserUpsertWithoutCpaOfInput = {
@@ -935,6 +1016,9 @@ export type UserUpdateWithoutCpaOfInput = {
   documentsUploaded?: Prisma.DocumentUpdateManyWithoutUploadedByNestedInput
   cpaClients?: Prisma.CpaClientUpdateManyWithoutCpaNestedInput
   inactiveMonthAttestations?: Prisma.AccountInactiveMonthUpdateManyWithoutUserNestedInput
+  engagementLettersAsCpa?: Prisma.EngagementLetterUpdateManyWithoutCpaNestedInput
+  filingMilestones?: Prisma.FilingMilestoneUpdateManyWithoutUserNestedInput
+  classificationNotes?: Prisma.ClassificationNoteUpdateManyWithoutAuthorNestedInput
 }
 
 export type UserUncheckedUpdateWithoutCpaOfInput = {
@@ -960,6 +1044,9 @@ export type UserUncheckedUpdateWithoutCpaOfInput = {
   documentsUploaded?: Prisma.DocumentUncheckedUpdateManyWithoutUploadedByNestedInput
   cpaClients?: Prisma.CpaClientUncheckedUpdateManyWithoutCpaNestedInput
   inactiveMonthAttestations?: Prisma.AccountInactiveMonthUncheckedUpdateManyWithoutUserNestedInput
+  engagementLettersAsCpa?: Prisma.EngagementLetterUncheckedUpdateManyWithoutCpaNestedInput
+  filingMilestones?: Prisma.FilingMilestoneUncheckedUpdateManyWithoutUserNestedInput
+  classificationNotes?: Prisma.ClassificationNoteUncheckedUpdateManyWithoutAuthorNestedInput
 }
 
 export type UserCreateWithoutAccountsInput = {
@@ -985,6 +1072,9 @@ export type UserCreateWithoutAccountsInput = {
   cpaClients?: Prisma.CpaClientCreateNestedManyWithoutCpaInput
   cpaOf?: Prisma.CpaClientCreateNestedManyWithoutClientInput
   inactiveMonthAttestations?: Prisma.AccountInactiveMonthCreateNestedManyWithoutUserInput
+  engagementLettersAsCpa?: Prisma.EngagementLetterCreateNestedManyWithoutCpaInput
+  filingMilestones?: Prisma.FilingMilestoneCreateNestedManyWithoutUserInput
+  classificationNotes?: Prisma.ClassificationNoteCreateNestedManyWithoutAuthorInput
 }
 
 export type UserUncheckedCreateWithoutAccountsInput = {
@@ -1010,6 +1100,9 @@ export type UserUncheckedCreateWithoutAccountsInput = {
   cpaClients?: Prisma.CpaClientUncheckedCreateNestedManyWithoutCpaInput
   cpaOf?: Prisma.CpaClientUncheckedCreateNestedManyWithoutClientInput
   inactiveMonthAttestations?: Prisma.AccountInactiveMonthUncheckedCreateNestedManyWithoutUserInput
+  engagementLettersAsCpa?: Prisma.EngagementLetterUncheckedCreateNestedManyWithoutCpaInput
+  filingMilestones?: Prisma.FilingMilestoneUncheckedCreateNestedManyWithoutUserInput
+  classificationNotes?: Prisma.ClassificationNoteUncheckedCreateNestedManyWithoutAuthorInput
 }
 
 export type UserCreateOrConnectWithoutAccountsInput = {
@@ -1051,6 +1144,9 @@ export type UserUpdateWithoutAccountsInput = {
   cpaClients?: Prisma.CpaClientUpdateManyWithoutCpaNestedInput
   cpaOf?: Prisma.CpaClientUpdateManyWithoutClientNestedInput
   inactiveMonthAttestations?: Prisma.AccountInactiveMonthUpdateManyWithoutUserNestedInput
+  engagementLettersAsCpa?: Prisma.EngagementLetterUpdateManyWithoutCpaNestedInput
+  filingMilestones?: Prisma.FilingMilestoneUpdateManyWithoutUserNestedInput
+  classificationNotes?: Prisma.ClassificationNoteUpdateManyWithoutAuthorNestedInput
 }
 
 export type UserUncheckedUpdateWithoutAccountsInput = {
@@ -1076,6 +1172,9 @@ export type UserUncheckedUpdateWithoutAccountsInput = {
   cpaClients?: Prisma.CpaClientUncheckedUpdateManyWithoutCpaNestedInput
   cpaOf?: Prisma.CpaClientUncheckedUpdateManyWithoutClientNestedInput
   inactiveMonthAttestations?: Prisma.AccountInactiveMonthUncheckedUpdateManyWithoutUserNestedInput
+  engagementLettersAsCpa?: Prisma.EngagementLetterUncheckedUpdateManyWithoutCpaNestedInput
+  filingMilestones?: Prisma.FilingMilestoneUncheckedUpdateManyWithoutUserNestedInput
+  classificationNotes?: Prisma.ClassificationNoteUncheckedUpdateManyWithoutAuthorNestedInput
 }
 
 export type UserCreateWithoutSessionsInput = {
@@ -1101,6 +1200,9 @@ export type UserCreateWithoutSessionsInput = {
   cpaClients?: Prisma.CpaClientCreateNestedManyWithoutCpaInput
   cpaOf?: Prisma.CpaClientCreateNestedManyWithoutClientInput
   inactiveMonthAttestations?: Prisma.AccountInactiveMonthCreateNestedManyWithoutUserInput
+  engagementLettersAsCpa?: Prisma.EngagementLetterCreateNestedManyWithoutCpaInput
+  filingMilestones?: Prisma.FilingMilestoneCreateNestedManyWithoutUserInput
+  classificationNotes?: Prisma.ClassificationNoteCreateNestedManyWithoutAuthorInput
 }
 
 export type UserUncheckedCreateWithoutSessionsInput = {
@@ -1126,6 +1228,9 @@ export type UserUncheckedCreateWithoutSessionsInput = {
   cpaClients?: Prisma.CpaClientUncheckedCreateNestedManyWithoutCpaInput
   cpaOf?: Prisma.CpaClientUncheckedCreateNestedManyWithoutClientInput
   inactiveMonthAttestations?: Prisma.AccountInactiveMonthUncheckedCreateNestedManyWithoutUserInput
+  engagementLettersAsCpa?: Prisma.EngagementLetterUncheckedCreateNestedManyWithoutCpaInput
+  filingMilestones?: Prisma.FilingMilestoneUncheckedCreateNestedManyWithoutUserInput
+  classificationNotes?: Prisma.ClassificationNoteUncheckedCreateNestedManyWithoutAuthorInput
 }
 
 export type UserCreateOrConnectWithoutSessionsInput = {
@@ -1167,6 +1272,9 @@ export type UserUpdateWithoutSessionsInput = {
   cpaClients?: Prisma.CpaClientUpdateManyWithoutCpaNestedInput
   cpaOf?: Prisma.CpaClientUpdateManyWithoutClientNestedInput
   inactiveMonthAttestations?: Prisma.AccountInactiveMonthUpdateManyWithoutUserNestedInput
+  engagementLettersAsCpa?: Prisma.EngagementLetterUpdateManyWithoutCpaNestedInput
+  filingMilestones?: Prisma.FilingMilestoneUpdateManyWithoutUserNestedInput
+  classificationNotes?: Prisma.ClassificationNoteUpdateManyWithoutAuthorNestedInput
 }
 
 export type UserUncheckedUpdateWithoutSessionsInput = {
@@ -1192,6 +1300,9 @@ export type UserUncheckedUpdateWithoutSessionsInput = {
   cpaClients?: Prisma.CpaClientUncheckedUpdateManyWithoutCpaNestedInput
   cpaOf?: Prisma.CpaClientUncheckedUpdateManyWithoutClientNestedInput
   inactiveMonthAttestations?: Prisma.AccountInactiveMonthUncheckedUpdateManyWithoutUserNestedInput
+  engagementLettersAsCpa?: Prisma.EngagementLetterUncheckedUpdateManyWithoutCpaNestedInput
+  filingMilestones?: Prisma.FilingMilestoneUncheckedUpdateManyWithoutUserNestedInput
+  classificationNotes?: Prisma.ClassificationNoteUncheckedUpdateManyWithoutAuthorNestedInput
 }
 
 export type UserCreateWithoutTaxYearsInput = {
@@ -1217,6 +1328,9 @@ export type UserCreateWithoutTaxYearsInput = {
   cpaClients?: Prisma.CpaClientCreateNestedManyWithoutCpaInput
   cpaOf?: Prisma.CpaClientCreateNestedManyWithoutClientInput
   inactiveMonthAttestations?: Prisma.AccountInactiveMonthCreateNestedManyWithoutUserInput
+  engagementLettersAsCpa?: Prisma.EngagementLetterCreateNestedManyWithoutCpaInput
+  filingMilestones?: Prisma.FilingMilestoneCreateNestedManyWithoutUserInput
+  classificationNotes?: Prisma.ClassificationNoteCreateNestedManyWithoutAuthorInput
 }
 
 export type UserUncheckedCreateWithoutTaxYearsInput = {
@@ -1242,6 +1356,9 @@ export type UserUncheckedCreateWithoutTaxYearsInput = {
   cpaClients?: Prisma.CpaClientUncheckedCreateNestedManyWithoutCpaInput
   cpaOf?: Prisma.CpaClientUncheckedCreateNestedManyWithoutClientInput
   inactiveMonthAttestations?: Prisma.AccountInactiveMonthUncheckedCreateNestedManyWithoutUserInput
+  engagementLettersAsCpa?: Prisma.EngagementLetterUncheckedCreateNestedManyWithoutCpaInput
+  filingMilestones?: Prisma.FilingMilestoneUncheckedCreateNestedManyWithoutUserInput
+  classificationNotes?: Prisma.ClassificationNoteUncheckedCreateNestedManyWithoutAuthorInput
 }
 
 export type UserCreateOrConnectWithoutTaxYearsInput = {
@@ -1283,6 +1400,9 @@ export type UserUpdateWithoutTaxYearsInput = {
   cpaClients?: Prisma.CpaClientUpdateManyWithoutCpaNestedInput
   cpaOf?: Prisma.CpaClientUpdateManyWithoutClientNestedInput
   inactiveMonthAttestations?: Prisma.AccountInactiveMonthUpdateManyWithoutUserNestedInput
+  engagementLettersAsCpa?: Prisma.EngagementLetterUpdateManyWithoutCpaNestedInput
+  filingMilestones?: Prisma.FilingMilestoneUpdateManyWithoutUserNestedInput
+  classificationNotes?: Prisma.ClassificationNoteUpdateManyWithoutAuthorNestedInput
 }
 
 export type UserUncheckedUpdateWithoutTaxYearsInput = {
@@ -1308,6 +1428,9 @@ export type UserUncheckedUpdateWithoutTaxYearsInput = {
   cpaClients?: Prisma.CpaClientUncheckedUpdateManyWithoutCpaNestedInput
   cpaOf?: Prisma.CpaClientUncheckedUpdateManyWithoutClientNestedInput
   inactiveMonthAttestations?: Prisma.AccountInactiveMonthUncheckedUpdateManyWithoutUserNestedInput
+  engagementLettersAsCpa?: Prisma.EngagementLetterUncheckedUpdateManyWithoutCpaNestedInput
+  filingMilestones?: Prisma.FilingMilestoneUncheckedUpdateManyWithoutUserNestedInput
+  classificationNotes?: Prisma.ClassificationNoteUncheckedUpdateManyWithoutAuthorNestedInput
 }
 
 export type UserCreateWithoutBusinessProfilesInput = {
@@ -1333,6 +1456,9 @@ export type UserCreateWithoutBusinessProfilesInput = {
   cpaClients?: Prisma.CpaClientCreateNestedManyWithoutCpaInput
   cpaOf?: Prisma.CpaClientCreateNestedManyWithoutClientInput
   inactiveMonthAttestations?: Prisma.AccountInactiveMonthCreateNestedManyWithoutUserInput
+  engagementLettersAsCpa?: Prisma.EngagementLetterCreateNestedManyWithoutCpaInput
+  filingMilestones?: Prisma.FilingMilestoneCreateNestedManyWithoutUserInput
+  classificationNotes?: Prisma.ClassificationNoteCreateNestedManyWithoutAuthorInput
 }
 
 export type UserUncheckedCreateWithoutBusinessProfilesInput = {
@@ -1358,6 +1484,9 @@ export type UserUncheckedCreateWithoutBusinessProfilesInput = {
   cpaClients?: Prisma.CpaClientUncheckedCreateNestedManyWithoutCpaInput
   cpaOf?: Prisma.CpaClientUncheckedCreateNestedManyWithoutClientInput
   inactiveMonthAttestations?: Prisma.AccountInactiveMonthUncheckedCreateNestedManyWithoutUserInput
+  engagementLettersAsCpa?: Prisma.EngagementLetterUncheckedCreateNestedManyWithoutCpaInput
+  filingMilestones?: Prisma.FilingMilestoneUncheckedCreateNestedManyWithoutUserInput
+  classificationNotes?: Prisma.ClassificationNoteUncheckedCreateNestedManyWithoutAuthorInput
 }
 
 export type UserCreateOrConnectWithoutBusinessProfilesInput = {
@@ -1399,6 +1528,9 @@ export type UserUpdateWithoutBusinessProfilesInput = {
   cpaClients?: Prisma.CpaClientUpdateManyWithoutCpaNestedInput
   cpaOf?: Prisma.CpaClientUpdateManyWithoutClientNestedInput
   inactiveMonthAttestations?: Prisma.AccountInactiveMonthUpdateManyWithoutUserNestedInput
+  engagementLettersAsCpa?: Prisma.EngagementLetterUpdateManyWithoutCpaNestedInput
+  filingMilestones?: Prisma.FilingMilestoneUpdateManyWithoutUserNestedInput
+  classificationNotes?: Prisma.ClassificationNoteUpdateManyWithoutAuthorNestedInput
 }
 
 export type UserUncheckedUpdateWithoutBusinessProfilesInput = {
@@ -1424,6 +1556,9 @@ export type UserUncheckedUpdateWithoutBusinessProfilesInput = {
   cpaClients?: Prisma.CpaClientUncheckedUpdateManyWithoutCpaNestedInput
   cpaOf?: Prisma.CpaClientUncheckedUpdateManyWithoutClientNestedInput
   inactiveMonthAttestations?: Prisma.AccountInactiveMonthUncheckedUpdateManyWithoutUserNestedInput
+  engagementLettersAsCpa?: Prisma.EngagementLetterUncheckedUpdateManyWithoutCpaNestedInput
+  filingMilestones?: Prisma.FilingMilestoneUncheckedUpdateManyWithoutUserNestedInput
+  classificationNotes?: Prisma.ClassificationNoteUncheckedUpdateManyWithoutAuthorNestedInput
 }
 
 export type UserCreateWithoutFinancialAccountsInput = {
@@ -1449,6 +1584,9 @@ export type UserCreateWithoutFinancialAccountsInput = {
   cpaClients?: Prisma.CpaClientCreateNestedManyWithoutCpaInput
   cpaOf?: Prisma.CpaClientCreateNestedManyWithoutClientInput
   inactiveMonthAttestations?: Prisma.AccountInactiveMonthCreateNestedManyWithoutUserInput
+  engagementLettersAsCpa?: Prisma.EngagementLetterCreateNestedManyWithoutCpaInput
+  filingMilestones?: Prisma.FilingMilestoneCreateNestedManyWithoutUserInput
+  classificationNotes?: Prisma.ClassificationNoteCreateNestedManyWithoutAuthorInput
 }
 
 export type UserUncheckedCreateWithoutFinancialAccountsInput = {
@@ -1474,6 +1612,9 @@ export type UserUncheckedCreateWithoutFinancialAccountsInput = {
   cpaClients?: Prisma.CpaClientUncheckedCreateNestedManyWithoutCpaInput
   cpaOf?: Prisma.CpaClientUncheckedCreateNestedManyWithoutClientInput
   inactiveMonthAttestations?: Prisma.AccountInactiveMonthUncheckedCreateNestedManyWithoutUserInput
+  engagementLettersAsCpa?: Prisma.EngagementLetterUncheckedCreateNestedManyWithoutCpaInput
+  filingMilestones?: Prisma.FilingMilestoneUncheckedCreateNestedManyWithoutUserInput
+  classificationNotes?: Prisma.ClassificationNoteUncheckedCreateNestedManyWithoutAuthorInput
 }
 
 export type UserCreateOrConnectWithoutFinancialAccountsInput = {
@@ -1515,6 +1656,9 @@ export type UserUpdateWithoutFinancialAccountsInput = {
   cpaClients?: Prisma.CpaClientUpdateManyWithoutCpaNestedInput
   cpaOf?: Prisma.CpaClientUpdateManyWithoutClientNestedInput
   inactiveMonthAttestations?: Prisma.AccountInactiveMonthUpdateManyWithoutUserNestedInput
+  engagementLettersAsCpa?: Prisma.EngagementLetterUpdateManyWithoutCpaNestedInput
+  filingMilestones?: Prisma.FilingMilestoneUpdateManyWithoutUserNestedInput
+  classificationNotes?: Prisma.ClassificationNoteUpdateManyWithoutAuthorNestedInput
 }
 
 export type UserUncheckedUpdateWithoutFinancialAccountsInput = {
@@ -1540,6 +1684,9 @@ export type UserUncheckedUpdateWithoutFinancialAccountsInput = {
   cpaClients?: Prisma.CpaClientUncheckedUpdateManyWithoutCpaNestedInput
   cpaOf?: Prisma.CpaClientUncheckedUpdateManyWithoutClientNestedInput
   inactiveMonthAttestations?: Prisma.AccountInactiveMonthUncheckedUpdateManyWithoutUserNestedInput
+  engagementLettersAsCpa?: Prisma.EngagementLetterUncheckedUpdateManyWithoutCpaNestedInput
+  filingMilestones?: Prisma.FilingMilestoneUncheckedUpdateManyWithoutUserNestedInput
+  classificationNotes?: Prisma.ClassificationNoteUncheckedUpdateManyWithoutAuthorNestedInput
 }
 
 export type UserCreateWithoutInactiveMonthAttestationsInput = {
@@ -1565,6 +1712,9 @@ export type UserCreateWithoutInactiveMonthAttestationsInput = {
   documentsUploaded?: Prisma.DocumentCreateNestedManyWithoutUploadedByInput
   cpaClients?: Prisma.CpaClientCreateNestedManyWithoutCpaInput
   cpaOf?: Prisma.CpaClientCreateNestedManyWithoutClientInput
+  engagementLettersAsCpa?: Prisma.EngagementLetterCreateNestedManyWithoutCpaInput
+  filingMilestones?: Prisma.FilingMilestoneCreateNestedManyWithoutUserInput
+  classificationNotes?: Prisma.ClassificationNoteCreateNestedManyWithoutAuthorInput
 }
 
 export type UserUncheckedCreateWithoutInactiveMonthAttestationsInput = {
@@ -1590,6 +1740,9 @@ export type UserUncheckedCreateWithoutInactiveMonthAttestationsInput = {
   documentsUploaded?: Prisma.DocumentUncheckedCreateNestedManyWithoutUploadedByInput
   cpaClients?: Prisma.CpaClientUncheckedCreateNestedManyWithoutCpaInput
   cpaOf?: Prisma.CpaClientUncheckedCreateNestedManyWithoutClientInput
+  engagementLettersAsCpa?: Prisma.EngagementLetterUncheckedCreateNestedManyWithoutCpaInput
+  filingMilestones?: Prisma.FilingMilestoneUncheckedCreateNestedManyWithoutUserInput
+  classificationNotes?: Prisma.ClassificationNoteUncheckedCreateNestedManyWithoutAuthorInput
 }
 
 export type UserCreateOrConnectWithoutInactiveMonthAttestationsInput = {
@@ -1631,6 +1784,9 @@ export type UserUpdateWithoutInactiveMonthAttestationsInput = {
   documentsUploaded?: Prisma.DocumentUpdateManyWithoutUploadedByNestedInput
   cpaClients?: Prisma.CpaClientUpdateManyWithoutCpaNestedInput
   cpaOf?: Prisma.CpaClientUpdateManyWithoutClientNestedInput
+  engagementLettersAsCpa?: Prisma.EngagementLetterUpdateManyWithoutCpaNestedInput
+  filingMilestones?: Prisma.FilingMilestoneUpdateManyWithoutUserNestedInput
+  classificationNotes?: Prisma.ClassificationNoteUpdateManyWithoutAuthorNestedInput
 }
 
 export type UserUncheckedUpdateWithoutInactiveMonthAttestationsInput = {
@@ -1656,6 +1812,9 @@ export type UserUncheckedUpdateWithoutInactiveMonthAttestationsInput = {
   documentsUploaded?: Prisma.DocumentUncheckedUpdateManyWithoutUploadedByNestedInput
   cpaClients?: Prisma.CpaClientUncheckedUpdateManyWithoutCpaNestedInput
   cpaOf?: Prisma.CpaClientUncheckedUpdateManyWithoutClientNestedInput
+  engagementLettersAsCpa?: Prisma.EngagementLetterUncheckedUpdateManyWithoutCpaNestedInput
+  filingMilestones?: Prisma.FilingMilestoneUncheckedUpdateManyWithoutUserNestedInput
+  classificationNotes?: Prisma.ClassificationNoteUncheckedUpdateManyWithoutAuthorNestedInput
 }
 
 export type UserCreateWithoutAuditEventsInput = {
@@ -1681,6 +1840,9 @@ export type UserCreateWithoutAuditEventsInput = {
   cpaClients?: Prisma.CpaClientCreateNestedManyWithoutCpaInput
   cpaOf?: Prisma.CpaClientCreateNestedManyWithoutClientInput
   inactiveMonthAttestations?: Prisma.AccountInactiveMonthCreateNestedManyWithoutUserInput
+  engagementLettersAsCpa?: Prisma.EngagementLetterCreateNestedManyWithoutCpaInput
+  filingMilestones?: Prisma.FilingMilestoneCreateNestedManyWithoutUserInput
+  classificationNotes?: Prisma.ClassificationNoteCreateNestedManyWithoutAuthorInput
 }
 
 export type UserUncheckedCreateWithoutAuditEventsInput = {
@@ -1706,6 +1868,9 @@ export type UserUncheckedCreateWithoutAuditEventsInput = {
   cpaClients?: Prisma.CpaClientUncheckedCreateNestedManyWithoutCpaInput
   cpaOf?: Prisma.CpaClientUncheckedCreateNestedManyWithoutClientInput
   inactiveMonthAttestations?: Prisma.AccountInactiveMonthUncheckedCreateNestedManyWithoutUserInput
+  engagementLettersAsCpa?: Prisma.EngagementLetterUncheckedCreateNestedManyWithoutCpaInput
+  filingMilestones?: Prisma.FilingMilestoneUncheckedCreateNestedManyWithoutUserInput
+  classificationNotes?: Prisma.ClassificationNoteUncheckedCreateNestedManyWithoutAuthorInput
 }
 
 export type UserCreateOrConnectWithoutAuditEventsInput = {
@@ -1736,6 +1901,9 @@ export type UserCreateWithoutAuditEventsAsCpaInput = {
   cpaClients?: Prisma.CpaClientCreateNestedManyWithoutCpaInput
   cpaOf?: Prisma.CpaClientCreateNestedManyWithoutClientInput
   inactiveMonthAttestations?: Prisma.AccountInactiveMonthCreateNestedManyWithoutUserInput
+  engagementLettersAsCpa?: Prisma.EngagementLetterCreateNestedManyWithoutCpaInput
+  filingMilestones?: Prisma.FilingMilestoneCreateNestedManyWithoutUserInput
+  classificationNotes?: Prisma.ClassificationNoteCreateNestedManyWithoutAuthorInput
 }
 
 export type UserUncheckedCreateWithoutAuditEventsAsCpaInput = {
@@ -1761,6 +1929,9 @@ export type UserUncheckedCreateWithoutAuditEventsAsCpaInput = {
   cpaClients?: Prisma.CpaClientUncheckedCreateNestedManyWithoutCpaInput
   cpaOf?: Prisma.CpaClientUncheckedCreateNestedManyWithoutClientInput
   inactiveMonthAttestations?: Prisma.AccountInactiveMonthUncheckedCreateNestedManyWithoutUserInput
+  engagementLettersAsCpa?: Prisma.EngagementLetterUncheckedCreateNestedManyWithoutCpaInput
+  filingMilestones?: Prisma.FilingMilestoneUncheckedCreateNestedManyWithoutUserInput
+  classificationNotes?: Prisma.ClassificationNoteUncheckedCreateNestedManyWithoutAuthorInput
 }
 
 export type UserCreateOrConnectWithoutAuditEventsAsCpaInput = {
@@ -1791,6 +1962,9 @@ export type UserCreateWithoutAuditEventsAsAdminInput = {
   cpaClients?: Prisma.CpaClientCreateNestedManyWithoutCpaInput
   cpaOf?: Prisma.CpaClientCreateNestedManyWithoutClientInput
   inactiveMonthAttestations?: Prisma.AccountInactiveMonthCreateNestedManyWithoutUserInput
+  engagementLettersAsCpa?: Prisma.EngagementLetterCreateNestedManyWithoutCpaInput
+  filingMilestones?: Prisma.FilingMilestoneCreateNestedManyWithoutUserInput
+  classificationNotes?: Prisma.ClassificationNoteCreateNestedManyWithoutAuthorInput
 }
 
 export type UserUncheckedCreateWithoutAuditEventsAsAdminInput = {
@@ -1816,6 +1990,9 @@ export type UserUncheckedCreateWithoutAuditEventsAsAdminInput = {
   cpaClients?: Prisma.CpaClientUncheckedCreateNestedManyWithoutCpaInput
   cpaOf?: Prisma.CpaClientUncheckedCreateNestedManyWithoutClientInput
   inactiveMonthAttestations?: Prisma.AccountInactiveMonthUncheckedCreateNestedManyWithoutUserInput
+  engagementLettersAsCpa?: Prisma.EngagementLetterUncheckedCreateNestedManyWithoutCpaInput
+  filingMilestones?: Prisma.FilingMilestoneUncheckedCreateNestedManyWithoutUserInput
+  classificationNotes?: Prisma.ClassificationNoteUncheckedCreateNestedManyWithoutAuthorInput
 }
 
 export type UserCreateOrConnectWithoutAuditEventsAsAdminInput = {
@@ -1857,6 +2034,9 @@ export type UserUpdateWithoutAuditEventsInput = {
   cpaClients?: Prisma.CpaClientUpdateManyWithoutCpaNestedInput
   cpaOf?: Prisma.CpaClientUpdateManyWithoutClientNestedInput
   inactiveMonthAttestations?: Prisma.AccountInactiveMonthUpdateManyWithoutUserNestedInput
+  engagementLettersAsCpa?: Prisma.EngagementLetterUpdateManyWithoutCpaNestedInput
+  filingMilestones?: Prisma.FilingMilestoneUpdateManyWithoutUserNestedInput
+  classificationNotes?: Prisma.ClassificationNoteUpdateManyWithoutAuthorNestedInput
 }
 
 export type UserUncheckedUpdateWithoutAuditEventsInput = {
@@ -1882,6 +2062,9 @@ export type UserUncheckedUpdateWithoutAuditEventsInput = {
   cpaClients?: Prisma.CpaClientUncheckedUpdateManyWithoutCpaNestedInput
   cpaOf?: Prisma.CpaClientUncheckedUpdateManyWithoutClientNestedInput
   inactiveMonthAttestations?: Prisma.AccountInactiveMonthUncheckedUpdateManyWithoutUserNestedInput
+  engagementLettersAsCpa?: Prisma.EngagementLetterUncheckedUpdateManyWithoutCpaNestedInput
+  filingMilestones?: Prisma.FilingMilestoneUncheckedUpdateManyWithoutUserNestedInput
+  classificationNotes?: Prisma.ClassificationNoteUncheckedUpdateManyWithoutAuthorNestedInput
 }
 
 export type UserUpsertWithoutAuditEventsAsCpaInput = {
@@ -1918,6 +2101,9 @@ export type UserUpdateWithoutAuditEventsAsCpaInput = {
   cpaClients?: Prisma.CpaClientUpdateManyWithoutCpaNestedInput
   cpaOf?: Prisma.CpaClientUpdateManyWithoutClientNestedInput
   inactiveMonthAttestations?: Prisma.AccountInactiveMonthUpdateManyWithoutUserNestedInput
+  engagementLettersAsCpa?: Prisma.EngagementLetterUpdateManyWithoutCpaNestedInput
+  filingMilestones?: Prisma.FilingMilestoneUpdateManyWithoutUserNestedInput
+  classificationNotes?: Prisma.ClassificationNoteUpdateManyWithoutAuthorNestedInput
 }
 
 export type UserUncheckedUpdateWithoutAuditEventsAsCpaInput = {
@@ -1943,6 +2129,9 @@ export type UserUncheckedUpdateWithoutAuditEventsAsCpaInput = {
   cpaClients?: Prisma.CpaClientUncheckedUpdateManyWithoutCpaNestedInput
   cpaOf?: Prisma.CpaClientUncheckedUpdateManyWithoutClientNestedInput
   inactiveMonthAttestations?: Prisma.AccountInactiveMonthUncheckedUpdateManyWithoutUserNestedInput
+  engagementLettersAsCpa?: Prisma.EngagementLetterUncheckedUpdateManyWithoutCpaNestedInput
+  filingMilestones?: Prisma.FilingMilestoneUncheckedUpdateManyWithoutUserNestedInput
+  classificationNotes?: Prisma.ClassificationNoteUncheckedUpdateManyWithoutAuthorNestedInput
 }
 
 export type UserUpsertWithoutAuditEventsAsAdminInput = {
@@ -1979,6 +2168,9 @@ export type UserUpdateWithoutAuditEventsAsAdminInput = {
   cpaClients?: Prisma.CpaClientUpdateManyWithoutCpaNestedInput
   cpaOf?: Prisma.CpaClientUpdateManyWithoutClientNestedInput
   inactiveMonthAttestations?: Prisma.AccountInactiveMonthUpdateManyWithoutUserNestedInput
+  engagementLettersAsCpa?: Prisma.EngagementLetterUpdateManyWithoutCpaNestedInput
+  filingMilestones?: Prisma.FilingMilestoneUpdateManyWithoutUserNestedInput
+  classificationNotes?: Prisma.ClassificationNoteUpdateManyWithoutAuthorNestedInput
 }
 
 export type UserUncheckedUpdateWithoutAuditEventsAsAdminInput = {
@@ -2004,6 +2196,9 @@ export type UserUncheckedUpdateWithoutAuditEventsAsAdminInput = {
   cpaClients?: Prisma.CpaClientUncheckedUpdateManyWithoutCpaNestedInput
   cpaOf?: Prisma.CpaClientUncheckedUpdateManyWithoutClientNestedInput
   inactiveMonthAttestations?: Prisma.AccountInactiveMonthUncheckedUpdateManyWithoutUserNestedInput
+  engagementLettersAsCpa?: Prisma.EngagementLetterUncheckedUpdateManyWithoutCpaNestedInput
+  filingMilestones?: Prisma.FilingMilestoneUncheckedUpdateManyWithoutUserNestedInput
+  classificationNotes?: Prisma.ClassificationNoteUncheckedUpdateManyWithoutAuthorNestedInput
 }
 
 export type UserCreateWithoutDocumentsInput = {
@@ -2029,6 +2224,9 @@ export type UserCreateWithoutDocumentsInput = {
   cpaClients?: Prisma.CpaClientCreateNestedManyWithoutCpaInput
   cpaOf?: Prisma.CpaClientCreateNestedManyWithoutClientInput
   inactiveMonthAttestations?: Prisma.AccountInactiveMonthCreateNestedManyWithoutUserInput
+  engagementLettersAsCpa?: Prisma.EngagementLetterCreateNestedManyWithoutCpaInput
+  filingMilestones?: Prisma.FilingMilestoneCreateNestedManyWithoutUserInput
+  classificationNotes?: Prisma.ClassificationNoteCreateNestedManyWithoutAuthorInput
 }
 
 export type UserUncheckedCreateWithoutDocumentsInput = {
@@ -2054,6 +2252,9 @@ export type UserUncheckedCreateWithoutDocumentsInput = {
   cpaClients?: Prisma.CpaClientUncheckedCreateNestedManyWithoutCpaInput
   cpaOf?: Prisma.CpaClientUncheckedCreateNestedManyWithoutClientInput
   inactiveMonthAttestations?: Prisma.AccountInactiveMonthUncheckedCreateNestedManyWithoutUserInput
+  engagementLettersAsCpa?: Prisma.EngagementLetterUncheckedCreateNestedManyWithoutCpaInput
+  filingMilestones?: Prisma.FilingMilestoneUncheckedCreateNestedManyWithoutUserInput
+  classificationNotes?: Prisma.ClassificationNoteUncheckedCreateNestedManyWithoutAuthorInput
 }
 
 export type UserCreateOrConnectWithoutDocumentsInput = {
@@ -2084,6 +2285,9 @@ export type UserCreateWithoutDocumentsUploadedInput = {
   cpaClients?: Prisma.CpaClientCreateNestedManyWithoutCpaInput
   cpaOf?: Prisma.CpaClientCreateNestedManyWithoutClientInput
   inactiveMonthAttestations?: Prisma.AccountInactiveMonthCreateNestedManyWithoutUserInput
+  engagementLettersAsCpa?: Prisma.EngagementLetterCreateNestedManyWithoutCpaInput
+  filingMilestones?: Prisma.FilingMilestoneCreateNestedManyWithoutUserInput
+  classificationNotes?: Prisma.ClassificationNoteCreateNestedManyWithoutAuthorInput
 }
 
 export type UserUncheckedCreateWithoutDocumentsUploadedInput = {
@@ -2109,6 +2313,9 @@ export type UserUncheckedCreateWithoutDocumentsUploadedInput = {
   cpaClients?: Prisma.CpaClientUncheckedCreateNestedManyWithoutCpaInput
   cpaOf?: Prisma.CpaClientUncheckedCreateNestedManyWithoutClientInput
   inactiveMonthAttestations?: Prisma.AccountInactiveMonthUncheckedCreateNestedManyWithoutUserInput
+  engagementLettersAsCpa?: Prisma.EngagementLetterUncheckedCreateNestedManyWithoutCpaInput
+  filingMilestones?: Prisma.FilingMilestoneUncheckedCreateNestedManyWithoutUserInput
+  classificationNotes?: Prisma.ClassificationNoteUncheckedCreateNestedManyWithoutAuthorInput
 }
 
 export type UserCreateOrConnectWithoutDocumentsUploadedInput = {
@@ -2150,6 +2357,9 @@ export type UserUpdateWithoutDocumentsInput = {
   cpaClients?: Prisma.CpaClientUpdateManyWithoutCpaNestedInput
   cpaOf?: Prisma.CpaClientUpdateManyWithoutClientNestedInput
   inactiveMonthAttestations?: Prisma.AccountInactiveMonthUpdateManyWithoutUserNestedInput
+  engagementLettersAsCpa?: Prisma.EngagementLetterUpdateManyWithoutCpaNestedInput
+  filingMilestones?: Prisma.FilingMilestoneUpdateManyWithoutUserNestedInput
+  classificationNotes?: Prisma.ClassificationNoteUpdateManyWithoutAuthorNestedInput
 }
 
 export type UserUncheckedUpdateWithoutDocumentsInput = {
@@ -2175,6 +2385,9 @@ export type UserUncheckedUpdateWithoutDocumentsInput = {
   cpaClients?: Prisma.CpaClientUncheckedUpdateManyWithoutCpaNestedInput
   cpaOf?: Prisma.CpaClientUncheckedUpdateManyWithoutClientNestedInput
   inactiveMonthAttestations?: Prisma.AccountInactiveMonthUncheckedUpdateManyWithoutUserNestedInput
+  engagementLettersAsCpa?: Prisma.EngagementLetterUncheckedUpdateManyWithoutCpaNestedInput
+  filingMilestones?: Prisma.FilingMilestoneUncheckedUpdateManyWithoutUserNestedInput
+  classificationNotes?: Prisma.ClassificationNoteUncheckedUpdateManyWithoutAuthorNestedInput
 }
 
 export type UserUpsertWithoutDocumentsUploadedInput = {
@@ -2211,6 +2424,9 @@ export type UserUpdateWithoutDocumentsUploadedInput = {
   cpaClients?: Prisma.CpaClientUpdateManyWithoutCpaNestedInput
   cpaOf?: Prisma.CpaClientUpdateManyWithoutClientNestedInput
   inactiveMonthAttestations?: Prisma.AccountInactiveMonthUpdateManyWithoutUserNestedInput
+  engagementLettersAsCpa?: Prisma.EngagementLetterUpdateManyWithoutCpaNestedInput
+  filingMilestones?: Prisma.FilingMilestoneUpdateManyWithoutUserNestedInput
+  classificationNotes?: Prisma.ClassificationNoteUpdateManyWithoutAuthorNestedInput
 }
 
 export type UserUncheckedUpdateWithoutDocumentsUploadedInput = {
@@ -2236,6 +2452,393 @@ export type UserUncheckedUpdateWithoutDocumentsUploadedInput = {
   cpaClients?: Prisma.CpaClientUncheckedUpdateManyWithoutCpaNestedInput
   cpaOf?: Prisma.CpaClientUncheckedUpdateManyWithoutClientNestedInput
   inactiveMonthAttestations?: Prisma.AccountInactiveMonthUncheckedUpdateManyWithoutUserNestedInput
+  engagementLettersAsCpa?: Prisma.EngagementLetterUncheckedUpdateManyWithoutCpaNestedInput
+  filingMilestones?: Prisma.FilingMilestoneUncheckedUpdateManyWithoutUserNestedInput
+  classificationNotes?: Prisma.ClassificationNoteUncheckedUpdateManyWithoutAuthorNestedInput
+}
+
+export type UserCreateWithoutEngagementLettersAsCpaInput = {
+  id?: string
+  name?: string | null
+  email: string
+  emailVerified?: Date | string | null
+  image?: string | null
+  password?: string | null
+  role?: $Enums.UserRole
+  isActive?: boolean
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  accounts?: Prisma.AccountCreateNestedManyWithoutUserInput
+  sessions?: Prisma.SessionCreateNestedManyWithoutUserInput
+  taxYears?: Prisma.TaxYearCreateNestedManyWithoutUserInput
+  financialAccounts?: Prisma.FinancialAccountCreateNestedManyWithoutUserInput
+  businessProfiles?: Prisma.BusinessProfileCreateNestedManyWithoutUserInput
+  auditEvents?: Prisma.AuditEventCreateNestedManyWithoutUserInput
+  auditEventsAsCpa?: Prisma.AuditEventCreateNestedManyWithoutActorCpaInput
+  auditEventsAsAdmin?: Prisma.AuditEventCreateNestedManyWithoutActorAdminInput
+  documents?: Prisma.DocumentCreateNestedManyWithoutUserInput
+  documentsUploaded?: Prisma.DocumentCreateNestedManyWithoutUploadedByInput
+  cpaClients?: Prisma.CpaClientCreateNestedManyWithoutCpaInput
+  cpaOf?: Prisma.CpaClientCreateNestedManyWithoutClientInput
+  inactiveMonthAttestations?: Prisma.AccountInactiveMonthCreateNestedManyWithoutUserInput
+  filingMilestones?: Prisma.FilingMilestoneCreateNestedManyWithoutUserInput
+  classificationNotes?: Prisma.ClassificationNoteCreateNestedManyWithoutAuthorInput
+}
+
+export type UserUncheckedCreateWithoutEngagementLettersAsCpaInput = {
+  id?: string
+  name?: string | null
+  email: string
+  emailVerified?: Date | string | null
+  image?: string | null
+  password?: string | null
+  role?: $Enums.UserRole
+  isActive?: boolean
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  accounts?: Prisma.AccountUncheckedCreateNestedManyWithoutUserInput
+  sessions?: Prisma.SessionUncheckedCreateNestedManyWithoutUserInput
+  taxYears?: Prisma.TaxYearUncheckedCreateNestedManyWithoutUserInput
+  financialAccounts?: Prisma.FinancialAccountUncheckedCreateNestedManyWithoutUserInput
+  businessProfiles?: Prisma.BusinessProfileUncheckedCreateNestedManyWithoutUserInput
+  auditEvents?: Prisma.AuditEventUncheckedCreateNestedManyWithoutUserInput
+  auditEventsAsCpa?: Prisma.AuditEventUncheckedCreateNestedManyWithoutActorCpaInput
+  auditEventsAsAdmin?: Prisma.AuditEventUncheckedCreateNestedManyWithoutActorAdminInput
+  documents?: Prisma.DocumentUncheckedCreateNestedManyWithoutUserInput
+  documentsUploaded?: Prisma.DocumentUncheckedCreateNestedManyWithoutUploadedByInput
+  cpaClients?: Prisma.CpaClientUncheckedCreateNestedManyWithoutCpaInput
+  cpaOf?: Prisma.CpaClientUncheckedCreateNestedManyWithoutClientInput
+  inactiveMonthAttestations?: Prisma.AccountInactiveMonthUncheckedCreateNestedManyWithoutUserInput
+  filingMilestones?: Prisma.FilingMilestoneUncheckedCreateNestedManyWithoutUserInput
+  classificationNotes?: Prisma.ClassificationNoteUncheckedCreateNestedManyWithoutAuthorInput
+}
+
+export type UserCreateOrConnectWithoutEngagementLettersAsCpaInput = {
+  where: Prisma.UserWhereUniqueInput
+  create: Prisma.XOR<Prisma.UserCreateWithoutEngagementLettersAsCpaInput, Prisma.UserUncheckedCreateWithoutEngagementLettersAsCpaInput>
+}
+
+export type UserUpsertWithoutEngagementLettersAsCpaInput = {
+  update: Prisma.XOR<Prisma.UserUpdateWithoutEngagementLettersAsCpaInput, Prisma.UserUncheckedUpdateWithoutEngagementLettersAsCpaInput>
+  create: Prisma.XOR<Prisma.UserCreateWithoutEngagementLettersAsCpaInput, Prisma.UserUncheckedCreateWithoutEngagementLettersAsCpaInput>
+  where?: Prisma.UserWhereInput
+}
+
+export type UserUpdateToOneWithWhereWithoutEngagementLettersAsCpaInput = {
+  where?: Prisma.UserWhereInput
+  data: Prisma.XOR<Prisma.UserUpdateWithoutEngagementLettersAsCpaInput, Prisma.UserUncheckedUpdateWithoutEngagementLettersAsCpaInput>
+}
+
+export type UserUpdateWithoutEngagementLettersAsCpaInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  email?: Prisma.StringFieldUpdateOperationsInput | string
+  emailVerified?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  image?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  password?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  role?: Prisma.EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
+  isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  accounts?: Prisma.AccountUpdateManyWithoutUserNestedInput
+  sessions?: Prisma.SessionUpdateManyWithoutUserNestedInput
+  taxYears?: Prisma.TaxYearUpdateManyWithoutUserNestedInput
+  financialAccounts?: Prisma.FinancialAccountUpdateManyWithoutUserNestedInput
+  businessProfiles?: Prisma.BusinessProfileUpdateManyWithoutUserNestedInput
+  auditEvents?: Prisma.AuditEventUpdateManyWithoutUserNestedInput
+  auditEventsAsCpa?: Prisma.AuditEventUpdateManyWithoutActorCpaNestedInput
+  auditEventsAsAdmin?: Prisma.AuditEventUpdateManyWithoutActorAdminNestedInput
+  documents?: Prisma.DocumentUpdateManyWithoutUserNestedInput
+  documentsUploaded?: Prisma.DocumentUpdateManyWithoutUploadedByNestedInput
+  cpaClients?: Prisma.CpaClientUpdateManyWithoutCpaNestedInput
+  cpaOf?: Prisma.CpaClientUpdateManyWithoutClientNestedInput
+  inactiveMonthAttestations?: Prisma.AccountInactiveMonthUpdateManyWithoutUserNestedInput
+  filingMilestones?: Prisma.FilingMilestoneUpdateManyWithoutUserNestedInput
+  classificationNotes?: Prisma.ClassificationNoteUpdateManyWithoutAuthorNestedInput
+}
+
+export type UserUncheckedUpdateWithoutEngagementLettersAsCpaInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  email?: Prisma.StringFieldUpdateOperationsInput | string
+  emailVerified?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  image?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  password?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  role?: Prisma.EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
+  isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  accounts?: Prisma.AccountUncheckedUpdateManyWithoutUserNestedInput
+  sessions?: Prisma.SessionUncheckedUpdateManyWithoutUserNestedInput
+  taxYears?: Prisma.TaxYearUncheckedUpdateManyWithoutUserNestedInput
+  financialAccounts?: Prisma.FinancialAccountUncheckedUpdateManyWithoutUserNestedInput
+  businessProfiles?: Prisma.BusinessProfileUncheckedUpdateManyWithoutUserNestedInput
+  auditEvents?: Prisma.AuditEventUncheckedUpdateManyWithoutUserNestedInput
+  auditEventsAsCpa?: Prisma.AuditEventUncheckedUpdateManyWithoutActorCpaNestedInput
+  auditEventsAsAdmin?: Prisma.AuditEventUncheckedUpdateManyWithoutActorAdminNestedInput
+  documents?: Prisma.DocumentUncheckedUpdateManyWithoutUserNestedInput
+  documentsUploaded?: Prisma.DocumentUncheckedUpdateManyWithoutUploadedByNestedInput
+  cpaClients?: Prisma.CpaClientUncheckedUpdateManyWithoutCpaNestedInput
+  cpaOf?: Prisma.CpaClientUncheckedUpdateManyWithoutClientNestedInput
+  inactiveMonthAttestations?: Prisma.AccountInactiveMonthUncheckedUpdateManyWithoutUserNestedInput
+  filingMilestones?: Prisma.FilingMilestoneUncheckedUpdateManyWithoutUserNestedInput
+  classificationNotes?: Prisma.ClassificationNoteUncheckedUpdateManyWithoutAuthorNestedInput
+}
+
+export type UserCreateWithoutFilingMilestonesInput = {
+  id?: string
+  name?: string | null
+  email: string
+  emailVerified?: Date | string | null
+  image?: string | null
+  password?: string | null
+  role?: $Enums.UserRole
+  isActive?: boolean
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  accounts?: Prisma.AccountCreateNestedManyWithoutUserInput
+  sessions?: Prisma.SessionCreateNestedManyWithoutUserInput
+  taxYears?: Prisma.TaxYearCreateNestedManyWithoutUserInput
+  financialAccounts?: Prisma.FinancialAccountCreateNestedManyWithoutUserInput
+  businessProfiles?: Prisma.BusinessProfileCreateNestedManyWithoutUserInput
+  auditEvents?: Prisma.AuditEventCreateNestedManyWithoutUserInput
+  auditEventsAsCpa?: Prisma.AuditEventCreateNestedManyWithoutActorCpaInput
+  auditEventsAsAdmin?: Prisma.AuditEventCreateNestedManyWithoutActorAdminInput
+  documents?: Prisma.DocumentCreateNestedManyWithoutUserInput
+  documentsUploaded?: Prisma.DocumentCreateNestedManyWithoutUploadedByInput
+  cpaClients?: Prisma.CpaClientCreateNestedManyWithoutCpaInput
+  cpaOf?: Prisma.CpaClientCreateNestedManyWithoutClientInput
+  inactiveMonthAttestations?: Prisma.AccountInactiveMonthCreateNestedManyWithoutUserInput
+  engagementLettersAsCpa?: Prisma.EngagementLetterCreateNestedManyWithoutCpaInput
+  classificationNotes?: Prisma.ClassificationNoteCreateNestedManyWithoutAuthorInput
+}
+
+export type UserUncheckedCreateWithoutFilingMilestonesInput = {
+  id?: string
+  name?: string | null
+  email: string
+  emailVerified?: Date | string | null
+  image?: string | null
+  password?: string | null
+  role?: $Enums.UserRole
+  isActive?: boolean
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  accounts?: Prisma.AccountUncheckedCreateNestedManyWithoutUserInput
+  sessions?: Prisma.SessionUncheckedCreateNestedManyWithoutUserInput
+  taxYears?: Prisma.TaxYearUncheckedCreateNestedManyWithoutUserInput
+  financialAccounts?: Prisma.FinancialAccountUncheckedCreateNestedManyWithoutUserInput
+  businessProfiles?: Prisma.BusinessProfileUncheckedCreateNestedManyWithoutUserInput
+  auditEvents?: Prisma.AuditEventUncheckedCreateNestedManyWithoutUserInput
+  auditEventsAsCpa?: Prisma.AuditEventUncheckedCreateNestedManyWithoutActorCpaInput
+  auditEventsAsAdmin?: Prisma.AuditEventUncheckedCreateNestedManyWithoutActorAdminInput
+  documents?: Prisma.DocumentUncheckedCreateNestedManyWithoutUserInput
+  documentsUploaded?: Prisma.DocumentUncheckedCreateNestedManyWithoutUploadedByInput
+  cpaClients?: Prisma.CpaClientUncheckedCreateNestedManyWithoutCpaInput
+  cpaOf?: Prisma.CpaClientUncheckedCreateNestedManyWithoutClientInput
+  inactiveMonthAttestations?: Prisma.AccountInactiveMonthUncheckedCreateNestedManyWithoutUserInput
+  engagementLettersAsCpa?: Prisma.EngagementLetterUncheckedCreateNestedManyWithoutCpaInput
+  classificationNotes?: Prisma.ClassificationNoteUncheckedCreateNestedManyWithoutAuthorInput
+}
+
+export type UserCreateOrConnectWithoutFilingMilestonesInput = {
+  where: Prisma.UserWhereUniqueInput
+  create: Prisma.XOR<Prisma.UserCreateWithoutFilingMilestonesInput, Prisma.UserUncheckedCreateWithoutFilingMilestonesInput>
+}
+
+export type UserUpsertWithoutFilingMilestonesInput = {
+  update: Prisma.XOR<Prisma.UserUpdateWithoutFilingMilestonesInput, Prisma.UserUncheckedUpdateWithoutFilingMilestonesInput>
+  create: Prisma.XOR<Prisma.UserCreateWithoutFilingMilestonesInput, Prisma.UserUncheckedCreateWithoutFilingMilestonesInput>
+  where?: Prisma.UserWhereInput
+}
+
+export type UserUpdateToOneWithWhereWithoutFilingMilestonesInput = {
+  where?: Prisma.UserWhereInput
+  data: Prisma.XOR<Prisma.UserUpdateWithoutFilingMilestonesInput, Prisma.UserUncheckedUpdateWithoutFilingMilestonesInput>
+}
+
+export type UserUpdateWithoutFilingMilestonesInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  email?: Prisma.StringFieldUpdateOperationsInput | string
+  emailVerified?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  image?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  password?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  role?: Prisma.EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
+  isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  accounts?: Prisma.AccountUpdateManyWithoutUserNestedInput
+  sessions?: Prisma.SessionUpdateManyWithoutUserNestedInput
+  taxYears?: Prisma.TaxYearUpdateManyWithoutUserNestedInput
+  financialAccounts?: Prisma.FinancialAccountUpdateManyWithoutUserNestedInput
+  businessProfiles?: Prisma.BusinessProfileUpdateManyWithoutUserNestedInput
+  auditEvents?: Prisma.AuditEventUpdateManyWithoutUserNestedInput
+  auditEventsAsCpa?: Prisma.AuditEventUpdateManyWithoutActorCpaNestedInput
+  auditEventsAsAdmin?: Prisma.AuditEventUpdateManyWithoutActorAdminNestedInput
+  documents?: Prisma.DocumentUpdateManyWithoutUserNestedInput
+  documentsUploaded?: Prisma.DocumentUpdateManyWithoutUploadedByNestedInput
+  cpaClients?: Prisma.CpaClientUpdateManyWithoutCpaNestedInput
+  cpaOf?: Prisma.CpaClientUpdateManyWithoutClientNestedInput
+  inactiveMonthAttestations?: Prisma.AccountInactiveMonthUpdateManyWithoutUserNestedInput
+  engagementLettersAsCpa?: Prisma.EngagementLetterUpdateManyWithoutCpaNestedInput
+  classificationNotes?: Prisma.ClassificationNoteUpdateManyWithoutAuthorNestedInput
+}
+
+export type UserUncheckedUpdateWithoutFilingMilestonesInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  email?: Prisma.StringFieldUpdateOperationsInput | string
+  emailVerified?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  image?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  password?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  role?: Prisma.EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
+  isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  accounts?: Prisma.AccountUncheckedUpdateManyWithoutUserNestedInput
+  sessions?: Prisma.SessionUncheckedUpdateManyWithoutUserNestedInput
+  taxYears?: Prisma.TaxYearUncheckedUpdateManyWithoutUserNestedInput
+  financialAccounts?: Prisma.FinancialAccountUncheckedUpdateManyWithoutUserNestedInput
+  businessProfiles?: Prisma.BusinessProfileUncheckedUpdateManyWithoutUserNestedInput
+  auditEvents?: Prisma.AuditEventUncheckedUpdateManyWithoutUserNestedInput
+  auditEventsAsCpa?: Prisma.AuditEventUncheckedUpdateManyWithoutActorCpaNestedInput
+  auditEventsAsAdmin?: Prisma.AuditEventUncheckedUpdateManyWithoutActorAdminNestedInput
+  documents?: Prisma.DocumentUncheckedUpdateManyWithoutUserNestedInput
+  documentsUploaded?: Prisma.DocumentUncheckedUpdateManyWithoutUploadedByNestedInput
+  cpaClients?: Prisma.CpaClientUncheckedUpdateManyWithoutCpaNestedInput
+  cpaOf?: Prisma.CpaClientUncheckedUpdateManyWithoutClientNestedInput
+  inactiveMonthAttestations?: Prisma.AccountInactiveMonthUncheckedUpdateManyWithoutUserNestedInput
+  engagementLettersAsCpa?: Prisma.EngagementLetterUncheckedUpdateManyWithoutCpaNestedInput
+  classificationNotes?: Prisma.ClassificationNoteUncheckedUpdateManyWithoutAuthorNestedInput
+}
+
+export type UserCreateWithoutClassificationNotesInput = {
+  id?: string
+  name?: string | null
+  email: string
+  emailVerified?: Date | string | null
+  image?: string | null
+  password?: string | null
+  role?: $Enums.UserRole
+  isActive?: boolean
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  accounts?: Prisma.AccountCreateNestedManyWithoutUserInput
+  sessions?: Prisma.SessionCreateNestedManyWithoutUserInput
+  taxYears?: Prisma.TaxYearCreateNestedManyWithoutUserInput
+  financialAccounts?: Prisma.FinancialAccountCreateNestedManyWithoutUserInput
+  businessProfiles?: Prisma.BusinessProfileCreateNestedManyWithoutUserInput
+  auditEvents?: Prisma.AuditEventCreateNestedManyWithoutUserInput
+  auditEventsAsCpa?: Prisma.AuditEventCreateNestedManyWithoutActorCpaInput
+  auditEventsAsAdmin?: Prisma.AuditEventCreateNestedManyWithoutActorAdminInput
+  documents?: Prisma.DocumentCreateNestedManyWithoutUserInput
+  documentsUploaded?: Prisma.DocumentCreateNestedManyWithoutUploadedByInput
+  cpaClients?: Prisma.CpaClientCreateNestedManyWithoutCpaInput
+  cpaOf?: Prisma.CpaClientCreateNestedManyWithoutClientInput
+  inactiveMonthAttestations?: Prisma.AccountInactiveMonthCreateNestedManyWithoutUserInput
+  engagementLettersAsCpa?: Prisma.EngagementLetterCreateNestedManyWithoutCpaInput
+  filingMilestones?: Prisma.FilingMilestoneCreateNestedManyWithoutUserInput
+}
+
+export type UserUncheckedCreateWithoutClassificationNotesInput = {
+  id?: string
+  name?: string | null
+  email: string
+  emailVerified?: Date | string | null
+  image?: string | null
+  password?: string | null
+  role?: $Enums.UserRole
+  isActive?: boolean
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  accounts?: Prisma.AccountUncheckedCreateNestedManyWithoutUserInput
+  sessions?: Prisma.SessionUncheckedCreateNestedManyWithoutUserInput
+  taxYears?: Prisma.TaxYearUncheckedCreateNestedManyWithoutUserInput
+  financialAccounts?: Prisma.FinancialAccountUncheckedCreateNestedManyWithoutUserInput
+  businessProfiles?: Prisma.BusinessProfileUncheckedCreateNestedManyWithoutUserInput
+  auditEvents?: Prisma.AuditEventUncheckedCreateNestedManyWithoutUserInput
+  auditEventsAsCpa?: Prisma.AuditEventUncheckedCreateNestedManyWithoutActorCpaInput
+  auditEventsAsAdmin?: Prisma.AuditEventUncheckedCreateNestedManyWithoutActorAdminInput
+  documents?: Prisma.DocumentUncheckedCreateNestedManyWithoutUserInput
+  documentsUploaded?: Prisma.DocumentUncheckedCreateNestedManyWithoutUploadedByInput
+  cpaClients?: Prisma.CpaClientUncheckedCreateNestedManyWithoutCpaInput
+  cpaOf?: Prisma.CpaClientUncheckedCreateNestedManyWithoutClientInput
+  inactiveMonthAttestations?: Prisma.AccountInactiveMonthUncheckedCreateNestedManyWithoutUserInput
+  engagementLettersAsCpa?: Prisma.EngagementLetterUncheckedCreateNestedManyWithoutCpaInput
+  filingMilestones?: Prisma.FilingMilestoneUncheckedCreateNestedManyWithoutUserInput
+}
+
+export type UserCreateOrConnectWithoutClassificationNotesInput = {
+  where: Prisma.UserWhereUniqueInput
+  create: Prisma.XOR<Prisma.UserCreateWithoutClassificationNotesInput, Prisma.UserUncheckedCreateWithoutClassificationNotesInput>
+}
+
+export type UserUpsertWithoutClassificationNotesInput = {
+  update: Prisma.XOR<Prisma.UserUpdateWithoutClassificationNotesInput, Prisma.UserUncheckedUpdateWithoutClassificationNotesInput>
+  create: Prisma.XOR<Prisma.UserCreateWithoutClassificationNotesInput, Prisma.UserUncheckedCreateWithoutClassificationNotesInput>
+  where?: Prisma.UserWhereInput
+}
+
+export type UserUpdateToOneWithWhereWithoutClassificationNotesInput = {
+  where?: Prisma.UserWhereInput
+  data: Prisma.XOR<Prisma.UserUpdateWithoutClassificationNotesInput, Prisma.UserUncheckedUpdateWithoutClassificationNotesInput>
+}
+
+export type UserUpdateWithoutClassificationNotesInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  email?: Prisma.StringFieldUpdateOperationsInput | string
+  emailVerified?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  image?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  password?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  role?: Prisma.EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
+  isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  accounts?: Prisma.AccountUpdateManyWithoutUserNestedInput
+  sessions?: Prisma.SessionUpdateManyWithoutUserNestedInput
+  taxYears?: Prisma.TaxYearUpdateManyWithoutUserNestedInput
+  financialAccounts?: Prisma.FinancialAccountUpdateManyWithoutUserNestedInput
+  businessProfiles?: Prisma.BusinessProfileUpdateManyWithoutUserNestedInput
+  auditEvents?: Prisma.AuditEventUpdateManyWithoutUserNestedInput
+  auditEventsAsCpa?: Prisma.AuditEventUpdateManyWithoutActorCpaNestedInput
+  auditEventsAsAdmin?: Prisma.AuditEventUpdateManyWithoutActorAdminNestedInput
+  documents?: Prisma.DocumentUpdateManyWithoutUserNestedInput
+  documentsUploaded?: Prisma.DocumentUpdateManyWithoutUploadedByNestedInput
+  cpaClients?: Prisma.CpaClientUpdateManyWithoutCpaNestedInput
+  cpaOf?: Prisma.CpaClientUpdateManyWithoutClientNestedInput
+  inactiveMonthAttestations?: Prisma.AccountInactiveMonthUpdateManyWithoutUserNestedInput
+  engagementLettersAsCpa?: Prisma.EngagementLetterUpdateManyWithoutCpaNestedInput
+  filingMilestones?: Prisma.FilingMilestoneUpdateManyWithoutUserNestedInput
+}
+
+export type UserUncheckedUpdateWithoutClassificationNotesInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  email?: Prisma.StringFieldUpdateOperationsInput | string
+  emailVerified?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  image?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  password?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  role?: Prisma.EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
+  isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  accounts?: Prisma.AccountUncheckedUpdateManyWithoutUserNestedInput
+  sessions?: Prisma.SessionUncheckedUpdateManyWithoutUserNestedInput
+  taxYears?: Prisma.TaxYearUncheckedUpdateManyWithoutUserNestedInput
+  financialAccounts?: Prisma.FinancialAccountUncheckedUpdateManyWithoutUserNestedInput
+  businessProfiles?: Prisma.BusinessProfileUncheckedUpdateManyWithoutUserNestedInput
+  auditEvents?: Prisma.AuditEventUncheckedUpdateManyWithoutUserNestedInput
+  auditEventsAsCpa?: Prisma.AuditEventUncheckedUpdateManyWithoutActorCpaNestedInput
+  auditEventsAsAdmin?: Prisma.AuditEventUncheckedUpdateManyWithoutActorAdminNestedInput
+  documents?: Prisma.DocumentUncheckedUpdateManyWithoutUserNestedInput
+  documentsUploaded?: Prisma.DocumentUncheckedUpdateManyWithoutUploadedByNestedInput
+  cpaClients?: Prisma.CpaClientUncheckedUpdateManyWithoutCpaNestedInput
+  cpaOf?: Prisma.CpaClientUncheckedUpdateManyWithoutClientNestedInput
+  inactiveMonthAttestations?: Prisma.AccountInactiveMonthUncheckedUpdateManyWithoutUserNestedInput
+  engagementLettersAsCpa?: Prisma.EngagementLetterUncheckedUpdateManyWithoutCpaNestedInput
+  filingMilestones?: Prisma.FilingMilestoneUncheckedUpdateManyWithoutUserNestedInput
 }
 
 
@@ -2257,6 +2860,9 @@ export type UserCountOutputType = {
   cpaClients: number
   cpaOf: number
   inactiveMonthAttestations: number
+  engagementLettersAsCpa: number
+  filingMilestones: number
+  classificationNotes: number
 }
 
 export type UserCountOutputTypeSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
@@ -2273,6 +2879,9 @@ export type UserCountOutputTypeSelect<ExtArgs extends runtime.Types.Extensions.I
   cpaClients?: boolean | UserCountOutputTypeCountCpaClientsArgs
   cpaOf?: boolean | UserCountOutputTypeCountCpaOfArgs
   inactiveMonthAttestations?: boolean | UserCountOutputTypeCountInactiveMonthAttestationsArgs
+  engagementLettersAsCpa?: boolean | UserCountOutputTypeCountEngagementLettersAsCpaArgs
+  filingMilestones?: boolean | UserCountOutputTypeCountFilingMilestonesArgs
+  classificationNotes?: boolean | UserCountOutputTypeCountClassificationNotesArgs
 }
 
 /**
@@ -2376,6 +2985,27 @@ export type UserCountOutputTypeCountInactiveMonthAttestationsArgs<ExtArgs extend
   where?: Prisma.AccountInactiveMonthWhereInput
 }
 
+/**
+ * UserCountOutputType without action
+ */
+export type UserCountOutputTypeCountEngagementLettersAsCpaArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.EngagementLetterWhereInput
+}
+
+/**
+ * UserCountOutputType without action
+ */
+export type UserCountOutputTypeCountFilingMilestonesArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.FilingMilestoneWhereInput
+}
+
+/**
+ * UserCountOutputType without action
+ */
+export type UserCountOutputTypeCountClassificationNotesArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.ClassificationNoteWhereInput
+}
+
 
 export type UserSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   id?: boolean
@@ -2401,6 +3031,9 @@ export type UserSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = r
   cpaClients?: boolean | Prisma.User$cpaClientsArgs<ExtArgs>
   cpaOf?: boolean | Prisma.User$cpaOfArgs<ExtArgs>
   inactiveMonthAttestations?: boolean | Prisma.User$inactiveMonthAttestationsArgs<ExtArgs>
+  engagementLettersAsCpa?: boolean | Prisma.User$engagementLettersAsCpaArgs<ExtArgs>
+  filingMilestones?: boolean | Prisma.User$filingMilestonesArgs<ExtArgs>
+  classificationNotes?: boolean | Prisma.User$classificationNotesArgs<ExtArgs>
   _count?: boolean | Prisma.UserCountOutputTypeDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["user"]>
 
@@ -2458,6 +3091,9 @@ export type UserInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = 
   cpaClients?: boolean | Prisma.User$cpaClientsArgs<ExtArgs>
   cpaOf?: boolean | Prisma.User$cpaOfArgs<ExtArgs>
   inactiveMonthAttestations?: boolean | Prisma.User$inactiveMonthAttestationsArgs<ExtArgs>
+  engagementLettersAsCpa?: boolean | Prisma.User$engagementLettersAsCpaArgs<ExtArgs>
+  filingMilestones?: boolean | Prisma.User$filingMilestonesArgs<ExtArgs>
+  classificationNotes?: boolean | Prisma.User$classificationNotesArgs<ExtArgs>
   _count?: boolean | Prisma.UserCountOutputTypeDefaultArgs<ExtArgs>
 }
 export type UserIncludeCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {}
@@ -2479,6 +3115,9 @@ export type $UserPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs =
     cpaClients: Prisma.$CpaClientPayload<ExtArgs>[]
     cpaOf: Prisma.$CpaClientPayload<ExtArgs>[]
     inactiveMonthAttestations: Prisma.$AccountInactiveMonthPayload<ExtArgs>[]
+    engagementLettersAsCpa: Prisma.$EngagementLetterPayload<ExtArgs>[]
+    filingMilestones: Prisma.$FilingMilestonePayload<ExtArgs>[]
+    classificationNotes: Prisma.$ClassificationNotePayload<ExtArgs>[]
   }
   scalars: runtime.Types.Extensions.GetPayloadResult<{
     id: string
@@ -2898,6 +3537,9 @@ export interface Prisma__UserClient<T, Null = never, ExtArgs extends runtime.Typ
   cpaClients<T extends Prisma.User$cpaClientsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$cpaClientsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$CpaClientPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   cpaOf<T extends Prisma.User$cpaOfArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$cpaOfArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$CpaClientPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   inactiveMonthAttestations<T extends Prisma.User$inactiveMonthAttestationsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$inactiveMonthAttestationsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$AccountInactiveMonthPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+  engagementLettersAsCpa<T extends Prisma.User$engagementLettersAsCpaArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$engagementLettersAsCpaArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$EngagementLetterPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+  filingMilestones<T extends Prisma.User$filingMilestonesArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$filingMilestonesArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$FilingMilestonePayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+  classificationNotes<T extends Prisma.User$classificationNotesArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$classificationNotesArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$ClassificationNotePayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   /**
    * Attaches callbacks for the resolution and/or rejection of the Promise.
    * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -3639,6 +4281,78 @@ export type User$inactiveMonthAttestationsArgs<ExtArgs extends runtime.Types.Ext
   take?: number
   skip?: number
   distinct?: Prisma.AccountInactiveMonthScalarFieldEnum | Prisma.AccountInactiveMonthScalarFieldEnum[]
+}
+
+/**
+ * User.engagementLettersAsCpa
+ */
+export type User$engagementLettersAsCpaArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the EngagementLetter
+   */
+  select?: Prisma.EngagementLetterSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the EngagementLetter
+   */
+  omit?: Prisma.EngagementLetterOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.EngagementLetterInclude<ExtArgs> | null
+  where?: Prisma.EngagementLetterWhereInput
+  orderBy?: Prisma.EngagementLetterOrderByWithRelationInput | Prisma.EngagementLetterOrderByWithRelationInput[]
+  cursor?: Prisma.EngagementLetterWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.EngagementLetterScalarFieldEnum | Prisma.EngagementLetterScalarFieldEnum[]
+}
+
+/**
+ * User.filingMilestones
+ */
+export type User$filingMilestonesArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the FilingMilestone
+   */
+  select?: Prisma.FilingMilestoneSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the FilingMilestone
+   */
+  omit?: Prisma.FilingMilestoneOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.FilingMilestoneInclude<ExtArgs> | null
+  where?: Prisma.FilingMilestoneWhereInput
+  orderBy?: Prisma.FilingMilestoneOrderByWithRelationInput | Prisma.FilingMilestoneOrderByWithRelationInput[]
+  cursor?: Prisma.FilingMilestoneWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.FilingMilestoneScalarFieldEnum | Prisma.FilingMilestoneScalarFieldEnum[]
+}
+
+/**
+ * User.classificationNotes
+ */
+export type User$classificationNotesArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the ClassificationNote
+   */
+  select?: Prisma.ClassificationNoteSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the ClassificationNote
+   */
+  omit?: Prisma.ClassificationNoteOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.ClassificationNoteInclude<ExtArgs> | null
+  where?: Prisma.ClassificationNoteWhereInput
+  orderBy?: Prisma.ClassificationNoteOrderByWithRelationInput | Prisma.ClassificationNoteOrderByWithRelationInput[]
+  cursor?: Prisma.ClassificationNoteWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.ClassificationNoteScalarFieldEnum | Prisma.ClassificationNoteScalarFieldEnum[]
 }
 
 /**

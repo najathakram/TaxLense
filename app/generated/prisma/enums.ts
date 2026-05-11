@@ -203,6 +203,51 @@ export const UserRole = {
 export type UserRole = (typeof UserRole)[keyof typeof UserRole]
 
 
+export const OwnerRole = {
+  PROPRIETOR: 'PROPRIETOR',
+  SHAREHOLDER: 'SHAREHOLDER',
+  PARTNER: 'PARTNER'
+} as const
+
+export type OwnerRole = (typeof OwnerRole)[keyof typeof OwnerRole]
+
+
+export const SignatureStatus = {
+  NOT_REQUESTED: 'NOT_REQUESTED',
+  REQUESTED: 'REQUESTED',
+  SIGNED: 'SIGNED',
+  DECLINED: 'DECLINED',
+  EXPIRED: 'EXPIRED'
+} as const
+
+export type SignatureStatus = (typeof SignatureStatus)[keyof typeof SignatureStatus]
+
+
+export const FilingStatus = {
+  NOT_STARTED: 'NOT_STARTED',
+  ENGAGEMENT_SIGNED: 'ENGAGEMENT_SIGNED',
+  TAXPAYER_8879_SIGNED: 'TAXPAYER_8879_SIGNED',
+  EFILED: 'EFILED',
+  ACCEPTED_BY_IRS: 'ACCEPTED_BY_IRS',
+  REJECTED_BY_IRS: 'REJECTED_BY_IRS',
+  PAPER_FILED: 'PAPER_FILED',
+  REFUND_RECEIVED: 'REFUND_RECEIVED',
+  BALANCE_PAID: 'BALANCE_PAID'
+} as const
+
+export type FilingStatus = (typeof FilingStatus)[keyof typeof FilingStatus]
+
+
+export const W9Status = {
+  NOT_REQUESTED: 'NOT_REQUESTED',
+  REQUESTED: 'REQUESTED',
+  RECEIVED: 'RECEIVED',
+  EXEMPT: 'EXEMPT'
+} as const
+
+export type W9Status = (typeof W9Status)[keyof typeof W9Status]
+
+
 export const DocumentCategory = {
   STATEMENT: 'STATEMENT',
   TAX_FORM_RECEIVED: 'TAX_FORM_RECEIVED',

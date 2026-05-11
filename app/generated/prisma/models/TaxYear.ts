@@ -258,6 +258,13 @@ export type TaxYearWhereInput = {
   documents?: Prisma.DocumentListRelationFilter
   pipelineRuns?: Prisma.PipelineRunListRelationFilter
   inactiveMonths?: Prisma.AccountInactiveMonthListRelationFilter
+  priorYearContext?: Prisma.XOR<Prisma.PriorYearContextNullableScalarRelationFilter, Prisma.PriorYearContextWhereInput> | null
+  consumedByContexts?: Prisma.PriorYearContextListRelationFilter
+  engagementLetter?: Prisma.XOR<Prisma.EngagementLetterNullableScalarRelationFilter, Prisma.EngagementLetterWhereInput> | null
+  form8879?: Prisma.XOR<Prisma.Form8879NullableScalarRelationFilter, Prisma.Form8879WhereInput> | null
+  filingMilestones?: Prisma.FilingMilestoneListRelationFilter
+  w9Submissions?: Prisma.W9SubmissionListRelationFilter
+  form1099Filings?: Prisma.Form1099FilingListRelationFilter
 }
 
 export type TaxYearOrderByWithRelationInput = {
@@ -284,6 +291,13 @@ export type TaxYearOrderByWithRelationInput = {
   documents?: Prisma.DocumentOrderByRelationAggregateInput
   pipelineRuns?: Prisma.PipelineRunOrderByRelationAggregateInput
   inactiveMonths?: Prisma.AccountInactiveMonthOrderByRelationAggregateInput
+  priorYearContext?: Prisma.PriorYearContextOrderByWithRelationInput
+  consumedByContexts?: Prisma.PriorYearContextOrderByRelationAggregateInput
+  engagementLetter?: Prisma.EngagementLetterOrderByWithRelationInput
+  form8879?: Prisma.Form8879OrderByWithRelationInput
+  filingMilestones?: Prisma.FilingMilestoneOrderByRelationAggregateInput
+  w9Submissions?: Prisma.W9SubmissionOrderByRelationAggregateInput
+  form1099Filings?: Prisma.Form1099FilingOrderByRelationAggregateInput
 }
 
 export type TaxYearWhereUniqueInput = Prisma.AtLeast<{
@@ -314,6 +328,13 @@ export type TaxYearWhereUniqueInput = Prisma.AtLeast<{
   documents?: Prisma.DocumentListRelationFilter
   pipelineRuns?: Prisma.PipelineRunListRelationFilter
   inactiveMonths?: Prisma.AccountInactiveMonthListRelationFilter
+  priorYearContext?: Prisma.XOR<Prisma.PriorYearContextNullableScalarRelationFilter, Prisma.PriorYearContextWhereInput> | null
+  consumedByContexts?: Prisma.PriorYearContextListRelationFilter
+  engagementLetter?: Prisma.XOR<Prisma.EngagementLetterNullableScalarRelationFilter, Prisma.EngagementLetterWhereInput> | null
+  form8879?: Prisma.XOR<Prisma.Form8879NullableScalarRelationFilter, Prisma.Form8879WhereInput> | null
+  filingMilestones?: Prisma.FilingMilestoneListRelationFilter
+  w9Submissions?: Prisma.W9SubmissionListRelationFilter
+  form1099Filings?: Prisma.Form1099FilingListRelationFilter
 }, "id" | "userId_year">
 
 export type TaxYearOrderByWithAggregationInput = {
@@ -370,6 +391,13 @@ export type TaxYearCreateInput = {
   documents?: Prisma.DocumentCreateNestedManyWithoutTaxYearInput
   pipelineRuns?: Prisma.PipelineRunCreateNestedManyWithoutTaxYearInput
   inactiveMonths?: Prisma.AccountInactiveMonthCreateNestedManyWithoutTaxYearInput
+  priorYearContext?: Prisma.PriorYearContextCreateNestedOneWithoutTaxYearInput
+  consumedByContexts?: Prisma.PriorYearContextCreateNestedManyWithoutSourcePriorYearInput
+  engagementLetter?: Prisma.EngagementLetterCreateNestedOneWithoutTaxYearInput
+  form8879?: Prisma.Form8879CreateNestedOneWithoutTaxYearInput
+  filingMilestones?: Prisma.FilingMilestoneCreateNestedManyWithoutTaxYearInput
+  w9Submissions?: Prisma.W9SubmissionCreateNestedManyWithoutTaxYearInput
+  form1099Filings?: Prisma.Form1099FilingCreateNestedManyWithoutTaxYearInput
 }
 
 export type TaxYearUncheckedCreateInput = {
@@ -394,6 +422,13 @@ export type TaxYearUncheckedCreateInput = {
   documents?: Prisma.DocumentUncheckedCreateNestedManyWithoutTaxYearInput
   pipelineRuns?: Prisma.PipelineRunUncheckedCreateNestedManyWithoutTaxYearInput
   inactiveMonths?: Prisma.AccountInactiveMonthUncheckedCreateNestedManyWithoutTaxYearInput
+  priorYearContext?: Prisma.PriorYearContextUncheckedCreateNestedOneWithoutTaxYearInput
+  consumedByContexts?: Prisma.PriorYearContextUncheckedCreateNestedManyWithoutSourcePriorYearInput
+  engagementLetter?: Prisma.EngagementLetterUncheckedCreateNestedOneWithoutTaxYearInput
+  form8879?: Prisma.Form8879UncheckedCreateNestedOneWithoutTaxYearInput
+  filingMilestones?: Prisma.FilingMilestoneUncheckedCreateNestedManyWithoutTaxYearInput
+  w9Submissions?: Prisma.W9SubmissionUncheckedCreateNestedManyWithoutTaxYearInput
+  form1099Filings?: Prisma.Form1099FilingUncheckedCreateNestedManyWithoutTaxYearInput
 }
 
 export type TaxYearUpdateInput = {
@@ -418,6 +453,13 @@ export type TaxYearUpdateInput = {
   documents?: Prisma.DocumentUpdateManyWithoutTaxYearNestedInput
   pipelineRuns?: Prisma.PipelineRunUpdateManyWithoutTaxYearNestedInput
   inactiveMonths?: Prisma.AccountInactiveMonthUpdateManyWithoutTaxYearNestedInput
+  priorYearContext?: Prisma.PriorYearContextUpdateOneWithoutTaxYearNestedInput
+  consumedByContexts?: Prisma.PriorYearContextUpdateManyWithoutSourcePriorYearNestedInput
+  engagementLetter?: Prisma.EngagementLetterUpdateOneWithoutTaxYearNestedInput
+  form8879?: Prisma.Form8879UpdateOneWithoutTaxYearNestedInput
+  filingMilestones?: Prisma.FilingMilestoneUpdateManyWithoutTaxYearNestedInput
+  w9Submissions?: Prisma.W9SubmissionUpdateManyWithoutTaxYearNestedInput
+  form1099Filings?: Prisma.Form1099FilingUpdateManyWithoutTaxYearNestedInput
 }
 
 export type TaxYearUncheckedUpdateInput = {
@@ -442,6 +484,13 @@ export type TaxYearUncheckedUpdateInput = {
   documents?: Prisma.DocumentUncheckedUpdateManyWithoutTaxYearNestedInput
   pipelineRuns?: Prisma.PipelineRunUncheckedUpdateManyWithoutTaxYearNestedInput
   inactiveMonths?: Prisma.AccountInactiveMonthUncheckedUpdateManyWithoutTaxYearNestedInput
+  priorYearContext?: Prisma.PriorYearContextUncheckedUpdateOneWithoutTaxYearNestedInput
+  consumedByContexts?: Prisma.PriorYearContextUncheckedUpdateManyWithoutSourcePriorYearNestedInput
+  engagementLetter?: Prisma.EngagementLetterUncheckedUpdateOneWithoutTaxYearNestedInput
+  form8879?: Prisma.Form8879UncheckedUpdateOneWithoutTaxYearNestedInput
+  filingMilestones?: Prisma.FilingMilestoneUncheckedUpdateManyWithoutTaxYearNestedInput
+  w9Submissions?: Prisma.W9SubmissionUncheckedUpdateManyWithoutTaxYearNestedInput
+  form1099Filings?: Prisma.Form1099FilingUncheckedUpdateManyWithoutTaxYearNestedInput
 }
 
 export type TaxYearCreateManyInput = {
@@ -811,6 +860,106 @@ export type TaxYearUpdateOneWithoutDocumentsNestedInput = {
   update?: Prisma.XOR<Prisma.XOR<Prisma.TaxYearUpdateToOneWithWhereWithoutDocumentsInput, Prisma.TaxYearUpdateWithoutDocumentsInput>, Prisma.TaxYearUncheckedUpdateWithoutDocumentsInput>
 }
 
+export type TaxYearCreateNestedOneWithoutPriorYearContextInput = {
+  create?: Prisma.XOR<Prisma.TaxYearCreateWithoutPriorYearContextInput, Prisma.TaxYearUncheckedCreateWithoutPriorYearContextInput>
+  connectOrCreate?: Prisma.TaxYearCreateOrConnectWithoutPriorYearContextInput
+  connect?: Prisma.TaxYearWhereUniqueInput
+}
+
+export type TaxYearCreateNestedOneWithoutConsumedByContextsInput = {
+  create?: Prisma.XOR<Prisma.TaxYearCreateWithoutConsumedByContextsInput, Prisma.TaxYearUncheckedCreateWithoutConsumedByContextsInput>
+  connectOrCreate?: Prisma.TaxYearCreateOrConnectWithoutConsumedByContextsInput
+  connect?: Prisma.TaxYearWhereUniqueInput
+}
+
+export type TaxYearUpdateOneRequiredWithoutPriorYearContextNestedInput = {
+  create?: Prisma.XOR<Prisma.TaxYearCreateWithoutPriorYearContextInput, Prisma.TaxYearUncheckedCreateWithoutPriorYearContextInput>
+  connectOrCreate?: Prisma.TaxYearCreateOrConnectWithoutPriorYearContextInput
+  upsert?: Prisma.TaxYearUpsertWithoutPriorYearContextInput
+  connect?: Prisma.TaxYearWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.TaxYearUpdateToOneWithWhereWithoutPriorYearContextInput, Prisma.TaxYearUpdateWithoutPriorYearContextInput>, Prisma.TaxYearUncheckedUpdateWithoutPriorYearContextInput>
+}
+
+export type TaxYearUpdateOneWithoutConsumedByContextsNestedInput = {
+  create?: Prisma.XOR<Prisma.TaxYearCreateWithoutConsumedByContextsInput, Prisma.TaxYearUncheckedCreateWithoutConsumedByContextsInput>
+  connectOrCreate?: Prisma.TaxYearCreateOrConnectWithoutConsumedByContextsInput
+  upsert?: Prisma.TaxYearUpsertWithoutConsumedByContextsInput
+  disconnect?: Prisma.TaxYearWhereInput | boolean
+  delete?: Prisma.TaxYearWhereInput | boolean
+  connect?: Prisma.TaxYearWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.TaxYearUpdateToOneWithWhereWithoutConsumedByContextsInput, Prisma.TaxYearUpdateWithoutConsumedByContextsInput>, Prisma.TaxYearUncheckedUpdateWithoutConsumedByContextsInput>
+}
+
+export type TaxYearCreateNestedOneWithoutEngagementLetterInput = {
+  create?: Prisma.XOR<Prisma.TaxYearCreateWithoutEngagementLetterInput, Prisma.TaxYearUncheckedCreateWithoutEngagementLetterInput>
+  connectOrCreate?: Prisma.TaxYearCreateOrConnectWithoutEngagementLetterInput
+  connect?: Prisma.TaxYearWhereUniqueInput
+}
+
+export type TaxYearUpdateOneRequiredWithoutEngagementLetterNestedInput = {
+  create?: Prisma.XOR<Prisma.TaxYearCreateWithoutEngagementLetterInput, Prisma.TaxYearUncheckedCreateWithoutEngagementLetterInput>
+  connectOrCreate?: Prisma.TaxYearCreateOrConnectWithoutEngagementLetterInput
+  upsert?: Prisma.TaxYearUpsertWithoutEngagementLetterInput
+  connect?: Prisma.TaxYearWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.TaxYearUpdateToOneWithWhereWithoutEngagementLetterInput, Prisma.TaxYearUpdateWithoutEngagementLetterInput>, Prisma.TaxYearUncheckedUpdateWithoutEngagementLetterInput>
+}
+
+export type TaxYearCreateNestedOneWithoutForm8879Input = {
+  create?: Prisma.XOR<Prisma.TaxYearCreateWithoutForm8879Input, Prisma.TaxYearUncheckedCreateWithoutForm8879Input>
+  connectOrCreate?: Prisma.TaxYearCreateOrConnectWithoutForm8879Input
+  connect?: Prisma.TaxYearWhereUniqueInput
+}
+
+export type TaxYearUpdateOneRequiredWithoutForm8879NestedInput = {
+  create?: Prisma.XOR<Prisma.TaxYearCreateWithoutForm8879Input, Prisma.TaxYearUncheckedCreateWithoutForm8879Input>
+  connectOrCreate?: Prisma.TaxYearCreateOrConnectWithoutForm8879Input
+  upsert?: Prisma.TaxYearUpsertWithoutForm8879Input
+  connect?: Prisma.TaxYearWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.TaxYearUpdateToOneWithWhereWithoutForm8879Input, Prisma.TaxYearUpdateWithoutForm8879Input>, Prisma.TaxYearUncheckedUpdateWithoutForm8879Input>
+}
+
+export type TaxYearCreateNestedOneWithoutFilingMilestonesInput = {
+  create?: Prisma.XOR<Prisma.TaxYearCreateWithoutFilingMilestonesInput, Prisma.TaxYearUncheckedCreateWithoutFilingMilestonesInput>
+  connectOrCreate?: Prisma.TaxYearCreateOrConnectWithoutFilingMilestonesInput
+  connect?: Prisma.TaxYearWhereUniqueInput
+}
+
+export type TaxYearUpdateOneRequiredWithoutFilingMilestonesNestedInput = {
+  create?: Prisma.XOR<Prisma.TaxYearCreateWithoutFilingMilestonesInput, Prisma.TaxYearUncheckedCreateWithoutFilingMilestonesInput>
+  connectOrCreate?: Prisma.TaxYearCreateOrConnectWithoutFilingMilestonesInput
+  upsert?: Prisma.TaxYearUpsertWithoutFilingMilestonesInput
+  connect?: Prisma.TaxYearWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.TaxYearUpdateToOneWithWhereWithoutFilingMilestonesInput, Prisma.TaxYearUpdateWithoutFilingMilestonesInput>, Prisma.TaxYearUncheckedUpdateWithoutFilingMilestonesInput>
+}
+
+export type TaxYearCreateNestedOneWithoutW9SubmissionsInput = {
+  create?: Prisma.XOR<Prisma.TaxYearCreateWithoutW9SubmissionsInput, Prisma.TaxYearUncheckedCreateWithoutW9SubmissionsInput>
+  connectOrCreate?: Prisma.TaxYearCreateOrConnectWithoutW9SubmissionsInput
+  connect?: Prisma.TaxYearWhereUniqueInput
+}
+
+export type TaxYearUpdateOneRequiredWithoutW9SubmissionsNestedInput = {
+  create?: Prisma.XOR<Prisma.TaxYearCreateWithoutW9SubmissionsInput, Prisma.TaxYearUncheckedCreateWithoutW9SubmissionsInput>
+  connectOrCreate?: Prisma.TaxYearCreateOrConnectWithoutW9SubmissionsInput
+  upsert?: Prisma.TaxYearUpsertWithoutW9SubmissionsInput
+  connect?: Prisma.TaxYearWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.TaxYearUpdateToOneWithWhereWithoutW9SubmissionsInput, Prisma.TaxYearUpdateWithoutW9SubmissionsInput>, Prisma.TaxYearUncheckedUpdateWithoutW9SubmissionsInput>
+}
+
+export type TaxYearCreateNestedOneWithoutForm1099FilingsInput = {
+  create?: Prisma.XOR<Prisma.TaxYearCreateWithoutForm1099FilingsInput, Prisma.TaxYearUncheckedCreateWithoutForm1099FilingsInput>
+  connectOrCreate?: Prisma.TaxYearCreateOrConnectWithoutForm1099FilingsInput
+  connect?: Prisma.TaxYearWhereUniqueInput
+}
+
+export type TaxYearUpdateOneRequiredWithoutForm1099FilingsNestedInput = {
+  create?: Prisma.XOR<Prisma.TaxYearCreateWithoutForm1099FilingsInput, Prisma.TaxYearUncheckedCreateWithoutForm1099FilingsInput>
+  connectOrCreate?: Prisma.TaxYearCreateOrConnectWithoutForm1099FilingsInput
+  upsert?: Prisma.TaxYearUpsertWithoutForm1099FilingsInput
+  connect?: Prisma.TaxYearWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.TaxYearUpdateToOneWithWhereWithoutForm1099FilingsInput, Prisma.TaxYearUpdateWithoutForm1099FilingsInput>, Prisma.TaxYearUncheckedUpdateWithoutForm1099FilingsInput>
+}
+
 export type TaxYearCreateWithoutUserInput = {
   id?: string
   year: number
@@ -832,6 +981,13 @@ export type TaxYearCreateWithoutUserInput = {
   documents?: Prisma.DocumentCreateNestedManyWithoutTaxYearInput
   pipelineRuns?: Prisma.PipelineRunCreateNestedManyWithoutTaxYearInput
   inactiveMonths?: Prisma.AccountInactiveMonthCreateNestedManyWithoutTaxYearInput
+  priorYearContext?: Prisma.PriorYearContextCreateNestedOneWithoutTaxYearInput
+  consumedByContexts?: Prisma.PriorYearContextCreateNestedManyWithoutSourcePriorYearInput
+  engagementLetter?: Prisma.EngagementLetterCreateNestedOneWithoutTaxYearInput
+  form8879?: Prisma.Form8879CreateNestedOneWithoutTaxYearInput
+  filingMilestones?: Prisma.FilingMilestoneCreateNestedManyWithoutTaxYearInput
+  w9Submissions?: Prisma.W9SubmissionCreateNestedManyWithoutTaxYearInput
+  form1099Filings?: Prisma.Form1099FilingCreateNestedManyWithoutTaxYearInput
 }
 
 export type TaxYearUncheckedCreateWithoutUserInput = {
@@ -855,6 +1011,13 @@ export type TaxYearUncheckedCreateWithoutUserInput = {
   documents?: Prisma.DocumentUncheckedCreateNestedManyWithoutTaxYearInput
   pipelineRuns?: Prisma.PipelineRunUncheckedCreateNestedManyWithoutTaxYearInput
   inactiveMonths?: Prisma.AccountInactiveMonthUncheckedCreateNestedManyWithoutTaxYearInput
+  priorYearContext?: Prisma.PriorYearContextUncheckedCreateNestedOneWithoutTaxYearInput
+  consumedByContexts?: Prisma.PriorYearContextUncheckedCreateNestedManyWithoutSourcePriorYearInput
+  engagementLetter?: Prisma.EngagementLetterUncheckedCreateNestedOneWithoutTaxYearInput
+  form8879?: Prisma.Form8879UncheckedCreateNestedOneWithoutTaxYearInput
+  filingMilestones?: Prisma.FilingMilestoneUncheckedCreateNestedManyWithoutTaxYearInput
+  w9Submissions?: Prisma.W9SubmissionUncheckedCreateNestedManyWithoutTaxYearInput
+  form1099Filings?: Prisma.Form1099FilingUncheckedCreateNestedManyWithoutTaxYearInput
 }
 
 export type TaxYearCreateOrConnectWithoutUserInput = {
@@ -919,6 +1082,13 @@ export type TaxYearCreateWithoutRuleVersionInput = {
   documents?: Prisma.DocumentCreateNestedManyWithoutTaxYearInput
   pipelineRuns?: Prisma.PipelineRunCreateNestedManyWithoutTaxYearInput
   inactiveMonths?: Prisma.AccountInactiveMonthCreateNestedManyWithoutTaxYearInput
+  priorYearContext?: Prisma.PriorYearContextCreateNestedOneWithoutTaxYearInput
+  consumedByContexts?: Prisma.PriorYearContextCreateNestedManyWithoutSourcePriorYearInput
+  engagementLetter?: Prisma.EngagementLetterCreateNestedOneWithoutTaxYearInput
+  form8879?: Prisma.Form8879CreateNestedOneWithoutTaxYearInput
+  filingMilestones?: Prisma.FilingMilestoneCreateNestedManyWithoutTaxYearInput
+  w9Submissions?: Prisma.W9SubmissionCreateNestedManyWithoutTaxYearInput
+  form1099Filings?: Prisma.Form1099FilingCreateNestedManyWithoutTaxYearInput
 }
 
 export type TaxYearUncheckedCreateWithoutRuleVersionInput = {
@@ -942,6 +1112,13 @@ export type TaxYearUncheckedCreateWithoutRuleVersionInput = {
   documents?: Prisma.DocumentUncheckedCreateNestedManyWithoutTaxYearInput
   pipelineRuns?: Prisma.PipelineRunUncheckedCreateNestedManyWithoutTaxYearInput
   inactiveMonths?: Prisma.AccountInactiveMonthUncheckedCreateNestedManyWithoutTaxYearInput
+  priorYearContext?: Prisma.PriorYearContextUncheckedCreateNestedOneWithoutTaxYearInput
+  consumedByContexts?: Prisma.PriorYearContextUncheckedCreateNestedManyWithoutSourcePriorYearInput
+  engagementLetter?: Prisma.EngagementLetterUncheckedCreateNestedOneWithoutTaxYearInput
+  form8879?: Prisma.Form8879UncheckedCreateNestedOneWithoutTaxYearInput
+  filingMilestones?: Prisma.FilingMilestoneUncheckedCreateNestedManyWithoutTaxYearInput
+  w9Submissions?: Prisma.W9SubmissionUncheckedCreateNestedManyWithoutTaxYearInput
+  form1099Filings?: Prisma.Form1099FilingUncheckedCreateNestedManyWithoutTaxYearInput
 }
 
 export type TaxYearCreateOrConnectWithoutRuleVersionInput = {
@@ -991,6 +1168,13 @@ export type TaxYearCreateWithoutBusinessProfileInput = {
   documents?: Prisma.DocumentCreateNestedManyWithoutTaxYearInput
   pipelineRuns?: Prisma.PipelineRunCreateNestedManyWithoutTaxYearInput
   inactiveMonths?: Prisma.AccountInactiveMonthCreateNestedManyWithoutTaxYearInput
+  priorYearContext?: Prisma.PriorYearContextCreateNestedOneWithoutTaxYearInput
+  consumedByContexts?: Prisma.PriorYearContextCreateNestedManyWithoutSourcePriorYearInput
+  engagementLetter?: Prisma.EngagementLetterCreateNestedOneWithoutTaxYearInput
+  form8879?: Prisma.Form8879CreateNestedOneWithoutTaxYearInput
+  filingMilestones?: Prisma.FilingMilestoneCreateNestedManyWithoutTaxYearInput
+  w9Submissions?: Prisma.W9SubmissionCreateNestedManyWithoutTaxYearInput
+  form1099Filings?: Prisma.Form1099FilingCreateNestedManyWithoutTaxYearInput
 }
 
 export type TaxYearUncheckedCreateWithoutBusinessProfileInput = {
@@ -1014,6 +1198,13 @@ export type TaxYearUncheckedCreateWithoutBusinessProfileInput = {
   documents?: Prisma.DocumentUncheckedCreateNestedManyWithoutTaxYearInput
   pipelineRuns?: Prisma.PipelineRunUncheckedCreateNestedManyWithoutTaxYearInput
   inactiveMonths?: Prisma.AccountInactiveMonthUncheckedCreateNestedManyWithoutTaxYearInput
+  priorYearContext?: Prisma.PriorYearContextUncheckedCreateNestedOneWithoutTaxYearInput
+  consumedByContexts?: Prisma.PriorYearContextUncheckedCreateNestedManyWithoutSourcePriorYearInput
+  engagementLetter?: Prisma.EngagementLetterUncheckedCreateNestedOneWithoutTaxYearInput
+  form8879?: Prisma.Form8879UncheckedCreateNestedOneWithoutTaxYearInput
+  filingMilestones?: Prisma.FilingMilestoneUncheckedCreateNestedManyWithoutTaxYearInput
+  w9Submissions?: Prisma.W9SubmissionUncheckedCreateNestedManyWithoutTaxYearInput
+  form1099Filings?: Prisma.Form1099FilingUncheckedCreateNestedManyWithoutTaxYearInput
 }
 
 export type TaxYearCreateOrConnectWithoutBusinessProfileInput = {
@@ -1053,6 +1244,13 @@ export type TaxYearUpdateWithoutBusinessProfileInput = {
   documents?: Prisma.DocumentUpdateManyWithoutTaxYearNestedInput
   pipelineRuns?: Prisma.PipelineRunUpdateManyWithoutTaxYearNestedInput
   inactiveMonths?: Prisma.AccountInactiveMonthUpdateManyWithoutTaxYearNestedInput
+  priorYearContext?: Prisma.PriorYearContextUpdateOneWithoutTaxYearNestedInput
+  consumedByContexts?: Prisma.PriorYearContextUpdateManyWithoutSourcePriorYearNestedInput
+  engagementLetter?: Prisma.EngagementLetterUpdateOneWithoutTaxYearNestedInput
+  form8879?: Prisma.Form8879UpdateOneWithoutTaxYearNestedInput
+  filingMilestones?: Prisma.FilingMilestoneUpdateManyWithoutTaxYearNestedInput
+  w9Submissions?: Prisma.W9SubmissionUpdateManyWithoutTaxYearNestedInput
+  form1099Filings?: Prisma.Form1099FilingUpdateManyWithoutTaxYearNestedInput
 }
 
 export type TaxYearUncheckedUpdateWithoutBusinessProfileInput = {
@@ -1076,6 +1274,13 @@ export type TaxYearUncheckedUpdateWithoutBusinessProfileInput = {
   documents?: Prisma.DocumentUncheckedUpdateManyWithoutTaxYearNestedInput
   pipelineRuns?: Prisma.PipelineRunUncheckedUpdateManyWithoutTaxYearNestedInput
   inactiveMonths?: Prisma.AccountInactiveMonthUncheckedUpdateManyWithoutTaxYearNestedInput
+  priorYearContext?: Prisma.PriorYearContextUncheckedUpdateOneWithoutTaxYearNestedInput
+  consumedByContexts?: Prisma.PriorYearContextUncheckedUpdateManyWithoutSourcePriorYearNestedInput
+  engagementLetter?: Prisma.EngagementLetterUncheckedUpdateOneWithoutTaxYearNestedInput
+  form8879?: Prisma.Form8879UncheckedUpdateOneWithoutTaxYearNestedInput
+  filingMilestones?: Prisma.FilingMilestoneUncheckedUpdateManyWithoutTaxYearNestedInput
+  w9Submissions?: Prisma.W9SubmissionUncheckedUpdateManyWithoutTaxYearNestedInput
+  form1099Filings?: Prisma.Form1099FilingUncheckedUpdateManyWithoutTaxYearNestedInput
 }
 
 export type TaxYearCreateWithoutFinancialAccountsInput = {
@@ -1099,6 +1304,13 @@ export type TaxYearCreateWithoutFinancialAccountsInput = {
   documents?: Prisma.DocumentCreateNestedManyWithoutTaxYearInput
   pipelineRuns?: Prisma.PipelineRunCreateNestedManyWithoutTaxYearInput
   inactiveMonths?: Prisma.AccountInactiveMonthCreateNestedManyWithoutTaxYearInput
+  priorYearContext?: Prisma.PriorYearContextCreateNestedOneWithoutTaxYearInput
+  consumedByContexts?: Prisma.PriorYearContextCreateNestedManyWithoutSourcePriorYearInput
+  engagementLetter?: Prisma.EngagementLetterCreateNestedOneWithoutTaxYearInput
+  form8879?: Prisma.Form8879CreateNestedOneWithoutTaxYearInput
+  filingMilestones?: Prisma.FilingMilestoneCreateNestedManyWithoutTaxYearInput
+  w9Submissions?: Prisma.W9SubmissionCreateNestedManyWithoutTaxYearInput
+  form1099Filings?: Prisma.Form1099FilingCreateNestedManyWithoutTaxYearInput
 }
 
 export type TaxYearUncheckedCreateWithoutFinancialAccountsInput = {
@@ -1122,6 +1334,13 @@ export type TaxYearUncheckedCreateWithoutFinancialAccountsInput = {
   documents?: Prisma.DocumentUncheckedCreateNestedManyWithoutTaxYearInput
   pipelineRuns?: Prisma.PipelineRunUncheckedCreateNestedManyWithoutTaxYearInput
   inactiveMonths?: Prisma.AccountInactiveMonthUncheckedCreateNestedManyWithoutTaxYearInput
+  priorYearContext?: Prisma.PriorYearContextUncheckedCreateNestedOneWithoutTaxYearInput
+  consumedByContexts?: Prisma.PriorYearContextUncheckedCreateNestedManyWithoutSourcePriorYearInput
+  engagementLetter?: Prisma.EngagementLetterUncheckedCreateNestedOneWithoutTaxYearInput
+  form8879?: Prisma.Form8879UncheckedCreateNestedOneWithoutTaxYearInput
+  filingMilestones?: Prisma.FilingMilestoneUncheckedCreateNestedManyWithoutTaxYearInput
+  w9Submissions?: Prisma.W9SubmissionUncheckedCreateNestedManyWithoutTaxYearInput
+  form1099Filings?: Prisma.Form1099FilingUncheckedCreateNestedManyWithoutTaxYearInput
 }
 
 export type TaxYearCreateOrConnectWithoutFinancialAccountsInput = {
@@ -1161,6 +1380,13 @@ export type TaxYearUpdateWithoutFinancialAccountsInput = {
   documents?: Prisma.DocumentUpdateManyWithoutTaxYearNestedInput
   pipelineRuns?: Prisma.PipelineRunUpdateManyWithoutTaxYearNestedInput
   inactiveMonths?: Prisma.AccountInactiveMonthUpdateManyWithoutTaxYearNestedInput
+  priorYearContext?: Prisma.PriorYearContextUpdateOneWithoutTaxYearNestedInput
+  consumedByContexts?: Prisma.PriorYearContextUpdateManyWithoutSourcePriorYearNestedInput
+  engagementLetter?: Prisma.EngagementLetterUpdateOneWithoutTaxYearNestedInput
+  form8879?: Prisma.Form8879UpdateOneWithoutTaxYearNestedInput
+  filingMilestones?: Prisma.FilingMilestoneUpdateManyWithoutTaxYearNestedInput
+  w9Submissions?: Prisma.W9SubmissionUpdateManyWithoutTaxYearNestedInput
+  form1099Filings?: Prisma.Form1099FilingUpdateManyWithoutTaxYearNestedInput
 }
 
 export type TaxYearUncheckedUpdateWithoutFinancialAccountsInput = {
@@ -1184,6 +1410,13 @@ export type TaxYearUncheckedUpdateWithoutFinancialAccountsInput = {
   documents?: Prisma.DocumentUncheckedUpdateManyWithoutTaxYearNestedInput
   pipelineRuns?: Prisma.PipelineRunUncheckedUpdateManyWithoutTaxYearNestedInput
   inactiveMonths?: Prisma.AccountInactiveMonthUncheckedUpdateManyWithoutTaxYearNestedInput
+  priorYearContext?: Prisma.PriorYearContextUncheckedUpdateOneWithoutTaxYearNestedInput
+  consumedByContexts?: Prisma.PriorYearContextUncheckedUpdateManyWithoutSourcePriorYearNestedInput
+  engagementLetter?: Prisma.EngagementLetterUncheckedUpdateOneWithoutTaxYearNestedInput
+  form8879?: Prisma.Form8879UncheckedUpdateOneWithoutTaxYearNestedInput
+  filingMilestones?: Prisma.FilingMilestoneUncheckedUpdateManyWithoutTaxYearNestedInput
+  w9Submissions?: Prisma.W9SubmissionUncheckedUpdateManyWithoutTaxYearNestedInput
+  form1099Filings?: Prisma.Form1099FilingUncheckedUpdateManyWithoutTaxYearNestedInput
 }
 
 export type TaxYearCreateWithoutAccountYearLinksInput = {
@@ -1207,6 +1440,13 @@ export type TaxYearCreateWithoutAccountYearLinksInput = {
   documents?: Prisma.DocumentCreateNestedManyWithoutTaxYearInput
   pipelineRuns?: Prisma.PipelineRunCreateNestedManyWithoutTaxYearInput
   inactiveMonths?: Prisma.AccountInactiveMonthCreateNestedManyWithoutTaxYearInput
+  priorYearContext?: Prisma.PriorYearContextCreateNestedOneWithoutTaxYearInput
+  consumedByContexts?: Prisma.PriorYearContextCreateNestedManyWithoutSourcePriorYearInput
+  engagementLetter?: Prisma.EngagementLetterCreateNestedOneWithoutTaxYearInput
+  form8879?: Prisma.Form8879CreateNestedOneWithoutTaxYearInput
+  filingMilestones?: Prisma.FilingMilestoneCreateNestedManyWithoutTaxYearInput
+  w9Submissions?: Prisma.W9SubmissionCreateNestedManyWithoutTaxYearInput
+  form1099Filings?: Prisma.Form1099FilingCreateNestedManyWithoutTaxYearInput
 }
 
 export type TaxYearUncheckedCreateWithoutAccountYearLinksInput = {
@@ -1230,6 +1470,13 @@ export type TaxYearUncheckedCreateWithoutAccountYearLinksInput = {
   documents?: Prisma.DocumentUncheckedCreateNestedManyWithoutTaxYearInput
   pipelineRuns?: Prisma.PipelineRunUncheckedCreateNestedManyWithoutTaxYearInput
   inactiveMonths?: Prisma.AccountInactiveMonthUncheckedCreateNestedManyWithoutTaxYearInput
+  priorYearContext?: Prisma.PriorYearContextUncheckedCreateNestedOneWithoutTaxYearInput
+  consumedByContexts?: Prisma.PriorYearContextUncheckedCreateNestedManyWithoutSourcePriorYearInput
+  engagementLetter?: Prisma.EngagementLetterUncheckedCreateNestedOneWithoutTaxYearInput
+  form8879?: Prisma.Form8879UncheckedCreateNestedOneWithoutTaxYearInput
+  filingMilestones?: Prisma.FilingMilestoneUncheckedCreateNestedManyWithoutTaxYearInput
+  w9Submissions?: Prisma.W9SubmissionUncheckedCreateNestedManyWithoutTaxYearInput
+  form1099Filings?: Prisma.Form1099FilingUncheckedCreateNestedManyWithoutTaxYearInput
 }
 
 export type TaxYearCreateOrConnectWithoutAccountYearLinksInput = {
@@ -1269,6 +1516,13 @@ export type TaxYearUpdateWithoutAccountYearLinksInput = {
   documents?: Prisma.DocumentUpdateManyWithoutTaxYearNestedInput
   pipelineRuns?: Prisma.PipelineRunUpdateManyWithoutTaxYearNestedInput
   inactiveMonths?: Prisma.AccountInactiveMonthUpdateManyWithoutTaxYearNestedInput
+  priorYearContext?: Prisma.PriorYearContextUpdateOneWithoutTaxYearNestedInput
+  consumedByContexts?: Prisma.PriorYearContextUpdateManyWithoutSourcePriorYearNestedInput
+  engagementLetter?: Prisma.EngagementLetterUpdateOneWithoutTaxYearNestedInput
+  form8879?: Prisma.Form8879UpdateOneWithoutTaxYearNestedInput
+  filingMilestones?: Prisma.FilingMilestoneUpdateManyWithoutTaxYearNestedInput
+  w9Submissions?: Prisma.W9SubmissionUpdateManyWithoutTaxYearNestedInput
+  form1099Filings?: Prisma.Form1099FilingUpdateManyWithoutTaxYearNestedInput
 }
 
 export type TaxYearUncheckedUpdateWithoutAccountYearLinksInput = {
@@ -1292,6 +1546,13 @@ export type TaxYearUncheckedUpdateWithoutAccountYearLinksInput = {
   documents?: Prisma.DocumentUncheckedUpdateManyWithoutTaxYearNestedInput
   pipelineRuns?: Prisma.PipelineRunUncheckedUpdateManyWithoutTaxYearNestedInput
   inactiveMonths?: Prisma.AccountInactiveMonthUncheckedUpdateManyWithoutTaxYearNestedInput
+  priorYearContext?: Prisma.PriorYearContextUncheckedUpdateOneWithoutTaxYearNestedInput
+  consumedByContexts?: Prisma.PriorYearContextUncheckedUpdateManyWithoutSourcePriorYearNestedInput
+  engagementLetter?: Prisma.EngagementLetterUncheckedUpdateOneWithoutTaxYearNestedInput
+  form8879?: Prisma.Form8879UncheckedUpdateOneWithoutTaxYearNestedInput
+  filingMilestones?: Prisma.FilingMilestoneUncheckedUpdateManyWithoutTaxYearNestedInput
+  w9Submissions?: Prisma.W9SubmissionUncheckedUpdateManyWithoutTaxYearNestedInput
+  form1099Filings?: Prisma.Form1099FilingUncheckedUpdateManyWithoutTaxYearNestedInput
 }
 
 export type TaxYearCreateWithoutInactiveMonthsInput = {
@@ -1315,6 +1576,13 @@ export type TaxYearCreateWithoutInactiveMonthsInput = {
   importSessions?: Prisma.ImportSessionCreateNestedManyWithoutTaxYearInput
   documents?: Prisma.DocumentCreateNestedManyWithoutTaxYearInput
   pipelineRuns?: Prisma.PipelineRunCreateNestedManyWithoutTaxYearInput
+  priorYearContext?: Prisma.PriorYearContextCreateNestedOneWithoutTaxYearInput
+  consumedByContexts?: Prisma.PriorYearContextCreateNestedManyWithoutSourcePriorYearInput
+  engagementLetter?: Prisma.EngagementLetterCreateNestedOneWithoutTaxYearInput
+  form8879?: Prisma.Form8879CreateNestedOneWithoutTaxYearInput
+  filingMilestones?: Prisma.FilingMilestoneCreateNestedManyWithoutTaxYearInput
+  w9Submissions?: Prisma.W9SubmissionCreateNestedManyWithoutTaxYearInput
+  form1099Filings?: Prisma.Form1099FilingCreateNestedManyWithoutTaxYearInput
 }
 
 export type TaxYearUncheckedCreateWithoutInactiveMonthsInput = {
@@ -1338,6 +1606,13 @@ export type TaxYearUncheckedCreateWithoutInactiveMonthsInput = {
   importSessions?: Prisma.ImportSessionUncheckedCreateNestedManyWithoutTaxYearInput
   documents?: Prisma.DocumentUncheckedCreateNestedManyWithoutTaxYearInput
   pipelineRuns?: Prisma.PipelineRunUncheckedCreateNestedManyWithoutTaxYearInput
+  priorYearContext?: Prisma.PriorYearContextUncheckedCreateNestedOneWithoutTaxYearInput
+  consumedByContexts?: Prisma.PriorYearContextUncheckedCreateNestedManyWithoutSourcePriorYearInput
+  engagementLetter?: Prisma.EngagementLetterUncheckedCreateNestedOneWithoutTaxYearInput
+  form8879?: Prisma.Form8879UncheckedCreateNestedOneWithoutTaxYearInput
+  filingMilestones?: Prisma.FilingMilestoneUncheckedCreateNestedManyWithoutTaxYearInput
+  w9Submissions?: Prisma.W9SubmissionUncheckedCreateNestedManyWithoutTaxYearInput
+  form1099Filings?: Prisma.Form1099FilingUncheckedCreateNestedManyWithoutTaxYearInput
 }
 
 export type TaxYearCreateOrConnectWithoutInactiveMonthsInput = {
@@ -1377,6 +1652,13 @@ export type TaxYearUpdateWithoutInactiveMonthsInput = {
   importSessions?: Prisma.ImportSessionUpdateManyWithoutTaxYearNestedInput
   documents?: Prisma.DocumentUpdateManyWithoutTaxYearNestedInput
   pipelineRuns?: Prisma.PipelineRunUpdateManyWithoutTaxYearNestedInput
+  priorYearContext?: Prisma.PriorYearContextUpdateOneWithoutTaxYearNestedInput
+  consumedByContexts?: Prisma.PriorYearContextUpdateManyWithoutSourcePriorYearNestedInput
+  engagementLetter?: Prisma.EngagementLetterUpdateOneWithoutTaxYearNestedInput
+  form8879?: Prisma.Form8879UpdateOneWithoutTaxYearNestedInput
+  filingMilestones?: Prisma.FilingMilestoneUpdateManyWithoutTaxYearNestedInput
+  w9Submissions?: Prisma.W9SubmissionUpdateManyWithoutTaxYearNestedInput
+  form1099Filings?: Prisma.Form1099FilingUpdateManyWithoutTaxYearNestedInput
 }
 
 export type TaxYearUncheckedUpdateWithoutInactiveMonthsInput = {
@@ -1400,6 +1682,13 @@ export type TaxYearUncheckedUpdateWithoutInactiveMonthsInput = {
   importSessions?: Prisma.ImportSessionUncheckedUpdateManyWithoutTaxYearNestedInput
   documents?: Prisma.DocumentUncheckedUpdateManyWithoutTaxYearNestedInput
   pipelineRuns?: Prisma.PipelineRunUncheckedUpdateManyWithoutTaxYearNestedInput
+  priorYearContext?: Prisma.PriorYearContextUncheckedUpdateOneWithoutTaxYearNestedInput
+  consumedByContexts?: Prisma.PriorYearContextUncheckedUpdateManyWithoutSourcePriorYearNestedInput
+  engagementLetter?: Prisma.EngagementLetterUncheckedUpdateOneWithoutTaxYearNestedInput
+  form8879?: Prisma.Form8879UncheckedUpdateOneWithoutTaxYearNestedInput
+  filingMilestones?: Prisma.FilingMilestoneUncheckedUpdateManyWithoutTaxYearNestedInput
+  w9Submissions?: Prisma.W9SubmissionUncheckedUpdateManyWithoutTaxYearNestedInput
+  form1099Filings?: Prisma.Form1099FilingUncheckedUpdateManyWithoutTaxYearNestedInput
 }
 
 export type TaxYearCreateWithoutStatementImportsInput = {
@@ -1423,6 +1712,13 @@ export type TaxYearCreateWithoutStatementImportsInput = {
   documents?: Prisma.DocumentCreateNestedManyWithoutTaxYearInput
   pipelineRuns?: Prisma.PipelineRunCreateNestedManyWithoutTaxYearInput
   inactiveMonths?: Prisma.AccountInactiveMonthCreateNestedManyWithoutTaxYearInput
+  priorYearContext?: Prisma.PriorYearContextCreateNestedOneWithoutTaxYearInput
+  consumedByContexts?: Prisma.PriorYearContextCreateNestedManyWithoutSourcePriorYearInput
+  engagementLetter?: Prisma.EngagementLetterCreateNestedOneWithoutTaxYearInput
+  form8879?: Prisma.Form8879CreateNestedOneWithoutTaxYearInput
+  filingMilestones?: Prisma.FilingMilestoneCreateNestedManyWithoutTaxYearInput
+  w9Submissions?: Prisma.W9SubmissionCreateNestedManyWithoutTaxYearInput
+  form1099Filings?: Prisma.Form1099FilingCreateNestedManyWithoutTaxYearInput
 }
 
 export type TaxYearUncheckedCreateWithoutStatementImportsInput = {
@@ -1446,6 +1742,13 @@ export type TaxYearUncheckedCreateWithoutStatementImportsInput = {
   documents?: Prisma.DocumentUncheckedCreateNestedManyWithoutTaxYearInput
   pipelineRuns?: Prisma.PipelineRunUncheckedCreateNestedManyWithoutTaxYearInput
   inactiveMonths?: Prisma.AccountInactiveMonthUncheckedCreateNestedManyWithoutTaxYearInput
+  priorYearContext?: Prisma.PriorYearContextUncheckedCreateNestedOneWithoutTaxYearInput
+  consumedByContexts?: Prisma.PriorYearContextUncheckedCreateNestedManyWithoutSourcePriorYearInput
+  engagementLetter?: Prisma.EngagementLetterUncheckedCreateNestedOneWithoutTaxYearInput
+  form8879?: Prisma.Form8879UncheckedCreateNestedOneWithoutTaxYearInput
+  filingMilestones?: Prisma.FilingMilestoneUncheckedCreateNestedManyWithoutTaxYearInput
+  w9Submissions?: Prisma.W9SubmissionUncheckedCreateNestedManyWithoutTaxYearInput
+  form1099Filings?: Prisma.Form1099FilingUncheckedCreateNestedManyWithoutTaxYearInput
 }
 
 export type TaxYearCreateOrConnectWithoutStatementImportsInput = {
@@ -1485,6 +1788,13 @@ export type TaxYearUpdateWithoutStatementImportsInput = {
   documents?: Prisma.DocumentUpdateManyWithoutTaxYearNestedInput
   pipelineRuns?: Prisma.PipelineRunUpdateManyWithoutTaxYearNestedInput
   inactiveMonths?: Prisma.AccountInactiveMonthUpdateManyWithoutTaxYearNestedInput
+  priorYearContext?: Prisma.PriorYearContextUpdateOneWithoutTaxYearNestedInput
+  consumedByContexts?: Prisma.PriorYearContextUpdateManyWithoutSourcePriorYearNestedInput
+  engagementLetter?: Prisma.EngagementLetterUpdateOneWithoutTaxYearNestedInput
+  form8879?: Prisma.Form8879UpdateOneWithoutTaxYearNestedInput
+  filingMilestones?: Prisma.FilingMilestoneUpdateManyWithoutTaxYearNestedInput
+  w9Submissions?: Prisma.W9SubmissionUpdateManyWithoutTaxYearNestedInput
+  form1099Filings?: Prisma.Form1099FilingUpdateManyWithoutTaxYearNestedInput
 }
 
 export type TaxYearUncheckedUpdateWithoutStatementImportsInput = {
@@ -1508,6 +1818,13 @@ export type TaxYearUncheckedUpdateWithoutStatementImportsInput = {
   documents?: Prisma.DocumentUncheckedUpdateManyWithoutTaxYearNestedInput
   pipelineRuns?: Prisma.PipelineRunUncheckedUpdateManyWithoutTaxYearNestedInput
   inactiveMonths?: Prisma.AccountInactiveMonthUncheckedUpdateManyWithoutTaxYearNestedInput
+  priorYearContext?: Prisma.PriorYearContextUncheckedUpdateOneWithoutTaxYearNestedInput
+  consumedByContexts?: Prisma.PriorYearContextUncheckedUpdateManyWithoutSourcePriorYearNestedInput
+  engagementLetter?: Prisma.EngagementLetterUncheckedUpdateOneWithoutTaxYearNestedInput
+  form8879?: Prisma.Form8879UncheckedUpdateOneWithoutTaxYearNestedInput
+  filingMilestones?: Prisma.FilingMilestoneUncheckedUpdateManyWithoutTaxYearNestedInput
+  w9Submissions?: Prisma.W9SubmissionUncheckedUpdateManyWithoutTaxYearNestedInput
+  form1099Filings?: Prisma.Form1099FilingUncheckedUpdateManyWithoutTaxYearNestedInput
 }
 
 export type TaxYearCreateWithoutImportSessionsInput = {
@@ -1531,6 +1848,13 @@ export type TaxYearCreateWithoutImportSessionsInput = {
   documents?: Prisma.DocumentCreateNestedManyWithoutTaxYearInput
   pipelineRuns?: Prisma.PipelineRunCreateNestedManyWithoutTaxYearInput
   inactiveMonths?: Prisma.AccountInactiveMonthCreateNestedManyWithoutTaxYearInput
+  priorYearContext?: Prisma.PriorYearContextCreateNestedOneWithoutTaxYearInput
+  consumedByContexts?: Prisma.PriorYearContextCreateNestedManyWithoutSourcePriorYearInput
+  engagementLetter?: Prisma.EngagementLetterCreateNestedOneWithoutTaxYearInput
+  form8879?: Prisma.Form8879CreateNestedOneWithoutTaxYearInput
+  filingMilestones?: Prisma.FilingMilestoneCreateNestedManyWithoutTaxYearInput
+  w9Submissions?: Prisma.W9SubmissionCreateNestedManyWithoutTaxYearInput
+  form1099Filings?: Prisma.Form1099FilingCreateNestedManyWithoutTaxYearInput
 }
 
 export type TaxYearUncheckedCreateWithoutImportSessionsInput = {
@@ -1554,6 +1878,13 @@ export type TaxYearUncheckedCreateWithoutImportSessionsInput = {
   documents?: Prisma.DocumentUncheckedCreateNestedManyWithoutTaxYearInput
   pipelineRuns?: Prisma.PipelineRunUncheckedCreateNestedManyWithoutTaxYearInput
   inactiveMonths?: Prisma.AccountInactiveMonthUncheckedCreateNestedManyWithoutTaxYearInput
+  priorYearContext?: Prisma.PriorYearContextUncheckedCreateNestedOneWithoutTaxYearInput
+  consumedByContexts?: Prisma.PriorYearContextUncheckedCreateNestedManyWithoutSourcePriorYearInput
+  engagementLetter?: Prisma.EngagementLetterUncheckedCreateNestedOneWithoutTaxYearInput
+  form8879?: Prisma.Form8879UncheckedCreateNestedOneWithoutTaxYearInput
+  filingMilestones?: Prisma.FilingMilestoneUncheckedCreateNestedManyWithoutTaxYearInput
+  w9Submissions?: Prisma.W9SubmissionUncheckedCreateNestedManyWithoutTaxYearInput
+  form1099Filings?: Prisma.Form1099FilingUncheckedCreateNestedManyWithoutTaxYearInput
 }
 
 export type TaxYearCreateOrConnectWithoutImportSessionsInput = {
@@ -1593,6 +1924,13 @@ export type TaxYearUpdateWithoutImportSessionsInput = {
   documents?: Prisma.DocumentUpdateManyWithoutTaxYearNestedInput
   pipelineRuns?: Prisma.PipelineRunUpdateManyWithoutTaxYearNestedInput
   inactiveMonths?: Prisma.AccountInactiveMonthUpdateManyWithoutTaxYearNestedInput
+  priorYearContext?: Prisma.PriorYearContextUpdateOneWithoutTaxYearNestedInput
+  consumedByContexts?: Prisma.PriorYearContextUpdateManyWithoutSourcePriorYearNestedInput
+  engagementLetter?: Prisma.EngagementLetterUpdateOneWithoutTaxYearNestedInput
+  form8879?: Prisma.Form8879UpdateOneWithoutTaxYearNestedInput
+  filingMilestones?: Prisma.FilingMilestoneUpdateManyWithoutTaxYearNestedInput
+  w9Submissions?: Prisma.W9SubmissionUpdateManyWithoutTaxYearNestedInput
+  form1099Filings?: Prisma.Form1099FilingUpdateManyWithoutTaxYearNestedInput
 }
 
 export type TaxYearUncheckedUpdateWithoutImportSessionsInput = {
@@ -1616,6 +1954,13 @@ export type TaxYearUncheckedUpdateWithoutImportSessionsInput = {
   documents?: Prisma.DocumentUncheckedUpdateManyWithoutTaxYearNestedInput
   pipelineRuns?: Prisma.PipelineRunUncheckedUpdateManyWithoutTaxYearNestedInput
   inactiveMonths?: Prisma.AccountInactiveMonthUncheckedUpdateManyWithoutTaxYearNestedInput
+  priorYearContext?: Prisma.PriorYearContextUncheckedUpdateOneWithoutTaxYearNestedInput
+  consumedByContexts?: Prisma.PriorYearContextUncheckedUpdateManyWithoutSourcePriorYearNestedInput
+  engagementLetter?: Prisma.EngagementLetterUncheckedUpdateOneWithoutTaxYearNestedInput
+  form8879?: Prisma.Form8879UncheckedUpdateOneWithoutTaxYearNestedInput
+  filingMilestones?: Prisma.FilingMilestoneUncheckedUpdateManyWithoutTaxYearNestedInput
+  w9Submissions?: Prisma.W9SubmissionUncheckedUpdateManyWithoutTaxYearNestedInput
+  form1099Filings?: Prisma.Form1099FilingUncheckedUpdateManyWithoutTaxYearNestedInput
 }
 
 export type TaxYearCreateWithoutPipelineRunsInput = {
@@ -1639,6 +1984,13 @@ export type TaxYearCreateWithoutPipelineRunsInput = {
   importSessions?: Prisma.ImportSessionCreateNestedManyWithoutTaxYearInput
   documents?: Prisma.DocumentCreateNestedManyWithoutTaxYearInput
   inactiveMonths?: Prisma.AccountInactiveMonthCreateNestedManyWithoutTaxYearInput
+  priorYearContext?: Prisma.PriorYearContextCreateNestedOneWithoutTaxYearInput
+  consumedByContexts?: Prisma.PriorYearContextCreateNestedManyWithoutSourcePriorYearInput
+  engagementLetter?: Prisma.EngagementLetterCreateNestedOneWithoutTaxYearInput
+  form8879?: Prisma.Form8879CreateNestedOneWithoutTaxYearInput
+  filingMilestones?: Prisma.FilingMilestoneCreateNestedManyWithoutTaxYearInput
+  w9Submissions?: Prisma.W9SubmissionCreateNestedManyWithoutTaxYearInput
+  form1099Filings?: Prisma.Form1099FilingCreateNestedManyWithoutTaxYearInput
 }
 
 export type TaxYearUncheckedCreateWithoutPipelineRunsInput = {
@@ -1662,6 +2014,13 @@ export type TaxYearUncheckedCreateWithoutPipelineRunsInput = {
   importSessions?: Prisma.ImportSessionUncheckedCreateNestedManyWithoutTaxYearInput
   documents?: Prisma.DocumentUncheckedCreateNestedManyWithoutTaxYearInput
   inactiveMonths?: Prisma.AccountInactiveMonthUncheckedCreateNestedManyWithoutTaxYearInput
+  priorYearContext?: Prisma.PriorYearContextUncheckedCreateNestedOneWithoutTaxYearInput
+  consumedByContexts?: Prisma.PriorYearContextUncheckedCreateNestedManyWithoutSourcePriorYearInput
+  engagementLetter?: Prisma.EngagementLetterUncheckedCreateNestedOneWithoutTaxYearInput
+  form8879?: Prisma.Form8879UncheckedCreateNestedOneWithoutTaxYearInput
+  filingMilestones?: Prisma.FilingMilestoneUncheckedCreateNestedManyWithoutTaxYearInput
+  w9Submissions?: Prisma.W9SubmissionUncheckedCreateNestedManyWithoutTaxYearInput
+  form1099Filings?: Prisma.Form1099FilingUncheckedCreateNestedManyWithoutTaxYearInput
 }
 
 export type TaxYearCreateOrConnectWithoutPipelineRunsInput = {
@@ -1701,6 +2060,13 @@ export type TaxYearUpdateWithoutPipelineRunsInput = {
   importSessions?: Prisma.ImportSessionUpdateManyWithoutTaxYearNestedInput
   documents?: Prisma.DocumentUpdateManyWithoutTaxYearNestedInput
   inactiveMonths?: Prisma.AccountInactiveMonthUpdateManyWithoutTaxYearNestedInput
+  priorYearContext?: Prisma.PriorYearContextUpdateOneWithoutTaxYearNestedInput
+  consumedByContexts?: Prisma.PriorYearContextUpdateManyWithoutSourcePriorYearNestedInput
+  engagementLetter?: Prisma.EngagementLetterUpdateOneWithoutTaxYearNestedInput
+  form8879?: Prisma.Form8879UpdateOneWithoutTaxYearNestedInput
+  filingMilestones?: Prisma.FilingMilestoneUpdateManyWithoutTaxYearNestedInput
+  w9Submissions?: Prisma.W9SubmissionUpdateManyWithoutTaxYearNestedInput
+  form1099Filings?: Prisma.Form1099FilingUpdateManyWithoutTaxYearNestedInput
 }
 
 export type TaxYearUncheckedUpdateWithoutPipelineRunsInput = {
@@ -1724,6 +2090,13 @@ export type TaxYearUncheckedUpdateWithoutPipelineRunsInput = {
   importSessions?: Prisma.ImportSessionUncheckedUpdateManyWithoutTaxYearNestedInput
   documents?: Prisma.DocumentUncheckedUpdateManyWithoutTaxYearNestedInput
   inactiveMonths?: Prisma.AccountInactiveMonthUncheckedUpdateManyWithoutTaxYearNestedInput
+  priorYearContext?: Prisma.PriorYearContextUncheckedUpdateOneWithoutTaxYearNestedInput
+  consumedByContexts?: Prisma.PriorYearContextUncheckedUpdateManyWithoutSourcePriorYearNestedInput
+  engagementLetter?: Prisma.EngagementLetterUncheckedUpdateOneWithoutTaxYearNestedInput
+  form8879?: Prisma.Form8879UncheckedUpdateOneWithoutTaxYearNestedInput
+  filingMilestones?: Prisma.FilingMilestoneUncheckedUpdateManyWithoutTaxYearNestedInput
+  w9Submissions?: Prisma.W9SubmissionUncheckedUpdateManyWithoutTaxYearNestedInput
+  form1099Filings?: Prisma.Form1099FilingUncheckedUpdateManyWithoutTaxYearNestedInput
 }
 
 export type TaxYearCreateWithoutTransactionsInput = {
@@ -1747,6 +2120,13 @@ export type TaxYearCreateWithoutTransactionsInput = {
   documents?: Prisma.DocumentCreateNestedManyWithoutTaxYearInput
   pipelineRuns?: Prisma.PipelineRunCreateNestedManyWithoutTaxYearInput
   inactiveMonths?: Prisma.AccountInactiveMonthCreateNestedManyWithoutTaxYearInput
+  priorYearContext?: Prisma.PriorYearContextCreateNestedOneWithoutTaxYearInput
+  consumedByContexts?: Prisma.PriorYearContextCreateNestedManyWithoutSourcePriorYearInput
+  engagementLetter?: Prisma.EngagementLetterCreateNestedOneWithoutTaxYearInput
+  form8879?: Prisma.Form8879CreateNestedOneWithoutTaxYearInput
+  filingMilestones?: Prisma.FilingMilestoneCreateNestedManyWithoutTaxYearInput
+  w9Submissions?: Prisma.W9SubmissionCreateNestedManyWithoutTaxYearInput
+  form1099Filings?: Prisma.Form1099FilingCreateNestedManyWithoutTaxYearInput
 }
 
 export type TaxYearUncheckedCreateWithoutTransactionsInput = {
@@ -1770,6 +2150,13 @@ export type TaxYearUncheckedCreateWithoutTransactionsInput = {
   documents?: Prisma.DocumentUncheckedCreateNestedManyWithoutTaxYearInput
   pipelineRuns?: Prisma.PipelineRunUncheckedCreateNestedManyWithoutTaxYearInput
   inactiveMonths?: Prisma.AccountInactiveMonthUncheckedCreateNestedManyWithoutTaxYearInput
+  priorYearContext?: Prisma.PriorYearContextUncheckedCreateNestedOneWithoutTaxYearInput
+  consumedByContexts?: Prisma.PriorYearContextUncheckedCreateNestedManyWithoutSourcePriorYearInput
+  engagementLetter?: Prisma.EngagementLetterUncheckedCreateNestedOneWithoutTaxYearInput
+  form8879?: Prisma.Form8879UncheckedCreateNestedOneWithoutTaxYearInput
+  filingMilestones?: Prisma.FilingMilestoneUncheckedCreateNestedManyWithoutTaxYearInput
+  w9Submissions?: Prisma.W9SubmissionUncheckedCreateNestedManyWithoutTaxYearInput
+  form1099Filings?: Prisma.Form1099FilingUncheckedCreateNestedManyWithoutTaxYearInput
 }
 
 export type TaxYearCreateOrConnectWithoutTransactionsInput = {
@@ -1809,6 +2196,13 @@ export type TaxYearUpdateWithoutTransactionsInput = {
   documents?: Prisma.DocumentUpdateManyWithoutTaxYearNestedInput
   pipelineRuns?: Prisma.PipelineRunUpdateManyWithoutTaxYearNestedInput
   inactiveMonths?: Prisma.AccountInactiveMonthUpdateManyWithoutTaxYearNestedInput
+  priorYearContext?: Prisma.PriorYearContextUpdateOneWithoutTaxYearNestedInput
+  consumedByContexts?: Prisma.PriorYearContextUpdateManyWithoutSourcePriorYearNestedInput
+  engagementLetter?: Prisma.EngagementLetterUpdateOneWithoutTaxYearNestedInput
+  form8879?: Prisma.Form8879UpdateOneWithoutTaxYearNestedInput
+  filingMilestones?: Prisma.FilingMilestoneUpdateManyWithoutTaxYearNestedInput
+  w9Submissions?: Prisma.W9SubmissionUpdateManyWithoutTaxYearNestedInput
+  form1099Filings?: Prisma.Form1099FilingUpdateManyWithoutTaxYearNestedInput
 }
 
 export type TaxYearUncheckedUpdateWithoutTransactionsInput = {
@@ -1832,6 +2226,13 @@ export type TaxYearUncheckedUpdateWithoutTransactionsInput = {
   documents?: Prisma.DocumentUncheckedUpdateManyWithoutTaxYearNestedInput
   pipelineRuns?: Prisma.PipelineRunUncheckedUpdateManyWithoutTaxYearNestedInput
   inactiveMonths?: Prisma.AccountInactiveMonthUncheckedUpdateManyWithoutTaxYearNestedInput
+  priorYearContext?: Prisma.PriorYearContextUncheckedUpdateOneWithoutTaxYearNestedInput
+  consumedByContexts?: Prisma.PriorYearContextUncheckedUpdateManyWithoutSourcePriorYearNestedInput
+  engagementLetter?: Prisma.EngagementLetterUncheckedUpdateOneWithoutTaxYearNestedInput
+  form8879?: Prisma.Form8879UncheckedUpdateOneWithoutTaxYearNestedInput
+  filingMilestones?: Prisma.FilingMilestoneUncheckedUpdateManyWithoutTaxYearNestedInput
+  w9Submissions?: Prisma.W9SubmissionUncheckedUpdateManyWithoutTaxYearNestedInput
+  form1099Filings?: Prisma.Form1099FilingUncheckedUpdateManyWithoutTaxYearNestedInput
 }
 
 export type TaxYearCreateWithoutMerchantRulesInput = {
@@ -1855,6 +2256,13 @@ export type TaxYearCreateWithoutMerchantRulesInput = {
   documents?: Prisma.DocumentCreateNestedManyWithoutTaxYearInput
   pipelineRuns?: Prisma.PipelineRunCreateNestedManyWithoutTaxYearInput
   inactiveMonths?: Prisma.AccountInactiveMonthCreateNestedManyWithoutTaxYearInput
+  priorYearContext?: Prisma.PriorYearContextCreateNestedOneWithoutTaxYearInput
+  consumedByContexts?: Prisma.PriorYearContextCreateNestedManyWithoutSourcePriorYearInput
+  engagementLetter?: Prisma.EngagementLetterCreateNestedOneWithoutTaxYearInput
+  form8879?: Prisma.Form8879CreateNestedOneWithoutTaxYearInput
+  filingMilestones?: Prisma.FilingMilestoneCreateNestedManyWithoutTaxYearInput
+  w9Submissions?: Prisma.W9SubmissionCreateNestedManyWithoutTaxYearInput
+  form1099Filings?: Prisma.Form1099FilingCreateNestedManyWithoutTaxYearInput
 }
 
 export type TaxYearUncheckedCreateWithoutMerchantRulesInput = {
@@ -1878,6 +2286,13 @@ export type TaxYearUncheckedCreateWithoutMerchantRulesInput = {
   documents?: Prisma.DocumentUncheckedCreateNestedManyWithoutTaxYearInput
   pipelineRuns?: Prisma.PipelineRunUncheckedCreateNestedManyWithoutTaxYearInput
   inactiveMonths?: Prisma.AccountInactiveMonthUncheckedCreateNestedManyWithoutTaxYearInput
+  priorYearContext?: Prisma.PriorYearContextUncheckedCreateNestedOneWithoutTaxYearInput
+  consumedByContexts?: Prisma.PriorYearContextUncheckedCreateNestedManyWithoutSourcePriorYearInput
+  engagementLetter?: Prisma.EngagementLetterUncheckedCreateNestedOneWithoutTaxYearInput
+  form8879?: Prisma.Form8879UncheckedCreateNestedOneWithoutTaxYearInput
+  filingMilestones?: Prisma.FilingMilestoneUncheckedCreateNestedManyWithoutTaxYearInput
+  w9Submissions?: Prisma.W9SubmissionUncheckedCreateNestedManyWithoutTaxYearInput
+  form1099Filings?: Prisma.Form1099FilingUncheckedCreateNestedManyWithoutTaxYearInput
 }
 
 export type TaxYearCreateOrConnectWithoutMerchantRulesInput = {
@@ -1917,6 +2332,13 @@ export type TaxYearUpdateWithoutMerchantRulesInput = {
   documents?: Prisma.DocumentUpdateManyWithoutTaxYearNestedInput
   pipelineRuns?: Prisma.PipelineRunUpdateManyWithoutTaxYearNestedInput
   inactiveMonths?: Prisma.AccountInactiveMonthUpdateManyWithoutTaxYearNestedInput
+  priorYearContext?: Prisma.PriorYearContextUpdateOneWithoutTaxYearNestedInput
+  consumedByContexts?: Prisma.PriorYearContextUpdateManyWithoutSourcePriorYearNestedInput
+  engagementLetter?: Prisma.EngagementLetterUpdateOneWithoutTaxYearNestedInput
+  form8879?: Prisma.Form8879UpdateOneWithoutTaxYearNestedInput
+  filingMilestones?: Prisma.FilingMilestoneUpdateManyWithoutTaxYearNestedInput
+  w9Submissions?: Prisma.W9SubmissionUpdateManyWithoutTaxYearNestedInput
+  form1099Filings?: Prisma.Form1099FilingUpdateManyWithoutTaxYearNestedInput
 }
 
 export type TaxYearUncheckedUpdateWithoutMerchantRulesInput = {
@@ -1940,6 +2362,13 @@ export type TaxYearUncheckedUpdateWithoutMerchantRulesInput = {
   documents?: Prisma.DocumentUncheckedUpdateManyWithoutTaxYearNestedInput
   pipelineRuns?: Prisma.PipelineRunUncheckedUpdateManyWithoutTaxYearNestedInput
   inactiveMonths?: Prisma.AccountInactiveMonthUncheckedUpdateManyWithoutTaxYearNestedInput
+  priorYearContext?: Prisma.PriorYearContextUncheckedUpdateOneWithoutTaxYearNestedInput
+  consumedByContexts?: Prisma.PriorYearContextUncheckedUpdateManyWithoutSourcePriorYearNestedInput
+  engagementLetter?: Prisma.EngagementLetterUncheckedUpdateOneWithoutTaxYearNestedInput
+  form8879?: Prisma.Form8879UncheckedUpdateOneWithoutTaxYearNestedInput
+  filingMilestones?: Prisma.FilingMilestoneUncheckedUpdateManyWithoutTaxYearNestedInput
+  w9Submissions?: Prisma.W9SubmissionUncheckedUpdateManyWithoutTaxYearNestedInput
+  form1099Filings?: Prisma.Form1099FilingUncheckedUpdateManyWithoutTaxYearNestedInput
 }
 
 export type TaxYearCreateWithoutStopItemsInput = {
@@ -1963,6 +2392,13 @@ export type TaxYearCreateWithoutStopItemsInput = {
   documents?: Prisma.DocumentCreateNestedManyWithoutTaxYearInput
   pipelineRuns?: Prisma.PipelineRunCreateNestedManyWithoutTaxYearInput
   inactiveMonths?: Prisma.AccountInactiveMonthCreateNestedManyWithoutTaxYearInput
+  priorYearContext?: Prisma.PriorYearContextCreateNestedOneWithoutTaxYearInput
+  consumedByContexts?: Prisma.PriorYearContextCreateNestedManyWithoutSourcePriorYearInput
+  engagementLetter?: Prisma.EngagementLetterCreateNestedOneWithoutTaxYearInput
+  form8879?: Prisma.Form8879CreateNestedOneWithoutTaxYearInput
+  filingMilestones?: Prisma.FilingMilestoneCreateNestedManyWithoutTaxYearInput
+  w9Submissions?: Prisma.W9SubmissionCreateNestedManyWithoutTaxYearInput
+  form1099Filings?: Prisma.Form1099FilingCreateNestedManyWithoutTaxYearInput
 }
 
 export type TaxYearUncheckedCreateWithoutStopItemsInput = {
@@ -1986,6 +2422,13 @@ export type TaxYearUncheckedCreateWithoutStopItemsInput = {
   documents?: Prisma.DocumentUncheckedCreateNestedManyWithoutTaxYearInput
   pipelineRuns?: Prisma.PipelineRunUncheckedCreateNestedManyWithoutTaxYearInput
   inactiveMonths?: Prisma.AccountInactiveMonthUncheckedCreateNestedManyWithoutTaxYearInput
+  priorYearContext?: Prisma.PriorYearContextUncheckedCreateNestedOneWithoutTaxYearInput
+  consumedByContexts?: Prisma.PriorYearContextUncheckedCreateNestedManyWithoutSourcePriorYearInput
+  engagementLetter?: Prisma.EngagementLetterUncheckedCreateNestedOneWithoutTaxYearInput
+  form8879?: Prisma.Form8879UncheckedCreateNestedOneWithoutTaxYearInput
+  filingMilestones?: Prisma.FilingMilestoneUncheckedCreateNestedManyWithoutTaxYearInput
+  w9Submissions?: Prisma.W9SubmissionUncheckedCreateNestedManyWithoutTaxYearInput
+  form1099Filings?: Prisma.Form1099FilingUncheckedCreateNestedManyWithoutTaxYearInput
 }
 
 export type TaxYearCreateOrConnectWithoutStopItemsInput = {
@@ -2025,6 +2468,13 @@ export type TaxYearUpdateWithoutStopItemsInput = {
   documents?: Prisma.DocumentUpdateManyWithoutTaxYearNestedInput
   pipelineRuns?: Prisma.PipelineRunUpdateManyWithoutTaxYearNestedInput
   inactiveMonths?: Prisma.AccountInactiveMonthUpdateManyWithoutTaxYearNestedInput
+  priorYearContext?: Prisma.PriorYearContextUpdateOneWithoutTaxYearNestedInput
+  consumedByContexts?: Prisma.PriorYearContextUpdateManyWithoutSourcePriorYearNestedInput
+  engagementLetter?: Prisma.EngagementLetterUpdateOneWithoutTaxYearNestedInput
+  form8879?: Prisma.Form8879UpdateOneWithoutTaxYearNestedInput
+  filingMilestones?: Prisma.FilingMilestoneUpdateManyWithoutTaxYearNestedInput
+  w9Submissions?: Prisma.W9SubmissionUpdateManyWithoutTaxYearNestedInput
+  form1099Filings?: Prisma.Form1099FilingUpdateManyWithoutTaxYearNestedInput
 }
 
 export type TaxYearUncheckedUpdateWithoutStopItemsInput = {
@@ -2048,6 +2498,13 @@ export type TaxYearUncheckedUpdateWithoutStopItemsInput = {
   documents?: Prisma.DocumentUncheckedUpdateManyWithoutTaxYearNestedInput
   pipelineRuns?: Prisma.PipelineRunUncheckedUpdateManyWithoutTaxYearNestedInput
   inactiveMonths?: Prisma.AccountInactiveMonthUncheckedUpdateManyWithoutTaxYearNestedInput
+  priorYearContext?: Prisma.PriorYearContextUncheckedUpdateOneWithoutTaxYearNestedInput
+  consumedByContexts?: Prisma.PriorYearContextUncheckedUpdateManyWithoutSourcePriorYearNestedInput
+  engagementLetter?: Prisma.EngagementLetterUncheckedUpdateOneWithoutTaxYearNestedInput
+  form8879?: Prisma.Form8879UncheckedUpdateOneWithoutTaxYearNestedInput
+  filingMilestones?: Prisma.FilingMilestoneUncheckedUpdateManyWithoutTaxYearNestedInput
+  w9Submissions?: Prisma.W9SubmissionUncheckedUpdateManyWithoutTaxYearNestedInput
+  form1099Filings?: Prisma.Form1099FilingUncheckedUpdateManyWithoutTaxYearNestedInput
 }
 
 export type TaxYearCreateWithoutReportsInput = {
@@ -2071,6 +2528,13 @@ export type TaxYearCreateWithoutReportsInput = {
   documents?: Prisma.DocumentCreateNestedManyWithoutTaxYearInput
   pipelineRuns?: Prisma.PipelineRunCreateNestedManyWithoutTaxYearInput
   inactiveMonths?: Prisma.AccountInactiveMonthCreateNestedManyWithoutTaxYearInput
+  priorYearContext?: Prisma.PriorYearContextCreateNestedOneWithoutTaxYearInput
+  consumedByContexts?: Prisma.PriorYearContextCreateNestedManyWithoutSourcePriorYearInput
+  engagementLetter?: Prisma.EngagementLetterCreateNestedOneWithoutTaxYearInput
+  form8879?: Prisma.Form8879CreateNestedOneWithoutTaxYearInput
+  filingMilestones?: Prisma.FilingMilestoneCreateNestedManyWithoutTaxYearInput
+  w9Submissions?: Prisma.W9SubmissionCreateNestedManyWithoutTaxYearInput
+  form1099Filings?: Prisma.Form1099FilingCreateNestedManyWithoutTaxYearInput
 }
 
 export type TaxYearUncheckedCreateWithoutReportsInput = {
@@ -2094,6 +2558,13 @@ export type TaxYearUncheckedCreateWithoutReportsInput = {
   documents?: Prisma.DocumentUncheckedCreateNestedManyWithoutTaxYearInput
   pipelineRuns?: Prisma.PipelineRunUncheckedCreateNestedManyWithoutTaxYearInput
   inactiveMonths?: Prisma.AccountInactiveMonthUncheckedCreateNestedManyWithoutTaxYearInput
+  priorYearContext?: Prisma.PriorYearContextUncheckedCreateNestedOneWithoutTaxYearInput
+  consumedByContexts?: Prisma.PriorYearContextUncheckedCreateNestedManyWithoutSourcePriorYearInput
+  engagementLetter?: Prisma.EngagementLetterUncheckedCreateNestedOneWithoutTaxYearInput
+  form8879?: Prisma.Form8879UncheckedCreateNestedOneWithoutTaxYearInput
+  filingMilestones?: Prisma.FilingMilestoneUncheckedCreateNestedManyWithoutTaxYearInput
+  w9Submissions?: Prisma.W9SubmissionUncheckedCreateNestedManyWithoutTaxYearInput
+  form1099Filings?: Prisma.Form1099FilingUncheckedCreateNestedManyWithoutTaxYearInput
 }
 
 export type TaxYearCreateOrConnectWithoutReportsInput = {
@@ -2133,6 +2604,13 @@ export type TaxYearUpdateWithoutReportsInput = {
   documents?: Prisma.DocumentUpdateManyWithoutTaxYearNestedInput
   pipelineRuns?: Prisma.PipelineRunUpdateManyWithoutTaxYearNestedInput
   inactiveMonths?: Prisma.AccountInactiveMonthUpdateManyWithoutTaxYearNestedInput
+  priorYearContext?: Prisma.PriorYearContextUpdateOneWithoutTaxYearNestedInput
+  consumedByContexts?: Prisma.PriorYearContextUpdateManyWithoutSourcePriorYearNestedInput
+  engagementLetter?: Prisma.EngagementLetterUpdateOneWithoutTaxYearNestedInput
+  form8879?: Prisma.Form8879UpdateOneWithoutTaxYearNestedInput
+  filingMilestones?: Prisma.FilingMilestoneUpdateManyWithoutTaxYearNestedInput
+  w9Submissions?: Prisma.W9SubmissionUpdateManyWithoutTaxYearNestedInput
+  form1099Filings?: Prisma.Form1099FilingUpdateManyWithoutTaxYearNestedInput
 }
 
 export type TaxYearUncheckedUpdateWithoutReportsInput = {
@@ -2156,6 +2634,13 @@ export type TaxYearUncheckedUpdateWithoutReportsInput = {
   documents?: Prisma.DocumentUncheckedUpdateManyWithoutTaxYearNestedInput
   pipelineRuns?: Prisma.PipelineRunUncheckedUpdateManyWithoutTaxYearNestedInput
   inactiveMonths?: Prisma.AccountInactiveMonthUncheckedUpdateManyWithoutTaxYearNestedInput
+  priorYearContext?: Prisma.PriorYearContextUncheckedUpdateOneWithoutTaxYearNestedInput
+  consumedByContexts?: Prisma.PriorYearContextUncheckedUpdateManyWithoutSourcePriorYearNestedInput
+  engagementLetter?: Prisma.EngagementLetterUncheckedUpdateOneWithoutTaxYearNestedInput
+  form8879?: Prisma.Form8879UncheckedUpdateOneWithoutTaxYearNestedInput
+  filingMilestones?: Prisma.FilingMilestoneUncheckedUpdateManyWithoutTaxYearNestedInput
+  w9Submissions?: Prisma.W9SubmissionUncheckedUpdateManyWithoutTaxYearNestedInput
+  form1099Filings?: Prisma.Form1099FilingUncheckedUpdateManyWithoutTaxYearNestedInput
 }
 
 export type TaxYearCreateWithoutDocumentsInput = {
@@ -2179,6 +2664,13 @@ export type TaxYearCreateWithoutDocumentsInput = {
   importSessions?: Prisma.ImportSessionCreateNestedManyWithoutTaxYearInput
   pipelineRuns?: Prisma.PipelineRunCreateNestedManyWithoutTaxYearInput
   inactiveMonths?: Prisma.AccountInactiveMonthCreateNestedManyWithoutTaxYearInput
+  priorYearContext?: Prisma.PriorYearContextCreateNestedOneWithoutTaxYearInput
+  consumedByContexts?: Prisma.PriorYearContextCreateNestedManyWithoutSourcePriorYearInput
+  engagementLetter?: Prisma.EngagementLetterCreateNestedOneWithoutTaxYearInput
+  form8879?: Prisma.Form8879CreateNestedOneWithoutTaxYearInput
+  filingMilestones?: Prisma.FilingMilestoneCreateNestedManyWithoutTaxYearInput
+  w9Submissions?: Prisma.W9SubmissionCreateNestedManyWithoutTaxYearInput
+  form1099Filings?: Prisma.Form1099FilingCreateNestedManyWithoutTaxYearInput
 }
 
 export type TaxYearUncheckedCreateWithoutDocumentsInput = {
@@ -2202,6 +2694,13 @@ export type TaxYearUncheckedCreateWithoutDocumentsInput = {
   importSessions?: Prisma.ImportSessionUncheckedCreateNestedManyWithoutTaxYearInput
   pipelineRuns?: Prisma.PipelineRunUncheckedCreateNestedManyWithoutTaxYearInput
   inactiveMonths?: Prisma.AccountInactiveMonthUncheckedCreateNestedManyWithoutTaxYearInput
+  priorYearContext?: Prisma.PriorYearContextUncheckedCreateNestedOneWithoutTaxYearInput
+  consumedByContexts?: Prisma.PriorYearContextUncheckedCreateNestedManyWithoutSourcePriorYearInput
+  engagementLetter?: Prisma.EngagementLetterUncheckedCreateNestedOneWithoutTaxYearInput
+  form8879?: Prisma.Form8879UncheckedCreateNestedOneWithoutTaxYearInput
+  filingMilestones?: Prisma.FilingMilestoneUncheckedCreateNestedManyWithoutTaxYearInput
+  w9Submissions?: Prisma.W9SubmissionUncheckedCreateNestedManyWithoutTaxYearInput
+  form1099Filings?: Prisma.Form1099FilingUncheckedCreateNestedManyWithoutTaxYearInput
 }
 
 export type TaxYearCreateOrConnectWithoutDocumentsInput = {
@@ -2241,6 +2740,13 @@ export type TaxYearUpdateWithoutDocumentsInput = {
   importSessions?: Prisma.ImportSessionUpdateManyWithoutTaxYearNestedInput
   pipelineRuns?: Prisma.PipelineRunUpdateManyWithoutTaxYearNestedInput
   inactiveMonths?: Prisma.AccountInactiveMonthUpdateManyWithoutTaxYearNestedInput
+  priorYearContext?: Prisma.PriorYearContextUpdateOneWithoutTaxYearNestedInput
+  consumedByContexts?: Prisma.PriorYearContextUpdateManyWithoutSourcePriorYearNestedInput
+  engagementLetter?: Prisma.EngagementLetterUpdateOneWithoutTaxYearNestedInput
+  form8879?: Prisma.Form8879UpdateOneWithoutTaxYearNestedInput
+  filingMilestones?: Prisma.FilingMilestoneUpdateManyWithoutTaxYearNestedInput
+  w9Submissions?: Prisma.W9SubmissionUpdateManyWithoutTaxYearNestedInput
+  form1099Filings?: Prisma.Form1099FilingUpdateManyWithoutTaxYearNestedInput
 }
 
 export type TaxYearUncheckedUpdateWithoutDocumentsInput = {
@@ -2264,6 +2770,965 @@ export type TaxYearUncheckedUpdateWithoutDocumentsInput = {
   importSessions?: Prisma.ImportSessionUncheckedUpdateManyWithoutTaxYearNestedInput
   pipelineRuns?: Prisma.PipelineRunUncheckedUpdateManyWithoutTaxYearNestedInput
   inactiveMonths?: Prisma.AccountInactiveMonthUncheckedUpdateManyWithoutTaxYearNestedInput
+  priorYearContext?: Prisma.PriorYearContextUncheckedUpdateOneWithoutTaxYearNestedInput
+  consumedByContexts?: Prisma.PriorYearContextUncheckedUpdateManyWithoutSourcePriorYearNestedInput
+  engagementLetter?: Prisma.EngagementLetterUncheckedUpdateOneWithoutTaxYearNestedInput
+  form8879?: Prisma.Form8879UncheckedUpdateOneWithoutTaxYearNestedInput
+  filingMilestones?: Prisma.FilingMilestoneUncheckedUpdateManyWithoutTaxYearNestedInput
+  w9Submissions?: Prisma.W9SubmissionUncheckedUpdateManyWithoutTaxYearNestedInput
+  form1099Filings?: Prisma.Form1099FilingUncheckedUpdateManyWithoutTaxYearNestedInput
+}
+
+export type TaxYearCreateWithoutPriorYearContextInput = {
+  id?: string
+  year: number
+  status?: $Enums.TaxYearStatus
+  lockedAt?: Date | string | null
+  lockedSnapshotHash?: string | null
+  acceptedRiskOverrides?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  createdAt?: Date | string
+  user: Prisma.UserCreateNestedOneWithoutTaxYearsInput
+  ruleVersion?: Prisma.RuleVersionCreateNestedOneWithoutTaxYearsInput
+  businessProfile?: Prisma.BusinessProfileCreateNestedOneWithoutTaxYearInput
+  financialAccounts?: Prisma.FinancialAccountCreateNestedManyWithoutTaxYearInput
+  accountYearLinks?: Prisma.AccountYearLinkCreateNestedManyWithoutTaxYearInput
+  statementImports?: Prisma.StatementImportCreateNestedManyWithoutTaxYearInput
+  transactions?: Prisma.TransactionCreateNestedManyWithoutTaxYearInput
+  merchantRules?: Prisma.MerchantRuleCreateNestedManyWithoutTaxYearInput
+  stopItems?: Prisma.StopItemCreateNestedManyWithoutTaxYearInput
+  reports?: Prisma.ReportCreateNestedManyWithoutTaxYearInput
+  importSessions?: Prisma.ImportSessionCreateNestedManyWithoutTaxYearInput
+  documents?: Prisma.DocumentCreateNestedManyWithoutTaxYearInput
+  pipelineRuns?: Prisma.PipelineRunCreateNestedManyWithoutTaxYearInput
+  inactiveMonths?: Prisma.AccountInactiveMonthCreateNestedManyWithoutTaxYearInput
+  consumedByContexts?: Prisma.PriorYearContextCreateNestedManyWithoutSourcePriorYearInput
+  engagementLetter?: Prisma.EngagementLetterCreateNestedOneWithoutTaxYearInput
+  form8879?: Prisma.Form8879CreateNestedOneWithoutTaxYearInput
+  filingMilestones?: Prisma.FilingMilestoneCreateNestedManyWithoutTaxYearInput
+  w9Submissions?: Prisma.W9SubmissionCreateNestedManyWithoutTaxYearInput
+  form1099Filings?: Prisma.Form1099FilingCreateNestedManyWithoutTaxYearInput
+}
+
+export type TaxYearUncheckedCreateWithoutPriorYearContextInput = {
+  id?: string
+  userId: string
+  year: number
+  status?: $Enums.TaxYearStatus
+  ruleVersionId?: string | null
+  lockedAt?: Date | string | null
+  lockedSnapshotHash?: string | null
+  acceptedRiskOverrides?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  createdAt?: Date | string
+  businessProfile?: Prisma.BusinessProfileUncheckedCreateNestedOneWithoutTaxYearInput
+  financialAccounts?: Prisma.FinancialAccountUncheckedCreateNestedManyWithoutTaxYearInput
+  accountYearLinks?: Prisma.AccountYearLinkUncheckedCreateNestedManyWithoutTaxYearInput
+  statementImports?: Prisma.StatementImportUncheckedCreateNestedManyWithoutTaxYearInput
+  transactions?: Prisma.TransactionUncheckedCreateNestedManyWithoutTaxYearInput
+  merchantRules?: Prisma.MerchantRuleUncheckedCreateNestedManyWithoutTaxYearInput
+  stopItems?: Prisma.StopItemUncheckedCreateNestedManyWithoutTaxYearInput
+  reports?: Prisma.ReportUncheckedCreateNestedManyWithoutTaxYearInput
+  importSessions?: Prisma.ImportSessionUncheckedCreateNestedManyWithoutTaxYearInput
+  documents?: Prisma.DocumentUncheckedCreateNestedManyWithoutTaxYearInput
+  pipelineRuns?: Prisma.PipelineRunUncheckedCreateNestedManyWithoutTaxYearInput
+  inactiveMonths?: Prisma.AccountInactiveMonthUncheckedCreateNestedManyWithoutTaxYearInput
+  consumedByContexts?: Prisma.PriorYearContextUncheckedCreateNestedManyWithoutSourcePriorYearInput
+  engagementLetter?: Prisma.EngagementLetterUncheckedCreateNestedOneWithoutTaxYearInput
+  form8879?: Prisma.Form8879UncheckedCreateNestedOneWithoutTaxYearInput
+  filingMilestones?: Prisma.FilingMilestoneUncheckedCreateNestedManyWithoutTaxYearInput
+  w9Submissions?: Prisma.W9SubmissionUncheckedCreateNestedManyWithoutTaxYearInput
+  form1099Filings?: Prisma.Form1099FilingUncheckedCreateNestedManyWithoutTaxYearInput
+}
+
+export type TaxYearCreateOrConnectWithoutPriorYearContextInput = {
+  where: Prisma.TaxYearWhereUniqueInput
+  create: Prisma.XOR<Prisma.TaxYearCreateWithoutPriorYearContextInput, Prisma.TaxYearUncheckedCreateWithoutPriorYearContextInput>
+}
+
+export type TaxYearCreateWithoutConsumedByContextsInput = {
+  id?: string
+  year: number
+  status?: $Enums.TaxYearStatus
+  lockedAt?: Date | string | null
+  lockedSnapshotHash?: string | null
+  acceptedRiskOverrides?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  createdAt?: Date | string
+  user: Prisma.UserCreateNestedOneWithoutTaxYearsInput
+  ruleVersion?: Prisma.RuleVersionCreateNestedOneWithoutTaxYearsInput
+  businessProfile?: Prisma.BusinessProfileCreateNestedOneWithoutTaxYearInput
+  financialAccounts?: Prisma.FinancialAccountCreateNestedManyWithoutTaxYearInput
+  accountYearLinks?: Prisma.AccountYearLinkCreateNestedManyWithoutTaxYearInput
+  statementImports?: Prisma.StatementImportCreateNestedManyWithoutTaxYearInput
+  transactions?: Prisma.TransactionCreateNestedManyWithoutTaxYearInput
+  merchantRules?: Prisma.MerchantRuleCreateNestedManyWithoutTaxYearInput
+  stopItems?: Prisma.StopItemCreateNestedManyWithoutTaxYearInput
+  reports?: Prisma.ReportCreateNestedManyWithoutTaxYearInput
+  importSessions?: Prisma.ImportSessionCreateNestedManyWithoutTaxYearInput
+  documents?: Prisma.DocumentCreateNestedManyWithoutTaxYearInput
+  pipelineRuns?: Prisma.PipelineRunCreateNestedManyWithoutTaxYearInput
+  inactiveMonths?: Prisma.AccountInactiveMonthCreateNestedManyWithoutTaxYearInput
+  priorYearContext?: Prisma.PriorYearContextCreateNestedOneWithoutTaxYearInput
+  engagementLetter?: Prisma.EngagementLetterCreateNestedOneWithoutTaxYearInput
+  form8879?: Prisma.Form8879CreateNestedOneWithoutTaxYearInput
+  filingMilestones?: Prisma.FilingMilestoneCreateNestedManyWithoutTaxYearInput
+  w9Submissions?: Prisma.W9SubmissionCreateNestedManyWithoutTaxYearInput
+  form1099Filings?: Prisma.Form1099FilingCreateNestedManyWithoutTaxYearInput
+}
+
+export type TaxYearUncheckedCreateWithoutConsumedByContextsInput = {
+  id?: string
+  userId: string
+  year: number
+  status?: $Enums.TaxYearStatus
+  ruleVersionId?: string | null
+  lockedAt?: Date | string | null
+  lockedSnapshotHash?: string | null
+  acceptedRiskOverrides?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  createdAt?: Date | string
+  businessProfile?: Prisma.BusinessProfileUncheckedCreateNestedOneWithoutTaxYearInput
+  financialAccounts?: Prisma.FinancialAccountUncheckedCreateNestedManyWithoutTaxYearInput
+  accountYearLinks?: Prisma.AccountYearLinkUncheckedCreateNestedManyWithoutTaxYearInput
+  statementImports?: Prisma.StatementImportUncheckedCreateNestedManyWithoutTaxYearInput
+  transactions?: Prisma.TransactionUncheckedCreateNestedManyWithoutTaxYearInput
+  merchantRules?: Prisma.MerchantRuleUncheckedCreateNestedManyWithoutTaxYearInput
+  stopItems?: Prisma.StopItemUncheckedCreateNestedManyWithoutTaxYearInput
+  reports?: Prisma.ReportUncheckedCreateNestedManyWithoutTaxYearInput
+  importSessions?: Prisma.ImportSessionUncheckedCreateNestedManyWithoutTaxYearInput
+  documents?: Prisma.DocumentUncheckedCreateNestedManyWithoutTaxYearInput
+  pipelineRuns?: Prisma.PipelineRunUncheckedCreateNestedManyWithoutTaxYearInput
+  inactiveMonths?: Prisma.AccountInactiveMonthUncheckedCreateNestedManyWithoutTaxYearInput
+  priorYearContext?: Prisma.PriorYearContextUncheckedCreateNestedOneWithoutTaxYearInput
+  engagementLetter?: Prisma.EngagementLetterUncheckedCreateNestedOneWithoutTaxYearInput
+  form8879?: Prisma.Form8879UncheckedCreateNestedOneWithoutTaxYearInput
+  filingMilestones?: Prisma.FilingMilestoneUncheckedCreateNestedManyWithoutTaxYearInput
+  w9Submissions?: Prisma.W9SubmissionUncheckedCreateNestedManyWithoutTaxYearInput
+  form1099Filings?: Prisma.Form1099FilingUncheckedCreateNestedManyWithoutTaxYearInput
+}
+
+export type TaxYearCreateOrConnectWithoutConsumedByContextsInput = {
+  where: Prisma.TaxYearWhereUniqueInput
+  create: Prisma.XOR<Prisma.TaxYearCreateWithoutConsumedByContextsInput, Prisma.TaxYearUncheckedCreateWithoutConsumedByContextsInput>
+}
+
+export type TaxYearUpsertWithoutPriorYearContextInput = {
+  update: Prisma.XOR<Prisma.TaxYearUpdateWithoutPriorYearContextInput, Prisma.TaxYearUncheckedUpdateWithoutPriorYearContextInput>
+  create: Prisma.XOR<Prisma.TaxYearCreateWithoutPriorYearContextInput, Prisma.TaxYearUncheckedCreateWithoutPriorYearContextInput>
+  where?: Prisma.TaxYearWhereInput
+}
+
+export type TaxYearUpdateToOneWithWhereWithoutPriorYearContextInput = {
+  where?: Prisma.TaxYearWhereInput
+  data: Prisma.XOR<Prisma.TaxYearUpdateWithoutPriorYearContextInput, Prisma.TaxYearUncheckedUpdateWithoutPriorYearContextInput>
+}
+
+export type TaxYearUpdateWithoutPriorYearContextInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  year?: Prisma.IntFieldUpdateOperationsInput | number
+  status?: Prisma.EnumTaxYearStatusFieldUpdateOperationsInput | $Enums.TaxYearStatus
+  lockedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  lockedSnapshotHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  acceptedRiskOverrides?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  user?: Prisma.UserUpdateOneRequiredWithoutTaxYearsNestedInput
+  ruleVersion?: Prisma.RuleVersionUpdateOneWithoutTaxYearsNestedInput
+  businessProfile?: Prisma.BusinessProfileUpdateOneWithoutTaxYearNestedInput
+  financialAccounts?: Prisma.FinancialAccountUpdateManyWithoutTaxYearNestedInput
+  accountYearLinks?: Prisma.AccountYearLinkUpdateManyWithoutTaxYearNestedInput
+  statementImports?: Prisma.StatementImportUpdateManyWithoutTaxYearNestedInput
+  transactions?: Prisma.TransactionUpdateManyWithoutTaxYearNestedInput
+  merchantRules?: Prisma.MerchantRuleUpdateManyWithoutTaxYearNestedInput
+  stopItems?: Prisma.StopItemUpdateManyWithoutTaxYearNestedInput
+  reports?: Prisma.ReportUpdateManyWithoutTaxYearNestedInput
+  importSessions?: Prisma.ImportSessionUpdateManyWithoutTaxYearNestedInput
+  documents?: Prisma.DocumentUpdateManyWithoutTaxYearNestedInput
+  pipelineRuns?: Prisma.PipelineRunUpdateManyWithoutTaxYearNestedInput
+  inactiveMonths?: Prisma.AccountInactiveMonthUpdateManyWithoutTaxYearNestedInput
+  consumedByContexts?: Prisma.PriorYearContextUpdateManyWithoutSourcePriorYearNestedInput
+  engagementLetter?: Prisma.EngagementLetterUpdateOneWithoutTaxYearNestedInput
+  form8879?: Prisma.Form8879UpdateOneWithoutTaxYearNestedInput
+  filingMilestones?: Prisma.FilingMilestoneUpdateManyWithoutTaxYearNestedInput
+  w9Submissions?: Prisma.W9SubmissionUpdateManyWithoutTaxYearNestedInput
+  form1099Filings?: Prisma.Form1099FilingUpdateManyWithoutTaxYearNestedInput
+}
+
+export type TaxYearUncheckedUpdateWithoutPriorYearContextInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  userId?: Prisma.StringFieldUpdateOperationsInput | string
+  year?: Prisma.IntFieldUpdateOperationsInput | number
+  status?: Prisma.EnumTaxYearStatusFieldUpdateOperationsInput | $Enums.TaxYearStatus
+  ruleVersionId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  lockedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  lockedSnapshotHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  acceptedRiskOverrides?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  businessProfile?: Prisma.BusinessProfileUncheckedUpdateOneWithoutTaxYearNestedInput
+  financialAccounts?: Prisma.FinancialAccountUncheckedUpdateManyWithoutTaxYearNestedInput
+  accountYearLinks?: Prisma.AccountYearLinkUncheckedUpdateManyWithoutTaxYearNestedInput
+  statementImports?: Prisma.StatementImportUncheckedUpdateManyWithoutTaxYearNestedInput
+  transactions?: Prisma.TransactionUncheckedUpdateManyWithoutTaxYearNestedInput
+  merchantRules?: Prisma.MerchantRuleUncheckedUpdateManyWithoutTaxYearNestedInput
+  stopItems?: Prisma.StopItemUncheckedUpdateManyWithoutTaxYearNestedInput
+  reports?: Prisma.ReportUncheckedUpdateManyWithoutTaxYearNestedInput
+  importSessions?: Prisma.ImportSessionUncheckedUpdateManyWithoutTaxYearNestedInput
+  documents?: Prisma.DocumentUncheckedUpdateManyWithoutTaxYearNestedInput
+  pipelineRuns?: Prisma.PipelineRunUncheckedUpdateManyWithoutTaxYearNestedInput
+  inactiveMonths?: Prisma.AccountInactiveMonthUncheckedUpdateManyWithoutTaxYearNestedInput
+  consumedByContexts?: Prisma.PriorYearContextUncheckedUpdateManyWithoutSourcePriorYearNestedInput
+  engagementLetter?: Prisma.EngagementLetterUncheckedUpdateOneWithoutTaxYearNestedInput
+  form8879?: Prisma.Form8879UncheckedUpdateOneWithoutTaxYearNestedInput
+  filingMilestones?: Prisma.FilingMilestoneUncheckedUpdateManyWithoutTaxYearNestedInput
+  w9Submissions?: Prisma.W9SubmissionUncheckedUpdateManyWithoutTaxYearNestedInput
+  form1099Filings?: Prisma.Form1099FilingUncheckedUpdateManyWithoutTaxYearNestedInput
+}
+
+export type TaxYearUpsertWithoutConsumedByContextsInput = {
+  update: Prisma.XOR<Prisma.TaxYearUpdateWithoutConsumedByContextsInput, Prisma.TaxYearUncheckedUpdateWithoutConsumedByContextsInput>
+  create: Prisma.XOR<Prisma.TaxYearCreateWithoutConsumedByContextsInput, Prisma.TaxYearUncheckedCreateWithoutConsumedByContextsInput>
+  where?: Prisma.TaxYearWhereInput
+}
+
+export type TaxYearUpdateToOneWithWhereWithoutConsumedByContextsInput = {
+  where?: Prisma.TaxYearWhereInput
+  data: Prisma.XOR<Prisma.TaxYearUpdateWithoutConsumedByContextsInput, Prisma.TaxYearUncheckedUpdateWithoutConsumedByContextsInput>
+}
+
+export type TaxYearUpdateWithoutConsumedByContextsInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  year?: Prisma.IntFieldUpdateOperationsInput | number
+  status?: Prisma.EnumTaxYearStatusFieldUpdateOperationsInput | $Enums.TaxYearStatus
+  lockedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  lockedSnapshotHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  acceptedRiskOverrides?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  user?: Prisma.UserUpdateOneRequiredWithoutTaxYearsNestedInput
+  ruleVersion?: Prisma.RuleVersionUpdateOneWithoutTaxYearsNestedInput
+  businessProfile?: Prisma.BusinessProfileUpdateOneWithoutTaxYearNestedInput
+  financialAccounts?: Prisma.FinancialAccountUpdateManyWithoutTaxYearNestedInput
+  accountYearLinks?: Prisma.AccountYearLinkUpdateManyWithoutTaxYearNestedInput
+  statementImports?: Prisma.StatementImportUpdateManyWithoutTaxYearNestedInput
+  transactions?: Prisma.TransactionUpdateManyWithoutTaxYearNestedInput
+  merchantRules?: Prisma.MerchantRuleUpdateManyWithoutTaxYearNestedInput
+  stopItems?: Prisma.StopItemUpdateManyWithoutTaxYearNestedInput
+  reports?: Prisma.ReportUpdateManyWithoutTaxYearNestedInput
+  importSessions?: Prisma.ImportSessionUpdateManyWithoutTaxYearNestedInput
+  documents?: Prisma.DocumentUpdateManyWithoutTaxYearNestedInput
+  pipelineRuns?: Prisma.PipelineRunUpdateManyWithoutTaxYearNestedInput
+  inactiveMonths?: Prisma.AccountInactiveMonthUpdateManyWithoutTaxYearNestedInput
+  priorYearContext?: Prisma.PriorYearContextUpdateOneWithoutTaxYearNestedInput
+  engagementLetter?: Prisma.EngagementLetterUpdateOneWithoutTaxYearNestedInput
+  form8879?: Prisma.Form8879UpdateOneWithoutTaxYearNestedInput
+  filingMilestones?: Prisma.FilingMilestoneUpdateManyWithoutTaxYearNestedInput
+  w9Submissions?: Prisma.W9SubmissionUpdateManyWithoutTaxYearNestedInput
+  form1099Filings?: Prisma.Form1099FilingUpdateManyWithoutTaxYearNestedInput
+}
+
+export type TaxYearUncheckedUpdateWithoutConsumedByContextsInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  userId?: Prisma.StringFieldUpdateOperationsInput | string
+  year?: Prisma.IntFieldUpdateOperationsInput | number
+  status?: Prisma.EnumTaxYearStatusFieldUpdateOperationsInput | $Enums.TaxYearStatus
+  ruleVersionId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  lockedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  lockedSnapshotHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  acceptedRiskOverrides?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  businessProfile?: Prisma.BusinessProfileUncheckedUpdateOneWithoutTaxYearNestedInput
+  financialAccounts?: Prisma.FinancialAccountUncheckedUpdateManyWithoutTaxYearNestedInput
+  accountYearLinks?: Prisma.AccountYearLinkUncheckedUpdateManyWithoutTaxYearNestedInput
+  statementImports?: Prisma.StatementImportUncheckedUpdateManyWithoutTaxYearNestedInput
+  transactions?: Prisma.TransactionUncheckedUpdateManyWithoutTaxYearNestedInput
+  merchantRules?: Prisma.MerchantRuleUncheckedUpdateManyWithoutTaxYearNestedInput
+  stopItems?: Prisma.StopItemUncheckedUpdateManyWithoutTaxYearNestedInput
+  reports?: Prisma.ReportUncheckedUpdateManyWithoutTaxYearNestedInput
+  importSessions?: Prisma.ImportSessionUncheckedUpdateManyWithoutTaxYearNestedInput
+  documents?: Prisma.DocumentUncheckedUpdateManyWithoutTaxYearNestedInput
+  pipelineRuns?: Prisma.PipelineRunUncheckedUpdateManyWithoutTaxYearNestedInput
+  inactiveMonths?: Prisma.AccountInactiveMonthUncheckedUpdateManyWithoutTaxYearNestedInput
+  priorYearContext?: Prisma.PriorYearContextUncheckedUpdateOneWithoutTaxYearNestedInput
+  engagementLetter?: Prisma.EngagementLetterUncheckedUpdateOneWithoutTaxYearNestedInput
+  form8879?: Prisma.Form8879UncheckedUpdateOneWithoutTaxYearNestedInput
+  filingMilestones?: Prisma.FilingMilestoneUncheckedUpdateManyWithoutTaxYearNestedInput
+  w9Submissions?: Prisma.W9SubmissionUncheckedUpdateManyWithoutTaxYearNestedInput
+  form1099Filings?: Prisma.Form1099FilingUncheckedUpdateManyWithoutTaxYearNestedInput
+}
+
+export type TaxYearCreateWithoutEngagementLetterInput = {
+  id?: string
+  year: number
+  status?: $Enums.TaxYearStatus
+  lockedAt?: Date | string | null
+  lockedSnapshotHash?: string | null
+  acceptedRiskOverrides?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  createdAt?: Date | string
+  user: Prisma.UserCreateNestedOneWithoutTaxYearsInput
+  ruleVersion?: Prisma.RuleVersionCreateNestedOneWithoutTaxYearsInput
+  businessProfile?: Prisma.BusinessProfileCreateNestedOneWithoutTaxYearInput
+  financialAccounts?: Prisma.FinancialAccountCreateNestedManyWithoutTaxYearInput
+  accountYearLinks?: Prisma.AccountYearLinkCreateNestedManyWithoutTaxYearInput
+  statementImports?: Prisma.StatementImportCreateNestedManyWithoutTaxYearInput
+  transactions?: Prisma.TransactionCreateNestedManyWithoutTaxYearInput
+  merchantRules?: Prisma.MerchantRuleCreateNestedManyWithoutTaxYearInput
+  stopItems?: Prisma.StopItemCreateNestedManyWithoutTaxYearInput
+  reports?: Prisma.ReportCreateNestedManyWithoutTaxYearInput
+  importSessions?: Prisma.ImportSessionCreateNestedManyWithoutTaxYearInput
+  documents?: Prisma.DocumentCreateNestedManyWithoutTaxYearInput
+  pipelineRuns?: Prisma.PipelineRunCreateNestedManyWithoutTaxYearInput
+  inactiveMonths?: Prisma.AccountInactiveMonthCreateNestedManyWithoutTaxYearInput
+  priorYearContext?: Prisma.PriorYearContextCreateNestedOneWithoutTaxYearInput
+  consumedByContexts?: Prisma.PriorYearContextCreateNestedManyWithoutSourcePriorYearInput
+  form8879?: Prisma.Form8879CreateNestedOneWithoutTaxYearInput
+  filingMilestones?: Prisma.FilingMilestoneCreateNestedManyWithoutTaxYearInput
+  w9Submissions?: Prisma.W9SubmissionCreateNestedManyWithoutTaxYearInput
+  form1099Filings?: Prisma.Form1099FilingCreateNestedManyWithoutTaxYearInput
+}
+
+export type TaxYearUncheckedCreateWithoutEngagementLetterInput = {
+  id?: string
+  userId: string
+  year: number
+  status?: $Enums.TaxYearStatus
+  ruleVersionId?: string | null
+  lockedAt?: Date | string | null
+  lockedSnapshotHash?: string | null
+  acceptedRiskOverrides?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  createdAt?: Date | string
+  businessProfile?: Prisma.BusinessProfileUncheckedCreateNestedOneWithoutTaxYearInput
+  financialAccounts?: Prisma.FinancialAccountUncheckedCreateNestedManyWithoutTaxYearInput
+  accountYearLinks?: Prisma.AccountYearLinkUncheckedCreateNestedManyWithoutTaxYearInput
+  statementImports?: Prisma.StatementImportUncheckedCreateNestedManyWithoutTaxYearInput
+  transactions?: Prisma.TransactionUncheckedCreateNestedManyWithoutTaxYearInput
+  merchantRules?: Prisma.MerchantRuleUncheckedCreateNestedManyWithoutTaxYearInput
+  stopItems?: Prisma.StopItemUncheckedCreateNestedManyWithoutTaxYearInput
+  reports?: Prisma.ReportUncheckedCreateNestedManyWithoutTaxYearInput
+  importSessions?: Prisma.ImportSessionUncheckedCreateNestedManyWithoutTaxYearInput
+  documents?: Prisma.DocumentUncheckedCreateNestedManyWithoutTaxYearInput
+  pipelineRuns?: Prisma.PipelineRunUncheckedCreateNestedManyWithoutTaxYearInput
+  inactiveMonths?: Prisma.AccountInactiveMonthUncheckedCreateNestedManyWithoutTaxYearInput
+  priorYearContext?: Prisma.PriorYearContextUncheckedCreateNestedOneWithoutTaxYearInput
+  consumedByContexts?: Prisma.PriorYearContextUncheckedCreateNestedManyWithoutSourcePriorYearInput
+  form8879?: Prisma.Form8879UncheckedCreateNestedOneWithoutTaxYearInput
+  filingMilestones?: Prisma.FilingMilestoneUncheckedCreateNestedManyWithoutTaxYearInput
+  w9Submissions?: Prisma.W9SubmissionUncheckedCreateNestedManyWithoutTaxYearInput
+  form1099Filings?: Prisma.Form1099FilingUncheckedCreateNestedManyWithoutTaxYearInput
+}
+
+export type TaxYearCreateOrConnectWithoutEngagementLetterInput = {
+  where: Prisma.TaxYearWhereUniqueInput
+  create: Prisma.XOR<Prisma.TaxYearCreateWithoutEngagementLetterInput, Prisma.TaxYearUncheckedCreateWithoutEngagementLetterInput>
+}
+
+export type TaxYearUpsertWithoutEngagementLetterInput = {
+  update: Prisma.XOR<Prisma.TaxYearUpdateWithoutEngagementLetterInput, Prisma.TaxYearUncheckedUpdateWithoutEngagementLetterInput>
+  create: Prisma.XOR<Prisma.TaxYearCreateWithoutEngagementLetterInput, Prisma.TaxYearUncheckedCreateWithoutEngagementLetterInput>
+  where?: Prisma.TaxYearWhereInput
+}
+
+export type TaxYearUpdateToOneWithWhereWithoutEngagementLetterInput = {
+  where?: Prisma.TaxYearWhereInput
+  data: Prisma.XOR<Prisma.TaxYearUpdateWithoutEngagementLetterInput, Prisma.TaxYearUncheckedUpdateWithoutEngagementLetterInput>
+}
+
+export type TaxYearUpdateWithoutEngagementLetterInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  year?: Prisma.IntFieldUpdateOperationsInput | number
+  status?: Prisma.EnumTaxYearStatusFieldUpdateOperationsInput | $Enums.TaxYearStatus
+  lockedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  lockedSnapshotHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  acceptedRiskOverrides?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  user?: Prisma.UserUpdateOneRequiredWithoutTaxYearsNestedInput
+  ruleVersion?: Prisma.RuleVersionUpdateOneWithoutTaxYearsNestedInput
+  businessProfile?: Prisma.BusinessProfileUpdateOneWithoutTaxYearNestedInput
+  financialAccounts?: Prisma.FinancialAccountUpdateManyWithoutTaxYearNestedInput
+  accountYearLinks?: Prisma.AccountYearLinkUpdateManyWithoutTaxYearNestedInput
+  statementImports?: Prisma.StatementImportUpdateManyWithoutTaxYearNestedInput
+  transactions?: Prisma.TransactionUpdateManyWithoutTaxYearNestedInput
+  merchantRules?: Prisma.MerchantRuleUpdateManyWithoutTaxYearNestedInput
+  stopItems?: Prisma.StopItemUpdateManyWithoutTaxYearNestedInput
+  reports?: Prisma.ReportUpdateManyWithoutTaxYearNestedInput
+  importSessions?: Prisma.ImportSessionUpdateManyWithoutTaxYearNestedInput
+  documents?: Prisma.DocumentUpdateManyWithoutTaxYearNestedInput
+  pipelineRuns?: Prisma.PipelineRunUpdateManyWithoutTaxYearNestedInput
+  inactiveMonths?: Prisma.AccountInactiveMonthUpdateManyWithoutTaxYearNestedInput
+  priorYearContext?: Prisma.PriorYearContextUpdateOneWithoutTaxYearNestedInput
+  consumedByContexts?: Prisma.PriorYearContextUpdateManyWithoutSourcePriorYearNestedInput
+  form8879?: Prisma.Form8879UpdateOneWithoutTaxYearNestedInput
+  filingMilestones?: Prisma.FilingMilestoneUpdateManyWithoutTaxYearNestedInput
+  w9Submissions?: Prisma.W9SubmissionUpdateManyWithoutTaxYearNestedInput
+  form1099Filings?: Prisma.Form1099FilingUpdateManyWithoutTaxYearNestedInput
+}
+
+export type TaxYearUncheckedUpdateWithoutEngagementLetterInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  userId?: Prisma.StringFieldUpdateOperationsInput | string
+  year?: Prisma.IntFieldUpdateOperationsInput | number
+  status?: Prisma.EnumTaxYearStatusFieldUpdateOperationsInput | $Enums.TaxYearStatus
+  ruleVersionId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  lockedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  lockedSnapshotHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  acceptedRiskOverrides?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  businessProfile?: Prisma.BusinessProfileUncheckedUpdateOneWithoutTaxYearNestedInput
+  financialAccounts?: Prisma.FinancialAccountUncheckedUpdateManyWithoutTaxYearNestedInput
+  accountYearLinks?: Prisma.AccountYearLinkUncheckedUpdateManyWithoutTaxYearNestedInput
+  statementImports?: Prisma.StatementImportUncheckedUpdateManyWithoutTaxYearNestedInput
+  transactions?: Prisma.TransactionUncheckedUpdateManyWithoutTaxYearNestedInput
+  merchantRules?: Prisma.MerchantRuleUncheckedUpdateManyWithoutTaxYearNestedInput
+  stopItems?: Prisma.StopItemUncheckedUpdateManyWithoutTaxYearNestedInput
+  reports?: Prisma.ReportUncheckedUpdateManyWithoutTaxYearNestedInput
+  importSessions?: Prisma.ImportSessionUncheckedUpdateManyWithoutTaxYearNestedInput
+  documents?: Prisma.DocumentUncheckedUpdateManyWithoutTaxYearNestedInput
+  pipelineRuns?: Prisma.PipelineRunUncheckedUpdateManyWithoutTaxYearNestedInput
+  inactiveMonths?: Prisma.AccountInactiveMonthUncheckedUpdateManyWithoutTaxYearNestedInput
+  priorYearContext?: Prisma.PriorYearContextUncheckedUpdateOneWithoutTaxYearNestedInput
+  consumedByContexts?: Prisma.PriorYearContextUncheckedUpdateManyWithoutSourcePriorYearNestedInput
+  form8879?: Prisma.Form8879UncheckedUpdateOneWithoutTaxYearNestedInput
+  filingMilestones?: Prisma.FilingMilestoneUncheckedUpdateManyWithoutTaxYearNestedInput
+  w9Submissions?: Prisma.W9SubmissionUncheckedUpdateManyWithoutTaxYearNestedInput
+  form1099Filings?: Prisma.Form1099FilingUncheckedUpdateManyWithoutTaxYearNestedInput
+}
+
+export type TaxYearCreateWithoutForm8879Input = {
+  id?: string
+  year: number
+  status?: $Enums.TaxYearStatus
+  lockedAt?: Date | string | null
+  lockedSnapshotHash?: string | null
+  acceptedRiskOverrides?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  createdAt?: Date | string
+  user: Prisma.UserCreateNestedOneWithoutTaxYearsInput
+  ruleVersion?: Prisma.RuleVersionCreateNestedOneWithoutTaxYearsInput
+  businessProfile?: Prisma.BusinessProfileCreateNestedOneWithoutTaxYearInput
+  financialAccounts?: Prisma.FinancialAccountCreateNestedManyWithoutTaxYearInput
+  accountYearLinks?: Prisma.AccountYearLinkCreateNestedManyWithoutTaxYearInput
+  statementImports?: Prisma.StatementImportCreateNestedManyWithoutTaxYearInput
+  transactions?: Prisma.TransactionCreateNestedManyWithoutTaxYearInput
+  merchantRules?: Prisma.MerchantRuleCreateNestedManyWithoutTaxYearInput
+  stopItems?: Prisma.StopItemCreateNestedManyWithoutTaxYearInput
+  reports?: Prisma.ReportCreateNestedManyWithoutTaxYearInput
+  importSessions?: Prisma.ImportSessionCreateNestedManyWithoutTaxYearInput
+  documents?: Prisma.DocumentCreateNestedManyWithoutTaxYearInput
+  pipelineRuns?: Prisma.PipelineRunCreateNestedManyWithoutTaxYearInput
+  inactiveMonths?: Prisma.AccountInactiveMonthCreateNestedManyWithoutTaxYearInput
+  priorYearContext?: Prisma.PriorYearContextCreateNestedOneWithoutTaxYearInput
+  consumedByContexts?: Prisma.PriorYearContextCreateNestedManyWithoutSourcePriorYearInput
+  engagementLetter?: Prisma.EngagementLetterCreateNestedOneWithoutTaxYearInput
+  filingMilestones?: Prisma.FilingMilestoneCreateNestedManyWithoutTaxYearInput
+  w9Submissions?: Prisma.W9SubmissionCreateNestedManyWithoutTaxYearInput
+  form1099Filings?: Prisma.Form1099FilingCreateNestedManyWithoutTaxYearInput
+}
+
+export type TaxYearUncheckedCreateWithoutForm8879Input = {
+  id?: string
+  userId: string
+  year: number
+  status?: $Enums.TaxYearStatus
+  ruleVersionId?: string | null
+  lockedAt?: Date | string | null
+  lockedSnapshotHash?: string | null
+  acceptedRiskOverrides?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  createdAt?: Date | string
+  businessProfile?: Prisma.BusinessProfileUncheckedCreateNestedOneWithoutTaxYearInput
+  financialAccounts?: Prisma.FinancialAccountUncheckedCreateNestedManyWithoutTaxYearInput
+  accountYearLinks?: Prisma.AccountYearLinkUncheckedCreateNestedManyWithoutTaxYearInput
+  statementImports?: Prisma.StatementImportUncheckedCreateNestedManyWithoutTaxYearInput
+  transactions?: Prisma.TransactionUncheckedCreateNestedManyWithoutTaxYearInput
+  merchantRules?: Prisma.MerchantRuleUncheckedCreateNestedManyWithoutTaxYearInput
+  stopItems?: Prisma.StopItemUncheckedCreateNestedManyWithoutTaxYearInput
+  reports?: Prisma.ReportUncheckedCreateNestedManyWithoutTaxYearInput
+  importSessions?: Prisma.ImportSessionUncheckedCreateNestedManyWithoutTaxYearInput
+  documents?: Prisma.DocumentUncheckedCreateNestedManyWithoutTaxYearInput
+  pipelineRuns?: Prisma.PipelineRunUncheckedCreateNestedManyWithoutTaxYearInput
+  inactiveMonths?: Prisma.AccountInactiveMonthUncheckedCreateNestedManyWithoutTaxYearInput
+  priorYearContext?: Prisma.PriorYearContextUncheckedCreateNestedOneWithoutTaxYearInput
+  consumedByContexts?: Prisma.PriorYearContextUncheckedCreateNestedManyWithoutSourcePriorYearInput
+  engagementLetter?: Prisma.EngagementLetterUncheckedCreateNestedOneWithoutTaxYearInput
+  filingMilestones?: Prisma.FilingMilestoneUncheckedCreateNestedManyWithoutTaxYearInput
+  w9Submissions?: Prisma.W9SubmissionUncheckedCreateNestedManyWithoutTaxYearInput
+  form1099Filings?: Prisma.Form1099FilingUncheckedCreateNestedManyWithoutTaxYearInput
+}
+
+export type TaxYearCreateOrConnectWithoutForm8879Input = {
+  where: Prisma.TaxYearWhereUniqueInput
+  create: Prisma.XOR<Prisma.TaxYearCreateWithoutForm8879Input, Prisma.TaxYearUncheckedCreateWithoutForm8879Input>
+}
+
+export type TaxYearUpsertWithoutForm8879Input = {
+  update: Prisma.XOR<Prisma.TaxYearUpdateWithoutForm8879Input, Prisma.TaxYearUncheckedUpdateWithoutForm8879Input>
+  create: Prisma.XOR<Prisma.TaxYearCreateWithoutForm8879Input, Prisma.TaxYearUncheckedCreateWithoutForm8879Input>
+  where?: Prisma.TaxYearWhereInput
+}
+
+export type TaxYearUpdateToOneWithWhereWithoutForm8879Input = {
+  where?: Prisma.TaxYearWhereInput
+  data: Prisma.XOR<Prisma.TaxYearUpdateWithoutForm8879Input, Prisma.TaxYearUncheckedUpdateWithoutForm8879Input>
+}
+
+export type TaxYearUpdateWithoutForm8879Input = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  year?: Prisma.IntFieldUpdateOperationsInput | number
+  status?: Prisma.EnumTaxYearStatusFieldUpdateOperationsInput | $Enums.TaxYearStatus
+  lockedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  lockedSnapshotHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  acceptedRiskOverrides?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  user?: Prisma.UserUpdateOneRequiredWithoutTaxYearsNestedInput
+  ruleVersion?: Prisma.RuleVersionUpdateOneWithoutTaxYearsNestedInput
+  businessProfile?: Prisma.BusinessProfileUpdateOneWithoutTaxYearNestedInput
+  financialAccounts?: Prisma.FinancialAccountUpdateManyWithoutTaxYearNestedInput
+  accountYearLinks?: Prisma.AccountYearLinkUpdateManyWithoutTaxYearNestedInput
+  statementImports?: Prisma.StatementImportUpdateManyWithoutTaxYearNestedInput
+  transactions?: Prisma.TransactionUpdateManyWithoutTaxYearNestedInput
+  merchantRules?: Prisma.MerchantRuleUpdateManyWithoutTaxYearNestedInput
+  stopItems?: Prisma.StopItemUpdateManyWithoutTaxYearNestedInput
+  reports?: Prisma.ReportUpdateManyWithoutTaxYearNestedInput
+  importSessions?: Prisma.ImportSessionUpdateManyWithoutTaxYearNestedInput
+  documents?: Prisma.DocumentUpdateManyWithoutTaxYearNestedInput
+  pipelineRuns?: Prisma.PipelineRunUpdateManyWithoutTaxYearNestedInput
+  inactiveMonths?: Prisma.AccountInactiveMonthUpdateManyWithoutTaxYearNestedInput
+  priorYearContext?: Prisma.PriorYearContextUpdateOneWithoutTaxYearNestedInput
+  consumedByContexts?: Prisma.PriorYearContextUpdateManyWithoutSourcePriorYearNestedInput
+  engagementLetter?: Prisma.EngagementLetterUpdateOneWithoutTaxYearNestedInput
+  filingMilestones?: Prisma.FilingMilestoneUpdateManyWithoutTaxYearNestedInput
+  w9Submissions?: Prisma.W9SubmissionUpdateManyWithoutTaxYearNestedInput
+  form1099Filings?: Prisma.Form1099FilingUpdateManyWithoutTaxYearNestedInput
+}
+
+export type TaxYearUncheckedUpdateWithoutForm8879Input = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  userId?: Prisma.StringFieldUpdateOperationsInput | string
+  year?: Prisma.IntFieldUpdateOperationsInput | number
+  status?: Prisma.EnumTaxYearStatusFieldUpdateOperationsInput | $Enums.TaxYearStatus
+  ruleVersionId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  lockedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  lockedSnapshotHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  acceptedRiskOverrides?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  businessProfile?: Prisma.BusinessProfileUncheckedUpdateOneWithoutTaxYearNestedInput
+  financialAccounts?: Prisma.FinancialAccountUncheckedUpdateManyWithoutTaxYearNestedInput
+  accountYearLinks?: Prisma.AccountYearLinkUncheckedUpdateManyWithoutTaxYearNestedInput
+  statementImports?: Prisma.StatementImportUncheckedUpdateManyWithoutTaxYearNestedInput
+  transactions?: Prisma.TransactionUncheckedUpdateManyWithoutTaxYearNestedInput
+  merchantRules?: Prisma.MerchantRuleUncheckedUpdateManyWithoutTaxYearNestedInput
+  stopItems?: Prisma.StopItemUncheckedUpdateManyWithoutTaxYearNestedInput
+  reports?: Prisma.ReportUncheckedUpdateManyWithoutTaxYearNestedInput
+  importSessions?: Prisma.ImportSessionUncheckedUpdateManyWithoutTaxYearNestedInput
+  documents?: Prisma.DocumentUncheckedUpdateManyWithoutTaxYearNestedInput
+  pipelineRuns?: Prisma.PipelineRunUncheckedUpdateManyWithoutTaxYearNestedInput
+  inactiveMonths?: Prisma.AccountInactiveMonthUncheckedUpdateManyWithoutTaxYearNestedInput
+  priorYearContext?: Prisma.PriorYearContextUncheckedUpdateOneWithoutTaxYearNestedInput
+  consumedByContexts?: Prisma.PriorYearContextUncheckedUpdateManyWithoutSourcePriorYearNestedInput
+  engagementLetter?: Prisma.EngagementLetterUncheckedUpdateOneWithoutTaxYearNestedInput
+  filingMilestones?: Prisma.FilingMilestoneUncheckedUpdateManyWithoutTaxYearNestedInput
+  w9Submissions?: Prisma.W9SubmissionUncheckedUpdateManyWithoutTaxYearNestedInput
+  form1099Filings?: Prisma.Form1099FilingUncheckedUpdateManyWithoutTaxYearNestedInput
+}
+
+export type TaxYearCreateWithoutFilingMilestonesInput = {
+  id?: string
+  year: number
+  status?: $Enums.TaxYearStatus
+  lockedAt?: Date | string | null
+  lockedSnapshotHash?: string | null
+  acceptedRiskOverrides?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  createdAt?: Date | string
+  user: Prisma.UserCreateNestedOneWithoutTaxYearsInput
+  ruleVersion?: Prisma.RuleVersionCreateNestedOneWithoutTaxYearsInput
+  businessProfile?: Prisma.BusinessProfileCreateNestedOneWithoutTaxYearInput
+  financialAccounts?: Prisma.FinancialAccountCreateNestedManyWithoutTaxYearInput
+  accountYearLinks?: Prisma.AccountYearLinkCreateNestedManyWithoutTaxYearInput
+  statementImports?: Prisma.StatementImportCreateNestedManyWithoutTaxYearInput
+  transactions?: Prisma.TransactionCreateNestedManyWithoutTaxYearInput
+  merchantRules?: Prisma.MerchantRuleCreateNestedManyWithoutTaxYearInput
+  stopItems?: Prisma.StopItemCreateNestedManyWithoutTaxYearInput
+  reports?: Prisma.ReportCreateNestedManyWithoutTaxYearInput
+  importSessions?: Prisma.ImportSessionCreateNestedManyWithoutTaxYearInput
+  documents?: Prisma.DocumentCreateNestedManyWithoutTaxYearInput
+  pipelineRuns?: Prisma.PipelineRunCreateNestedManyWithoutTaxYearInput
+  inactiveMonths?: Prisma.AccountInactiveMonthCreateNestedManyWithoutTaxYearInput
+  priorYearContext?: Prisma.PriorYearContextCreateNestedOneWithoutTaxYearInput
+  consumedByContexts?: Prisma.PriorYearContextCreateNestedManyWithoutSourcePriorYearInput
+  engagementLetter?: Prisma.EngagementLetterCreateNestedOneWithoutTaxYearInput
+  form8879?: Prisma.Form8879CreateNestedOneWithoutTaxYearInput
+  w9Submissions?: Prisma.W9SubmissionCreateNestedManyWithoutTaxYearInput
+  form1099Filings?: Prisma.Form1099FilingCreateNestedManyWithoutTaxYearInput
+}
+
+export type TaxYearUncheckedCreateWithoutFilingMilestonesInput = {
+  id?: string
+  userId: string
+  year: number
+  status?: $Enums.TaxYearStatus
+  ruleVersionId?: string | null
+  lockedAt?: Date | string | null
+  lockedSnapshotHash?: string | null
+  acceptedRiskOverrides?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  createdAt?: Date | string
+  businessProfile?: Prisma.BusinessProfileUncheckedCreateNestedOneWithoutTaxYearInput
+  financialAccounts?: Prisma.FinancialAccountUncheckedCreateNestedManyWithoutTaxYearInput
+  accountYearLinks?: Prisma.AccountYearLinkUncheckedCreateNestedManyWithoutTaxYearInput
+  statementImports?: Prisma.StatementImportUncheckedCreateNestedManyWithoutTaxYearInput
+  transactions?: Prisma.TransactionUncheckedCreateNestedManyWithoutTaxYearInput
+  merchantRules?: Prisma.MerchantRuleUncheckedCreateNestedManyWithoutTaxYearInput
+  stopItems?: Prisma.StopItemUncheckedCreateNestedManyWithoutTaxYearInput
+  reports?: Prisma.ReportUncheckedCreateNestedManyWithoutTaxYearInput
+  importSessions?: Prisma.ImportSessionUncheckedCreateNestedManyWithoutTaxYearInput
+  documents?: Prisma.DocumentUncheckedCreateNestedManyWithoutTaxYearInput
+  pipelineRuns?: Prisma.PipelineRunUncheckedCreateNestedManyWithoutTaxYearInput
+  inactiveMonths?: Prisma.AccountInactiveMonthUncheckedCreateNestedManyWithoutTaxYearInput
+  priorYearContext?: Prisma.PriorYearContextUncheckedCreateNestedOneWithoutTaxYearInput
+  consumedByContexts?: Prisma.PriorYearContextUncheckedCreateNestedManyWithoutSourcePriorYearInput
+  engagementLetter?: Prisma.EngagementLetterUncheckedCreateNestedOneWithoutTaxYearInput
+  form8879?: Prisma.Form8879UncheckedCreateNestedOneWithoutTaxYearInput
+  w9Submissions?: Prisma.W9SubmissionUncheckedCreateNestedManyWithoutTaxYearInput
+  form1099Filings?: Prisma.Form1099FilingUncheckedCreateNestedManyWithoutTaxYearInput
+}
+
+export type TaxYearCreateOrConnectWithoutFilingMilestonesInput = {
+  where: Prisma.TaxYearWhereUniqueInput
+  create: Prisma.XOR<Prisma.TaxYearCreateWithoutFilingMilestonesInput, Prisma.TaxYearUncheckedCreateWithoutFilingMilestonesInput>
+}
+
+export type TaxYearUpsertWithoutFilingMilestonesInput = {
+  update: Prisma.XOR<Prisma.TaxYearUpdateWithoutFilingMilestonesInput, Prisma.TaxYearUncheckedUpdateWithoutFilingMilestonesInput>
+  create: Prisma.XOR<Prisma.TaxYearCreateWithoutFilingMilestonesInput, Prisma.TaxYearUncheckedCreateWithoutFilingMilestonesInput>
+  where?: Prisma.TaxYearWhereInput
+}
+
+export type TaxYearUpdateToOneWithWhereWithoutFilingMilestonesInput = {
+  where?: Prisma.TaxYearWhereInput
+  data: Prisma.XOR<Prisma.TaxYearUpdateWithoutFilingMilestonesInput, Prisma.TaxYearUncheckedUpdateWithoutFilingMilestonesInput>
+}
+
+export type TaxYearUpdateWithoutFilingMilestonesInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  year?: Prisma.IntFieldUpdateOperationsInput | number
+  status?: Prisma.EnumTaxYearStatusFieldUpdateOperationsInput | $Enums.TaxYearStatus
+  lockedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  lockedSnapshotHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  acceptedRiskOverrides?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  user?: Prisma.UserUpdateOneRequiredWithoutTaxYearsNestedInput
+  ruleVersion?: Prisma.RuleVersionUpdateOneWithoutTaxYearsNestedInput
+  businessProfile?: Prisma.BusinessProfileUpdateOneWithoutTaxYearNestedInput
+  financialAccounts?: Prisma.FinancialAccountUpdateManyWithoutTaxYearNestedInput
+  accountYearLinks?: Prisma.AccountYearLinkUpdateManyWithoutTaxYearNestedInput
+  statementImports?: Prisma.StatementImportUpdateManyWithoutTaxYearNestedInput
+  transactions?: Prisma.TransactionUpdateManyWithoutTaxYearNestedInput
+  merchantRules?: Prisma.MerchantRuleUpdateManyWithoutTaxYearNestedInput
+  stopItems?: Prisma.StopItemUpdateManyWithoutTaxYearNestedInput
+  reports?: Prisma.ReportUpdateManyWithoutTaxYearNestedInput
+  importSessions?: Prisma.ImportSessionUpdateManyWithoutTaxYearNestedInput
+  documents?: Prisma.DocumentUpdateManyWithoutTaxYearNestedInput
+  pipelineRuns?: Prisma.PipelineRunUpdateManyWithoutTaxYearNestedInput
+  inactiveMonths?: Prisma.AccountInactiveMonthUpdateManyWithoutTaxYearNestedInput
+  priorYearContext?: Prisma.PriorYearContextUpdateOneWithoutTaxYearNestedInput
+  consumedByContexts?: Prisma.PriorYearContextUpdateManyWithoutSourcePriorYearNestedInput
+  engagementLetter?: Prisma.EngagementLetterUpdateOneWithoutTaxYearNestedInput
+  form8879?: Prisma.Form8879UpdateOneWithoutTaxYearNestedInput
+  w9Submissions?: Prisma.W9SubmissionUpdateManyWithoutTaxYearNestedInput
+  form1099Filings?: Prisma.Form1099FilingUpdateManyWithoutTaxYearNestedInput
+}
+
+export type TaxYearUncheckedUpdateWithoutFilingMilestonesInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  userId?: Prisma.StringFieldUpdateOperationsInput | string
+  year?: Prisma.IntFieldUpdateOperationsInput | number
+  status?: Prisma.EnumTaxYearStatusFieldUpdateOperationsInput | $Enums.TaxYearStatus
+  ruleVersionId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  lockedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  lockedSnapshotHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  acceptedRiskOverrides?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  businessProfile?: Prisma.BusinessProfileUncheckedUpdateOneWithoutTaxYearNestedInput
+  financialAccounts?: Prisma.FinancialAccountUncheckedUpdateManyWithoutTaxYearNestedInput
+  accountYearLinks?: Prisma.AccountYearLinkUncheckedUpdateManyWithoutTaxYearNestedInput
+  statementImports?: Prisma.StatementImportUncheckedUpdateManyWithoutTaxYearNestedInput
+  transactions?: Prisma.TransactionUncheckedUpdateManyWithoutTaxYearNestedInput
+  merchantRules?: Prisma.MerchantRuleUncheckedUpdateManyWithoutTaxYearNestedInput
+  stopItems?: Prisma.StopItemUncheckedUpdateManyWithoutTaxYearNestedInput
+  reports?: Prisma.ReportUncheckedUpdateManyWithoutTaxYearNestedInput
+  importSessions?: Prisma.ImportSessionUncheckedUpdateManyWithoutTaxYearNestedInput
+  documents?: Prisma.DocumentUncheckedUpdateManyWithoutTaxYearNestedInput
+  pipelineRuns?: Prisma.PipelineRunUncheckedUpdateManyWithoutTaxYearNestedInput
+  inactiveMonths?: Prisma.AccountInactiveMonthUncheckedUpdateManyWithoutTaxYearNestedInput
+  priorYearContext?: Prisma.PriorYearContextUncheckedUpdateOneWithoutTaxYearNestedInput
+  consumedByContexts?: Prisma.PriorYearContextUncheckedUpdateManyWithoutSourcePriorYearNestedInput
+  engagementLetter?: Prisma.EngagementLetterUncheckedUpdateOneWithoutTaxYearNestedInput
+  form8879?: Prisma.Form8879UncheckedUpdateOneWithoutTaxYearNestedInput
+  w9Submissions?: Prisma.W9SubmissionUncheckedUpdateManyWithoutTaxYearNestedInput
+  form1099Filings?: Prisma.Form1099FilingUncheckedUpdateManyWithoutTaxYearNestedInput
+}
+
+export type TaxYearCreateWithoutW9SubmissionsInput = {
+  id?: string
+  year: number
+  status?: $Enums.TaxYearStatus
+  lockedAt?: Date | string | null
+  lockedSnapshotHash?: string | null
+  acceptedRiskOverrides?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  createdAt?: Date | string
+  user: Prisma.UserCreateNestedOneWithoutTaxYearsInput
+  ruleVersion?: Prisma.RuleVersionCreateNestedOneWithoutTaxYearsInput
+  businessProfile?: Prisma.BusinessProfileCreateNestedOneWithoutTaxYearInput
+  financialAccounts?: Prisma.FinancialAccountCreateNestedManyWithoutTaxYearInput
+  accountYearLinks?: Prisma.AccountYearLinkCreateNestedManyWithoutTaxYearInput
+  statementImports?: Prisma.StatementImportCreateNestedManyWithoutTaxYearInput
+  transactions?: Prisma.TransactionCreateNestedManyWithoutTaxYearInput
+  merchantRules?: Prisma.MerchantRuleCreateNestedManyWithoutTaxYearInput
+  stopItems?: Prisma.StopItemCreateNestedManyWithoutTaxYearInput
+  reports?: Prisma.ReportCreateNestedManyWithoutTaxYearInput
+  importSessions?: Prisma.ImportSessionCreateNestedManyWithoutTaxYearInput
+  documents?: Prisma.DocumentCreateNestedManyWithoutTaxYearInput
+  pipelineRuns?: Prisma.PipelineRunCreateNestedManyWithoutTaxYearInput
+  inactiveMonths?: Prisma.AccountInactiveMonthCreateNestedManyWithoutTaxYearInput
+  priorYearContext?: Prisma.PriorYearContextCreateNestedOneWithoutTaxYearInput
+  consumedByContexts?: Prisma.PriorYearContextCreateNestedManyWithoutSourcePriorYearInput
+  engagementLetter?: Prisma.EngagementLetterCreateNestedOneWithoutTaxYearInput
+  form8879?: Prisma.Form8879CreateNestedOneWithoutTaxYearInput
+  filingMilestones?: Prisma.FilingMilestoneCreateNestedManyWithoutTaxYearInput
+  form1099Filings?: Prisma.Form1099FilingCreateNestedManyWithoutTaxYearInput
+}
+
+export type TaxYearUncheckedCreateWithoutW9SubmissionsInput = {
+  id?: string
+  userId: string
+  year: number
+  status?: $Enums.TaxYearStatus
+  ruleVersionId?: string | null
+  lockedAt?: Date | string | null
+  lockedSnapshotHash?: string | null
+  acceptedRiskOverrides?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  createdAt?: Date | string
+  businessProfile?: Prisma.BusinessProfileUncheckedCreateNestedOneWithoutTaxYearInput
+  financialAccounts?: Prisma.FinancialAccountUncheckedCreateNestedManyWithoutTaxYearInput
+  accountYearLinks?: Prisma.AccountYearLinkUncheckedCreateNestedManyWithoutTaxYearInput
+  statementImports?: Prisma.StatementImportUncheckedCreateNestedManyWithoutTaxYearInput
+  transactions?: Prisma.TransactionUncheckedCreateNestedManyWithoutTaxYearInput
+  merchantRules?: Prisma.MerchantRuleUncheckedCreateNestedManyWithoutTaxYearInput
+  stopItems?: Prisma.StopItemUncheckedCreateNestedManyWithoutTaxYearInput
+  reports?: Prisma.ReportUncheckedCreateNestedManyWithoutTaxYearInput
+  importSessions?: Prisma.ImportSessionUncheckedCreateNestedManyWithoutTaxYearInput
+  documents?: Prisma.DocumentUncheckedCreateNestedManyWithoutTaxYearInput
+  pipelineRuns?: Prisma.PipelineRunUncheckedCreateNestedManyWithoutTaxYearInput
+  inactiveMonths?: Prisma.AccountInactiveMonthUncheckedCreateNestedManyWithoutTaxYearInput
+  priorYearContext?: Prisma.PriorYearContextUncheckedCreateNestedOneWithoutTaxYearInput
+  consumedByContexts?: Prisma.PriorYearContextUncheckedCreateNestedManyWithoutSourcePriorYearInput
+  engagementLetter?: Prisma.EngagementLetterUncheckedCreateNestedOneWithoutTaxYearInput
+  form8879?: Prisma.Form8879UncheckedCreateNestedOneWithoutTaxYearInput
+  filingMilestones?: Prisma.FilingMilestoneUncheckedCreateNestedManyWithoutTaxYearInput
+  form1099Filings?: Prisma.Form1099FilingUncheckedCreateNestedManyWithoutTaxYearInput
+}
+
+export type TaxYearCreateOrConnectWithoutW9SubmissionsInput = {
+  where: Prisma.TaxYearWhereUniqueInput
+  create: Prisma.XOR<Prisma.TaxYearCreateWithoutW9SubmissionsInput, Prisma.TaxYearUncheckedCreateWithoutW9SubmissionsInput>
+}
+
+export type TaxYearUpsertWithoutW9SubmissionsInput = {
+  update: Prisma.XOR<Prisma.TaxYearUpdateWithoutW9SubmissionsInput, Prisma.TaxYearUncheckedUpdateWithoutW9SubmissionsInput>
+  create: Prisma.XOR<Prisma.TaxYearCreateWithoutW9SubmissionsInput, Prisma.TaxYearUncheckedCreateWithoutW9SubmissionsInput>
+  where?: Prisma.TaxYearWhereInput
+}
+
+export type TaxYearUpdateToOneWithWhereWithoutW9SubmissionsInput = {
+  where?: Prisma.TaxYearWhereInput
+  data: Prisma.XOR<Prisma.TaxYearUpdateWithoutW9SubmissionsInput, Prisma.TaxYearUncheckedUpdateWithoutW9SubmissionsInput>
+}
+
+export type TaxYearUpdateWithoutW9SubmissionsInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  year?: Prisma.IntFieldUpdateOperationsInput | number
+  status?: Prisma.EnumTaxYearStatusFieldUpdateOperationsInput | $Enums.TaxYearStatus
+  lockedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  lockedSnapshotHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  acceptedRiskOverrides?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  user?: Prisma.UserUpdateOneRequiredWithoutTaxYearsNestedInput
+  ruleVersion?: Prisma.RuleVersionUpdateOneWithoutTaxYearsNestedInput
+  businessProfile?: Prisma.BusinessProfileUpdateOneWithoutTaxYearNestedInput
+  financialAccounts?: Prisma.FinancialAccountUpdateManyWithoutTaxYearNestedInput
+  accountYearLinks?: Prisma.AccountYearLinkUpdateManyWithoutTaxYearNestedInput
+  statementImports?: Prisma.StatementImportUpdateManyWithoutTaxYearNestedInput
+  transactions?: Prisma.TransactionUpdateManyWithoutTaxYearNestedInput
+  merchantRules?: Prisma.MerchantRuleUpdateManyWithoutTaxYearNestedInput
+  stopItems?: Prisma.StopItemUpdateManyWithoutTaxYearNestedInput
+  reports?: Prisma.ReportUpdateManyWithoutTaxYearNestedInput
+  importSessions?: Prisma.ImportSessionUpdateManyWithoutTaxYearNestedInput
+  documents?: Prisma.DocumentUpdateManyWithoutTaxYearNestedInput
+  pipelineRuns?: Prisma.PipelineRunUpdateManyWithoutTaxYearNestedInput
+  inactiveMonths?: Prisma.AccountInactiveMonthUpdateManyWithoutTaxYearNestedInput
+  priorYearContext?: Prisma.PriorYearContextUpdateOneWithoutTaxYearNestedInput
+  consumedByContexts?: Prisma.PriorYearContextUpdateManyWithoutSourcePriorYearNestedInput
+  engagementLetter?: Prisma.EngagementLetterUpdateOneWithoutTaxYearNestedInput
+  form8879?: Prisma.Form8879UpdateOneWithoutTaxYearNestedInput
+  filingMilestones?: Prisma.FilingMilestoneUpdateManyWithoutTaxYearNestedInput
+  form1099Filings?: Prisma.Form1099FilingUpdateManyWithoutTaxYearNestedInput
+}
+
+export type TaxYearUncheckedUpdateWithoutW9SubmissionsInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  userId?: Prisma.StringFieldUpdateOperationsInput | string
+  year?: Prisma.IntFieldUpdateOperationsInput | number
+  status?: Prisma.EnumTaxYearStatusFieldUpdateOperationsInput | $Enums.TaxYearStatus
+  ruleVersionId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  lockedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  lockedSnapshotHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  acceptedRiskOverrides?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  businessProfile?: Prisma.BusinessProfileUncheckedUpdateOneWithoutTaxYearNestedInput
+  financialAccounts?: Prisma.FinancialAccountUncheckedUpdateManyWithoutTaxYearNestedInput
+  accountYearLinks?: Prisma.AccountYearLinkUncheckedUpdateManyWithoutTaxYearNestedInput
+  statementImports?: Prisma.StatementImportUncheckedUpdateManyWithoutTaxYearNestedInput
+  transactions?: Prisma.TransactionUncheckedUpdateManyWithoutTaxYearNestedInput
+  merchantRules?: Prisma.MerchantRuleUncheckedUpdateManyWithoutTaxYearNestedInput
+  stopItems?: Prisma.StopItemUncheckedUpdateManyWithoutTaxYearNestedInput
+  reports?: Prisma.ReportUncheckedUpdateManyWithoutTaxYearNestedInput
+  importSessions?: Prisma.ImportSessionUncheckedUpdateManyWithoutTaxYearNestedInput
+  documents?: Prisma.DocumentUncheckedUpdateManyWithoutTaxYearNestedInput
+  pipelineRuns?: Prisma.PipelineRunUncheckedUpdateManyWithoutTaxYearNestedInput
+  inactiveMonths?: Prisma.AccountInactiveMonthUncheckedUpdateManyWithoutTaxYearNestedInput
+  priorYearContext?: Prisma.PriorYearContextUncheckedUpdateOneWithoutTaxYearNestedInput
+  consumedByContexts?: Prisma.PriorYearContextUncheckedUpdateManyWithoutSourcePriorYearNestedInput
+  engagementLetter?: Prisma.EngagementLetterUncheckedUpdateOneWithoutTaxYearNestedInput
+  form8879?: Prisma.Form8879UncheckedUpdateOneWithoutTaxYearNestedInput
+  filingMilestones?: Prisma.FilingMilestoneUncheckedUpdateManyWithoutTaxYearNestedInput
+  form1099Filings?: Prisma.Form1099FilingUncheckedUpdateManyWithoutTaxYearNestedInput
+}
+
+export type TaxYearCreateWithoutForm1099FilingsInput = {
+  id?: string
+  year: number
+  status?: $Enums.TaxYearStatus
+  lockedAt?: Date | string | null
+  lockedSnapshotHash?: string | null
+  acceptedRiskOverrides?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  createdAt?: Date | string
+  user: Prisma.UserCreateNestedOneWithoutTaxYearsInput
+  ruleVersion?: Prisma.RuleVersionCreateNestedOneWithoutTaxYearsInput
+  businessProfile?: Prisma.BusinessProfileCreateNestedOneWithoutTaxYearInput
+  financialAccounts?: Prisma.FinancialAccountCreateNestedManyWithoutTaxYearInput
+  accountYearLinks?: Prisma.AccountYearLinkCreateNestedManyWithoutTaxYearInput
+  statementImports?: Prisma.StatementImportCreateNestedManyWithoutTaxYearInput
+  transactions?: Prisma.TransactionCreateNestedManyWithoutTaxYearInput
+  merchantRules?: Prisma.MerchantRuleCreateNestedManyWithoutTaxYearInput
+  stopItems?: Prisma.StopItemCreateNestedManyWithoutTaxYearInput
+  reports?: Prisma.ReportCreateNestedManyWithoutTaxYearInput
+  importSessions?: Prisma.ImportSessionCreateNestedManyWithoutTaxYearInput
+  documents?: Prisma.DocumentCreateNestedManyWithoutTaxYearInput
+  pipelineRuns?: Prisma.PipelineRunCreateNestedManyWithoutTaxYearInput
+  inactiveMonths?: Prisma.AccountInactiveMonthCreateNestedManyWithoutTaxYearInput
+  priorYearContext?: Prisma.PriorYearContextCreateNestedOneWithoutTaxYearInput
+  consumedByContexts?: Prisma.PriorYearContextCreateNestedManyWithoutSourcePriorYearInput
+  engagementLetter?: Prisma.EngagementLetterCreateNestedOneWithoutTaxYearInput
+  form8879?: Prisma.Form8879CreateNestedOneWithoutTaxYearInput
+  filingMilestones?: Prisma.FilingMilestoneCreateNestedManyWithoutTaxYearInput
+  w9Submissions?: Prisma.W9SubmissionCreateNestedManyWithoutTaxYearInput
+}
+
+export type TaxYearUncheckedCreateWithoutForm1099FilingsInput = {
+  id?: string
+  userId: string
+  year: number
+  status?: $Enums.TaxYearStatus
+  ruleVersionId?: string | null
+  lockedAt?: Date | string | null
+  lockedSnapshotHash?: string | null
+  acceptedRiskOverrides?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  createdAt?: Date | string
+  businessProfile?: Prisma.BusinessProfileUncheckedCreateNestedOneWithoutTaxYearInput
+  financialAccounts?: Prisma.FinancialAccountUncheckedCreateNestedManyWithoutTaxYearInput
+  accountYearLinks?: Prisma.AccountYearLinkUncheckedCreateNestedManyWithoutTaxYearInput
+  statementImports?: Prisma.StatementImportUncheckedCreateNestedManyWithoutTaxYearInput
+  transactions?: Prisma.TransactionUncheckedCreateNestedManyWithoutTaxYearInput
+  merchantRules?: Prisma.MerchantRuleUncheckedCreateNestedManyWithoutTaxYearInput
+  stopItems?: Prisma.StopItemUncheckedCreateNestedManyWithoutTaxYearInput
+  reports?: Prisma.ReportUncheckedCreateNestedManyWithoutTaxYearInput
+  importSessions?: Prisma.ImportSessionUncheckedCreateNestedManyWithoutTaxYearInput
+  documents?: Prisma.DocumentUncheckedCreateNestedManyWithoutTaxYearInput
+  pipelineRuns?: Prisma.PipelineRunUncheckedCreateNestedManyWithoutTaxYearInput
+  inactiveMonths?: Prisma.AccountInactiveMonthUncheckedCreateNestedManyWithoutTaxYearInput
+  priorYearContext?: Prisma.PriorYearContextUncheckedCreateNestedOneWithoutTaxYearInput
+  consumedByContexts?: Prisma.PriorYearContextUncheckedCreateNestedManyWithoutSourcePriorYearInput
+  engagementLetter?: Prisma.EngagementLetterUncheckedCreateNestedOneWithoutTaxYearInput
+  form8879?: Prisma.Form8879UncheckedCreateNestedOneWithoutTaxYearInput
+  filingMilestones?: Prisma.FilingMilestoneUncheckedCreateNestedManyWithoutTaxYearInput
+  w9Submissions?: Prisma.W9SubmissionUncheckedCreateNestedManyWithoutTaxYearInput
+}
+
+export type TaxYearCreateOrConnectWithoutForm1099FilingsInput = {
+  where: Prisma.TaxYearWhereUniqueInput
+  create: Prisma.XOR<Prisma.TaxYearCreateWithoutForm1099FilingsInput, Prisma.TaxYearUncheckedCreateWithoutForm1099FilingsInput>
+}
+
+export type TaxYearUpsertWithoutForm1099FilingsInput = {
+  update: Prisma.XOR<Prisma.TaxYearUpdateWithoutForm1099FilingsInput, Prisma.TaxYearUncheckedUpdateWithoutForm1099FilingsInput>
+  create: Prisma.XOR<Prisma.TaxYearCreateWithoutForm1099FilingsInput, Prisma.TaxYearUncheckedCreateWithoutForm1099FilingsInput>
+  where?: Prisma.TaxYearWhereInput
+}
+
+export type TaxYearUpdateToOneWithWhereWithoutForm1099FilingsInput = {
+  where?: Prisma.TaxYearWhereInput
+  data: Prisma.XOR<Prisma.TaxYearUpdateWithoutForm1099FilingsInput, Prisma.TaxYearUncheckedUpdateWithoutForm1099FilingsInput>
+}
+
+export type TaxYearUpdateWithoutForm1099FilingsInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  year?: Prisma.IntFieldUpdateOperationsInput | number
+  status?: Prisma.EnumTaxYearStatusFieldUpdateOperationsInput | $Enums.TaxYearStatus
+  lockedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  lockedSnapshotHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  acceptedRiskOverrides?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  user?: Prisma.UserUpdateOneRequiredWithoutTaxYearsNestedInput
+  ruleVersion?: Prisma.RuleVersionUpdateOneWithoutTaxYearsNestedInput
+  businessProfile?: Prisma.BusinessProfileUpdateOneWithoutTaxYearNestedInput
+  financialAccounts?: Prisma.FinancialAccountUpdateManyWithoutTaxYearNestedInput
+  accountYearLinks?: Prisma.AccountYearLinkUpdateManyWithoutTaxYearNestedInput
+  statementImports?: Prisma.StatementImportUpdateManyWithoutTaxYearNestedInput
+  transactions?: Prisma.TransactionUpdateManyWithoutTaxYearNestedInput
+  merchantRules?: Prisma.MerchantRuleUpdateManyWithoutTaxYearNestedInput
+  stopItems?: Prisma.StopItemUpdateManyWithoutTaxYearNestedInput
+  reports?: Prisma.ReportUpdateManyWithoutTaxYearNestedInput
+  importSessions?: Prisma.ImportSessionUpdateManyWithoutTaxYearNestedInput
+  documents?: Prisma.DocumentUpdateManyWithoutTaxYearNestedInput
+  pipelineRuns?: Prisma.PipelineRunUpdateManyWithoutTaxYearNestedInput
+  inactiveMonths?: Prisma.AccountInactiveMonthUpdateManyWithoutTaxYearNestedInput
+  priorYearContext?: Prisma.PriorYearContextUpdateOneWithoutTaxYearNestedInput
+  consumedByContexts?: Prisma.PriorYearContextUpdateManyWithoutSourcePriorYearNestedInput
+  engagementLetter?: Prisma.EngagementLetterUpdateOneWithoutTaxYearNestedInput
+  form8879?: Prisma.Form8879UpdateOneWithoutTaxYearNestedInput
+  filingMilestones?: Prisma.FilingMilestoneUpdateManyWithoutTaxYearNestedInput
+  w9Submissions?: Prisma.W9SubmissionUpdateManyWithoutTaxYearNestedInput
+}
+
+export type TaxYearUncheckedUpdateWithoutForm1099FilingsInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  userId?: Prisma.StringFieldUpdateOperationsInput | string
+  year?: Prisma.IntFieldUpdateOperationsInput | number
+  status?: Prisma.EnumTaxYearStatusFieldUpdateOperationsInput | $Enums.TaxYearStatus
+  ruleVersionId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  lockedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  lockedSnapshotHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  acceptedRiskOverrides?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  businessProfile?: Prisma.BusinessProfileUncheckedUpdateOneWithoutTaxYearNestedInput
+  financialAccounts?: Prisma.FinancialAccountUncheckedUpdateManyWithoutTaxYearNestedInput
+  accountYearLinks?: Prisma.AccountYearLinkUncheckedUpdateManyWithoutTaxYearNestedInput
+  statementImports?: Prisma.StatementImportUncheckedUpdateManyWithoutTaxYearNestedInput
+  transactions?: Prisma.TransactionUncheckedUpdateManyWithoutTaxYearNestedInput
+  merchantRules?: Prisma.MerchantRuleUncheckedUpdateManyWithoutTaxYearNestedInput
+  stopItems?: Prisma.StopItemUncheckedUpdateManyWithoutTaxYearNestedInput
+  reports?: Prisma.ReportUncheckedUpdateManyWithoutTaxYearNestedInput
+  importSessions?: Prisma.ImportSessionUncheckedUpdateManyWithoutTaxYearNestedInput
+  documents?: Prisma.DocumentUncheckedUpdateManyWithoutTaxYearNestedInput
+  pipelineRuns?: Prisma.PipelineRunUncheckedUpdateManyWithoutTaxYearNestedInput
+  inactiveMonths?: Prisma.AccountInactiveMonthUncheckedUpdateManyWithoutTaxYearNestedInput
+  priorYearContext?: Prisma.PriorYearContextUncheckedUpdateOneWithoutTaxYearNestedInput
+  consumedByContexts?: Prisma.PriorYearContextUncheckedUpdateManyWithoutSourcePriorYearNestedInput
+  engagementLetter?: Prisma.EngagementLetterUncheckedUpdateOneWithoutTaxYearNestedInput
+  form8879?: Prisma.Form8879UncheckedUpdateOneWithoutTaxYearNestedInput
+  filingMilestones?: Prisma.FilingMilestoneUncheckedUpdateManyWithoutTaxYearNestedInput
+  w9Submissions?: Prisma.W9SubmissionUncheckedUpdateManyWithoutTaxYearNestedInput
 }
 
 export type TaxYearCreateManyUserInput = {
@@ -2298,6 +3763,13 @@ export type TaxYearUpdateWithoutUserInput = {
   documents?: Prisma.DocumentUpdateManyWithoutTaxYearNestedInput
   pipelineRuns?: Prisma.PipelineRunUpdateManyWithoutTaxYearNestedInput
   inactiveMonths?: Prisma.AccountInactiveMonthUpdateManyWithoutTaxYearNestedInput
+  priorYearContext?: Prisma.PriorYearContextUpdateOneWithoutTaxYearNestedInput
+  consumedByContexts?: Prisma.PriorYearContextUpdateManyWithoutSourcePriorYearNestedInput
+  engagementLetter?: Prisma.EngagementLetterUpdateOneWithoutTaxYearNestedInput
+  form8879?: Prisma.Form8879UpdateOneWithoutTaxYearNestedInput
+  filingMilestones?: Prisma.FilingMilestoneUpdateManyWithoutTaxYearNestedInput
+  w9Submissions?: Prisma.W9SubmissionUpdateManyWithoutTaxYearNestedInput
+  form1099Filings?: Prisma.Form1099FilingUpdateManyWithoutTaxYearNestedInput
 }
 
 export type TaxYearUncheckedUpdateWithoutUserInput = {
@@ -2321,6 +3793,13 @@ export type TaxYearUncheckedUpdateWithoutUserInput = {
   documents?: Prisma.DocumentUncheckedUpdateManyWithoutTaxYearNestedInput
   pipelineRuns?: Prisma.PipelineRunUncheckedUpdateManyWithoutTaxYearNestedInput
   inactiveMonths?: Prisma.AccountInactiveMonthUncheckedUpdateManyWithoutTaxYearNestedInput
+  priorYearContext?: Prisma.PriorYearContextUncheckedUpdateOneWithoutTaxYearNestedInput
+  consumedByContexts?: Prisma.PriorYearContextUncheckedUpdateManyWithoutSourcePriorYearNestedInput
+  engagementLetter?: Prisma.EngagementLetterUncheckedUpdateOneWithoutTaxYearNestedInput
+  form8879?: Prisma.Form8879UncheckedUpdateOneWithoutTaxYearNestedInput
+  filingMilestones?: Prisma.FilingMilestoneUncheckedUpdateManyWithoutTaxYearNestedInput
+  w9Submissions?: Prisma.W9SubmissionUncheckedUpdateManyWithoutTaxYearNestedInput
+  form1099Filings?: Prisma.Form1099FilingUncheckedUpdateManyWithoutTaxYearNestedInput
 }
 
 export type TaxYearUncheckedUpdateManyWithoutUserInput = {
@@ -2366,6 +3845,13 @@ export type TaxYearUpdateWithoutRuleVersionInput = {
   documents?: Prisma.DocumentUpdateManyWithoutTaxYearNestedInput
   pipelineRuns?: Prisma.PipelineRunUpdateManyWithoutTaxYearNestedInput
   inactiveMonths?: Prisma.AccountInactiveMonthUpdateManyWithoutTaxYearNestedInput
+  priorYearContext?: Prisma.PriorYearContextUpdateOneWithoutTaxYearNestedInput
+  consumedByContexts?: Prisma.PriorYearContextUpdateManyWithoutSourcePriorYearNestedInput
+  engagementLetter?: Prisma.EngagementLetterUpdateOneWithoutTaxYearNestedInput
+  form8879?: Prisma.Form8879UpdateOneWithoutTaxYearNestedInput
+  filingMilestones?: Prisma.FilingMilestoneUpdateManyWithoutTaxYearNestedInput
+  w9Submissions?: Prisma.W9SubmissionUpdateManyWithoutTaxYearNestedInput
+  form1099Filings?: Prisma.Form1099FilingUpdateManyWithoutTaxYearNestedInput
 }
 
 export type TaxYearUncheckedUpdateWithoutRuleVersionInput = {
@@ -2389,6 +3875,13 @@ export type TaxYearUncheckedUpdateWithoutRuleVersionInput = {
   documents?: Prisma.DocumentUncheckedUpdateManyWithoutTaxYearNestedInput
   pipelineRuns?: Prisma.PipelineRunUncheckedUpdateManyWithoutTaxYearNestedInput
   inactiveMonths?: Prisma.AccountInactiveMonthUncheckedUpdateManyWithoutTaxYearNestedInput
+  priorYearContext?: Prisma.PriorYearContextUncheckedUpdateOneWithoutTaxYearNestedInput
+  consumedByContexts?: Prisma.PriorYearContextUncheckedUpdateManyWithoutSourcePriorYearNestedInput
+  engagementLetter?: Prisma.EngagementLetterUncheckedUpdateOneWithoutTaxYearNestedInput
+  form8879?: Prisma.Form8879UncheckedUpdateOneWithoutTaxYearNestedInput
+  filingMilestones?: Prisma.FilingMilestoneUncheckedUpdateManyWithoutTaxYearNestedInput
+  w9Submissions?: Prisma.W9SubmissionUncheckedUpdateManyWithoutTaxYearNestedInput
+  form1099Filings?: Prisma.Form1099FilingUncheckedUpdateManyWithoutTaxYearNestedInput
 }
 
 export type TaxYearUncheckedUpdateManyWithoutRuleVersionInput = {
@@ -2419,6 +3912,10 @@ export type TaxYearCountOutputType = {
   documents: number
   pipelineRuns: number
   inactiveMonths: number
+  consumedByContexts: number
+  filingMilestones: number
+  w9Submissions: number
+  form1099Filings: number
 }
 
 export type TaxYearCountOutputTypeSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
@@ -2433,6 +3930,10 @@ export type TaxYearCountOutputTypeSelect<ExtArgs extends runtime.Types.Extension
   documents?: boolean | TaxYearCountOutputTypeCountDocumentsArgs
   pipelineRuns?: boolean | TaxYearCountOutputTypeCountPipelineRunsArgs
   inactiveMonths?: boolean | TaxYearCountOutputTypeCountInactiveMonthsArgs
+  consumedByContexts?: boolean | TaxYearCountOutputTypeCountConsumedByContextsArgs
+  filingMilestones?: boolean | TaxYearCountOutputTypeCountFilingMilestonesArgs
+  w9Submissions?: boolean | TaxYearCountOutputTypeCountW9SubmissionsArgs
+  form1099Filings?: boolean | TaxYearCountOutputTypeCountForm1099FilingsArgs
 }
 
 /**
@@ -2522,6 +4023,34 @@ export type TaxYearCountOutputTypeCountInactiveMonthsArgs<ExtArgs extends runtim
   where?: Prisma.AccountInactiveMonthWhereInput
 }
 
+/**
+ * TaxYearCountOutputType without action
+ */
+export type TaxYearCountOutputTypeCountConsumedByContextsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.PriorYearContextWhereInput
+}
+
+/**
+ * TaxYearCountOutputType without action
+ */
+export type TaxYearCountOutputTypeCountFilingMilestonesArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.FilingMilestoneWhereInput
+}
+
+/**
+ * TaxYearCountOutputType without action
+ */
+export type TaxYearCountOutputTypeCountW9SubmissionsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.W9SubmissionWhereInput
+}
+
+/**
+ * TaxYearCountOutputType without action
+ */
+export type TaxYearCountOutputTypeCountForm1099FilingsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.Form1099FilingWhereInput
+}
+
 
 export type TaxYearSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   id?: boolean
@@ -2547,6 +4076,13 @@ export type TaxYearSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs 
   documents?: boolean | Prisma.TaxYear$documentsArgs<ExtArgs>
   pipelineRuns?: boolean | Prisma.TaxYear$pipelineRunsArgs<ExtArgs>
   inactiveMonths?: boolean | Prisma.TaxYear$inactiveMonthsArgs<ExtArgs>
+  priorYearContext?: boolean | Prisma.TaxYear$priorYearContextArgs<ExtArgs>
+  consumedByContexts?: boolean | Prisma.TaxYear$consumedByContextsArgs<ExtArgs>
+  engagementLetter?: boolean | Prisma.TaxYear$engagementLetterArgs<ExtArgs>
+  form8879?: boolean | Prisma.TaxYear$form8879Args<ExtArgs>
+  filingMilestones?: boolean | Prisma.TaxYear$filingMilestonesArgs<ExtArgs>
+  w9Submissions?: boolean | Prisma.TaxYear$w9SubmissionsArgs<ExtArgs>
+  form1099Filings?: boolean | Prisma.TaxYear$form1099FilingsArgs<ExtArgs>
   _count?: boolean | Prisma.TaxYearCountOutputTypeDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["taxYear"]>
 
@@ -2606,6 +4142,13 @@ export type TaxYearInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs
   documents?: boolean | Prisma.TaxYear$documentsArgs<ExtArgs>
   pipelineRuns?: boolean | Prisma.TaxYear$pipelineRunsArgs<ExtArgs>
   inactiveMonths?: boolean | Prisma.TaxYear$inactiveMonthsArgs<ExtArgs>
+  priorYearContext?: boolean | Prisma.TaxYear$priorYearContextArgs<ExtArgs>
+  consumedByContexts?: boolean | Prisma.TaxYear$consumedByContextsArgs<ExtArgs>
+  engagementLetter?: boolean | Prisma.TaxYear$engagementLetterArgs<ExtArgs>
+  form8879?: boolean | Prisma.TaxYear$form8879Args<ExtArgs>
+  filingMilestones?: boolean | Prisma.TaxYear$filingMilestonesArgs<ExtArgs>
+  w9Submissions?: boolean | Prisma.TaxYear$w9SubmissionsArgs<ExtArgs>
+  form1099Filings?: boolean | Prisma.TaxYear$form1099FilingsArgs<ExtArgs>
   _count?: boolean | Prisma.TaxYearCountOutputTypeDefaultArgs<ExtArgs>
 }
 export type TaxYearIncludeCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
@@ -2634,6 +4177,13 @@ export type $TaxYearPayload<ExtArgs extends runtime.Types.Extensions.InternalArg
     documents: Prisma.$DocumentPayload<ExtArgs>[]
     pipelineRuns: Prisma.$PipelineRunPayload<ExtArgs>[]
     inactiveMonths: Prisma.$AccountInactiveMonthPayload<ExtArgs>[]
+    priorYearContext: Prisma.$PriorYearContextPayload<ExtArgs> | null
+    consumedByContexts: Prisma.$PriorYearContextPayload<ExtArgs>[]
+    engagementLetter: Prisma.$EngagementLetterPayload<ExtArgs> | null
+    form8879: Prisma.$Form8879Payload<ExtArgs> | null
+    filingMilestones: Prisma.$FilingMilestonePayload<ExtArgs>[]
+    w9Submissions: Prisma.$W9SubmissionPayload<ExtArgs>[]
+    form1099Filings: Prisma.$Form1099FilingPayload<ExtArgs>[]
   }
   scalars: runtime.Types.Extensions.GetPayloadResult<{
     id: string
@@ -3053,6 +4603,13 @@ export interface Prisma__TaxYearClient<T, Null = never, ExtArgs extends runtime.
   documents<T extends Prisma.TaxYear$documentsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.TaxYear$documentsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$DocumentPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   pipelineRuns<T extends Prisma.TaxYear$pipelineRunsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.TaxYear$pipelineRunsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$PipelineRunPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   inactiveMonths<T extends Prisma.TaxYear$inactiveMonthsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.TaxYear$inactiveMonthsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$AccountInactiveMonthPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+  priorYearContext<T extends Prisma.TaxYear$priorYearContextArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.TaxYear$priorYearContextArgs<ExtArgs>>): Prisma.Prisma__PriorYearContextClient<runtime.Types.Result.GetResult<Prisma.$PriorYearContextPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+  consumedByContexts<T extends Prisma.TaxYear$consumedByContextsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.TaxYear$consumedByContextsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$PriorYearContextPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+  engagementLetter<T extends Prisma.TaxYear$engagementLetterArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.TaxYear$engagementLetterArgs<ExtArgs>>): Prisma.Prisma__EngagementLetterClient<runtime.Types.Result.GetResult<Prisma.$EngagementLetterPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+  form8879<T extends Prisma.TaxYear$form8879Args<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.TaxYear$form8879Args<ExtArgs>>): Prisma.Prisma__Form8879Client<runtime.Types.Result.GetResult<Prisma.$Form8879Payload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+  filingMilestones<T extends Prisma.TaxYear$filingMilestonesArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.TaxYear$filingMilestonesArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$FilingMilestonePayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+  w9Submissions<T extends Prisma.TaxYear$w9SubmissionsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.TaxYear$w9SubmissionsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$W9SubmissionPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+  form1099Filings<T extends Prisma.TaxYear$form1099FilingsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.TaxYear$form1099FilingsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$Form1099FilingPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   /**
    * Attaches callbacks for the resolution and/or rejection of the Promise.
    * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -3791,6 +5348,159 @@ export type TaxYear$inactiveMonthsArgs<ExtArgs extends runtime.Types.Extensions.
   take?: number
   skip?: number
   distinct?: Prisma.AccountInactiveMonthScalarFieldEnum | Prisma.AccountInactiveMonthScalarFieldEnum[]
+}
+
+/**
+ * TaxYear.priorYearContext
+ */
+export type TaxYear$priorYearContextArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the PriorYearContext
+   */
+  select?: Prisma.PriorYearContextSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the PriorYearContext
+   */
+  omit?: Prisma.PriorYearContextOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.PriorYearContextInclude<ExtArgs> | null
+  where?: Prisma.PriorYearContextWhereInput
+}
+
+/**
+ * TaxYear.consumedByContexts
+ */
+export type TaxYear$consumedByContextsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the PriorYearContext
+   */
+  select?: Prisma.PriorYearContextSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the PriorYearContext
+   */
+  omit?: Prisma.PriorYearContextOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.PriorYearContextInclude<ExtArgs> | null
+  where?: Prisma.PriorYearContextWhereInput
+  orderBy?: Prisma.PriorYearContextOrderByWithRelationInput | Prisma.PriorYearContextOrderByWithRelationInput[]
+  cursor?: Prisma.PriorYearContextWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.PriorYearContextScalarFieldEnum | Prisma.PriorYearContextScalarFieldEnum[]
+}
+
+/**
+ * TaxYear.engagementLetter
+ */
+export type TaxYear$engagementLetterArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the EngagementLetter
+   */
+  select?: Prisma.EngagementLetterSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the EngagementLetter
+   */
+  omit?: Prisma.EngagementLetterOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.EngagementLetterInclude<ExtArgs> | null
+  where?: Prisma.EngagementLetterWhereInput
+}
+
+/**
+ * TaxYear.form8879
+ */
+export type TaxYear$form8879Args<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the Form8879
+   */
+  select?: Prisma.Form8879Select<ExtArgs> | null
+  /**
+   * Omit specific fields from the Form8879
+   */
+  omit?: Prisma.Form8879Omit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.Form8879Include<ExtArgs> | null
+  where?: Prisma.Form8879WhereInput
+}
+
+/**
+ * TaxYear.filingMilestones
+ */
+export type TaxYear$filingMilestonesArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the FilingMilestone
+   */
+  select?: Prisma.FilingMilestoneSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the FilingMilestone
+   */
+  omit?: Prisma.FilingMilestoneOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.FilingMilestoneInclude<ExtArgs> | null
+  where?: Prisma.FilingMilestoneWhereInput
+  orderBy?: Prisma.FilingMilestoneOrderByWithRelationInput | Prisma.FilingMilestoneOrderByWithRelationInput[]
+  cursor?: Prisma.FilingMilestoneWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.FilingMilestoneScalarFieldEnum | Prisma.FilingMilestoneScalarFieldEnum[]
+}
+
+/**
+ * TaxYear.w9Submissions
+ */
+export type TaxYear$w9SubmissionsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the W9Submission
+   */
+  select?: Prisma.W9SubmissionSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the W9Submission
+   */
+  omit?: Prisma.W9SubmissionOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.W9SubmissionInclude<ExtArgs> | null
+  where?: Prisma.W9SubmissionWhereInput
+  orderBy?: Prisma.W9SubmissionOrderByWithRelationInput | Prisma.W9SubmissionOrderByWithRelationInput[]
+  cursor?: Prisma.W9SubmissionWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.W9SubmissionScalarFieldEnum | Prisma.W9SubmissionScalarFieldEnum[]
+}
+
+/**
+ * TaxYear.form1099Filings
+ */
+export type TaxYear$form1099FilingsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the Form1099Filing
+   */
+  select?: Prisma.Form1099FilingSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the Form1099Filing
+   */
+  omit?: Prisma.Form1099FilingOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.Form1099FilingInclude<ExtArgs> | null
+  where?: Prisma.Form1099FilingWhereInput
+  orderBy?: Prisma.Form1099FilingOrderByWithRelationInput | Prisma.Form1099FilingOrderByWithRelationInput[]
+  cursor?: Prisma.Form1099FilingWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.Form1099FilingScalarFieldEnum | Prisma.Form1099FilingScalarFieldEnum[]
 }
 
 /**

@@ -161,3 +161,38 @@ export type Report = Prisma.ReportModel
  * 
  */
 export type Document = Prisma.DocumentModel
+/**
+ * Model PriorYearContext
+ * 
+ */
+export type PriorYearContext = Prisma.PriorYearContextModel
+/**
+ * Model EngagementLetter
+ * 
+ */
+export type EngagementLetter = Prisma.EngagementLetterModel
+/**
+ * Model Form8879
+ * 
+ */
+export type Form8879 = Prisma.Form8879Model
+/**
+ * Model FilingMilestone
+ * 
+ */
+export type FilingMilestone = Prisma.FilingMilestoneModel
+/**
+ * Model W9Submission
+ * 
+ */
+export type W9Submission = Prisma.W9SubmissionModel
+/**
+ * Model Form1099Filing
+ * 
+ */
+export type Form1099Filing = Prisma.Form1099FilingModel
+/**
+ * Model ClassificationNote
+ * 
+ */
+export type ClassificationNote = Prisma.ClassificationNoteModel
