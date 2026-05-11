@@ -12,6 +12,7 @@ import { deriveStage, getYearCounts } from "@/lib/taxYear/status"
 import { fmtUSD } from "@/lib/format/currency"
 import { RiskOverrideButton } from "./override-button"
 import { OVERRIDABLE_SIGNALS } from "@/lib/risk/overridable"
+import { FixItButton } from "./fix-it-button"
 
 interface Props {
   params: Promise<{ year: string }>
@@ -85,16 +86,17 @@ function SignalGroup({
                   <Link className="text-blue-600 underline" href={`../ledger`}>view in ledger</Link>
                 </p>
               )}
-              {overridable && (
-                <div className="mt-2">
+              <div className="mt-2 flex gap-2 items-center flex-wrap">
+                <FixItButton year={year} signalId={s.id} />
+                {overridable && (
                   <RiskOverrideButton
                     year={year}
                     signalId={s.id}
                     acked={acked}
                     ackedRationale={ackedRationale}
                   />
-                </div>
-              )}
+                )}
+              </div>
             </div>
           )
         })}
@@ -103,19 +105,24 @@ function SignalGroup({
   )
 }
 
-function AssertionsPanel({ result }: { result: AssertionRunResult }) {
+function AssertionsPanel({ result, year }: { result: AssertionRunResult; year: number }) {
   const all = [...result.passed, ...result.failed].sort((a, b) => a.id.localeCompare(b.id))
   return (
     <Card>
       <CardHeader><CardTitle className="text-base">QA Assertions</CardTitle></CardHeader>
       <CardContent>
-        <ul className="space-y-1 text-sm">
+        <ul className="space-y-2 text-sm">
           {all.map((a) => (
             <li key={a.id} className="flex items-start gap-2">
               <span>{a.passed ? "✓" : a.blocking ? "✗" : "!"}</span>
               <span className="flex-1">
                 <strong>[{a.id}]</strong> {a.name}
                 <span className="ml-1 text-xs text-muted-foreground">— {a.details}</span>
+                {!a.passed && (
+                  <div className="mt-1">
+                    <FixItButton year={year} signalId={a.id} />
+                  </div>
+                )}
               </span>
             </li>
           ))}
@@ -234,7 +241,7 @@ export default async function RiskPage({ params }: Props) {
             </Alert>
           )}
         </div>
-        <AssertionsPanel result={assertions} />
+        <AssertionsPanel result={assertions} year={year} />
       </div>
     </div>
   )

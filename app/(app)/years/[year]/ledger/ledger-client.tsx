@@ -304,6 +304,15 @@ export function LedgerClient({ year, rows, accounts }: Props) {
         <div className="ml-auto text-right">
           <div>{filtered.length} rows</div>
           <div className="font-semibold">{fmtUSD(totalDeductible, { cents: true })} deductible</div>
+          {filtered.length > 0 && filtered.length !== selected.size && (
+            <button
+              className="text-xs underline mt-1 text-muted-foreground"
+              onClick={() => setSelected(new Set(filtered.map((r) => r.id)))}
+              type="button"
+            >
+              Select all {filtered.length} matching →
+            </button>
+          )}
         </div>
       </div>
 
