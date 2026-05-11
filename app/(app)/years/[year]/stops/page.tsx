@@ -31,22 +31,37 @@ export default async function StopsPage({ params, searchParams }: Props) {
   // an empty page if the autonomous CPA agent hadn't yet run.
   await deriveStopsFromAssertions(taxYear.id)
 
-  // Surface the LATEST AUTO_RESOLVE_STOPS run result + its skipBreakdown so
-  // the user has a persistent record of "what happened the last time I
-  // pressed Auto-resolve with AI." The transient floating-progress chip
-  // disappears on page reload — without this panel, when the user comes
-  // back the next day and sees no progress, they have no way to find out
-  // why the AI bailed (low_confidence / api_error / parse_error).
+  // Surface the LATEST AUTO_RESOLVE_STOPS / GENERATE_AI_PROPOSALS run result
+  // so the user has a persistent record of what happened last time they hit
+  // the AI button. The transient floating-progress chip disappears on
+  // reload — without this panel, the user comes back the next day, sees no
+  // progress, and has no way to find out why.
   const lastAutoRun = await prisma.pipelineRun.findFirst({
-    where: { taxYearId: taxYear.id, kind: "AUTO_RESOLVE_STOPS" },
+    where: {
+      taxYearId: taxYear.id,
+      kind: { in: ["AUTO_RESOLVE_STOPS", "GENERATE_AI_PROPOSALS"] },
+    },
     orderBy: { startedAt: "desc" },
     select: {
       id: true,
+      kind: true,
       status: true,
       startedAt: true,
       finishedAt: true,
       result: true,
       lastError: true,
+    },
+  })
+
+  // Count pending AI proposals so we can show a banner directing the CPA
+  // to /review whenever proposals are waiting (e.g. they navigated away
+  // before approving, or just landed back on the page after an earlier
+  // generation run).
+  const pendingProposalsCount = await prisma.stopItem.count({
+    where: {
+      taxYearId: taxYear.id,
+      state: "PENDING",
+      aiProposal: { not: undefined },
     },
   })
   const lastAutoSummary = lastAutoRun
@@ -138,6 +153,7 @@ export default async function StopsPage({ params, searchParams }: Props) {
         stops={serialized}
         initialCategory={initialCategory}
         lastAutoSummary={lastAutoSummary}
+        pendingProposalsCount={pendingProposalsCount}
       />
     </div>
   )

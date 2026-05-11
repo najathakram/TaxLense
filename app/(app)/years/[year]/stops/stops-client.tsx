@@ -14,7 +14,7 @@ import { Switch } from "@/components/ui/switch"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { SCHEDULE_C_LINES } from "@/lib/classification/constants"
 import { resolveStop, deferStop, archiveSupersededStops, type StopAnswer } from "./actions"
-import { runAutoResolveStops, getPipelineRunStatus } from "@/app/(app)/years/[year]/pipeline/actions"
+import { runGenerateAiProposals, getPipelineRunStatus } from "@/app/(app)/years/[year]/pipeline/actions"
 import { FloatingProgress } from "@/components/pipeline/floating-progress"
 import type { AiSuggestion } from "@/lib/stops/aiSuggestion"
 import { fmtUSD } from "@/lib/format/currency"
@@ -87,6 +87,7 @@ export function StopsClient({
   stops,
   initialCategory,
   lastAutoSummary,
+  pendingProposalsCount = 0,
 }: {
   year: number
   stops: SerializedStop[]
@@ -98,6 +99,9 @@ export function StopsClient({
    *  Auto-resolve attempt didn't drop the count (e.g. "0 resolved, 22
    *  skipped — 22 low_confidence"). */
   lastAutoSummary?: LastAutoSummary | null
+  /** Count of pending stops with an aiProposal — drives a banner that
+   *  routes the CPA to /review even after a page reload. */
+  pendingProposalsCount?: number
 }) {
   const [activeRun, setActiveRun] = useState<{ runId: string; label: string } | null>(null)
   const [progress, setProgress] = useState<Record<string, unknown>>({})
@@ -135,29 +139,37 @@ export function StopsClient({
       if (!status) return
       setProgress((status.progress as Record<string, unknown>) ?? {})
       if (status.status === "DONE") {
+        // The new result shape is from generateAiProposals — generated /
+        // autoApplied / pendingReview. Map onto the legacy {resolved,
+        // skipped, errors} so the floating chip still renders something
+        // sensible, then redirect to /review where the CPA can scan and
+        // bulk-approve the rest.
         const r = (status.result as {
-          resolved?: number
-          skipped?: number
+          generated?: number
+          autoApplied?: number
+          pendingReview?: number
           errors?: number
-          skipBreakdown?: Record<string, number>
+          withPriorCaseContext?: number
         } | null) ?? null
         if (r) {
           setLastResult({
-            resolved: r.resolved ?? 0,
-            skipped: r.skipped ?? 0,
+            resolved: r.autoApplied ?? 0,
+            skipped: r.pendingReview ?? 0,
             errors: r.errors ?? 0,
-            skipBreakdown: r.skipBreakdown,
+            skipBreakdown: r.withPriorCaseContext != null && r.generated != null
+              ? { with_prior_cases: r.withPriorCaseContext, without_prior_cases: r.generated - r.withPriorCaseContext }
+              : undefined,
           })
         }
         setActiveRun(null)
-        // Keep the result chip on screen long enough for the user to actually
-        // read the breakdown (was 250ms — far too short to register "0
-        // resolved, 22 skipped, 22 low_confidence" before the page yanked
-        // itself out). 4s gives time to read; the page then reloads to pull
-        // the fresh server-rendered list of remaining stops.
-        setTimeout(() => window.location.reload(), 4000)
+        // Send the CPA to the review page where their pending proposals
+        // are listed for bulk approval. Slight delay so the success chip
+        // is briefly visible first.
+        setTimeout(() => {
+          window.location.href = `/years/${year}/stops/review`
+        }, 1500)
       } else if (status.status === "FAILED") {
-        setLastError(status.lastError ?? "Auto-resolve failed.")
+        setLastError(status.lastError ?? "Generation failed.")
         setActiveRun(null)
       }
     }
@@ -174,8 +186,8 @@ export function StopsClient({
     setLastResult(null)
     setProgress({})
     try {
-      const handle = await runAutoResolveStops(year)
-      setActiveRun({ runId: handle.runId, label: "Auto-resolving STOPs" })
+      const handle = await runGenerateAiProposals(year)
+      setActiveRun({ runId: handle.runId, label: "Generating AI recommendations" })
     } catch (e) {
       setLastError(e instanceof Error ? e.message : String(e))
     }
@@ -283,11 +295,29 @@ export function StopsClient({
         </div>
       )}
 
+      {/* Pending-proposals banner — only shows when proposals from a prior
+          generation run are waiting. Lets the CPA find /review even if they
+          navigated away from the post-generation auto-redirect. */}
+      {pendingProposalsCount > 0 && (
+        <div className="rounded border border-blue-500/30 bg-blue-500/10 px-4 py-3 flex items-center justify-between gap-3 flex-wrap">
+          <div className="text-sm">
+            <span className="font-medium">AI has {pendingProposalsCount} recommendation{pendingProposalsCount === 1 ? "" : "s"} waiting for your review.</span>
+            <span className="text-muted-foreground ml-2">High-confidence picks were already auto-applied — these need your call.</span>
+          </div>
+          <a
+            href={`/years/${year}/stops/review`}
+            className="text-sm font-semibold text-blue-600 hover:underline"
+          >
+            Review and approve →
+          </a>
+        </div>
+      )}
+
       {/* Auto-resolve banner */}
       <div className="flex items-center justify-between gap-4 border rounded p-3 bg-muted/30 flex-wrap">
         <div className="text-sm flex items-center gap-3 flex-wrap">
           <span className="font-medium">{totalPending} pending stops</span>
-          <span className="text-muted-foreground">— AI (Sonnet) will auto-resolve high-confidence items (≥70%); lower-confidence picks pre-fill the form for one-click confirm.</span>
+          <span className="text-muted-foreground">— AI (Sonnet) drafts a proposal for every pending stop using your prior similar resolutions; review on the next page before any classifications land in the ledger.</span>
           {answeredCount > 0 && (
             <button
               type="button"
@@ -306,7 +336,7 @@ export function StopsClient({
             disabled={autoBusy || totalPending === 0}
           />
           <Button size="sm" disabled={autoBusy || totalPending === 0} onClick={onAutoResolve}>
-            {autoBusy ? "Resolving…" : "Auto-resolve with AI"}
+            {autoBusy ? "Generating…" : "Generate AI recommendations"}
           </Button>
         </div>
       </div>
