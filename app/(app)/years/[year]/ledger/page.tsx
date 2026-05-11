@@ -52,6 +52,20 @@ export default async function LedgerPage({ params }: Props) {
     }
   }
 
+  // Phase J — load CPA-note counts per current Classification so the ledger
+  // row can show 💬 indicators. Single grouped query keeps it cheap.
+  const currentClassIds = txns.flatMap((t) => t.classifications.map((c) => c.id))
+  const noteCounts = currentClassIds.length
+    ? await prisma.classificationNote.groupBy({
+        by: ["classificationId"],
+        where: { classificationId: { in: currentClassIds } },
+        _count: { _all: true },
+      })
+    : []
+  const noteCountByClassId = new Map<string, number>(
+    noteCounts.map((n) => [n.classificationId, n._count._all]),
+  )
+
   const rows: LedgerRow[] = txns.map((t) => {
     const c = t.classifications[0]
     const amount = Number(t.amountNormalized.toString())
@@ -74,6 +88,7 @@ export default async function LedgerPage({ params }: Props) {
       reasoning: c?.reasoning ?? "",
       isChildOfSplit: !!t.splitOfId,
       openStopId: stopByTxn.get(t.id) ?? null,
+      noteCount: c ? (noteCountByClassId.get(c.id) ?? 0) : 0,
     }
   })
 

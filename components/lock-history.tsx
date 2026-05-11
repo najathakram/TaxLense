@@ -15,6 +15,10 @@ export interface LockHistoryEvent {
   eventType: "TAXYEAR_LOCKED" | "TAXYEAR_UNLOCKED"
   rationale: string | null
   hash: string | null
+  /** When this LOCK is the result of a re-lock after an unlock, points to
+   *  the prior locked snapshot's hash so the chain is auditable. Null on
+   *  the original lock. (Plan 5.3 — leftover fix.) */
+  parentLockedHash?: string | null
   actor: string
 }
 
@@ -55,6 +59,11 @@ export function LockHistory({ events }: Props) {
               {e.hash && (
                 <div className="font-mono text-[10px] mt-0.5 truncate">
                   hash: {e.hash.slice(0, 32)}…
+                </div>
+              )}
+              {e.parentLockedHash && (
+                <div className="font-mono text-[10px] mt-0.5 truncate text-muted-foreground/80">
+                  ← chained from: {e.parentLockedHash.slice(0, 32)}…
                 </div>
               )}
             </div>

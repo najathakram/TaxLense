@@ -8,6 +8,8 @@ import {
   type DocKindSlug,
 } from "@/lib/reports/documentRegistry"
 import { DocumentViewer } from "../document-viewer"
+import { buildLineage } from "@/lib/reports/lineage"
+import { getFormSpec } from "@/lib/forms/registry"
 
 interface Props {
   params: Promise<{ year: string; kind: string }>
@@ -33,6 +35,13 @@ export default async function DocumentKindPage({ params }: Props) {
   const statuses = await getDocStatuses(taxYear.id)
   const status = statuses.get(spec.slug)!
 
+  // Lineage drill-down — only meaningful for primary tax forms whose lines
+  // map to Schedule C / 1120-S / 1065 / 1120 line set. Skip for workflow
+  // docs (engagement, 8879) and accounting docs (depreciation schedule).
+  const showLineage = spec.group === "TAX" && spec.requiresLock
+  const lineage = showLineage ? await buildLineage(taxYear.id) : []
+  const formName = getFormSpec(entityType).primaryReturn
+
   return (
     <DocumentViewer
       year={year}
@@ -53,6 +62,8 @@ export default async function DocumentKindPage({ params }: Props) {
       sidebarMeta={Object.fromEntries(
         slugs.map((s) => [s, { displayName: DOC_REGISTRY[s].displayName, shortName: DOC_REGISTRY[s].shortName, group: DOC_REGISTRY[s].group }]),
       )}
+      lineage={lineage}
+      lineageFormName={formName}
     />
   )
 }

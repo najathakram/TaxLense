@@ -380,6 +380,31 @@ export function EngagementClient({
         </CardContent>
       </Card>
 
+      {/* Delivery packet */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-sm">Send to client</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          <p className="text-xs text-muted-foreground">
+            Builds a polished, client-facing ZIP: cover memo with bottom-line numbers + next
+            steps, the primary tax return, 8879 (if generated), engagement letter (if signed),
+            and one 1099-NEC Copy B per recipient. Different from the audit dump — this is the
+            taxpayer-friendly bundle you email after lock.
+          </p>
+          <div className="flex gap-2 items-center">
+            <a href={`/api/years/${year}/delivery-packet`} download>
+              <Button size="sm" disabled={!isLocked}>
+                Build delivery packet ZIP
+              </Button>
+            </a>
+            {!isLocked && (
+              <span className="text-xs text-muted-foreground">Lock the year first.</span>
+            )}
+          </div>
+        </CardContent>
+      </Card>
+
       {/* Filing status tracker */}
       <Card>
         <CardHeader>

@@ -56,12 +56,26 @@ export async function createTaxYear(yearStr: string): Promise<CreateTaxYearResul
   })
   const priorProfile = priorWithProfile?.businessProfile ?? null
 
+  // Pull owners + known entities to roll forward (Phase 5.1 leftover-fix).
+  // MerchantRules are intentionally NOT rolled forward — they're year-specific
+  // by design (the CPA agent re-derives them each year); auto-copying would
+  // lock in stale codings.
+  let priorOwners: Awaited<ReturnType<typeof prisma.owner.findMany>> = []
+  let priorKnownEntities: Awaited<ReturnType<typeof prisma.knownEntity.findMany>> = []
+  if (priorProfile) {
+    priorOwners = await prisma.owner.findMany({ where: { profileId: priorProfile.id, isActive: true } })
+    priorKnownEntities = await prisma.knownEntity.findMany({
+      where: { profileId: priorProfile.id },
+    }).catch(() => [])
+  }
+
   await prisma.$transaction(async (tx) => {
     const created = await tx.taxYear.create({
       data: { userId, year, status: "CREATED" },
     })
+    let newProfileId: string | null = null
     if (priorProfile) {
-      await tx.businessProfile.create({
+      const newProfile = await tx.businessProfile.create({
         data: {
           userId,
           taxYearId: created.id,
@@ -81,6 +95,53 @@ export async function createTaxYear(yearStr: string): Promise<CreateTaxYearResul
           // anything changed (e.g. moved states); they won't be forced to.
         },
       })
+      newProfileId = newProfile.id
+
+      // Roll forward Owners — same names/SSN/EIN/ownership %. Year-specific
+      // values (capitalContribution, distributions, w2Wages) reset to null
+      // since they're per-year cash flows.
+      for (const o of priorOwners) {
+        await tx.owner.create({
+          data: {
+            profileId: newProfile.id,
+            kind: o.kind,
+            name: o.name,
+            email: o.email,
+            ssnLast4: o.ssnLast4,
+            ein: o.ein,
+            ownershipPct: o.ownershipPct,
+            addressLine1: o.addressLine1,
+            addressLine2: o.addressLine2,
+            city: o.city,
+            stateRegion: o.stateRegion,
+            postalCode: o.postalCode,
+            countryCode: o.countryCode,
+            // Year-start basis carries forward from prior year-end (via
+            // PriorYearContext.shareholderBasis / .partnerCapital), so we
+            // don't copy the prior-year values here — those were the prior
+            // year's roll-forward state.
+            stockBasis: null,
+            debtBasis: null,
+            partnerCapitalStart: null,
+            isActive: true,
+          },
+        })
+      }
+
+      // Roll forward KnownEntities — names/keywords for known clients,
+      // contractors, exclusion patterns. Durable client information.
+      for (const k of priorKnownEntities) {
+        await tx.knownEntity.create({
+          data: {
+            profileId: newProfile.id,
+            kind: k.kind,
+            displayName: k.displayName,
+            matchKeywords: k.matchKeywords,
+            defaultCode: k.defaultCode,
+            notes: k.notes,
+          },
+        })
+      }
     }
     await tx.auditEvent.create({
       data: {
@@ -89,7 +150,13 @@ export async function createTaxYear(yearStr: string): Promise<CreateTaxYearResul
         eventType: "TAXYEAR_CREATED",
         entityType: "TaxYear",
         entityId: created.id,
-        afterState: { year, profileCarriedFromYear: priorWithProfile?.year ?? null },
+        afterState: {
+          year,
+          profileCarriedFromYear: priorWithProfile?.year ?? null,
+          ownersCarried: priorOwners.length,
+          knownEntitiesCarried: priorKnownEntities.length,
+          newProfileId,
+        },
       },
     })
   })

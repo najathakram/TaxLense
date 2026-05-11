@@ -35,10 +35,18 @@ export default async function NewTaxYearPage() {
     <Section sub="DASHBOARD" title="New tax year">
       <Card pad={28}>
         <p className="text-sm" style={{ color: "var(--fg-2)", marginBottom: 18 }}>
-          Pick a year to set up. We&rsquo;ll copy your most recent profile (entity type,
-          NAICS, accounting method, state, home office, vehicle, revenue streams)
-          forward so you don&rsquo;t walk the wizard again. Trips and known entities
-          stay year-specific — add them under <code>/profile</code> once the year exists.
+          Pick a year to set up. We&rsquo;ll roll the following forward from your most recent
+          year automatically:
+        </p>
+        <ul className="text-sm" style={{ color: "var(--fg-2)", marginLeft: 18, marginBottom: 18, listStyle: "disc" }}>
+          <li>Business profile (entity type, NAICS, accounting method, state, home office, vehicle, revenue streams)</li>
+          <li>Owners list (names, ownership %, SSN/EIN, mailing address) — year-specific cash flows reset</li>
+          <li>Known entities (contractors, clients, exclusion patterns)</li>
+          <li>Carryforward (NOL, §179, depreciation schedule, basis) — only when the prior year is LOCKED</li>
+        </ul>
+        <p className="text-sm" style={{ color: "var(--fg-2)", marginBottom: 18 }}>
+          Trips and merchant rules stay year-specific (the agent re-derives merchant rules each
+          year so stale codings don&rsquo;t carry forward).
         </p>
         <form action={async (fd: FormData) => { "use server"; await createTaxYear(String(fd.get("year") ?? "")) }}>
           <div style={{ display: "grid", gap: 8, marginBottom: 16 }}>

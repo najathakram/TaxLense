@@ -41,7 +41,15 @@ import {
   buildScheduleM1Pdf,
   buildScheduleM2Pdf,
   buildScheduleLPdf,
+  buildScheduleM2_1120Pdf,
+  buildScheduleGPdf,
 } from "./pdf/schedules"
+import {
+  buildFormW2W3Pdf,
+  buildForm941Pdf,
+  buildForm940Pdf,
+  buildForm1125EPdf,
+} from "./pdf/payroll"
 import { buildMasterLedger } from "./masterLedger"
 import { buildFinancialStatements } from "./financialStatements"
 
@@ -95,7 +103,9 @@ async function loadEntityForms(taxYearId: string, entityType: string): Promise<E
     // No K-1 — C-Corp shareholders receive 1099-DIV (separate filing flow).
     out.push({ name: "07_form_1120_worksheet.pdf", buffer: await buildForm1120Pdf(taxYearId) })
     out.push({ name: "09_schedule_m1_1120.pdf", buffer: await buildScheduleM1Pdf(taxYearId, "1120") })
+    out.push({ name: "10_schedule_m2_1120.pdf", buffer: await buildScheduleM2_1120Pdf(taxYearId) })
     out.push({ name: "11_schedule_l_1120.pdf",  buffer: await buildScheduleLPdf(taxYearId, "1120")  })
+    out.push({ name: "11b_schedule_g_1120.pdf", buffer: await buildScheduleGPdf(taxYearId) })
   }
 
   // Always-on supplementary schedules (any entity)
@@ -106,6 +116,17 @@ async function loadEntityForms(taxYearId: string, entityType: string): Promise<E
   if (entityType === "SOLE_PROP" || entityType === "LLC_SINGLE") {
     out.push({ name: "14_schedule_se.pdf",   buffer: await buildScheduleSePdf(taxYearId) })
     out.push({ name: "15_form_8995_qbi.pdf", buffer: await buildForm8995Pdf(taxYearId)  })
+  }
+
+  // Corporate entities — payroll forms (W-2/W-3 + 941 quarterly + 940 + 1125-E)
+  if (entityType === "S_CORP" || entityType === "C_CORP") {
+    out.push({ name: "16_form_w2_w3.pdf",     buffer: await buildFormW2W3Pdf(taxYearId) })
+    out.push({ name: "17_form_941_q1.pdf",    buffer: await buildForm941Pdf(taxYearId, 1) })
+    out.push({ name: "17_form_941_q2.pdf",    buffer: await buildForm941Pdf(taxYearId, 2) })
+    out.push({ name: "17_form_941_q3.pdf",    buffer: await buildForm941Pdf(taxYearId, 3) })
+    out.push({ name: "17_form_941_q4.pdf",    buffer: await buildForm941Pdf(taxYearId, 4) })
+    out.push({ name: "18_form_940_futa.pdf",  buffer: await buildForm940Pdf(taxYearId) })
+    out.push({ name: "19_form_1125e.pdf",     buffer: await buildForm1125EPdf(taxYearId) })
   }
 
   return out

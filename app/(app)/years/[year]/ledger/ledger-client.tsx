@@ -55,6 +55,9 @@ export interface LedgerRow {
   /** ID of a PENDING StopItem this row's transaction is part of, or null.
    *  Drives the inline STOP badge and the "Resolve →" deep link. (Tier 3.11) */
   openStopId: string | null
+  /** Count of CPA notes attached to the current classification — drives
+   *  the 💬 indicator on the merchant cell (Phase J leftover). */
+  noteCount: number
 }
 
 interface Props {
@@ -417,6 +420,16 @@ export function LedgerClient({ year, rows, accounts }: Props) {
                         >
                           <span aria-hidden>!</span>
                           STOP
+                        </a>
+                      )}
+                      {r.noteCount > 0 && (
+                        <a
+                          href={`/years/${year}/merchants/${encodeURIComponent(r.merchantNormalized ?? r.merchantRaw)}`}
+                          className="text-[10px] shrink-0"
+                          title={`${r.noteCount} CPA note${r.noteCount === 1 ? "" : "s"} — open merchant view`}
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          💬{r.noteCount}
                         </a>
                       )}
                     </div>

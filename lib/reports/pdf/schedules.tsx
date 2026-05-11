@@ -618,6 +618,144 @@ function ScheduleM2Doc({
 }
 
 // ─────────────────────────────────────────────────────────────────────────
+// Schedule M-2 (Form 1120) — Analysis of Unappropriated Retained Earnings
+// ─────────────────────────────────────────────────────────────────────────
+// C-Corp version of the M-2 — different lineage from S-Corp AAA.
+
+interface CCorpM2OwnerRow {
+  name: string
+  ownershipPct: number
+  capitalContribution: number
+  distributions: number
+}
+
+function ScheduleM2_1120Doc({
+  ctx,
+  owners,
+  beginningRetainedEarnings,
+}: {
+  ctx: ScheduleContext
+  owners: CCorpM2OwnerRow[]
+  beginningRetainedEarnings: number
+}) {
+  const netIncome = ctx.netProfit
+  const totalDistributions = owners.reduce((s, o) => s + o.distributions, 0)
+  const endingRetainedEarnings = beginningRetainedEarnings + netIncome - totalDistributions
+
+  return (
+    <Document>
+      <Page size="LETTER" style={styles.page}>
+        <View style={styles.header}>
+          <Text>SCHEDULE M-2 (1120) WORKSHEET — TaxLens (Retained Earnings Analysis)</Text>
+        </View>
+        <Text style={styles.h1}>{ctx.header.clientName}</Text>
+        <Text style={styles.muted}>
+          Analysis of Unappropriated Retained Earnings per Books · TY {ctx.header.year}
+        </Text>
+
+        <FormLine num="1" label="Balance at beginning of year" amount={beginningRetainedEarnings} />
+        <FormLine num="2" label="Net income (loss) per books" amount={netIncome} />
+        <FormLine num="3" label="Other increases (itemize)" amount={null} />
+        <FormLine num="4" label="Total of lines 1-3" amount={beginningRetainedEarnings + netIncome} />
+        <FormLine num="5a" label="Cash distributions" amount={totalDistributions} />
+        <FormLine num="5b" label="Stock distributions" amount={null} />
+        <FormLine num="5c" label="Property distributions" amount={null} />
+        <FormLine num="6" label="Other decreases (itemize)" amount={null} />
+        <FormLine num="7" label="Total of lines 5 and 6" amount={totalDistributions} />
+        <View style={styles.totalRow}>
+          <Text style={styles.lineNum}>8</Text>
+          <Text style={styles.lineLabel}>Balance at end of year (line 4 minus line 7)</Text>
+          <Text style={styles.lineAmount}>{fmtUSD(endingRetainedEarnings)}</Text>
+        </View>
+
+        {owners.length > 0 && (
+          <>
+            <Text style={styles.h2}>Per-shareholder distribution detail</Text>
+            {owners.map((o, i) => (
+              <View key={i} style={styles.line}>
+                <Text style={styles.lineLabel}>
+                  {o.name} ({o.ownershipPct.toFixed(2)}%)
+                </Text>
+                <Text style={styles.lineAmount}>{fmtUSD(o.distributions)}</Text>
+              </View>
+            ))}
+          </>
+        )}
+
+        <Text style={styles.authority}>
+          Authority: Form 1120 Schedule M-2 Instructions Rev. 2025. C-Corp distributions to
+          shareholders are dividends — issue Form 1099-DIV to recipients.
+        </Text>
+
+        <PageFooter header={ctx.header} formId="Schedule M-2 (1120)" />
+      </Page>
+    </Document>
+  )
+}
+
+// ─────────────────────────────────────────────────────────────────────────
+// Schedule G (Form 1120) — Information on Certain Persons Owning the
+// Corporation's Voting Stock (any owner ≥ 20%)
+// ─────────────────────────────────────────────────────────────────────────
+
+interface SchGOwnerRow {
+  name: string
+  taxIdentifier: string | null
+  ownershipPct: number
+  countryCode: string
+}
+
+function ScheduleGDoc({ ctx, owners }: { ctx: ScheduleContext; owners: SchGOwnerRow[] }) {
+  const reportable = owners.filter((o) => o.ownershipPct >= 20)
+  return (
+    <Document>
+      <Page size="LETTER" style={styles.page}>
+        <View style={styles.header}>
+          <Text>SCHEDULE G (1120) WORKSHEET — TaxLens (Voting Stock Owners ≥ 20%)</Text>
+        </View>
+        <Text style={styles.h1}>{ctx.header.clientName}</Text>
+        <Text style={styles.muted}>
+          Information on Certain Persons Owning the Corporation&apos;s Voting Stock · TY {ctx.header.year}
+        </Text>
+
+        <Text style={styles.h2}>Part I — Persons owning 20% or more</Text>
+        {reportable.length === 0 ? (
+          <Text style={styles.small}>
+            No shareholder owns ≥ 20% of voting stock. Schedule G not required.
+          </Text>
+        ) : (
+          reportable.map((o, i) => (
+            <View key={i} style={{ marginBottom: 8, padding: 6, border: "1 solid #e5e7eb" }}>
+              <Text style={{ fontFamily: "Helvetica-Bold", fontSize: 10 }}>{o.name}</Text>
+              <View style={styles.line}>
+                <Text style={styles.lineLabel}>Identifying number (SSN / EIN)</Text>
+                <Text style={styles.lineAmount}>{o.taxIdentifier ?? "[VERIFY]"}</Text>
+              </View>
+              <View style={styles.line}>
+                <Text style={styles.lineLabel}>Country of citizenship / incorporation</Text>
+                <Text style={styles.lineAmount}>{o.countryCode}</Text>
+              </View>
+              <View style={styles.line}>
+                <Text style={styles.lineLabel}>Voting stock owned (%)</Text>
+                <Text style={styles.lineAmount}>{o.ownershipPct.toFixed(2)}%</Text>
+              </View>
+            </View>
+          ))
+        )}
+
+        <Text style={styles.authority}>
+          Authority: Form 1120 Instructions Rev. 2025; Schedule G — required when any single
+          person owns ≥ 20% of voting stock at year-end (also disclosed on Form 1120 Schedule
+          K, line 4).
+        </Text>
+
+        <PageFooter header={ctx.header} formId="Schedule G (1120)" />
+      </Page>
+    </Document>
+  )
+}
+
+// ─────────────────────────────────────────────────────────────────────────
 // Schedule L — Balance Sheet per Books
 // ─────────────────────────────────────────────────────────────────────────
 
@@ -765,5 +903,69 @@ export async function buildScheduleLPdf(
 ): Promise<Buffer> {
   const ctx = await loadScheduleContext(taxYearId)
   const stream = await pdf(<ScheduleLDoc ctx={ctx} formContext={formContext} />).toBuffer()
+  return pdfToBuffer(stream as unknown as AsyncIterable<Buffer | string>)
+}
+
+export async function buildScheduleM2_1120Pdf(taxYearId: string): Promise<Buffer> {
+  const ctx = await loadScheduleContext(taxYearId)
+  const profile = await prisma.businessProfile.findUnique({
+    where: { taxYearId },
+    select: { id: true },
+  })
+  const ownerRows = profile
+    ? await prisma.owner.findMany({
+        where: { profileId: profile.id, isActive: true, kind: { in: ["OFFICER", "SHAREHOLDER"] } },
+        select: {
+          name: true,
+          ownershipPct: true,
+          capitalContribution: true,
+          distributions: true,
+        },
+      })
+    : []
+  const owners: CCorpM2OwnerRow[] = ownerRows.map((o) => ({
+    name: o.name,
+    ownershipPct: Number(o.ownershipPct.toString()),
+    capitalContribution: Number(o.capitalContribution?.toString() ?? "0"),
+    distributions: Number(o.distributions?.toString() ?? "0"),
+  }))
+  // Beginning retained earnings — pull from PriorYearContext if set; else 0
+  const pyc = await prisma.priorYearContext.findUnique({ where: { taxYearId } })
+  // Approximation — we don't track retained earnings explicitly yet; use 0
+  // for first year and a placeholder for subsequent. Real number lives on
+  // Schedule L line 24; CPA fills in.
+  const beginningRetainedEarnings = pyc ? 0 : 0
+
+  const stream = await pdf(
+    <ScheduleM2_1120Doc
+      ctx={ctx}
+      owners={owners}
+      beginningRetainedEarnings={beginningRetainedEarnings}
+    />,
+  ).toBuffer()
+  return pdfToBuffer(stream as unknown as AsyncIterable<Buffer | string>)
+}
+
+export async function buildScheduleGPdf(taxYearId: string): Promise<Buffer> {
+  const ctx = await loadScheduleContext(taxYearId)
+  const profile = await prisma.businessProfile.findUnique({
+    where: { taxYearId },
+    select: { id: true },
+  })
+  const ownerRows = profile
+    ? await prisma.owner.findMany({
+        where: { profileId: profile.id, isActive: true },
+        select: { name: true, ssnLast4: true, ein: true, ownershipPct: true, countryCode: true },
+      })
+    : []
+  const owners: SchGOwnerRow[] = ownerRows.map((o) => ({
+    name: o.name,
+    // EIN if entity owner, else masked SSN — matches the Schedule G display
+    // convention (full TIN required on filed form, masked here for safety).
+    taxIdentifier: o.ein ?? (o.ssnLast4 ? `***-**-${o.ssnLast4}` : null),
+    ownershipPct: Number(o.ownershipPct.toString()),
+    countryCode: o.countryCode,
+  }))
+  const stream = await pdf(<ScheduleGDoc ctx={ctx} owners={owners} />).toBuffer()
   return pdfToBuffer(stream as unknown as AsyncIterable<Buffer | string>)
 }

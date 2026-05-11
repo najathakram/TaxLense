@@ -5,6 +5,7 @@ import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Alert, AlertDescription } from "@/components/ui/alert"
+import { LineagePanel, type LineageRow } from "./[kind]/lineage-panel"
 
 interface SpecMeta {
   slug: string
@@ -35,6 +36,9 @@ interface Props {
     string,
     { displayName: string; shortName: string; group: "TAX" | "ACCOUNTING" | "WORKFLOW" }
   >
+  /** Lineage rows for the active doc — populated for TAX-group docs only. */
+  lineage?: LineageRow[]
+  lineageFormName?: string
 }
 
 const GROUP_LABEL: Record<"TAX" | "ACCOUNTING" | "WORKFLOW", string> = {
@@ -53,6 +57,8 @@ export function DocumentViewer({
   sidebarSlugs,
   sidebarStatuses,
   sidebarMeta,
+  lineage,
+  lineageFormName,
 }: Props) {
   const statusBySlug = Object.fromEntries(sidebarStatuses.map((s) => [s.slug, s]))
 
@@ -154,11 +160,15 @@ export function DocumentViewer({
                 <iframe
                   src={pdfUrl}
                   className="w-full"
-                  style={{ height: "calc(100vh - 220px)", border: 0 }}
+                  style={{ height: "calc(100vh - 380px)", border: 0 }}
                   title={activeSpec.displayName}
                 />
               </CardContent>
             </Card>
+          )}
+
+          {lineage && lineage.length > 0 && lineageFormName && (
+            <LineagePanel year={year} rows={lineage} formName={lineageFormName} />
           )}
         </div>
       </main>

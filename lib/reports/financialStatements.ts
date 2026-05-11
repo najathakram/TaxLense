@@ -562,6 +562,71 @@ export async function buildFinancialStatements(taxYearId: string): Promise<Buffe
     account: "NOTE: Cash-method dropshipping → no AR/AP/Inventory; Owner's Equity is a balancing plug equal to cumulative retained earnings.",
   })
 
+  // ── Sheet 8: Vendor List ─────────────────────────────────────────────────
+  // Aggregates all WRITE_OFF / MEALS_* outflows by merchant (normalized) so
+  // the CPA can sanity-check who got paid + flag candidates for 1099-NEC /
+  // 1099-MISC issuance. Sorted by total spend descending.
+  const vendorMap = new Map<
+    string,
+    { count: number; total: number; deductible: number; codes: Set<string>; lines: Set<string> }
+  >()
+  for (const t of deductibleTxns) {
+    const key = (t.merchantNormalized ?? t.merchantRaw.trim().slice(0, 80)) || "(unknown)"
+    if (!vendorMap.has(key)) {
+      vendorMap.set(key, { count: 0, total: 0, deductible: 0, codes: new Set(), lines: new Set() })
+    }
+    const v = vendorMap.get(key)!
+    v.count++
+    v.total += Math.abs(t.amountNormalized)
+    v.deductible += deductibleAmt(t.amountNormalized, t.classification.code, t.classification.businessPct)
+    v.codes.add(t.classification.code)
+    if (t.classification.scheduleCLine) v.lines.add(t.classification.scheduleCLine)
+  }
+
+  const vendorSheet = wb.addWorksheet("Vendor List")
+  vendorSheet.columns = [
+    { header: "Vendor / Merchant", key: "vendor", width: 40 },
+    { header: "# Txns", key: "count", width: 8 },
+    { header: "Total Paid ($)", key: "total", width: 16 },
+    { header: "Deductible ($)", key: "deductible", width: 16 },
+    { header: "Codes", key: "codes", width: 24 },
+    { header: "Schedule lines", key: "lines", width: 30 },
+    { header: "Likely 1099 ≥ $600", key: "needs1099", width: 18 },
+  ]
+  applyHeaderRow(vendorSheet.getRow(1))
+  vendorSheet.views = [{ state: "frozen", ySplit: 1 }]
+  vendorSheet.autoFilter = { from: "A1", to: "G1" }
+
+  const sortedVendors = [...vendorMap.entries()].sort(
+    (a, b) => b[1].deductible - a[1].deductible,
+  )
+  for (const [vendor, v] of sortedVendors) {
+    const r = vendorSheet.addRow({
+      vendor,
+      count: v.count,
+      total: v.total,
+      deductible: v.deductible,
+      codes: [...v.codes].join(", "),
+      lines: [...v.lines].join("; "),
+      // Flag 1099-NEC candidates: contract-labor lines ≥ $600 to non-corp
+      // (corp exemption applied at the per-payee level via W-9 — so this is a
+      // best-guess flag; the 1099s page does the canonical check).
+      needs1099: v.deductible >= 600 && [...v.lines].some((l) => /Line 11|Contract Labor|Compensation|Salaries|Guaranteed/i.test(l)) ? "Yes (NEC)" : v.deductible >= 600 && [...v.lines].some((l) => /rent|royalt/i.test(l)) ? "Yes (MISC)" : "—",
+    })
+    r.getCell("total").numFmt = '#,##0.00'
+    r.getCell("deductible").numFmt = '#,##0.00'
+  }
+  const vendorTotal = vendorSheet.addRow({
+    vendor: "TOTAL",
+    count: sortedVendors.reduce((s, [, v]) => s + v.count, 0),
+    total: sortedVendors.reduce((s, [, v]) => s + v.total, 0),
+    deductible: totalDeductible,
+  })
+  vendorTotal.font = { bold: true }
+  vendorTotal.fill = totalFill()
+  vendorTotal.getCell("total").numFmt = '#,##0.00'
+  vendorTotal.getCell("deductible").numFmt = '#,##0.00'
+
   const buf = await wb.xlsx.writeBuffer()
   return Buffer.from(buf)
 }

@@ -61,6 +61,7 @@ function pushYearStages(
       items: [
         { label: "Finalize",  href: `${yearBase}/finalize`,  indent: 1 },
         { label: "Documents", href: `${yearBase}/documents`, indent: 1 },
+        { label: "Memos",     href: `${yearBase}/memos`,     indent: 1 },
       ],
     },
   ]

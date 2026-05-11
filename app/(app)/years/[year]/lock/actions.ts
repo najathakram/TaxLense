@@ -50,6 +50,25 @@ export async function confirmLock(year: number): Promise<void> {
 
   const hash = await computeLedgerHash(taxYear.id)
 
+  // Phase 5.3 / leftover-fix: when re-locking after an unlock, chain to the
+  // previous locked snapshot. The prior TAXYEAR_LOCKED event is the most
+  // recent lock event for this year. Capturing parentLockedHash makes the
+  // re-lock chain explicit so the LockHistory panel can render
+  // 'v1 → unlock → v2 → unlock → v3' lineage.
+  const priorLock = await prisma.auditEvent.findFirst({
+    where: {
+      entityType: "TaxYear",
+      entityId: taxYear.id,
+      eventType: "TAXYEAR_LOCKED",
+    },
+    orderBy: { occurredAt: "desc" },
+    select: { afterState: true },
+  })
+  const parentLockedHash =
+    priorLock && priorLock.afterState
+      ? ((priorLock.afterState as { hash?: string }).hash ?? null)
+      : null
+
   await prisma.$transaction(async (tx) => {
     await tx.taxYear.update({
       where: { id: taxYear.id },
@@ -71,6 +90,7 @@ export async function confirmLock(year: number): Promise<void> {
           score: result.risk.score,
           band: result.risk.band,
           estimatedDeductions: result.risk.estimatedDeductions,
+          parentLockedHash, // chain link for LockHistory panel
         },
       },
     })

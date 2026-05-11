@@ -86,13 +86,14 @@ export default async function FinalizePage({ params }: Props) {
   ])
 
   const lockHistoryEvents: LockHistoryEvent[] = lockEvents.map((e) => {
-    const after = (e.afterState ?? null) as { hash?: string } | null
+    const after = (e.afterState ?? null) as { hash?: string; parentLockedHash?: string } | null
     const before = (e.beforeState ?? null) as { priorHash?: string } | null
     return {
       occurredAt: e.occurredAt.toISOString().slice(0, 19).replace("T", " "),
       eventType: e.eventType as "TAXYEAR_LOCKED" | "TAXYEAR_UNLOCKED",
       rationale: e.rationale ?? null,
       hash: after?.hash ?? before?.priorHash ?? null,
+      parentLockedHash: after?.parentLockedHash ?? null,
       actor: e.user?.name ?? e.user?.email ?? "system",
     }
   })
