@@ -13,7 +13,7 @@ import {
   type DropReason,
   type BusinessContext,
 } from "@/lib/ai/autoResolveStops"
-import { aiSuggestionFromResolution } from "@/lib/stops/aiSuggestion"
+import { aiSuggestionFromResolution, deriveAiSuggestion, type AiSuggestion } from "@/lib/stops/aiSuggestion"
 import { aggregateClientNotes } from "@/lib/ai/merchantIntelligence"
 import type { ProgressReporter } from "@/lib/jobs/pipelineRun"
 import { recomputeStatus } from "@/lib/taxYear/status"
@@ -292,6 +292,36 @@ function thresholdFor(category: string): number {
   return AUTO_RESOLVE_THRESHOLDS[category] ?? DEFAULT_AUTO_RESOLVE_THRESHOLD
 }
 
+/**
+ * Map a heuristic AiSuggestion (from lib/stops/aiSuggestion.ts) into a
+ * StopAnswer that deriveFromAnswer can convert to a Classification.
+ * This is the "AI says NEEDS_CONTEXT but the heuristic gave us a real
+ * answer" path — without it, deposits like "RETURN OF POSTED CHECK" or
+ * "STRIPE PAYOUT" stayed PENDING forever even though the deterministic
+ * regex matched a clear pattern.
+ */
+function suggestionToAnswer(s: AiSuggestion): StopAnswer | null {
+  switch (s.kind) {
+    case "deposit":
+      return { kind: "deposit", choice: s.choice }
+    case "transfer":
+      return {
+        kind: "transfer",
+        choice: s.choice,
+        ...(s.payeeName ? { payeeName: s.payeeName } : {}),
+        ...(s.purpose ? { purpose: s.purpose } : {}),
+      }
+    case "merchant":
+      return {
+        kind: "merchant",
+        choice: s.choice,
+        ...(s.scheduleCLine ? { scheduleCLine: s.scheduleCLine } : {}),
+      }
+    default:
+      return null
+  }
+}
+
 export async function autoResolveStops(
   year: number,
   reportProgress?: ProgressReporter,
@@ -423,12 +453,89 @@ export async function autoResolveStops(
     const mk = stop.merchantRule?.merchantKey ?? "UNKNOWN"
 
     if (!ai) {
-      // The AI dropped this row OR never returned it. Persist a heuristic
-      // suggestion so the row at least pre-fills its radio for the user
-      // (instead of staring at four blank options), then surface the real
-      // reason in `details` so the UI can say "Sonnet skipped 5: 3 timed out,
-      // 2 hallucinated stopId" rather than the prior opaque "5 skipped".
+      // The AI dropped this row OR never returned it. Try the heuristic
+      // first — if it gives a confident answer (e.g. "STRIPE PAYOUT" →
+      // PLATFORM_1099 0.85), apply it instead of leaving the user with
+      // a stuck PENDING row.
       const reason: DropReason = (aiDrops.get(stop.id) as DropReason | undefined) ?? "missing_from_response"
+      const threshold = thresholdFor(stop.category)
+      const heuristic = deriveAiSuggestion(stop)
+      if (heuristic && heuristic.confidence >= threshold) {
+        const heurAnswer = suggestionToAnswer(heuristic)
+        if (heurAnswer) {
+          try {
+            const derived = deriveFromAnswer(heurAnswer, {
+              ruleCode: stop.merchantRule?.code,
+              ruleLine: stop.merchantRule?.scheduleCLine,
+            })
+            await prisma.$transaction(async (tx) => {
+              for (const txId of stop.transactionIds) {
+                await tx.classification.updateMany({
+                  where: { transactionId: txId, isCurrent: true },
+                  data: { isCurrent: false },
+                })
+                await tx.classification.create({
+                  data: {
+                    transactionId: txId,
+                    code: derived.code,
+                    scheduleCLine: derived.scheduleCLine,
+                    businessPct: derived.businessPct,
+                    ircCitations: derived.ircCitations,
+                    confidence: heuristic.confidence,
+                    evidenceTier: derived.evidenceTier,
+                    source: "AI" as ClassificationSource,
+                    reasoning: `Auto-resolved (heuristic, AI did not respond): ${heuristic.reasoning ?? derived.reasoning}`,
+                    isCurrent: true,
+                    createdByUserId: userId,
+                  },
+                })
+              }
+              await tx.stopItem.update({
+                where: { id: stop.id },
+                data: {
+                  state: "ANSWERED",
+                  answeredAt: new Date(),
+                  userAnswer: {
+                    autoResolved: true,
+                    via: "heuristic_only",
+                    aiDropReason: reason,
+                    heuristicConfidence: heuristic.confidence,
+                  } as unknown as Prisma.InputJsonValue,
+                },
+              })
+              await tx.auditEvent.create({
+                data: {
+                  userId,
+                  actorType: "AI",
+                  eventType: "STOP_RESOLVED",
+                  entityType: "StopItem",
+                  entityId: stop.id,
+                  afterState: {
+                    code: derived.code,
+                    businessPct: derived.businessPct,
+                    confidence: heuristic.confidence,
+                    autoResolved: true,
+                    via: "heuristic_only",
+                  },
+                  rationale: heuristic.reasoning ?? derived.reasoning,
+                },
+              })
+            }, { timeout: 60_000 })
+            resolved++
+            details.push({
+              merchantKey: mk,
+              code: derived.code,
+              confidence: heuristic.confidence,
+              status: "resolved",
+              reason: `heuristic_only (AI dropped: ${reason})`,
+            })
+            continue
+          } catch (err) {
+            console.error("[autoResolveStops] heuristic-only write failed for stop", stop.id, err)
+            // Fall through to skipped.
+          }
+        }
+      }
       skipped++
       bumpReason(reason)
       details.push({ merchantKey: mk, code: "?", confidence: 0, status: "skipped", reason })
@@ -437,10 +544,96 @@ export async function autoResolveStops(
 
     const threshold = thresholdFor(stop.category)
     if (ai.confidence < threshold) {
-      // Persist the suggestion anyway so the form pre-fills with the AI's
-      // best guess on the next render. Without this the user faces four
-      // blank radios on every STOP that didn't make the auto-resolve
-      // bar — which is what they were complaining about.
+      // Heuristic-fallback path. If the AI is below threshold but the
+      // deterministic deriveAiSuggestion heuristic gave us a confident
+      // answer for the same stop (e.g. "RETURN OF POSTED CHECK" → REFUND
+      // at 0.65, or "STRIPE PAYOUT" → PLATFORM_1099 at 0.85), apply the
+      // heuristic. Without this, Sonnet's safe-mode NEEDS_CONTEXT (0.40
+      // on every ambiguous deposit) blocked even rows where the regex
+      // pattern matched a clear pattern — leaving the user clicking
+      // "Auto-resolve" repeatedly with no progress.
+      const heuristic = deriveAiSuggestion(stop)
+      if (heuristic && heuristic.confidence >= threshold) {
+        const heurAnswer = suggestionToAnswer(heuristic)
+        if (heurAnswer) {
+          try {
+            const derived = deriveFromAnswer(heurAnswer, {
+              ruleCode: stop.merchantRule?.code,
+              ruleLine: stop.merchantRule?.scheduleCLine,
+            })
+            await prisma.$transaction(async (tx) => {
+              for (const txId of stop.transactionIds) {
+                await tx.classification.updateMany({
+                  where: { transactionId: txId, isCurrent: true },
+                  data: { isCurrent: false },
+                })
+                await tx.classification.create({
+                  data: {
+                    transactionId: txId,
+                    code: derived.code,
+                    scheduleCLine: derived.scheduleCLine,
+                    businessPct: derived.businessPct,
+                    ircCitations: derived.ircCitations,
+                    confidence: heuristic.confidence,
+                    evidenceTier: derived.evidenceTier,
+                    source: "AI" as ClassificationSource,
+                    reasoning: `Auto-resolved (heuristic fallback): ${heuristic.reasoning ?? derived.reasoning}`,
+                    isCurrent: true,
+                    createdByUserId: userId,
+                  },
+                })
+              }
+              await tx.stopItem.update({
+                where: { id: stop.id },
+                data: {
+                  state: "ANSWERED",
+                  answeredAt: new Date(),
+                  userAnswer: {
+                    autoResolved: true,
+                    via: "heuristic_fallback",
+                    aiSaidNeedsContext: ai.code === "NEEDS_CONTEXT",
+                    heuristicConfidence: heuristic.confidence,
+                  } as unknown as Prisma.InputJsonValue,
+                },
+              })
+              await tx.auditEvent.create({
+                data: {
+                  userId,
+                  actorType: "AI",
+                  eventType: "STOP_RESOLVED",
+                  entityType: "StopItem",
+                  entityId: stop.id,
+                  afterState: {
+                    code: derived.code,
+                    businessPct: derived.businessPct,
+                    confidence: heuristic.confidence,
+                    autoResolved: true,
+                    via: "heuristic_fallback",
+                  },
+                  rationale: heuristic.reasoning ?? derived.reasoning,
+                },
+              })
+            }, { timeout: 60_000 })
+            resolved++
+            details.push({
+              merchantKey: mk,
+              code: derived.code,
+              confidence: heuristic.confidence,
+              status: "resolved",
+              reason: `heuristic_fallback (AI: ${ai.code} ${ai.confidence.toFixed(2)})`,
+            })
+            continue
+          } catch (err) {
+            console.error("[autoResolveStops] heuristic-fallback write failed for stop", stop.id, err)
+            // Fall through to the persist-suggestion + skipped path below.
+          }
+        }
+      }
+
+      // No usable heuristic — persist the suggestion anyway so the form
+      // pre-fills with the AI's best guess on the next render. Without
+      // this the user faces four blank radios on every STOP that didn't
+      // make the auto-resolve bar.
       const suggestion = aiSuggestionFromResolution(
         stop.category,
         ai.code,
