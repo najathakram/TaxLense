@@ -16,6 +16,7 @@ import { detectNeededMemos } from "@/lib/ai/positionMemo"
 import { computeLedgerHash } from "@/lib/lock/hash"
 import { loadDeliverableContext } from "@/lib/forms/loadDeliverableContext"
 import { DumpPanel } from "./dump-panel"
+import { LockHistory, type LockHistoryEvent } from "@/components/lock-history"
 
 interface Props {
   params: Promise<{ year: string }>
@@ -58,7 +59,7 @@ export default async function FinalizePage({ params }: Props) {
   // takes <100ms) so the drift banner appears whether or not the year is
   // locked. Without this, locked years could silently drift after edits and
   // the master-ledger XLSX would stamp the old hash on new content.
-  const [risk, assertions, reports, counts, neededMemos, currentHash, deliverableCtx] = await Promise.all([
+  const [risk, assertions, reports, counts, neededMemos, currentHash, deliverableCtx, lockEvents] = await Promise.all([
     isLocked ? null : computeRiskScore(taxYear.id),
     isLocked ? null : runLockAssertions(taxYear.id),
     prisma.report.findMany({
@@ -71,7 +72,30 @@ export default async function FinalizePage({ params }: Props) {
     // server-side load → the panel re-evaluates the deliverable list
     // reactively client-side when the user changes the entity dropdown.
     loadDeliverableContext(taxYear.id),
+    // Phase H: lock-history chain — every TAXYEAR_LOCKED / TAXYEAR_UNLOCKED
+    // for this year, ordered most recent first.
+    prisma.auditEvent.findMany({
+      where: {
+        entityType: "TaxYear",
+        entityId: taxYear.id,
+        eventType: { in: ["TAXYEAR_LOCKED", "TAXYEAR_UNLOCKED"] },
+      },
+      orderBy: { occurredAt: "desc" },
+      include: { user: { select: { name: true, email: true } } },
+    }),
   ])
+
+  const lockHistoryEvents: LockHistoryEvent[] = lockEvents.map((e) => {
+    const after = (e.afterState ?? null) as { hash?: string } | null
+    const before = (e.beforeState ?? null) as { priorHash?: string } | null
+    return {
+      occurredAt: e.occurredAt.toISOString().slice(0, 19).replace("T", " "),
+      eventType: e.eventType as "TAXYEAR_LOCKED" | "TAXYEAR_UNLOCKED",
+      rationale: e.rationale ?? null,
+      hash: after?.hash ?? before?.priorHash ?? null,
+      actor: e.user?.name ?? e.user?.email ?? "system",
+    }
+  })
 
   const lockedDrift =
     isLocked &&
@@ -389,6 +413,10 @@ export default async function FinalizePage({ params }: Props) {
           </div>
         )}
       </Section>
+
+      {lockHistoryEvents.length > 0 && (
+        <LockHistory events={lockHistoryEvents} />
+      )}
     </div>
   )
 }

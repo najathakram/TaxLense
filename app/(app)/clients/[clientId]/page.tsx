@@ -8,6 +8,7 @@ import { enterClientSession } from "@/lib/cpa/actions"
 import { Section, Card, Btn, Pill, Avi, Tag, ProgressArc, Risk } from "@/components/v2/primitives"
 import { fmtUSD, fmtDate, statusKey } from "@/components/v2/format"
 import { EnterClientButton } from "./enter-client-button"
+import { TrendStrip, type YearTrendRow } from "@/components/trend-strip"
 
 async function enterAndGo(formData: FormData) {
   "use server"
@@ -45,6 +46,35 @@ export default async function ClientHomePage({ params }: Props) {
 
   const yearStrip = await getClientYearStrip(clientId)
   const allYears = [2026, 2025, 2024, 2023]
+
+  // Phase H: 5-year trend strip with carryforward sums per year.
+  const carryforwards = await prisma.priorYearContext.findMany({
+    where: { taxYear: { userId: clientId } },
+    include: { taxYear: { select: { year: true } } },
+  })
+  const carryByYear = new Map<number, number>()
+  for (const c of carryforwards) {
+    const sum =
+      Number(c.netOperatingLoss?.toString() ?? "0") +
+      Number(c.section179Carryover?.toString() ?? "0") +
+      Number(c.passiveLossCarryforward?.toString() ?? "0") +
+      Number(c.capitalLossShortTerm?.toString() ?? "0") +
+      Number(c.capitalLossLongTerm?.toString() ?? "0") +
+      Number(c.amtCreditCarryforward?.toString() ?? "0") +
+      Number(c.qbiLossCarryforward?.toString() ?? "0") +
+      Number(c.section163jCarryforward?.toString() ?? "0")
+    carryByYear.set(c.taxYear.year, sum)
+  }
+  const trendRows: YearTrendRow[] = yearStrip
+    .filter((s) => s.grossReceipts > 0 || s.totalDeductions > 0)
+    .map((s) => ({
+      year: s.year,
+      status: s.status,
+      receipts: s.grossReceipts,
+      deductions: s.totalDeductions,
+      net: s.netProfit,
+      carryforwardTotal: carryByYear.get(s.year) ?? 0,
+    }))
 
   const recentEvents = await prisma.auditEvent.findMany({
     where: { userId: clientId },
@@ -198,6 +228,12 @@ export default async function ClientHomePage({ params }: Props) {
           })}
         </div>
       </Section>
+
+      {trendRows.length >= 2 && (
+        <div style={{ padding: "0 28px 16px" }}>
+          <TrendStrip rows={trendRows} />
+        </div>
+      )}
 
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, padding: "8px 28px 28px" }}>
         <Card pad={0}>
