@@ -158,7 +158,8 @@ export const StopCategory = {
   TRANSFER: 'TRANSFER',
   PERIOD_GAP: 'PERIOD_GAP',
   DEPOSIT: 'DEPOSIT',
-  SECTION_274D: 'SECTION_274D'
+  SECTION_274D: 'SECTION_274D',
+  P2P_ROUNDTRIP: 'P2P_ROUNDTRIP'
 } as const
 
 export type StopCategory = (typeof StopCategory)[keyof typeof StopCategory]

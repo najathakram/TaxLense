@@ -16,6 +16,7 @@ import { runResidualPass } from "@/lib/ai/residualTransaction"
 import { runBulkClassifyPass } from "@/lib/ai/bulkClassify"
 import { autoResolveStops } from "@/app/(app)/years/[year]/stops/actions"
 import { deriveStopsFromAssertions } from "@/lib/stops/deriveFromAssertions"
+import { deriveP2pRoundTripStops } from "@/lib/pairing/p2pRoundTrip"
 import {
   startPipelineRun,
   executePipelineRun,
@@ -158,7 +159,13 @@ export async function runApplyRules(year: number) {
     // A13 detect (missing meal substantiation and unclassified deposits) so the
     // dashboard and the STOPs queue stay in agreement.
     const stopsFromAssertions = await deriveStopsFromAssertions(taxYearId)
-    return { ...result, ...stopsFromAssertions }
+    // Also detect P2P round-trip counterparties (same person on both sides
+    // of the ledger) — see lib/pairing/p2pRoundTrip.ts. Atif's prod ledger
+    // had Pocketsflow inflows from Kirsten/Shawna and outflows TO the same
+    // people coded as Contract Labor — a logically inconsistent pattern
+    // the CPA must resolve.
+    const p2p = await deriveP2pRoundTripStops(taxYearId)
+    return { ...result, ...stopsFromAssertions, p2pCounterpartyStops: p2p.counterpartyStops }
   })
 }
 
@@ -219,12 +226,19 @@ export async function runCpaAgentAction(year: number) {
     // because the agent never emits DEPOSIT-category stops itself.
     let depositStops = 0
     let section274dStops = 0
+    let p2pCounterpartyStops = 0
     try {
       const dr = await deriveStopsFromAssertions(taxYearId)
       depositStops = dr.depositStops
       section274dStops = dr.section274dStops
     } catch (err) {
       console.error("[runCpaAgent] deriveStopsFromAssertions failed:", err)
+    }
+    try {
+      const p2p = await deriveP2pRoundTripStops(taxYearId)
+      p2pCounterpartyStops = p2p.counterpartyStops
+    } catch (err) {
+      console.error("[runCpaAgent] deriveP2pRoundTripStops failed:", err)
     }
     return {
       rowsConsidered: result.rowsConsidered,
@@ -235,6 +249,7 @@ export async function runCpaAgentAction(year: number) {
       archivedStops: result.archivedStops,
       depositStops,
       section274dStops,
+      p2pCounterpartyStops,
       summary: result.memo.summary,
     }
   })

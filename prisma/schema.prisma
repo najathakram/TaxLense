@@ -146,6 +146,13 @@ enum StopCategory {
   PERIOD_GAP
   DEPOSIT
   SECTION_274D
+  // Same counterparty appears on BOTH sides of the ledger — inflows from
+  // person X AND outflows to person X. The two sides are typically classified
+  // independently (inflow → NEEDS_CONTEXT $0 income, outflow → Contract Labor
+  // 100% deductible) creating an asymmetric "best of both worlds" pattern.
+  // The CPA must resolve the relationship: personal P2P / customer-and-refund
+  // / contractor (1099 required). One STOP per counterparty groups all txns.
+  P2P_ROUNDTRIP
 }
 
 enum StopState {
