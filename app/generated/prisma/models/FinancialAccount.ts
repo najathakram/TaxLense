@@ -219,6 +219,7 @@ export type FinancialAccountWhereInput = {
   statementImports?: Prisma.StatementImportListRelationFilter
   transactions?: Prisma.TransactionListRelationFilter
   yearLinks?: Prisma.AccountYearLinkListRelationFilter
+  inactiveMonths?: Prisma.AccountInactiveMonthListRelationFilter
 }
 
 export type FinancialAccountOrderByWithRelationInput = {
@@ -236,6 +237,7 @@ export type FinancialAccountOrderByWithRelationInput = {
   statementImports?: Prisma.StatementImportOrderByRelationAggregateInput
   transactions?: Prisma.TransactionOrderByRelationAggregateInput
   yearLinks?: Prisma.AccountYearLinkOrderByRelationAggregateInput
+  inactiveMonths?: Prisma.AccountInactiveMonthOrderByRelationAggregateInput
 }
 
 export type FinancialAccountWhereUniqueInput = Prisma.AtLeast<{
@@ -256,6 +258,7 @@ export type FinancialAccountWhereUniqueInput = Prisma.AtLeast<{
   statementImports?: Prisma.StatementImportListRelationFilter
   transactions?: Prisma.TransactionListRelationFilter
   yearLinks?: Prisma.AccountYearLinkListRelationFilter
+  inactiveMonths?: Prisma.AccountInactiveMonthListRelationFilter
 }, "id">
 
 export type FinancialAccountOrderByWithAggregationInput = {
@@ -301,6 +304,7 @@ export type FinancialAccountCreateInput = {
   statementImports?: Prisma.StatementImportCreateNestedManyWithoutAccountInput
   transactions?: Prisma.TransactionCreateNestedManyWithoutAccountInput
   yearLinks?: Prisma.AccountYearLinkCreateNestedManyWithoutAccountInput
+  inactiveMonths?: Prisma.AccountInactiveMonthCreateNestedManyWithoutAccountInput
 }
 
 export type FinancialAccountUncheckedCreateInput = {
@@ -316,6 +320,7 @@ export type FinancialAccountUncheckedCreateInput = {
   statementImports?: Prisma.StatementImportUncheckedCreateNestedManyWithoutAccountInput
   transactions?: Prisma.TransactionUncheckedCreateNestedManyWithoutAccountInput
   yearLinks?: Prisma.AccountYearLinkUncheckedCreateNestedManyWithoutAccountInput
+  inactiveMonths?: Prisma.AccountInactiveMonthUncheckedCreateNestedManyWithoutAccountInput
 }
 
 export type FinancialAccountUpdateInput = {
@@ -331,6 +336,7 @@ export type FinancialAccountUpdateInput = {
   statementImports?: Prisma.StatementImportUpdateManyWithoutAccountNestedInput
   transactions?: Prisma.TransactionUpdateManyWithoutAccountNestedInput
   yearLinks?: Prisma.AccountYearLinkUpdateManyWithoutAccountNestedInput
+  inactiveMonths?: Prisma.AccountInactiveMonthUpdateManyWithoutAccountNestedInput
 }
 
 export type FinancialAccountUncheckedUpdateInput = {
@@ -346,6 +352,7 @@ export type FinancialAccountUncheckedUpdateInput = {
   statementImports?: Prisma.StatementImportUncheckedUpdateManyWithoutAccountNestedInput
   transactions?: Prisma.TransactionUncheckedUpdateManyWithoutAccountNestedInput
   yearLinks?: Prisma.AccountYearLinkUncheckedUpdateManyWithoutAccountNestedInput
+  inactiveMonths?: Prisma.AccountInactiveMonthUncheckedUpdateManyWithoutAccountNestedInput
 }
 
 export type FinancialAccountCreateManyInput = {
@@ -539,6 +546,20 @@ export type FinancialAccountUpdateOneRequiredWithoutYearLinksNestedInput = {
   update?: Prisma.XOR<Prisma.XOR<Prisma.FinancialAccountUpdateToOneWithWhereWithoutYearLinksInput, Prisma.FinancialAccountUpdateWithoutYearLinksInput>, Prisma.FinancialAccountUncheckedUpdateWithoutYearLinksInput>
 }
 
+export type FinancialAccountCreateNestedOneWithoutInactiveMonthsInput = {
+  create?: Prisma.XOR<Prisma.FinancialAccountCreateWithoutInactiveMonthsInput, Prisma.FinancialAccountUncheckedCreateWithoutInactiveMonthsInput>
+  connectOrCreate?: Prisma.FinancialAccountCreateOrConnectWithoutInactiveMonthsInput
+  connect?: Prisma.FinancialAccountWhereUniqueInput
+}
+
+export type FinancialAccountUpdateOneRequiredWithoutInactiveMonthsNestedInput = {
+  create?: Prisma.XOR<Prisma.FinancialAccountCreateWithoutInactiveMonthsInput, Prisma.FinancialAccountUncheckedCreateWithoutInactiveMonthsInput>
+  connectOrCreate?: Prisma.FinancialAccountCreateOrConnectWithoutInactiveMonthsInput
+  upsert?: Prisma.FinancialAccountUpsertWithoutInactiveMonthsInput
+  connect?: Prisma.FinancialAccountWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.FinancialAccountUpdateToOneWithWhereWithoutInactiveMonthsInput, Prisma.FinancialAccountUpdateWithoutInactiveMonthsInput>, Prisma.FinancialAccountUncheckedUpdateWithoutInactiveMonthsInput>
+}
+
 export type FinancialAccountCreateNestedOneWithoutStatementImportsInput = {
   create?: Prisma.XOR<Prisma.FinancialAccountCreateWithoutStatementImportsInput, Prisma.FinancialAccountUncheckedCreateWithoutStatementImportsInput>
   connectOrCreate?: Prisma.FinancialAccountCreateOrConnectWithoutStatementImportsInput
@@ -579,6 +600,7 @@ export type FinancialAccountCreateWithoutUserInput = {
   statementImports?: Prisma.StatementImportCreateNestedManyWithoutAccountInput
   transactions?: Prisma.TransactionCreateNestedManyWithoutAccountInput
   yearLinks?: Prisma.AccountYearLinkCreateNestedManyWithoutAccountInput
+  inactiveMonths?: Prisma.AccountInactiveMonthCreateNestedManyWithoutAccountInput
 }
 
 export type FinancialAccountUncheckedCreateWithoutUserInput = {
@@ -593,6 +615,7 @@ export type FinancialAccountUncheckedCreateWithoutUserInput = {
   statementImports?: Prisma.StatementImportUncheckedCreateNestedManyWithoutAccountInput
   transactions?: Prisma.TransactionUncheckedCreateNestedManyWithoutAccountInput
   yearLinks?: Prisma.AccountYearLinkUncheckedCreateNestedManyWithoutAccountInput
+  inactiveMonths?: Prisma.AccountInactiveMonthUncheckedCreateNestedManyWithoutAccountInput
 }
 
 export type FinancialAccountCreateOrConnectWithoutUserInput = {
@@ -648,6 +671,7 @@ export type FinancialAccountCreateWithoutTaxYearInput = {
   statementImports?: Prisma.StatementImportCreateNestedManyWithoutAccountInput
   transactions?: Prisma.TransactionCreateNestedManyWithoutAccountInput
   yearLinks?: Prisma.AccountYearLinkCreateNestedManyWithoutAccountInput
+  inactiveMonths?: Prisma.AccountInactiveMonthCreateNestedManyWithoutAccountInput
 }
 
 export type FinancialAccountUncheckedCreateWithoutTaxYearInput = {
@@ -662,6 +686,7 @@ export type FinancialAccountUncheckedCreateWithoutTaxYearInput = {
   statementImports?: Prisma.StatementImportUncheckedCreateNestedManyWithoutAccountInput
   transactions?: Prisma.TransactionUncheckedCreateNestedManyWithoutAccountInput
   yearLinks?: Prisma.AccountYearLinkUncheckedCreateNestedManyWithoutAccountInput
+  inactiveMonths?: Prisma.AccountInactiveMonthUncheckedCreateNestedManyWithoutAccountInput
 }
 
 export type FinancialAccountCreateOrConnectWithoutTaxYearInput = {
@@ -702,6 +727,7 @@ export type FinancialAccountCreateWithoutYearLinksInput = {
   taxYear: Prisma.TaxYearCreateNestedOneWithoutFinancialAccountsInput
   statementImports?: Prisma.StatementImportCreateNestedManyWithoutAccountInput
   transactions?: Prisma.TransactionCreateNestedManyWithoutAccountInput
+  inactiveMonths?: Prisma.AccountInactiveMonthCreateNestedManyWithoutAccountInput
 }
 
 export type FinancialAccountUncheckedCreateWithoutYearLinksInput = {
@@ -716,6 +742,7 @@ export type FinancialAccountUncheckedCreateWithoutYearLinksInput = {
   isPrimaryBusiness?: boolean
   statementImports?: Prisma.StatementImportUncheckedCreateNestedManyWithoutAccountInput
   transactions?: Prisma.TransactionUncheckedCreateNestedManyWithoutAccountInput
+  inactiveMonths?: Prisma.AccountInactiveMonthUncheckedCreateNestedManyWithoutAccountInput
 }
 
 export type FinancialAccountCreateOrConnectWithoutYearLinksInput = {
@@ -746,6 +773,7 @@ export type FinancialAccountUpdateWithoutYearLinksInput = {
   taxYear?: Prisma.TaxYearUpdateOneRequiredWithoutFinancialAccountsNestedInput
   statementImports?: Prisma.StatementImportUpdateManyWithoutAccountNestedInput
   transactions?: Prisma.TransactionUpdateManyWithoutAccountNestedInput
+  inactiveMonths?: Prisma.AccountInactiveMonthUpdateManyWithoutAccountNestedInput
 }
 
 export type FinancialAccountUncheckedUpdateWithoutYearLinksInput = {
@@ -760,6 +788,83 @@ export type FinancialAccountUncheckedUpdateWithoutYearLinksInput = {
   isPrimaryBusiness?: Prisma.BoolFieldUpdateOperationsInput | boolean
   statementImports?: Prisma.StatementImportUncheckedUpdateManyWithoutAccountNestedInput
   transactions?: Prisma.TransactionUncheckedUpdateManyWithoutAccountNestedInput
+  inactiveMonths?: Prisma.AccountInactiveMonthUncheckedUpdateManyWithoutAccountNestedInput
+}
+
+export type FinancialAccountCreateWithoutInactiveMonthsInput = {
+  id?: string
+  type: $Enums.AccountType
+  kind?: $Enums.AccountKind
+  institution: string
+  mask?: string | null
+  nickname?: string | null
+  isPrimaryBusiness?: boolean
+  user: Prisma.UserCreateNestedOneWithoutFinancialAccountsInput
+  taxYear: Prisma.TaxYearCreateNestedOneWithoutFinancialAccountsInput
+  statementImports?: Prisma.StatementImportCreateNestedManyWithoutAccountInput
+  transactions?: Prisma.TransactionCreateNestedManyWithoutAccountInput
+  yearLinks?: Prisma.AccountYearLinkCreateNestedManyWithoutAccountInput
+}
+
+export type FinancialAccountUncheckedCreateWithoutInactiveMonthsInput = {
+  id?: string
+  userId: string
+  taxYearId: string
+  type: $Enums.AccountType
+  kind?: $Enums.AccountKind
+  institution: string
+  mask?: string | null
+  nickname?: string | null
+  isPrimaryBusiness?: boolean
+  statementImports?: Prisma.StatementImportUncheckedCreateNestedManyWithoutAccountInput
+  transactions?: Prisma.TransactionUncheckedCreateNestedManyWithoutAccountInput
+  yearLinks?: Prisma.AccountYearLinkUncheckedCreateNestedManyWithoutAccountInput
+}
+
+export type FinancialAccountCreateOrConnectWithoutInactiveMonthsInput = {
+  where: Prisma.FinancialAccountWhereUniqueInput
+  create: Prisma.XOR<Prisma.FinancialAccountCreateWithoutInactiveMonthsInput, Prisma.FinancialAccountUncheckedCreateWithoutInactiveMonthsInput>
+}
+
+export type FinancialAccountUpsertWithoutInactiveMonthsInput = {
+  update: Prisma.XOR<Prisma.FinancialAccountUpdateWithoutInactiveMonthsInput, Prisma.FinancialAccountUncheckedUpdateWithoutInactiveMonthsInput>
+  create: Prisma.XOR<Prisma.FinancialAccountCreateWithoutInactiveMonthsInput, Prisma.FinancialAccountUncheckedCreateWithoutInactiveMonthsInput>
+  where?: Prisma.FinancialAccountWhereInput
+}
+
+export type FinancialAccountUpdateToOneWithWhereWithoutInactiveMonthsInput = {
+  where?: Prisma.FinancialAccountWhereInput
+  data: Prisma.XOR<Prisma.FinancialAccountUpdateWithoutInactiveMonthsInput, Prisma.FinancialAccountUncheckedUpdateWithoutInactiveMonthsInput>
+}
+
+export type FinancialAccountUpdateWithoutInactiveMonthsInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  type?: Prisma.EnumAccountTypeFieldUpdateOperationsInput | $Enums.AccountType
+  kind?: Prisma.EnumAccountKindFieldUpdateOperationsInput | $Enums.AccountKind
+  institution?: Prisma.StringFieldUpdateOperationsInput | string
+  mask?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  nickname?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  isPrimaryBusiness?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  user?: Prisma.UserUpdateOneRequiredWithoutFinancialAccountsNestedInput
+  taxYear?: Prisma.TaxYearUpdateOneRequiredWithoutFinancialAccountsNestedInput
+  statementImports?: Prisma.StatementImportUpdateManyWithoutAccountNestedInput
+  transactions?: Prisma.TransactionUpdateManyWithoutAccountNestedInput
+  yearLinks?: Prisma.AccountYearLinkUpdateManyWithoutAccountNestedInput
+}
+
+export type FinancialAccountUncheckedUpdateWithoutInactiveMonthsInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  userId?: Prisma.StringFieldUpdateOperationsInput | string
+  taxYearId?: Prisma.StringFieldUpdateOperationsInput | string
+  type?: Prisma.EnumAccountTypeFieldUpdateOperationsInput | $Enums.AccountType
+  kind?: Prisma.EnumAccountKindFieldUpdateOperationsInput | $Enums.AccountKind
+  institution?: Prisma.StringFieldUpdateOperationsInput | string
+  mask?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  nickname?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  isPrimaryBusiness?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  statementImports?: Prisma.StatementImportUncheckedUpdateManyWithoutAccountNestedInput
+  transactions?: Prisma.TransactionUncheckedUpdateManyWithoutAccountNestedInput
+  yearLinks?: Prisma.AccountYearLinkUncheckedUpdateManyWithoutAccountNestedInput
 }
 
 export type FinancialAccountCreateWithoutStatementImportsInput = {
@@ -774,6 +879,7 @@ export type FinancialAccountCreateWithoutStatementImportsInput = {
   taxYear: Prisma.TaxYearCreateNestedOneWithoutFinancialAccountsInput
   transactions?: Prisma.TransactionCreateNestedManyWithoutAccountInput
   yearLinks?: Prisma.AccountYearLinkCreateNestedManyWithoutAccountInput
+  inactiveMonths?: Prisma.AccountInactiveMonthCreateNestedManyWithoutAccountInput
 }
 
 export type FinancialAccountUncheckedCreateWithoutStatementImportsInput = {
@@ -788,6 +894,7 @@ export type FinancialAccountUncheckedCreateWithoutStatementImportsInput = {
   isPrimaryBusiness?: boolean
   transactions?: Prisma.TransactionUncheckedCreateNestedManyWithoutAccountInput
   yearLinks?: Prisma.AccountYearLinkUncheckedCreateNestedManyWithoutAccountInput
+  inactiveMonths?: Prisma.AccountInactiveMonthUncheckedCreateNestedManyWithoutAccountInput
 }
 
 export type FinancialAccountCreateOrConnectWithoutStatementImportsInput = {
@@ -818,6 +925,7 @@ export type FinancialAccountUpdateWithoutStatementImportsInput = {
   taxYear?: Prisma.TaxYearUpdateOneRequiredWithoutFinancialAccountsNestedInput
   transactions?: Prisma.TransactionUpdateManyWithoutAccountNestedInput
   yearLinks?: Prisma.AccountYearLinkUpdateManyWithoutAccountNestedInput
+  inactiveMonths?: Prisma.AccountInactiveMonthUpdateManyWithoutAccountNestedInput
 }
 
 export type FinancialAccountUncheckedUpdateWithoutStatementImportsInput = {
@@ -832,6 +940,7 @@ export type FinancialAccountUncheckedUpdateWithoutStatementImportsInput = {
   isPrimaryBusiness?: Prisma.BoolFieldUpdateOperationsInput | boolean
   transactions?: Prisma.TransactionUncheckedUpdateManyWithoutAccountNestedInput
   yearLinks?: Prisma.AccountYearLinkUncheckedUpdateManyWithoutAccountNestedInput
+  inactiveMonths?: Prisma.AccountInactiveMonthUncheckedUpdateManyWithoutAccountNestedInput
 }
 
 export type FinancialAccountCreateWithoutTransactionsInput = {
@@ -846,6 +955,7 @@ export type FinancialAccountCreateWithoutTransactionsInput = {
   taxYear: Prisma.TaxYearCreateNestedOneWithoutFinancialAccountsInput
   statementImports?: Prisma.StatementImportCreateNestedManyWithoutAccountInput
   yearLinks?: Prisma.AccountYearLinkCreateNestedManyWithoutAccountInput
+  inactiveMonths?: Prisma.AccountInactiveMonthCreateNestedManyWithoutAccountInput
 }
 
 export type FinancialAccountUncheckedCreateWithoutTransactionsInput = {
@@ -860,6 +970,7 @@ export type FinancialAccountUncheckedCreateWithoutTransactionsInput = {
   isPrimaryBusiness?: boolean
   statementImports?: Prisma.StatementImportUncheckedCreateNestedManyWithoutAccountInput
   yearLinks?: Prisma.AccountYearLinkUncheckedCreateNestedManyWithoutAccountInput
+  inactiveMonths?: Prisma.AccountInactiveMonthUncheckedCreateNestedManyWithoutAccountInput
 }
 
 export type FinancialAccountCreateOrConnectWithoutTransactionsInput = {
@@ -890,6 +1001,7 @@ export type FinancialAccountUpdateWithoutTransactionsInput = {
   taxYear?: Prisma.TaxYearUpdateOneRequiredWithoutFinancialAccountsNestedInput
   statementImports?: Prisma.StatementImportUpdateManyWithoutAccountNestedInput
   yearLinks?: Prisma.AccountYearLinkUpdateManyWithoutAccountNestedInput
+  inactiveMonths?: Prisma.AccountInactiveMonthUpdateManyWithoutAccountNestedInput
 }
 
 export type FinancialAccountUncheckedUpdateWithoutTransactionsInput = {
@@ -904,6 +1016,7 @@ export type FinancialAccountUncheckedUpdateWithoutTransactionsInput = {
   isPrimaryBusiness?: Prisma.BoolFieldUpdateOperationsInput | boolean
   statementImports?: Prisma.StatementImportUncheckedUpdateManyWithoutAccountNestedInput
   yearLinks?: Prisma.AccountYearLinkUncheckedUpdateManyWithoutAccountNestedInput
+  inactiveMonths?: Prisma.AccountInactiveMonthUncheckedUpdateManyWithoutAccountNestedInput
 }
 
 export type FinancialAccountCreateManyUserInput = {
@@ -929,6 +1042,7 @@ export type FinancialAccountUpdateWithoutUserInput = {
   statementImports?: Prisma.StatementImportUpdateManyWithoutAccountNestedInput
   transactions?: Prisma.TransactionUpdateManyWithoutAccountNestedInput
   yearLinks?: Prisma.AccountYearLinkUpdateManyWithoutAccountNestedInput
+  inactiveMonths?: Prisma.AccountInactiveMonthUpdateManyWithoutAccountNestedInput
 }
 
 export type FinancialAccountUncheckedUpdateWithoutUserInput = {
@@ -943,6 +1057,7 @@ export type FinancialAccountUncheckedUpdateWithoutUserInput = {
   statementImports?: Prisma.StatementImportUncheckedUpdateManyWithoutAccountNestedInput
   transactions?: Prisma.TransactionUncheckedUpdateManyWithoutAccountNestedInput
   yearLinks?: Prisma.AccountYearLinkUncheckedUpdateManyWithoutAccountNestedInput
+  inactiveMonths?: Prisma.AccountInactiveMonthUncheckedUpdateManyWithoutAccountNestedInput
 }
 
 export type FinancialAccountUncheckedUpdateManyWithoutUserInput = {
@@ -979,6 +1094,7 @@ export type FinancialAccountUpdateWithoutTaxYearInput = {
   statementImports?: Prisma.StatementImportUpdateManyWithoutAccountNestedInput
   transactions?: Prisma.TransactionUpdateManyWithoutAccountNestedInput
   yearLinks?: Prisma.AccountYearLinkUpdateManyWithoutAccountNestedInput
+  inactiveMonths?: Prisma.AccountInactiveMonthUpdateManyWithoutAccountNestedInput
 }
 
 export type FinancialAccountUncheckedUpdateWithoutTaxYearInput = {
@@ -993,6 +1109,7 @@ export type FinancialAccountUncheckedUpdateWithoutTaxYearInput = {
   statementImports?: Prisma.StatementImportUncheckedUpdateManyWithoutAccountNestedInput
   transactions?: Prisma.TransactionUncheckedUpdateManyWithoutAccountNestedInput
   yearLinks?: Prisma.AccountYearLinkUncheckedUpdateManyWithoutAccountNestedInput
+  inactiveMonths?: Prisma.AccountInactiveMonthUncheckedUpdateManyWithoutAccountNestedInput
 }
 
 export type FinancialAccountUncheckedUpdateManyWithoutTaxYearInput = {
@@ -1015,12 +1132,14 @@ export type FinancialAccountCountOutputType = {
   statementImports: number
   transactions: number
   yearLinks: number
+  inactiveMonths: number
 }
 
 export type FinancialAccountCountOutputTypeSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   statementImports?: boolean | FinancialAccountCountOutputTypeCountStatementImportsArgs
   transactions?: boolean | FinancialAccountCountOutputTypeCountTransactionsArgs
   yearLinks?: boolean | FinancialAccountCountOutputTypeCountYearLinksArgs
+  inactiveMonths?: boolean | FinancialAccountCountOutputTypeCountInactiveMonthsArgs
 }
 
 /**
@@ -1054,6 +1173,13 @@ export type FinancialAccountCountOutputTypeCountYearLinksArgs<ExtArgs extends ru
   where?: Prisma.AccountYearLinkWhereInput
 }
 
+/**
+ * FinancialAccountCountOutputType without action
+ */
+export type FinancialAccountCountOutputTypeCountInactiveMonthsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.AccountInactiveMonthWhereInput
+}
+
 
 export type FinancialAccountSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   id?: boolean
@@ -1070,6 +1196,7 @@ export type FinancialAccountSelect<ExtArgs extends runtime.Types.Extensions.Inte
   statementImports?: boolean | Prisma.FinancialAccount$statementImportsArgs<ExtArgs>
   transactions?: boolean | Prisma.FinancialAccount$transactionsArgs<ExtArgs>
   yearLinks?: boolean | Prisma.FinancialAccount$yearLinksArgs<ExtArgs>
+  inactiveMonths?: boolean | Prisma.FinancialAccount$inactiveMonthsArgs<ExtArgs>
   _count?: boolean | Prisma.FinancialAccountCountOutputTypeDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["financialAccount"]>
 
@@ -1120,6 +1247,7 @@ export type FinancialAccountInclude<ExtArgs extends runtime.Types.Extensions.Int
   statementImports?: boolean | Prisma.FinancialAccount$statementImportsArgs<ExtArgs>
   transactions?: boolean | Prisma.FinancialAccount$transactionsArgs<ExtArgs>
   yearLinks?: boolean | Prisma.FinancialAccount$yearLinksArgs<ExtArgs>
+  inactiveMonths?: boolean | Prisma.FinancialAccount$inactiveMonthsArgs<ExtArgs>
   _count?: boolean | Prisma.FinancialAccountCountOutputTypeDefaultArgs<ExtArgs>
 }
 export type FinancialAccountIncludeCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
@@ -1139,6 +1267,7 @@ export type $FinancialAccountPayload<ExtArgs extends runtime.Types.Extensions.In
     statementImports: Prisma.$StatementImportPayload<ExtArgs>[]
     transactions: Prisma.$TransactionPayload<ExtArgs>[]
     yearLinks: Prisma.$AccountYearLinkPayload<ExtArgs>[]
+    inactiveMonths: Prisma.$AccountInactiveMonthPayload<ExtArgs>[]
   }
   scalars: runtime.Types.Extensions.GetPayloadResult<{
     id: string
@@ -1549,6 +1678,7 @@ export interface Prisma__FinancialAccountClient<T, Null = never, ExtArgs extends
   statementImports<T extends Prisma.FinancialAccount$statementImportsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.FinancialAccount$statementImportsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$StatementImportPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   transactions<T extends Prisma.FinancialAccount$transactionsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.FinancialAccount$transactionsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$TransactionPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   yearLinks<T extends Prisma.FinancialAccount$yearLinksArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.FinancialAccount$yearLinksArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$AccountYearLinkPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+  inactiveMonths<T extends Prisma.FinancialAccount$inactiveMonthsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.FinancialAccount$inactiveMonthsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$AccountInactiveMonthPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   /**
    * Attaches callbacks for the resolution and/or rejection of the Promise.
    * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -2057,6 +2187,30 @@ export type FinancialAccount$yearLinksArgs<ExtArgs extends runtime.Types.Extensi
   take?: number
   skip?: number
   distinct?: Prisma.AccountYearLinkScalarFieldEnum | Prisma.AccountYearLinkScalarFieldEnum[]
+}
+
+/**
+ * FinancialAccount.inactiveMonths
+ */
+export type FinancialAccount$inactiveMonthsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the AccountInactiveMonth
+   */
+  select?: Prisma.AccountInactiveMonthSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the AccountInactiveMonth
+   */
+  omit?: Prisma.AccountInactiveMonthOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.AccountInactiveMonthInclude<ExtArgs> | null
+  where?: Prisma.AccountInactiveMonthWhereInput
+  orderBy?: Prisma.AccountInactiveMonthOrderByWithRelationInput | Prisma.AccountInactiveMonthOrderByWithRelationInput[]
+  cursor?: Prisma.AccountInactiveMonthWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.AccountInactiveMonthScalarFieldEnum | Prisma.AccountInactiveMonthScalarFieldEnum[]
 }
 
 /**

@@ -397,6 +397,7 @@ export const ModelName = {
   Owner: 'Owner',
   FinancialAccount: 'FinancialAccount',
   AccountYearLink: 'AccountYearLink',
+  AccountInactiveMonth: 'AccountInactiveMonth',
   StatementImport: 'StatementImport',
   ImportSession: 'ImportSession',
   PipelineRun: 'PipelineRun',
@@ -422,7 +423,7 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
     omit: GlobalOmitOptions
   }
   meta: {
-    modelProps: "user" | "cpaClient" | "account" | "session" | "verificationToken" | "ruleVersion" | "taxYear" | "businessProfile" | "knownEntity" | "trip" | "owner" | "financialAccount" | "accountYearLink" | "statementImport" | "importSession" | "pipelineRun" | "transaction" | "classification" | "merchantRule" | "stopItem" | "auditEvent" | "report" | "document"
+    modelProps: "user" | "cpaClient" | "account" | "session" | "verificationToken" | "ruleVersion" | "taxYear" | "businessProfile" | "knownEntity" | "trip" | "owner" | "financialAccount" | "accountYearLink" | "accountInactiveMonth" | "statementImport" | "importSession" | "pipelineRun" | "transaction" | "classification" | "merchantRule" | "stopItem" | "auditEvent" | "report" | "document"
     txIsolationLevel: TransactionIsolationLevel
   }
   model: {
@@ -1385,6 +1386,80 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
         count: {
           args: Prisma.AccountYearLinkCountArgs<ExtArgs>
           result: runtime.Types.Utils.Optional<Prisma.AccountYearLinkCountAggregateOutputType> | number
+        }
+      }
+    }
+    AccountInactiveMonth: {
+      payload: Prisma.$AccountInactiveMonthPayload<ExtArgs>
+      fields: Prisma.AccountInactiveMonthFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.AccountInactiveMonthFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AccountInactiveMonthPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.AccountInactiveMonthFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AccountInactiveMonthPayload>
+        }
+        findFirst: {
+          args: Prisma.AccountInactiveMonthFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AccountInactiveMonthPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.AccountInactiveMonthFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AccountInactiveMonthPayload>
+        }
+        findMany: {
+          args: Prisma.AccountInactiveMonthFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AccountInactiveMonthPayload>[]
+        }
+        create: {
+          args: Prisma.AccountInactiveMonthCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AccountInactiveMonthPayload>
+        }
+        createMany: {
+          args: Prisma.AccountInactiveMonthCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.AccountInactiveMonthCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AccountInactiveMonthPayload>[]
+        }
+        delete: {
+          args: Prisma.AccountInactiveMonthDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AccountInactiveMonthPayload>
+        }
+        update: {
+          args: Prisma.AccountInactiveMonthUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AccountInactiveMonthPayload>
+        }
+        deleteMany: {
+          args: Prisma.AccountInactiveMonthDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.AccountInactiveMonthUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.AccountInactiveMonthUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AccountInactiveMonthPayload>[]
+        }
+        upsert: {
+          args: Prisma.AccountInactiveMonthUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AccountInactiveMonthPayload>
+        }
+        aggregate: {
+          args: Prisma.AccountInactiveMonthAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateAccountInactiveMonth>
+        }
+        groupBy: {
+          args: Prisma.AccountInactiveMonthGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AccountInactiveMonthGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.AccountInactiveMonthCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AccountInactiveMonthCountAggregateOutputType> | number
         }
       }
     }
@@ -2355,6 +2430,20 @@ export const AccountYearLinkScalarFieldEnum = {
 export type AccountYearLinkScalarFieldEnum = (typeof AccountYearLinkScalarFieldEnum)[keyof typeof AccountYearLinkScalarFieldEnum]
 
 
+export const AccountInactiveMonthScalarFieldEnum = {
+  id: 'id',
+  accountId: 'accountId',
+  taxYearId: 'taxYearId',
+  year: 'year',
+  month: 'month',
+  reason: 'reason',
+  attestedBy: 'attestedBy',
+  attestedAt: 'attestedAt'
+} as const
+
+export type AccountInactiveMonthScalarFieldEnum = (typeof AccountInactiveMonthScalarFieldEnum)[keyof typeof AccountInactiveMonthScalarFieldEnum]
+
+
 export const StatementImportScalarFieldEnum = {
   id: 'id',
   accountId: 'accountId',
@@ -3077,6 +3166,7 @@ export type GlobalOmitConfig = {
   owner?: Prisma.OwnerOmit
   financialAccount?: Prisma.FinancialAccountOmit
   accountYearLink?: Prisma.AccountYearLinkOmit
+  accountInactiveMonth?: Prisma.AccountInactiveMonthOmit
   statementImport?: Prisma.StatementImportOmit
   importSession?: Prisma.ImportSessionOmit
   pipelineRun?: Prisma.PipelineRunOmit

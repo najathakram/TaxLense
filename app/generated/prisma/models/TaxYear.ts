@@ -257,6 +257,7 @@ export type TaxYearWhereInput = {
   importSessions?: Prisma.ImportSessionListRelationFilter
   documents?: Prisma.DocumentListRelationFilter
   pipelineRuns?: Prisma.PipelineRunListRelationFilter
+  inactiveMonths?: Prisma.AccountInactiveMonthListRelationFilter
 }
 
 export type TaxYearOrderByWithRelationInput = {
@@ -282,6 +283,7 @@ export type TaxYearOrderByWithRelationInput = {
   importSessions?: Prisma.ImportSessionOrderByRelationAggregateInput
   documents?: Prisma.DocumentOrderByRelationAggregateInput
   pipelineRuns?: Prisma.PipelineRunOrderByRelationAggregateInput
+  inactiveMonths?: Prisma.AccountInactiveMonthOrderByRelationAggregateInput
 }
 
 export type TaxYearWhereUniqueInput = Prisma.AtLeast<{
@@ -311,6 +313,7 @@ export type TaxYearWhereUniqueInput = Prisma.AtLeast<{
   importSessions?: Prisma.ImportSessionListRelationFilter
   documents?: Prisma.DocumentListRelationFilter
   pipelineRuns?: Prisma.PipelineRunListRelationFilter
+  inactiveMonths?: Prisma.AccountInactiveMonthListRelationFilter
 }, "id" | "userId_year">
 
 export type TaxYearOrderByWithAggregationInput = {
@@ -366,6 +369,7 @@ export type TaxYearCreateInput = {
   importSessions?: Prisma.ImportSessionCreateNestedManyWithoutTaxYearInput
   documents?: Prisma.DocumentCreateNestedManyWithoutTaxYearInput
   pipelineRuns?: Prisma.PipelineRunCreateNestedManyWithoutTaxYearInput
+  inactiveMonths?: Prisma.AccountInactiveMonthCreateNestedManyWithoutTaxYearInput
 }
 
 export type TaxYearUncheckedCreateInput = {
@@ -389,6 +393,7 @@ export type TaxYearUncheckedCreateInput = {
   importSessions?: Prisma.ImportSessionUncheckedCreateNestedManyWithoutTaxYearInput
   documents?: Prisma.DocumentUncheckedCreateNestedManyWithoutTaxYearInput
   pipelineRuns?: Prisma.PipelineRunUncheckedCreateNestedManyWithoutTaxYearInput
+  inactiveMonths?: Prisma.AccountInactiveMonthUncheckedCreateNestedManyWithoutTaxYearInput
 }
 
 export type TaxYearUpdateInput = {
@@ -412,6 +417,7 @@ export type TaxYearUpdateInput = {
   importSessions?: Prisma.ImportSessionUpdateManyWithoutTaxYearNestedInput
   documents?: Prisma.DocumentUpdateManyWithoutTaxYearNestedInput
   pipelineRuns?: Prisma.PipelineRunUpdateManyWithoutTaxYearNestedInput
+  inactiveMonths?: Prisma.AccountInactiveMonthUpdateManyWithoutTaxYearNestedInput
 }
 
 export type TaxYearUncheckedUpdateInput = {
@@ -435,6 +441,7 @@ export type TaxYearUncheckedUpdateInput = {
   importSessions?: Prisma.ImportSessionUncheckedUpdateManyWithoutTaxYearNestedInput
   documents?: Prisma.DocumentUncheckedUpdateManyWithoutTaxYearNestedInput
   pipelineRuns?: Prisma.PipelineRunUncheckedUpdateManyWithoutTaxYearNestedInput
+  inactiveMonths?: Prisma.AccountInactiveMonthUncheckedUpdateManyWithoutTaxYearNestedInput
 }
 
 export type TaxYearCreateManyInput = {
@@ -676,6 +683,20 @@ export type TaxYearUpdateOneRequiredWithoutAccountYearLinksNestedInput = {
   update?: Prisma.XOR<Prisma.XOR<Prisma.TaxYearUpdateToOneWithWhereWithoutAccountYearLinksInput, Prisma.TaxYearUpdateWithoutAccountYearLinksInput>, Prisma.TaxYearUncheckedUpdateWithoutAccountYearLinksInput>
 }
 
+export type TaxYearCreateNestedOneWithoutInactiveMonthsInput = {
+  create?: Prisma.XOR<Prisma.TaxYearCreateWithoutInactiveMonthsInput, Prisma.TaxYearUncheckedCreateWithoutInactiveMonthsInput>
+  connectOrCreate?: Prisma.TaxYearCreateOrConnectWithoutInactiveMonthsInput
+  connect?: Prisma.TaxYearWhereUniqueInput
+}
+
+export type TaxYearUpdateOneRequiredWithoutInactiveMonthsNestedInput = {
+  create?: Prisma.XOR<Prisma.TaxYearCreateWithoutInactiveMonthsInput, Prisma.TaxYearUncheckedCreateWithoutInactiveMonthsInput>
+  connectOrCreate?: Prisma.TaxYearCreateOrConnectWithoutInactiveMonthsInput
+  upsert?: Prisma.TaxYearUpsertWithoutInactiveMonthsInput
+  connect?: Prisma.TaxYearWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.TaxYearUpdateToOneWithWhereWithoutInactiveMonthsInput, Prisma.TaxYearUpdateWithoutInactiveMonthsInput>, Prisma.TaxYearUncheckedUpdateWithoutInactiveMonthsInput>
+}
+
 export type TaxYearCreateNestedOneWithoutStatementImportsInput = {
   create?: Prisma.XOR<Prisma.TaxYearCreateWithoutStatementImportsInput, Prisma.TaxYearUncheckedCreateWithoutStatementImportsInput>
   connectOrCreate?: Prisma.TaxYearCreateOrConnectWithoutStatementImportsInput
@@ -810,6 +831,7 @@ export type TaxYearCreateWithoutUserInput = {
   importSessions?: Prisma.ImportSessionCreateNestedManyWithoutTaxYearInput
   documents?: Prisma.DocumentCreateNestedManyWithoutTaxYearInput
   pipelineRuns?: Prisma.PipelineRunCreateNestedManyWithoutTaxYearInput
+  inactiveMonths?: Prisma.AccountInactiveMonthCreateNestedManyWithoutTaxYearInput
 }
 
 export type TaxYearUncheckedCreateWithoutUserInput = {
@@ -832,6 +854,7 @@ export type TaxYearUncheckedCreateWithoutUserInput = {
   importSessions?: Prisma.ImportSessionUncheckedCreateNestedManyWithoutTaxYearInput
   documents?: Prisma.DocumentUncheckedCreateNestedManyWithoutTaxYearInput
   pipelineRuns?: Prisma.PipelineRunUncheckedCreateNestedManyWithoutTaxYearInput
+  inactiveMonths?: Prisma.AccountInactiveMonthUncheckedCreateNestedManyWithoutTaxYearInput
 }
 
 export type TaxYearCreateOrConnectWithoutUserInput = {
@@ -895,6 +918,7 @@ export type TaxYearCreateWithoutRuleVersionInput = {
   importSessions?: Prisma.ImportSessionCreateNestedManyWithoutTaxYearInput
   documents?: Prisma.DocumentCreateNestedManyWithoutTaxYearInput
   pipelineRuns?: Prisma.PipelineRunCreateNestedManyWithoutTaxYearInput
+  inactiveMonths?: Prisma.AccountInactiveMonthCreateNestedManyWithoutTaxYearInput
 }
 
 export type TaxYearUncheckedCreateWithoutRuleVersionInput = {
@@ -917,6 +941,7 @@ export type TaxYearUncheckedCreateWithoutRuleVersionInput = {
   importSessions?: Prisma.ImportSessionUncheckedCreateNestedManyWithoutTaxYearInput
   documents?: Prisma.DocumentUncheckedCreateNestedManyWithoutTaxYearInput
   pipelineRuns?: Prisma.PipelineRunUncheckedCreateNestedManyWithoutTaxYearInput
+  inactiveMonths?: Prisma.AccountInactiveMonthUncheckedCreateNestedManyWithoutTaxYearInput
 }
 
 export type TaxYearCreateOrConnectWithoutRuleVersionInput = {
@@ -965,6 +990,7 @@ export type TaxYearCreateWithoutBusinessProfileInput = {
   importSessions?: Prisma.ImportSessionCreateNestedManyWithoutTaxYearInput
   documents?: Prisma.DocumentCreateNestedManyWithoutTaxYearInput
   pipelineRuns?: Prisma.PipelineRunCreateNestedManyWithoutTaxYearInput
+  inactiveMonths?: Prisma.AccountInactiveMonthCreateNestedManyWithoutTaxYearInput
 }
 
 export type TaxYearUncheckedCreateWithoutBusinessProfileInput = {
@@ -987,6 +1013,7 @@ export type TaxYearUncheckedCreateWithoutBusinessProfileInput = {
   importSessions?: Prisma.ImportSessionUncheckedCreateNestedManyWithoutTaxYearInput
   documents?: Prisma.DocumentUncheckedCreateNestedManyWithoutTaxYearInput
   pipelineRuns?: Prisma.PipelineRunUncheckedCreateNestedManyWithoutTaxYearInput
+  inactiveMonths?: Prisma.AccountInactiveMonthUncheckedCreateNestedManyWithoutTaxYearInput
 }
 
 export type TaxYearCreateOrConnectWithoutBusinessProfileInput = {
@@ -1025,6 +1052,7 @@ export type TaxYearUpdateWithoutBusinessProfileInput = {
   importSessions?: Prisma.ImportSessionUpdateManyWithoutTaxYearNestedInput
   documents?: Prisma.DocumentUpdateManyWithoutTaxYearNestedInput
   pipelineRuns?: Prisma.PipelineRunUpdateManyWithoutTaxYearNestedInput
+  inactiveMonths?: Prisma.AccountInactiveMonthUpdateManyWithoutTaxYearNestedInput
 }
 
 export type TaxYearUncheckedUpdateWithoutBusinessProfileInput = {
@@ -1047,6 +1075,7 @@ export type TaxYearUncheckedUpdateWithoutBusinessProfileInput = {
   importSessions?: Prisma.ImportSessionUncheckedUpdateManyWithoutTaxYearNestedInput
   documents?: Prisma.DocumentUncheckedUpdateManyWithoutTaxYearNestedInput
   pipelineRuns?: Prisma.PipelineRunUncheckedUpdateManyWithoutTaxYearNestedInput
+  inactiveMonths?: Prisma.AccountInactiveMonthUncheckedUpdateManyWithoutTaxYearNestedInput
 }
 
 export type TaxYearCreateWithoutFinancialAccountsInput = {
@@ -1069,6 +1098,7 @@ export type TaxYearCreateWithoutFinancialAccountsInput = {
   importSessions?: Prisma.ImportSessionCreateNestedManyWithoutTaxYearInput
   documents?: Prisma.DocumentCreateNestedManyWithoutTaxYearInput
   pipelineRuns?: Prisma.PipelineRunCreateNestedManyWithoutTaxYearInput
+  inactiveMonths?: Prisma.AccountInactiveMonthCreateNestedManyWithoutTaxYearInput
 }
 
 export type TaxYearUncheckedCreateWithoutFinancialAccountsInput = {
@@ -1091,6 +1121,7 @@ export type TaxYearUncheckedCreateWithoutFinancialAccountsInput = {
   importSessions?: Prisma.ImportSessionUncheckedCreateNestedManyWithoutTaxYearInput
   documents?: Prisma.DocumentUncheckedCreateNestedManyWithoutTaxYearInput
   pipelineRuns?: Prisma.PipelineRunUncheckedCreateNestedManyWithoutTaxYearInput
+  inactiveMonths?: Prisma.AccountInactiveMonthUncheckedCreateNestedManyWithoutTaxYearInput
 }
 
 export type TaxYearCreateOrConnectWithoutFinancialAccountsInput = {
@@ -1129,6 +1160,7 @@ export type TaxYearUpdateWithoutFinancialAccountsInput = {
   importSessions?: Prisma.ImportSessionUpdateManyWithoutTaxYearNestedInput
   documents?: Prisma.DocumentUpdateManyWithoutTaxYearNestedInput
   pipelineRuns?: Prisma.PipelineRunUpdateManyWithoutTaxYearNestedInput
+  inactiveMonths?: Prisma.AccountInactiveMonthUpdateManyWithoutTaxYearNestedInput
 }
 
 export type TaxYearUncheckedUpdateWithoutFinancialAccountsInput = {
@@ -1151,6 +1183,7 @@ export type TaxYearUncheckedUpdateWithoutFinancialAccountsInput = {
   importSessions?: Prisma.ImportSessionUncheckedUpdateManyWithoutTaxYearNestedInput
   documents?: Prisma.DocumentUncheckedUpdateManyWithoutTaxYearNestedInput
   pipelineRuns?: Prisma.PipelineRunUncheckedUpdateManyWithoutTaxYearNestedInput
+  inactiveMonths?: Prisma.AccountInactiveMonthUncheckedUpdateManyWithoutTaxYearNestedInput
 }
 
 export type TaxYearCreateWithoutAccountYearLinksInput = {
@@ -1173,6 +1206,7 @@ export type TaxYearCreateWithoutAccountYearLinksInput = {
   importSessions?: Prisma.ImportSessionCreateNestedManyWithoutTaxYearInput
   documents?: Prisma.DocumentCreateNestedManyWithoutTaxYearInput
   pipelineRuns?: Prisma.PipelineRunCreateNestedManyWithoutTaxYearInput
+  inactiveMonths?: Prisma.AccountInactiveMonthCreateNestedManyWithoutTaxYearInput
 }
 
 export type TaxYearUncheckedCreateWithoutAccountYearLinksInput = {
@@ -1195,6 +1229,7 @@ export type TaxYearUncheckedCreateWithoutAccountYearLinksInput = {
   importSessions?: Prisma.ImportSessionUncheckedCreateNestedManyWithoutTaxYearInput
   documents?: Prisma.DocumentUncheckedCreateNestedManyWithoutTaxYearInput
   pipelineRuns?: Prisma.PipelineRunUncheckedCreateNestedManyWithoutTaxYearInput
+  inactiveMonths?: Prisma.AccountInactiveMonthUncheckedCreateNestedManyWithoutTaxYearInput
 }
 
 export type TaxYearCreateOrConnectWithoutAccountYearLinksInput = {
@@ -1233,6 +1268,7 @@ export type TaxYearUpdateWithoutAccountYearLinksInput = {
   importSessions?: Prisma.ImportSessionUpdateManyWithoutTaxYearNestedInput
   documents?: Prisma.DocumentUpdateManyWithoutTaxYearNestedInput
   pipelineRuns?: Prisma.PipelineRunUpdateManyWithoutTaxYearNestedInput
+  inactiveMonths?: Prisma.AccountInactiveMonthUpdateManyWithoutTaxYearNestedInput
 }
 
 export type TaxYearUncheckedUpdateWithoutAccountYearLinksInput = {
@@ -1247,6 +1283,115 @@ export type TaxYearUncheckedUpdateWithoutAccountYearLinksInput = {
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   businessProfile?: Prisma.BusinessProfileUncheckedUpdateOneWithoutTaxYearNestedInput
   financialAccounts?: Prisma.FinancialAccountUncheckedUpdateManyWithoutTaxYearNestedInput
+  statementImports?: Prisma.StatementImportUncheckedUpdateManyWithoutTaxYearNestedInput
+  transactions?: Prisma.TransactionUncheckedUpdateManyWithoutTaxYearNestedInput
+  merchantRules?: Prisma.MerchantRuleUncheckedUpdateManyWithoutTaxYearNestedInput
+  stopItems?: Prisma.StopItemUncheckedUpdateManyWithoutTaxYearNestedInput
+  reports?: Prisma.ReportUncheckedUpdateManyWithoutTaxYearNestedInput
+  importSessions?: Prisma.ImportSessionUncheckedUpdateManyWithoutTaxYearNestedInput
+  documents?: Prisma.DocumentUncheckedUpdateManyWithoutTaxYearNestedInput
+  pipelineRuns?: Prisma.PipelineRunUncheckedUpdateManyWithoutTaxYearNestedInput
+  inactiveMonths?: Prisma.AccountInactiveMonthUncheckedUpdateManyWithoutTaxYearNestedInput
+}
+
+export type TaxYearCreateWithoutInactiveMonthsInput = {
+  id?: string
+  year: number
+  status?: $Enums.TaxYearStatus
+  lockedAt?: Date | string | null
+  lockedSnapshotHash?: string | null
+  acceptedRiskOverrides?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  createdAt?: Date | string
+  user: Prisma.UserCreateNestedOneWithoutTaxYearsInput
+  ruleVersion?: Prisma.RuleVersionCreateNestedOneWithoutTaxYearsInput
+  businessProfile?: Prisma.BusinessProfileCreateNestedOneWithoutTaxYearInput
+  financialAccounts?: Prisma.FinancialAccountCreateNestedManyWithoutTaxYearInput
+  accountYearLinks?: Prisma.AccountYearLinkCreateNestedManyWithoutTaxYearInput
+  statementImports?: Prisma.StatementImportCreateNestedManyWithoutTaxYearInput
+  transactions?: Prisma.TransactionCreateNestedManyWithoutTaxYearInput
+  merchantRules?: Prisma.MerchantRuleCreateNestedManyWithoutTaxYearInput
+  stopItems?: Prisma.StopItemCreateNestedManyWithoutTaxYearInput
+  reports?: Prisma.ReportCreateNestedManyWithoutTaxYearInput
+  importSessions?: Prisma.ImportSessionCreateNestedManyWithoutTaxYearInput
+  documents?: Prisma.DocumentCreateNestedManyWithoutTaxYearInput
+  pipelineRuns?: Prisma.PipelineRunCreateNestedManyWithoutTaxYearInput
+}
+
+export type TaxYearUncheckedCreateWithoutInactiveMonthsInput = {
+  id?: string
+  userId: string
+  year: number
+  status?: $Enums.TaxYearStatus
+  ruleVersionId?: string | null
+  lockedAt?: Date | string | null
+  lockedSnapshotHash?: string | null
+  acceptedRiskOverrides?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  createdAt?: Date | string
+  businessProfile?: Prisma.BusinessProfileUncheckedCreateNestedOneWithoutTaxYearInput
+  financialAccounts?: Prisma.FinancialAccountUncheckedCreateNestedManyWithoutTaxYearInput
+  accountYearLinks?: Prisma.AccountYearLinkUncheckedCreateNestedManyWithoutTaxYearInput
+  statementImports?: Prisma.StatementImportUncheckedCreateNestedManyWithoutTaxYearInput
+  transactions?: Prisma.TransactionUncheckedCreateNestedManyWithoutTaxYearInput
+  merchantRules?: Prisma.MerchantRuleUncheckedCreateNestedManyWithoutTaxYearInput
+  stopItems?: Prisma.StopItemUncheckedCreateNestedManyWithoutTaxYearInput
+  reports?: Prisma.ReportUncheckedCreateNestedManyWithoutTaxYearInput
+  importSessions?: Prisma.ImportSessionUncheckedCreateNestedManyWithoutTaxYearInput
+  documents?: Prisma.DocumentUncheckedCreateNestedManyWithoutTaxYearInput
+  pipelineRuns?: Prisma.PipelineRunUncheckedCreateNestedManyWithoutTaxYearInput
+}
+
+export type TaxYearCreateOrConnectWithoutInactiveMonthsInput = {
+  where: Prisma.TaxYearWhereUniqueInput
+  create: Prisma.XOR<Prisma.TaxYearCreateWithoutInactiveMonthsInput, Prisma.TaxYearUncheckedCreateWithoutInactiveMonthsInput>
+}
+
+export type TaxYearUpsertWithoutInactiveMonthsInput = {
+  update: Prisma.XOR<Prisma.TaxYearUpdateWithoutInactiveMonthsInput, Prisma.TaxYearUncheckedUpdateWithoutInactiveMonthsInput>
+  create: Prisma.XOR<Prisma.TaxYearCreateWithoutInactiveMonthsInput, Prisma.TaxYearUncheckedCreateWithoutInactiveMonthsInput>
+  where?: Prisma.TaxYearWhereInput
+}
+
+export type TaxYearUpdateToOneWithWhereWithoutInactiveMonthsInput = {
+  where?: Prisma.TaxYearWhereInput
+  data: Prisma.XOR<Prisma.TaxYearUpdateWithoutInactiveMonthsInput, Prisma.TaxYearUncheckedUpdateWithoutInactiveMonthsInput>
+}
+
+export type TaxYearUpdateWithoutInactiveMonthsInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  year?: Prisma.IntFieldUpdateOperationsInput | number
+  status?: Prisma.EnumTaxYearStatusFieldUpdateOperationsInput | $Enums.TaxYearStatus
+  lockedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  lockedSnapshotHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  acceptedRiskOverrides?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  user?: Prisma.UserUpdateOneRequiredWithoutTaxYearsNestedInput
+  ruleVersion?: Prisma.RuleVersionUpdateOneWithoutTaxYearsNestedInput
+  businessProfile?: Prisma.BusinessProfileUpdateOneWithoutTaxYearNestedInput
+  financialAccounts?: Prisma.FinancialAccountUpdateManyWithoutTaxYearNestedInput
+  accountYearLinks?: Prisma.AccountYearLinkUpdateManyWithoutTaxYearNestedInput
+  statementImports?: Prisma.StatementImportUpdateManyWithoutTaxYearNestedInput
+  transactions?: Prisma.TransactionUpdateManyWithoutTaxYearNestedInput
+  merchantRules?: Prisma.MerchantRuleUpdateManyWithoutTaxYearNestedInput
+  stopItems?: Prisma.StopItemUpdateManyWithoutTaxYearNestedInput
+  reports?: Prisma.ReportUpdateManyWithoutTaxYearNestedInput
+  importSessions?: Prisma.ImportSessionUpdateManyWithoutTaxYearNestedInput
+  documents?: Prisma.DocumentUpdateManyWithoutTaxYearNestedInput
+  pipelineRuns?: Prisma.PipelineRunUpdateManyWithoutTaxYearNestedInput
+}
+
+export type TaxYearUncheckedUpdateWithoutInactiveMonthsInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  userId?: Prisma.StringFieldUpdateOperationsInput | string
+  year?: Prisma.IntFieldUpdateOperationsInput | number
+  status?: Prisma.EnumTaxYearStatusFieldUpdateOperationsInput | $Enums.TaxYearStatus
+  ruleVersionId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  lockedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  lockedSnapshotHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  acceptedRiskOverrides?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  businessProfile?: Prisma.BusinessProfileUncheckedUpdateOneWithoutTaxYearNestedInput
+  financialAccounts?: Prisma.FinancialAccountUncheckedUpdateManyWithoutTaxYearNestedInput
+  accountYearLinks?: Prisma.AccountYearLinkUncheckedUpdateManyWithoutTaxYearNestedInput
   statementImports?: Prisma.StatementImportUncheckedUpdateManyWithoutTaxYearNestedInput
   transactions?: Prisma.TransactionUncheckedUpdateManyWithoutTaxYearNestedInput
   merchantRules?: Prisma.MerchantRuleUncheckedUpdateManyWithoutTaxYearNestedInput
@@ -1277,6 +1422,7 @@ export type TaxYearCreateWithoutStatementImportsInput = {
   importSessions?: Prisma.ImportSessionCreateNestedManyWithoutTaxYearInput
   documents?: Prisma.DocumentCreateNestedManyWithoutTaxYearInput
   pipelineRuns?: Prisma.PipelineRunCreateNestedManyWithoutTaxYearInput
+  inactiveMonths?: Prisma.AccountInactiveMonthCreateNestedManyWithoutTaxYearInput
 }
 
 export type TaxYearUncheckedCreateWithoutStatementImportsInput = {
@@ -1299,6 +1445,7 @@ export type TaxYearUncheckedCreateWithoutStatementImportsInput = {
   importSessions?: Prisma.ImportSessionUncheckedCreateNestedManyWithoutTaxYearInput
   documents?: Prisma.DocumentUncheckedCreateNestedManyWithoutTaxYearInput
   pipelineRuns?: Prisma.PipelineRunUncheckedCreateNestedManyWithoutTaxYearInput
+  inactiveMonths?: Prisma.AccountInactiveMonthUncheckedCreateNestedManyWithoutTaxYearInput
 }
 
 export type TaxYearCreateOrConnectWithoutStatementImportsInput = {
@@ -1337,6 +1484,7 @@ export type TaxYearUpdateWithoutStatementImportsInput = {
   importSessions?: Prisma.ImportSessionUpdateManyWithoutTaxYearNestedInput
   documents?: Prisma.DocumentUpdateManyWithoutTaxYearNestedInput
   pipelineRuns?: Prisma.PipelineRunUpdateManyWithoutTaxYearNestedInput
+  inactiveMonths?: Prisma.AccountInactiveMonthUpdateManyWithoutTaxYearNestedInput
 }
 
 export type TaxYearUncheckedUpdateWithoutStatementImportsInput = {
@@ -1359,6 +1507,7 @@ export type TaxYearUncheckedUpdateWithoutStatementImportsInput = {
   importSessions?: Prisma.ImportSessionUncheckedUpdateManyWithoutTaxYearNestedInput
   documents?: Prisma.DocumentUncheckedUpdateManyWithoutTaxYearNestedInput
   pipelineRuns?: Prisma.PipelineRunUncheckedUpdateManyWithoutTaxYearNestedInput
+  inactiveMonths?: Prisma.AccountInactiveMonthUncheckedUpdateManyWithoutTaxYearNestedInput
 }
 
 export type TaxYearCreateWithoutImportSessionsInput = {
@@ -1381,6 +1530,7 @@ export type TaxYearCreateWithoutImportSessionsInput = {
   reports?: Prisma.ReportCreateNestedManyWithoutTaxYearInput
   documents?: Prisma.DocumentCreateNestedManyWithoutTaxYearInput
   pipelineRuns?: Prisma.PipelineRunCreateNestedManyWithoutTaxYearInput
+  inactiveMonths?: Prisma.AccountInactiveMonthCreateNestedManyWithoutTaxYearInput
 }
 
 export type TaxYearUncheckedCreateWithoutImportSessionsInput = {
@@ -1403,6 +1553,7 @@ export type TaxYearUncheckedCreateWithoutImportSessionsInput = {
   reports?: Prisma.ReportUncheckedCreateNestedManyWithoutTaxYearInput
   documents?: Prisma.DocumentUncheckedCreateNestedManyWithoutTaxYearInput
   pipelineRuns?: Prisma.PipelineRunUncheckedCreateNestedManyWithoutTaxYearInput
+  inactiveMonths?: Prisma.AccountInactiveMonthUncheckedCreateNestedManyWithoutTaxYearInput
 }
 
 export type TaxYearCreateOrConnectWithoutImportSessionsInput = {
@@ -1441,6 +1592,7 @@ export type TaxYearUpdateWithoutImportSessionsInput = {
   reports?: Prisma.ReportUpdateManyWithoutTaxYearNestedInput
   documents?: Prisma.DocumentUpdateManyWithoutTaxYearNestedInput
   pipelineRuns?: Prisma.PipelineRunUpdateManyWithoutTaxYearNestedInput
+  inactiveMonths?: Prisma.AccountInactiveMonthUpdateManyWithoutTaxYearNestedInput
 }
 
 export type TaxYearUncheckedUpdateWithoutImportSessionsInput = {
@@ -1463,6 +1615,7 @@ export type TaxYearUncheckedUpdateWithoutImportSessionsInput = {
   reports?: Prisma.ReportUncheckedUpdateManyWithoutTaxYearNestedInput
   documents?: Prisma.DocumentUncheckedUpdateManyWithoutTaxYearNestedInput
   pipelineRuns?: Prisma.PipelineRunUncheckedUpdateManyWithoutTaxYearNestedInput
+  inactiveMonths?: Prisma.AccountInactiveMonthUncheckedUpdateManyWithoutTaxYearNestedInput
 }
 
 export type TaxYearCreateWithoutPipelineRunsInput = {
@@ -1485,6 +1638,7 @@ export type TaxYearCreateWithoutPipelineRunsInput = {
   reports?: Prisma.ReportCreateNestedManyWithoutTaxYearInput
   importSessions?: Prisma.ImportSessionCreateNestedManyWithoutTaxYearInput
   documents?: Prisma.DocumentCreateNestedManyWithoutTaxYearInput
+  inactiveMonths?: Prisma.AccountInactiveMonthCreateNestedManyWithoutTaxYearInput
 }
 
 export type TaxYearUncheckedCreateWithoutPipelineRunsInput = {
@@ -1507,6 +1661,7 @@ export type TaxYearUncheckedCreateWithoutPipelineRunsInput = {
   reports?: Prisma.ReportUncheckedCreateNestedManyWithoutTaxYearInput
   importSessions?: Prisma.ImportSessionUncheckedCreateNestedManyWithoutTaxYearInput
   documents?: Prisma.DocumentUncheckedCreateNestedManyWithoutTaxYearInput
+  inactiveMonths?: Prisma.AccountInactiveMonthUncheckedCreateNestedManyWithoutTaxYearInput
 }
 
 export type TaxYearCreateOrConnectWithoutPipelineRunsInput = {
@@ -1545,6 +1700,7 @@ export type TaxYearUpdateWithoutPipelineRunsInput = {
   reports?: Prisma.ReportUpdateManyWithoutTaxYearNestedInput
   importSessions?: Prisma.ImportSessionUpdateManyWithoutTaxYearNestedInput
   documents?: Prisma.DocumentUpdateManyWithoutTaxYearNestedInput
+  inactiveMonths?: Prisma.AccountInactiveMonthUpdateManyWithoutTaxYearNestedInput
 }
 
 export type TaxYearUncheckedUpdateWithoutPipelineRunsInput = {
@@ -1567,6 +1723,7 @@ export type TaxYearUncheckedUpdateWithoutPipelineRunsInput = {
   reports?: Prisma.ReportUncheckedUpdateManyWithoutTaxYearNestedInput
   importSessions?: Prisma.ImportSessionUncheckedUpdateManyWithoutTaxYearNestedInput
   documents?: Prisma.DocumentUncheckedUpdateManyWithoutTaxYearNestedInput
+  inactiveMonths?: Prisma.AccountInactiveMonthUncheckedUpdateManyWithoutTaxYearNestedInput
 }
 
 export type TaxYearCreateWithoutTransactionsInput = {
@@ -1589,6 +1746,7 @@ export type TaxYearCreateWithoutTransactionsInput = {
   importSessions?: Prisma.ImportSessionCreateNestedManyWithoutTaxYearInput
   documents?: Prisma.DocumentCreateNestedManyWithoutTaxYearInput
   pipelineRuns?: Prisma.PipelineRunCreateNestedManyWithoutTaxYearInput
+  inactiveMonths?: Prisma.AccountInactiveMonthCreateNestedManyWithoutTaxYearInput
 }
 
 export type TaxYearUncheckedCreateWithoutTransactionsInput = {
@@ -1611,6 +1769,7 @@ export type TaxYearUncheckedCreateWithoutTransactionsInput = {
   importSessions?: Prisma.ImportSessionUncheckedCreateNestedManyWithoutTaxYearInput
   documents?: Prisma.DocumentUncheckedCreateNestedManyWithoutTaxYearInput
   pipelineRuns?: Prisma.PipelineRunUncheckedCreateNestedManyWithoutTaxYearInput
+  inactiveMonths?: Prisma.AccountInactiveMonthUncheckedCreateNestedManyWithoutTaxYearInput
 }
 
 export type TaxYearCreateOrConnectWithoutTransactionsInput = {
@@ -1649,6 +1808,7 @@ export type TaxYearUpdateWithoutTransactionsInput = {
   importSessions?: Prisma.ImportSessionUpdateManyWithoutTaxYearNestedInput
   documents?: Prisma.DocumentUpdateManyWithoutTaxYearNestedInput
   pipelineRuns?: Prisma.PipelineRunUpdateManyWithoutTaxYearNestedInput
+  inactiveMonths?: Prisma.AccountInactiveMonthUpdateManyWithoutTaxYearNestedInput
 }
 
 export type TaxYearUncheckedUpdateWithoutTransactionsInput = {
@@ -1671,6 +1831,7 @@ export type TaxYearUncheckedUpdateWithoutTransactionsInput = {
   importSessions?: Prisma.ImportSessionUncheckedUpdateManyWithoutTaxYearNestedInput
   documents?: Prisma.DocumentUncheckedUpdateManyWithoutTaxYearNestedInput
   pipelineRuns?: Prisma.PipelineRunUncheckedUpdateManyWithoutTaxYearNestedInput
+  inactiveMonths?: Prisma.AccountInactiveMonthUncheckedUpdateManyWithoutTaxYearNestedInput
 }
 
 export type TaxYearCreateWithoutMerchantRulesInput = {
@@ -1693,6 +1854,7 @@ export type TaxYearCreateWithoutMerchantRulesInput = {
   importSessions?: Prisma.ImportSessionCreateNestedManyWithoutTaxYearInput
   documents?: Prisma.DocumentCreateNestedManyWithoutTaxYearInput
   pipelineRuns?: Prisma.PipelineRunCreateNestedManyWithoutTaxYearInput
+  inactiveMonths?: Prisma.AccountInactiveMonthCreateNestedManyWithoutTaxYearInput
 }
 
 export type TaxYearUncheckedCreateWithoutMerchantRulesInput = {
@@ -1715,6 +1877,7 @@ export type TaxYearUncheckedCreateWithoutMerchantRulesInput = {
   importSessions?: Prisma.ImportSessionUncheckedCreateNestedManyWithoutTaxYearInput
   documents?: Prisma.DocumentUncheckedCreateNestedManyWithoutTaxYearInput
   pipelineRuns?: Prisma.PipelineRunUncheckedCreateNestedManyWithoutTaxYearInput
+  inactiveMonths?: Prisma.AccountInactiveMonthUncheckedCreateNestedManyWithoutTaxYearInput
 }
 
 export type TaxYearCreateOrConnectWithoutMerchantRulesInput = {
@@ -1753,6 +1916,7 @@ export type TaxYearUpdateWithoutMerchantRulesInput = {
   importSessions?: Prisma.ImportSessionUpdateManyWithoutTaxYearNestedInput
   documents?: Prisma.DocumentUpdateManyWithoutTaxYearNestedInput
   pipelineRuns?: Prisma.PipelineRunUpdateManyWithoutTaxYearNestedInput
+  inactiveMonths?: Prisma.AccountInactiveMonthUpdateManyWithoutTaxYearNestedInput
 }
 
 export type TaxYearUncheckedUpdateWithoutMerchantRulesInput = {
@@ -1775,6 +1939,7 @@ export type TaxYearUncheckedUpdateWithoutMerchantRulesInput = {
   importSessions?: Prisma.ImportSessionUncheckedUpdateManyWithoutTaxYearNestedInput
   documents?: Prisma.DocumentUncheckedUpdateManyWithoutTaxYearNestedInput
   pipelineRuns?: Prisma.PipelineRunUncheckedUpdateManyWithoutTaxYearNestedInput
+  inactiveMonths?: Prisma.AccountInactiveMonthUncheckedUpdateManyWithoutTaxYearNestedInput
 }
 
 export type TaxYearCreateWithoutStopItemsInput = {
@@ -1797,6 +1962,7 @@ export type TaxYearCreateWithoutStopItemsInput = {
   importSessions?: Prisma.ImportSessionCreateNestedManyWithoutTaxYearInput
   documents?: Prisma.DocumentCreateNestedManyWithoutTaxYearInput
   pipelineRuns?: Prisma.PipelineRunCreateNestedManyWithoutTaxYearInput
+  inactiveMonths?: Prisma.AccountInactiveMonthCreateNestedManyWithoutTaxYearInput
 }
 
 export type TaxYearUncheckedCreateWithoutStopItemsInput = {
@@ -1819,6 +1985,7 @@ export type TaxYearUncheckedCreateWithoutStopItemsInput = {
   importSessions?: Prisma.ImportSessionUncheckedCreateNestedManyWithoutTaxYearInput
   documents?: Prisma.DocumentUncheckedCreateNestedManyWithoutTaxYearInput
   pipelineRuns?: Prisma.PipelineRunUncheckedCreateNestedManyWithoutTaxYearInput
+  inactiveMonths?: Prisma.AccountInactiveMonthUncheckedCreateNestedManyWithoutTaxYearInput
 }
 
 export type TaxYearCreateOrConnectWithoutStopItemsInput = {
@@ -1857,6 +2024,7 @@ export type TaxYearUpdateWithoutStopItemsInput = {
   importSessions?: Prisma.ImportSessionUpdateManyWithoutTaxYearNestedInput
   documents?: Prisma.DocumentUpdateManyWithoutTaxYearNestedInput
   pipelineRuns?: Prisma.PipelineRunUpdateManyWithoutTaxYearNestedInput
+  inactiveMonths?: Prisma.AccountInactiveMonthUpdateManyWithoutTaxYearNestedInput
 }
 
 export type TaxYearUncheckedUpdateWithoutStopItemsInput = {
@@ -1879,6 +2047,7 @@ export type TaxYearUncheckedUpdateWithoutStopItemsInput = {
   importSessions?: Prisma.ImportSessionUncheckedUpdateManyWithoutTaxYearNestedInput
   documents?: Prisma.DocumentUncheckedUpdateManyWithoutTaxYearNestedInput
   pipelineRuns?: Prisma.PipelineRunUncheckedUpdateManyWithoutTaxYearNestedInput
+  inactiveMonths?: Prisma.AccountInactiveMonthUncheckedUpdateManyWithoutTaxYearNestedInput
 }
 
 export type TaxYearCreateWithoutReportsInput = {
@@ -1901,6 +2070,7 @@ export type TaxYearCreateWithoutReportsInput = {
   importSessions?: Prisma.ImportSessionCreateNestedManyWithoutTaxYearInput
   documents?: Prisma.DocumentCreateNestedManyWithoutTaxYearInput
   pipelineRuns?: Prisma.PipelineRunCreateNestedManyWithoutTaxYearInput
+  inactiveMonths?: Prisma.AccountInactiveMonthCreateNestedManyWithoutTaxYearInput
 }
 
 export type TaxYearUncheckedCreateWithoutReportsInput = {
@@ -1923,6 +2093,7 @@ export type TaxYearUncheckedCreateWithoutReportsInput = {
   importSessions?: Prisma.ImportSessionUncheckedCreateNestedManyWithoutTaxYearInput
   documents?: Prisma.DocumentUncheckedCreateNestedManyWithoutTaxYearInput
   pipelineRuns?: Prisma.PipelineRunUncheckedCreateNestedManyWithoutTaxYearInput
+  inactiveMonths?: Prisma.AccountInactiveMonthUncheckedCreateNestedManyWithoutTaxYearInput
 }
 
 export type TaxYearCreateOrConnectWithoutReportsInput = {
@@ -1961,6 +2132,7 @@ export type TaxYearUpdateWithoutReportsInput = {
   importSessions?: Prisma.ImportSessionUpdateManyWithoutTaxYearNestedInput
   documents?: Prisma.DocumentUpdateManyWithoutTaxYearNestedInput
   pipelineRuns?: Prisma.PipelineRunUpdateManyWithoutTaxYearNestedInput
+  inactiveMonths?: Prisma.AccountInactiveMonthUpdateManyWithoutTaxYearNestedInput
 }
 
 export type TaxYearUncheckedUpdateWithoutReportsInput = {
@@ -1983,6 +2155,7 @@ export type TaxYearUncheckedUpdateWithoutReportsInput = {
   importSessions?: Prisma.ImportSessionUncheckedUpdateManyWithoutTaxYearNestedInput
   documents?: Prisma.DocumentUncheckedUpdateManyWithoutTaxYearNestedInput
   pipelineRuns?: Prisma.PipelineRunUncheckedUpdateManyWithoutTaxYearNestedInput
+  inactiveMonths?: Prisma.AccountInactiveMonthUncheckedUpdateManyWithoutTaxYearNestedInput
 }
 
 export type TaxYearCreateWithoutDocumentsInput = {
@@ -2005,6 +2178,7 @@ export type TaxYearCreateWithoutDocumentsInput = {
   reports?: Prisma.ReportCreateNestedManyWithoutTaxYearInput
   importSessions?: Prisma.ImportSessionCreateNestedManyWithoutTaxYearInput
   pipelineRuns?: Prisma.PipelineRunCreateNestedManyWithoutTaxYearInput
+  inactiveMonths?: Prisma.AccountInactiveMonthCreateNestedManyWithoutTaxYearInput
 }
 
 export type TaxYearUncheckedCreateWithoutDocumentsInput = {
@@ -2027,6 +2201,7 @@ export type TaxYearUncheckedCreateWithoutDocumentsInput = {
   reports?: Prisma.ReportUncheckedCreateNestedManyWithoutTaxYearInput
   importSessions?: Prisma.ImportSessionUncheckedCreateNestedManyWithoutTaxYearInput
   pipelineRuns?: Prisma.PipelineRunUncheckedCreateNestedManyWithoutTaxYearInput
+  inactiveMonths?: Prisma.AccountInactiveMonthUncheckedCreateNestedManyWithoutTaxYearInput
 }
 
 export type TaxYearCreateOrConnectWithoutDocumentsInput = {
@@ -2065,6 +2240,7 @@ export type TaxYearUpdateWithoutDocumentsInput = {
   reports?: Prisma.ReportUpdateManyWithoutTaxYearNestedInput
   importSessions?: Prisma.ImportSessionUpdateManyWithoutTaxYearNestedInput
   pipelineRuns?: Prisma.PipelineRunUpdateManyWithoutTaxYearNestedInput
+  inactiveMonths?: Prisma.AccountInactiveMonthUpdateManyWithoutTaxYearNestedInput
 }
 
 export type TaxYearUncheckedUpdateWithoutDocumentsInput = {
@@ -2087,6 +2263,7 @@ export type TaxYearUncheckedUpdateWithoutDocumentsInput = {
   reports?: Prisma.ReportUncheckedUpdateManyWithoutTaxYearNestedInput
   importSessions?: Prisma.ImportSessionUncheckedUpdateManyWithoutTaxYearNestedInput
   pipelineRuns?: Prisma.PipelineRunUncheckedUpdateManyWithoutTaxYearNestedInput
+  inactiveMonths?: Prisma.AccountInactiveMonthUncheckedUpdateManyWithoutTaxYearNestedInput
 }
 
 export type TaxYearCreateManyUserInput = {
@@ -2120,6 +2297,7 @@ export type TaxYearUpdateWithoutUserInput = {
   importSessions?: Prisma.ImportSessionUpdateManyWithoutTaxYearNestedInput
   documents?: Prisma.DocumentUpdateManyWithoutTaxYearNestedInput
   pipelineRuns?: Prisma.PipelineRunUpdateManyWithoutTaxYearNestedInput
+  inactiveMonths?: Prisma.AccountInactiveMonthUpdateManyWithoutTaxYearNestedInput
 }
 
 export type TaxYearUncheckedUpdateWithoutUserInput = {
@@ -2142,6 +2320,7 @@ export type TaxYearUncheckedUpdateWithoutUserInput = {
   importSessions?: Prisma.ImportSessionUncheckedUpdateManyWithoutTaxYearNestedInput
   documents?: Prisma.DocumentUncheckedUpdateManyWithoutTaxYearNestedInput
   pipelineRuns?: Prisma.PipelineRunUncheckedUpdateManyWithoutTaxYearNestedInput
+  inactiveMonths?: Prisma.AccountInactiveMonthUncheckedUpdateManyWithoutTaxYearNestedInput
 }
 
 export type TaxYearUncheckedUpdateManyWithoutUserInput = {
@@ -2186,6 +2365,7 @@ export type TaxYearUpdateWithoutRuleVersionInput = {
   importSessions?: Prisma.ImportSessionUpdateManyWithoutTaxYearNestedInput
   documents?: Prisma.DocumentUpdateManyWithoutTaxYearNestedInput
   pipelineRuns?: Prisma.PipelineRunUpdateManyWithoutTaxYearNestedInput
+  inactiveMonths?: Prisma.AccountInactiveMonthUpdateManyWithoutTaxYearNestedInput
 }
 
 export type TaxYearUncheckedUpdateWithoutRuleVersionInput = {
@@ -2208,6 +2388,7 @@ export type TaxYearUncheckedUpdateWithoutRuleVersionInput = {
   importSessions?: Prisma.ImportSessionUncheckedUpdateManyWithoutTaxYearNestedInput
   documents?: Prisma.DocumentUncheckedUpdateManyWithoutTaxYearNestedInput
   pipelineRuns?: Prisma.PipelineRunUncheckedUpdateManyWithoutTaxYearNestedInput
+  inactiveMonths?: Prisma.AccountInactiveMonthUncheckedUpdateManyWithoutTaxYearNestedInput
 }
 
 export type TaxYearUncheckedUpdateManyWithoutRuleVersionInput = {
@@ -2237,6 +2418,7 @@ export type TaxYearCountOutputType = {
   importSessions: number
   documents: number
   pipelineRuns: number
+  inactiveMonths: number
 }
 
 export type TaxYearCountOutputTypeSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
@@ -2250,6 +2432,7 @@ export type TaxYearCountOutputTypeSelect<ExtArgs extends runtime.Types.Extension
   importSessions?: boolean | TaxYearCountOutputTypeCountImportSessionsArgs
   documents?: boolean | TaxYearCountOutputTypeCountDocumentsArgs
   pipelineRuns?: boolean | TaxYearCountOutputTypeCountPipelineRunsArgs
+  inactiveMonths?: boolean | TaxYearCountOutputTypeCountInactiveMonthsArgs
 }
 
 /**
@@ -2332,6 +2515,13 @@ export type TaxYearCountOutputTypeCountPipelineRunsArgs<ExtArgs extends runtime.
   where?: Prisma.PipelineRunWhereInput
 }
 
+/**
+ * TaxYearCountOutputType without action
+ */
+export type TaxYearCountOutputTypeCountInactiveMonthsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.AccountInactiveMonthWhereInput
+}
+
 
 export type TaxYearSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   id?: boolean
@@ -2356,6 +2546,7 @@ export type TaxYearSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs 
   importSessions?: boolean | Prisma.TaxYear$importSessionsArgs<ExtArgs>
   documents?: boolean | Prisma.TaxYear$documentsArgs<ExtArgs>
   pipelineRuns?: boolean | Prisma.TaxYear$pipelineRunsArgs<ExtArgs>
+  inactiveMonths?: boolean | Prisma.TaxYear$inactiveMonthsArgs<ExtArgs>
   _count?: boolean | Prisma.TaxYearCountOutputTypeDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["taxYear"]>
 
@@ -2414,6 +2605,7 @@ export type TaxYearInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs
   importSessions?: boolean | Prisma.TaxYear$importSessionsArgs<ExtArgs>
   documents?: boolean | Prisma.TaxYear$documentsArgs<ExtArgs>
   pipelineRuns?: boolean | Prisma.TaxYear$pipelineRunsArgs<ExtArgs>
+  inactiveMonths?: boolean | Prisma.TaxYear$inactiveMonthsArgs<ExtArgs>
   _count?: boolean | Prisma.TaxYearCountOutputTypeDefaultArgs<ExtArgs>
 }
 export type TaxYearIncludeCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
@@ -2441,6 +2633,7 @@ export type $TaxYearPayload<ExtArgs extends runtime.Types.Extensions.InternalArg
     importSessions: Prisma.$ImportSessionPayload<ExtArgs>[]
     documents: Prisma.$DocumentPayload<ExtArgs>[]
     pipelineRuns: Prisma.$PipelineRunPayload<ExtArgs>[]
+    inactiveMonths: Prisma.$AccountInactiveMonthPayload<ExtArgs>[]
   }
   scalars: runtime.Types.Extensions.GetPayloadResult<{
     id: string
@@ -2859,6 +3052,7 @@ export interface Prisma__TaxYearClient<T, Null = never, ExtArgs extends runtime.
   importSessions<T extends Prisma.TaxYear$importSessionsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.TaxYear$importSessionsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$ImportSessionPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   documents<T extends Prisma.TaxYear$documentsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.TaxYear$documentsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$DocumentPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   pipelineRuns<T extends Prisma.TaxYear$pipelineRunsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.TaxYear$pipelineRunsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$PipelineRunPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+  inactiveMonths<T extends Prisma.TaxYear$inactiveMonthsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.TaxYear$inactiveMonthsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$AccountInactiveMonthPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   /**
    * Attaches callbacks for the resolution and/or rejection of the Promise.
    * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -3573,6 +3767,30 @@ export type TaxYear$pipelineRunsArgs<ExtArgs extends runtime.Types.Extensions.In
   take?: number
   skip?: number
   distinct?: Prisma.PipelineRunScalarFieldEnum | Prisma.PipelineRunScalarFieldEnum[]
+}
+
+/**
+ * TaxYear.inactiveMonths
+ */
+export type TaxYear$inactiveMonthsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the AccountInactiveMonth
+   */
+  select?: Prisma.AccountInactiveMonthSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the AccountInactiveMonth
+   */
+  omit?: Prisma.AccountInactiveMonthOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.AccountInactiveMonthInclude<ExtArgs> | null
+  where?: Prisma.AccountInactiveMonthWhereInput
+  orderBy?: Prisma.AccountInactiveMonthOrderByWithRelationInput | Prisma.AccountInactiveMonthOrderByWithRelationInput[]
+  cursor?: Prisma.AccountInactiveMonthWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.AccountInactiveMonthScalarFieldEnum | Prisma.AccountInactiveMonthScalarFieldEnum[]
 }
 
 /**

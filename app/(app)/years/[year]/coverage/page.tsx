@@ -7,12 +7,14 @@ interface Props {
   params: Promise<{ year: string }>
 }
 
-/** Which months have at least one SUCCESS/PARTIAL import, keyed by "accountId:YYYY-MM" */
+/** Per-month coverage cell. `attestedInactive` clears the gap flag for A14. */
 type MonthCoverage = {
   accountId: string
   month: string       // "YYYY-MM"
   txCount: number
-  hasGap: boolean     // month has 0 transactions from this account
+  hasGap: boolean              // month has 0 transactions AND no attestation
+  attestedInactive: boolean    // CPA marked the month inactive (A14 ok)
+  attestationReason: string | null
 }
 
 export default async function CoveragePage({ params }: Props) {
@@ -35,6 +37,7 @@ export default async function CoveragePage({ params }: Props) {
           nickname: true,
           mask: true,
           type: true,
+          kind: true,
           statementImports: {
             where: { parseStatus: { in: ["SUCCESS", "PARTIAL"] } },
             select: {
@@ -47,6 +50,12 @@ export default async function CoveragePage({ params }: Props) {
           },
           transactions: {
             select: { postedDate: true },
+          },
+          // A14 attestations for this account in this tax year — clear
+          // the gap flag for the month/year combos the CPA confirmed.
+          inactiveMonths: {
+            where: { year },
+            select: { month: true, reason: true },
           },
         },
         orderBy: { institution: "asc" },
@@ -70,12 +79,27 @@ export default async function CoveragePage({ params }: Props) {
       txByMonth[month] = (txByMonth[month] ?? 0) + 1
     }
 
-    const coverage: MonthCoverage[] = months.map((month) => ({
-      accountId: acct.id,
-      month,
-      txCount: txByMonth[month] ?? 0,
-      hasGap: (txByMonth[month] ?? 0) === 0,
-    }))
+    // Index attestations by 1-12 month number → reason
+    const attestationByMonth: Record<number, string> = {}
+    for (const m of acct.inactiveMonths) {
+      attestationByMonth[m.month] = m.reason
+    }
+
+    const coverage: MonthCoverage[] = months.map((monthStr) => {
+      const monthNum = parseInt(monthStr.slice(5), 10)
+      const txCount = txByMonth[monthStr] ?? 0
+      const attestation = attestationByMonth[monthNum] ?? null
+      return {
+        accountId: acct.id,
+        month: monthStr,
+        txCount,
+        // Gap = no txns AND no inactive attestation. With an attestation
+        // the cell is "explained inactive" — A14 ok, no gap.
+        hasGap: txCount === 0 && attestation === null,
+        attestedInactive: attestation !== null,
+        attestationReason: attestation,
+      }
+    })
 
     return {
       id: acct.id,
@@ -83,14 +107,17 @@ export default async function CoveragePage({ params }: Props) {
       nickname: acct.nickname,
       mask: acct.mask,
       type: acct.type,
+      kind: acct.kind,
       importCount: acct.statementImports.length,
       coverage,
     }
   })
 
-  // Total gap count (months × accounts where txCount=0 and account has at least 1 import)
+  // Total gap count (months × accounts where txCount=0 AND no attestation,
+  // restricted to accounts that have at least 1 import or at least 1
+  // attestation — fully unused accounts are not flagged as 12 gaps).
   const totalGaps = accounts
-    .filter((a) => a.importCount > 0)
+    .filter((a) => a.importCount > 0 || a.coverage.some((c) => c.attestedInactive))
     .flatMap((a) => a.coverage)
     .filter((c) => c.hasGap).length
 

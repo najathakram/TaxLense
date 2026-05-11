@@ -407,6 +407,97 @@ export async function A13_DEPOSITS_RECONSTRUCTED(taxYearId: string): Promise<Ass
   }
 }
 
+// ---------- A14: COVERAGE COMPLETE ----------
+
+/**
+ * A14_COVERAGE_COMPLETE — every active account has either a statement
+ * with transactions OR an explicit "inactive month" attestation for
+ * every month in the tax year. Pre-fix the Coverage page surfaced gap
+ * counts but Risk dashboard ignored them entirely; Atif's BofA had 6
+ * missing months and Wise 5 missing months, none flagged as blockers.
+ *
+ * Resolution paths for the CPA:
+ *   - Upload the missing statement (gap count drops naturally), OR
+ *   - Mark the month inactive on the Coverage page (writes
+ *     AccountInactiveMonth row + AuditEvent — defensible attestation).
+ *
+ * Both produce A14 PASS. A blocking assertion: a year with unexplained
+ * coverage holes shouldn't lock — the underlying ledger is incomplete.
+ */
+export async function A14_COVERAGE_COMPLETE(taxYearId: string): Promise<AssertionResult> {
+  const ty = await prisma.taxYear.findUnique({
+    where: { id: taxYearId },
+    select: { year: true },
+  })
+  if (!ty) {
+    return {
+      id: "A14",
+      name: "Coverage complete (no unexplained month gaps)",
+      passed: false,
+      blocking: true,
+      details: "TaxYear not found",
+    }
+  }
+
+  const accounts = await prisma.financialAccount.findMany({
+    where: { taxYearId },
+    select: {
+      id: true,
+      institution: true,
+      nickname: true,
+      mask: true,
+      transactions: { select: { postedDate: true } },
+      inactiveMonths: {
+        where: { year: ty.year },
+        select: { month: true },
+      },
+    },
+  })
+
+  let gapCount = 0
+  const gapDetails: string[] = []
+  for (const acct of accounts) {
+    // Skip accounts with zero transactions and zero attestations — these
+    // were created but never used. Treat them as not-yet-active rather
+    // than "every month is a gap." If the CPA wants to attest them it
+    // still works.
+    if (acct.transactions.length === 0 && acct.inactiveMonths.length === 0) continue
+
+    const monthsWithTx = new Set<number>()
+    for (const tx of acct.transactions) {
+      if (tx.postedDate.getUTCFullYear() === ty.year) {
+        monthsWithTx.add(tx.postedDate.getUTCMonth() + 1)
+      }
+    }
+    const monthsAttested = new Set(acct.inactiveMonths.map((m) => m.month))
+
+    const accountGaps: number[] = []
+    for (let m = 1; m <= 12; m++) {
+      if (!monthsWithTx.has(m) && !monthsAttested.has(m)) accountGaps.push(m)
+    }
+
+    if (accountGaps.length > 0) {
+      gapCount += accountGaps.length
+      const label = acct.nickname ?? `${acct.institution}${acct.mask ? " ··" + acct.mask : ""}`
+      const monthNames = accountGaps
+        .map((m) => new Date(ty.year, m - 1, 1).toLocaleString("en-US", { month: "short" }))
+        .join(", ")
+      gapDetails.push(`${label}: ${monthNames}`)
+    }
+  }
+
+  const passed = gapCount === 0
+  return {
+    id: "A14",
+    name: "Coverage complete (no unexplained month gaps)",
+    passed,
+    blocking: true,
+    details: passed
+      ? "All active accounts have statements or inactive-month attestations for every month"
+      : `${gapCount} unexplained month-gap${gapCount === 1 ? "" : "s"} — ${gapDetails.join("; ")}`,
+  }
+}
+
 // ---------- Orchestrator ----------
 
 export async function runLockAssertions(taxYearId: string): Promise<AssertionRunResult> {
@@ -424,6 +515,7 @@ export async function runLockAssertions(taxYearId: string): Promise<AssertionRun
     A11_REFUND_NET_ZERO(taxYearId),
     A12_HOME_OFFICE_SIMPLIFIED(taxYearId),
     A13_DEPOSITS_RECONSTRUCTED(taxYearId),
+    A14_COVERAGE_COMPLETE(taxYearId),
   ])
   const passed = results.filter((r) => r.passed)
   const failed = results.filter((r) => !r.passed)

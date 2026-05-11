@@ -107,6 +107,11 @@ export type FinancialAccount = Prisma.FinancialAccountModel
  */
 export type AccountYearLink = Prisma.AccountYearLinkModel
 /**
+ * Model AccountInactiveMonth
+ * 
+ */
+export type AccountInactiveMonth = Prisma.AccountInactiveMonthModel
+/**
  * Model StatementImport
  * 
  */
