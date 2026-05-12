@@ -64,20 +64,68 @@ export default async function StopsPage({ params, searchParams }: Props) {
       aiProposal: { not: undefined },
     },
   })
+  // Normalize the last-run result to a single shape regardless of which kind
+  // of pipeline run produced it. AUTO_RESOLVE_STOPS returns
+  // {resolved, skipped, errors, skipBreakdown, details}. The newer
+  // GENERATE_AI_PROPOSALS returns {generated, autoApplied, pendingReview,
+  // withPriorCaseContext, errors, dropReasons}. The persistent panel needs
+  // a single contract — we map both into a common form here so the client
+  // doesn't have to branch on kind.
   const lastAutoSummary = lastAutoRun
-    ? {
-        status: lastAutoRun.status,
-        startedAt: lastAutoRun.startedAt.toISOString(),
-        finishedAt: lastAutoRun.finishedAt?.toISOString() ?? null,
-        result: (lastAutoRun.result as {
-          resolved?: number
-          skipped?: number
-          errors?: number
-          skipBreakdown?: Record<string, number>
-          details?: Array<{ merchantKey: string; code: string; confidence: number; status: string; reason?: string }>
-        } | null) ?? null,
-        lastError: lastAutoRun.lastError,
-      }
+    ? (() => {
+        const raw = lastAutoRun.result as Record<string, unknown> | null
+        const isProposalRun = lastAutoRun.kind === "GENERATE_AI_PROPOSALS"
+        // Choose the right primary counters per kind.
+        const resolved = isProposalRun
+          ? (raw?.["autoApplied"] as number | undefined) ?? 0
+          : (raw?.["resolved"] as number | undefined) ?? 0
+        const skipped = isProposalRun
+          ? (raw?.["pendingReview"] as number | undefined) ?? 0
+          : (raw?.["skipped"] as number | undefined) ?? 0
+        const errors = (raw?.["errors"] as number | undefined) ?? 0
+        // skipBreakdown — autoResolveStops emits a {reason: count} map;
+        // generateAiProposals emits a {stopId: reason} map (dropReasons),
+        // so we invert that for display.
+        let skipBreakdown: Record<string, number> | undefined
+        if (isProposalRun) {
+          const drops = raw?.["dropReasons"] as Record<string, string> | undefined
+          if (drops && typeof drops === "object") {
+            skipBreakdown = {}
+            for (const reason of Object.values(drops)) {
+              skipBreakdown[reason] = (skipBreakdown[reason] ?? 0) + 1
+            }
+            // Also surface the prior-case coverage as a breakdown chip.
+            const withCtx = raw?.["withPriorCaseContext"] as number | undefined
+            const generated = raw?.["generated"] as number | undefined
+            if (withCtx != null && generated != null && generated > 0) {
+              skipBreakdown[`${withCtx}/${generated} with prior cases`] = 0
+            }
+          }
+        } else {
+          skipBreakdown = raw?.["skipBreakdown"] as Record<string, number> | undefined
+        }
+        // Detail rows are autoResolveStops-only — proposals don't carry
+        // them in the same shape (the per-stop info lives on
+        // StopItem.aiProposal instead, and the /review page renders it).
+        const details = isProposalRun
+          ? undefined
+          : (raw?.["details"] as Array<{ merchantKey: string; code: string; confidence: number; status: string; reason?: string }> | undefined)
+
+        return {
+          kind: lastAutoRun.kind as "AUTO_RESOLVE_STOPS" | "GENERATE_AI_PROPOSALS",
+          status: lastAutoRun.status,
+          startedAt: lastAutoRun.startedAt.toISOString(),
+          finishedAt: lastAutoRun.finishedAt?.toISOString() ?? null,
+          result: {
+            resolved,
+            skipped,
+            errors,
+            skipBreakdown,
+            details,
+          },
+          lastError: lastAutoRun.lastError,
+        }
+      })()
     : null
 
   const stops = await prisma.stopItem.findMany({

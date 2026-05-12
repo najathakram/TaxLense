@@ -252,7 +252,14 @@ export async function findSimilarResolvedStops(
         scheduleCLine: resolvedLine,
       },
       resolvedAt: c.answeredAt?.toISOString() ?? "",
-      similarity: score,
+      // Cap the displayed similarity at 1.0 — the internal score can reach
+      // 1.2 (exact-match 1.0 + sameAccount 0.1 + sameAmount 0.1) which the
+      // AI prompt and review UI then formatted as "similarity 1.1" or
+      // "similarity 1.2", which reads as nonsense to a human ("greater than
+      // 100% match"). The internal _score keeps the full value so the
+      // sort still surfaces strong-signal matches above weak ones; only
+      // the display number is clamped.
+      similarity: Math.min(1.0, score),
       year: c.taxYear.year,
       _score: score,
     })

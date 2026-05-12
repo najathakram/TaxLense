@@ -69,6 +69,9 @@ const CATEGORIES: { key: StopCategory; label: string }[] = [
 const POLL_MS = 2_000
 
 export interface LastAutoSummary {
+  /** Which pipeline kind produced this run — drives the label rendering
+   *  ("auto-resolved" vs "auto-applied", "skipped" vs "pending review"). */
+  kind?: "AUTO_RESOLVE_STOPS" | "GENERATE_AI_PROPOSALS"
   status: string
   startedAt: string
   finishedAt: string | null
@@ -237,28 +240,38 @@ export function StopsClient({
         errorMessage={lastError}
         recentResults={lastResult ? [{
           ok: lastResult.errors === 0,
-          label: "Auto-resolve",
+          // Match the persistent panel labels: the new flow is review-first
+          // ("auto-applied / pending review") not write-now
+          // ("resolved / skipped"). The numbers come from the same shape
+          // mapping the polling tick already does in onAutoResolve above.
+          label: "AI proposals",
           detail: (() => {
-            const head = `${lastResult.resolved} resolved · ${lastResult.skipped} skipped · ${lastResult.errors} errors`
+            const head = `${lastResult.resolved} auto-applied · ${lastResult.skipped} pending review · ${lastResult.errors} errors`
             const bd = (lastResult as { skipBreakdown?: Record<string, number> }).skipBreakdown
             if (!bd) return head
             const parts = Object.entries(bd)
               .sort((a, b) => b[1] - a[1])
-              .map(([reason, n]) => `${n} ${reason}`)
+              .map(([reason, n]) => (n > 0 ? `${n} ${reason}` : reason))
               .join(", ")
             return parts ? `${head} (${parts})` : head
           })(),
         }] : []}
       />
 
-      {/* Persistent "last auto-resolve run" panel — survives the page reload
-          that the floating chip doesn't. Without this, the user pressed
-          Auto-resolve, the chip flashed for 4s, the page reloaded, and they
-          had no way to remember why the count didn't drop. */}
+      {/* Persistent "last run" panel — survives the page reload that the
+          floating chip doesn't. Labels swap based on which kind of run
+          produced the latest entry: AUTO_RESOLVE_STOPS uses
+          "resolved/skipped/errors"; GENERATE_AI_PROPOSALS uses
+          "auto-applied / pending review / errors" — same numbers, but
+          the labels match what the run actually does. */}
       {lastAutoSummary && lastAutoSummary.result && (
         <div className="rounded border bg-muted/20 p-3 text-sm space-y-1">
           <div className="flex items-center gap-2 flex-wrap">
-            <span className="font-medium">Last auto-resolve run</span>
+            <span className="font-medium">
+              {lastAutoSummary.kind === "GENERATE_AI_PROPOSALS"
+                ? "Last AI proposal run"
+                : "Last auto-resolve run"}
+            </span>
             <span className="text-xs text-muted-foreground">
               {new Date(lastAutoSummary.startedAt).toLocaleString()} ·{" "}
               {lastAutoSummary.status}
@@ -268,12 +281,15 @@ export function StopsClient({
           <div className="text-xs text-muted-foreground">
             {(() => {
               const r = lastAutoSummary.result!
-              const head = `${r.resolved ?? 0} resolved · ${r.skipped ?? 0} skipped · ${r.errors ?? 0} errors`
+              const isProposal = lastAutoSummary.kind === "GENERATE_AI_PROPOSALS"
+              const head = isProposal
+                ? `${r.resolved ?? 0} auto-applied · ${r.skipped ?? 0} pending review · ${r.errors ?? 0} errors`
+                : `${r.resolved ?? 0} resolved · ${r.skipped ?? 0} skipped · ${r.errors ?? 0} errors`
               const bd = r.skipBreakdown
               if (!bd) return head
               const parts = Object.entries(bd)
                 .sort((a, b) => b[1] - a[1])
-                .map(([reason, n]) => `${n} ${reason}`)
+                .map(([reason, n]) => (n > 0 ? `${n} ${reason}` : reason))
                 .join(", ")
               return parts ? `${head} (${parts})` : head
             })()}
