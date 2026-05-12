@@ -46,20 +46,26 @@ export async function deriveStopsFromAssertions(
   })
 
   for (const tx of unclassifiedInflows) {
-    // Only skip if a real PENDING stop exists. ANSWERED stops are stale
-    // (the txn is still unclassified — meaning the prior answer didn't
-    // stick), so we re-emit a fresh PENDING. Without this, Atif's STOPs
-    // page stayed empty after Archive Superseded even though 63 deposits
-    // were still NEEDS_CONTEXT in the ledger.
-    const existingPending = await prisma.stopItem.findFirst({
+    // Skip if ANY existing stop covers this transaction, regardless of
+    // state. The previous "only skip PENDING" rule fed an infinite loop:
+    // when a stop was answered as OTHER (or auto-applied as
+    // NEEDS_CONTEXT), the underlying transaction's current classification
+    // stayed NEEDS_CONTEXT, which re-matched the OR clause above on the
+    // next page load and re-created a fresh PENDING stop. The CPA would
+    // press Generate, watch 8 proposals get persisted, and on reload see
+    // 8 brand-new blank-radio cards because deriveStopsFromAssertions had
+    // forgotten the prior decision and made new shells with no aiSuggestion.
+    //
+    // The user can still re-answer an ANSWERED stop via the "Show
+    // answered" toggle on /stops — we just don't materialize a duplicate.
+    const existingStop = await prisma.stopItem.findFirst({
       where: {
         taxYearId,
         category: "DEPOSIT",
         transactionIds: { has: tx.id },
-        state: "PENDING",
       },
     })
-    if (existingPending) continue
+    if (existingStop) continue
     const absDollars = Math.abs(Number(tx.amountNormalized.toString()))
     const abs = absDollars.toFixed(2) // canonical for stop.context — keep machine-readable
     const absDisplay = fmtUSD(absDollars, { cents: true })
@@ -111,15 +117,15 @@ export async function deriveStopsFromAssertions(
     const purposeOk = !!sub?.purpose && sub.purpose.trim().length >= 2
     if (attendeesOk && purposeOk) continue
 
-    const existingPending = await prisma.stopItem.findFirst({
+    // Same any-state skip as the DEPOSIT branch above — see comment there.
+    const existingStop = await prisma.stopItem.findFirst({
       where: {
         taxYearId,
         category: "SECTION_274D",
         transactionIds: { has: tx.id },
-        state: "PENDING",
       },
     })
-    if (existingPending) continue
+    if (existingStop) continue
 
     const absDollars = Math.abs(Number(tx.amountNormalized.toString()))
     const abs = absDollars.toFixed(2)
