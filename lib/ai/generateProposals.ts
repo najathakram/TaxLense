@@ -535,7 +535,21 @@ export async function generateAiProposals(
 
     try {
       await persistProposal(stop.id, record)
-      if (record.confidence >= HIGH_CONFIDENCE_AUTO_APPLY_THRESHOLD) {
+      // Defensive auto-apply gate. Never auto-apply when the AI hedged:
+      //   - code === "NEEDS_CONTEXT": writing this as the current
+      //     classification triggers deriveStopsFromAssertions to
+      //     immediately re-create a new PENDING DEPOSIT stop on the
+      //     same transaction → infinite loop where every Generate
+      //     run looks like it auto-applied N stops but the count
+      //     never drops.
+      //   - answer.choice === "OTHER": the model chose OTHER because
+      //     it couldn't decide. Auto-applying that decision is worse
+      //     than leaving the stop PENDING — the CPA gets no signal
+      //     that the AI was uncertain.
+      const isHedged =
+        record.code === "NEEDS_CONTEXT" ||
+        ("choice" in record.answer && record.answer.choice === "OTHER")
+      if (!isHedged && record.confidence >= HIGH_CONFIDENCE_AUTO_APPLY_THRESHOLD) {
         await autoApply(stop, record, opts.actorUserId)
         autoApplied++
       } else {
