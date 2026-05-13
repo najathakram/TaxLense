@@ -84,7 +84,7 @@ function SignalGroup({
               {s.transactionIds && s.transactionIds.length > 0 && (
                 <p className="mt-1 text-xs">
                   {s.transactionIds.length} affected txn{s.transactionIds.length === 1 ? "" : "s"} —{" "}
-                  <Link className="text-blue-600 underline" href={`../ledger`}>view in ledger</Link>
+                  <Link className="text-blue-600 underline" href={`/years/${year}/ledger`}>view in ledger</Link>
                 </p>
               )}
               <div className="mt-2 flex gap-2 items-center flex-wrap">
