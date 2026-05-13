@@ -11,7 +11,7 @@ import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover
 import { Textarea } from "@/components/ui/textarea"
 import { Label } from "@/components/ui/label"
 import { Checkbox } from "@/components/ui/checkbox"
-import { TRANSACTION_CODES, SCHEDULE_C_LINES, codeColorClass } from "@/lib/classification/constants"
+import { TRANSACTION_CODES, codeColorClass } from "@/lib/classification/constants"
 import { AMAZON_MERCHANT_PATTERN, AMAZON_SPLIT_THRESHOLD } from "@/lib/splits/config"
 import { fmtUSD } from "@/lib/format/currency"
 
@@ -58,15 +58,48 @@ export interface LedgerRow {
   /** Count of CPA notes attached to the current classification — drives
    *  the 💬 indicator on the merchant cell (Phase J leftover). */
   noteCount: number
+  /** True when the transaction has NO current Classification row at all.
+   *  Distinct from `code: "NEEDS_CONTEXT"` on a real classification — those
+   *  came from the agent's escalation path. Unclassified rows haven't been
+   *  through the agent yet and need a Run-CPA-Agent prompt. */
+  isUnclassified: boolean
 }
 
 interface Props {
   year: number
   rows: LedgerRow[]
   accounts: { id: string; nickname: string | null }[]
+  /** Taxpayer's entity type (SOLE_PROP / S_CORP / LLC_MULTI / C_CORP / …). */
+  entityType: string
+  /** Allowed form-line strings for this entity — drives the inline-edit
+   *  dropdown and the split-dialog dropdown. */
+  formLines: string[]
+  /** Column-header label per entity ("Sch C Line", "Form 1120-S Line", …). */
+  formLineLabel: string
+  /** Count of transactions with no current Classification row. Drives the
+   *  amber "Run CPA Agent →" banner above the filter bar. */
+  unclassifiedCount: number
 }
 
-export function LedgerClient({ year, rows, accounts }: Props) {
+export function LedgerClient({
+  year,
+  rows,
+  accounts,
+  entityType: _entityType,
+  formLines,
+  formLineLabel,
+  unclassifiedCount,
+}: Props) {
+  // Build the dropdown option list once. If a row's stored scheduleCLine is
+  // not in the current entity's allowlist (e.g. user changed entity type
+  // mid-year), we still surface it as a "(legacy)" option so the value is
+  // visible and re-pickable rather than silently blank.
+  const lineOptionsForRow = (current: string | null): string[] => {
+    if (current && !formLines.includes(current)) return [...formLines, current]
+    return formLines
+  }
+  const isLegacyLine = (line: string, current: string | null): boolean =>
+    current === line && !formLines.includes(line)
   // Read URL params on first render so Risk fix-it deep-links
   // (e.g. /ledger?code=PERSONAL, ?merchant=WISE, ?account=Wise) seed the
   // filter state. Without this, clicking "Review PERSONAL rows →" landed
@@ -244,6 +277,33 @@ export function LedgerClient({ year, rows, accounts }: Props) {
 
   return (
     <div className="space-y-4">
+      {/* Unclassified banner — Tier B-21. Shown when one or more transactions
+          have no current Classification row. Distinct from `NEEDS_CONTEXT`
+          (which IS a classification, just escalated). The CPA agent on
+          /pipeline classifies every unclassified row in one Sonnet pass. */}
+      {unclassifiedCount > 0 && (
+        <div
+          className="flex flex-wrap items-center gap-3 border border-amber-500/40 bg-amber-500/10 text-amber-600 dark:text-amber-400 rounded p-3 text-sm"
+          data-testid="unclassified-banner"
+        >
+          <span className="text-lg leading-none" aria-hidden>
+            ⚠
+          </span>
+          <span>
+            <strong>
+              {unclassifiedCount} transaction{unclassifiedCount === 1 ? "" : "s"} not yet classified
+            </strong>{" "}
+            — these rows have no business % or {formLineLabel.toLowerCase()} assignment yet.
+          </span>
+          <a
+            href={`/years/${year}/pipeline`}
+            className="ml-auto inline-flex items-center gap-1 rounded border border-amber-500/40 px-2 py-1 text-xs font-semibold hover:bg-amber-500/20"
+          >
+            Run CPA Agent →
+          </a>
+        </div>
+      )}
+
       {/* NL override bar */}
       <div className="border rounded p-3 bg-muted/30 space-y-2">
         <Label className="text-xs">Tell the AI what to change</Label>
@@ -389,7 +449,9 @@ export function LedgerClient({ year, rows, accounts }: Props) {
           <div className="p-2">Category{categoryLoading ? " ⏳" : ""}</div>
           <button className="p-2 text-right w-full hover:text-primary" onClick={() => toggleSort("amount")}>Amount{sortArrow("amount")}</button>
           <div className="p-2">Code</div>
-          <div className="p-2">Sch C Line</div>
+          <div className="p-2" title={`Form line on the entity's primary return (${formLineLabel})`}>
+            {formLineLabel}
+          </div>
           <div className="p-2 text-right">Biz %</div>
           <div className="p-2 text-right">Deductible</div>
           <div className="p-2 text-center">Tier</div>
@@ -464,7 +526,7 @@ export function LedgerClient({ year, rows, accounts }: Props) {
                   <div className={`p-2 text-right tabular-nums ${r.amount > 0 ? "text-red-600 dark:text-red-400" : "text-green-600 dark:text-green-400"}`}>
                     {r.amount > 0 ? "-" : "+"}{fmtUSD(Math.abs(r.amount), { cents: true })}
                   </div>
-                  <div className="p-2">
+                  <div className="p-2 flex flex-col gap-0.5">
                     <select
                       className="w-full bg-transparent border rounded p-0.5"
                       value={r.code}
@@ -475,6 +537,14 @@ export function LedgerClient({ year, rows, accounts }: Props) {
                         <option key={c} value={c}>{c}</option>
                       ))}
                     </select>
+                    {r.isUnclassified && (
+                      <span
+                        className="inline-flex items-center justify-center rounded border border-amber-500/40 bg-amber-500/10 px-1 py-0 text-[9px] font-semibold uppercase tracking-wide text-amber-600 dark:text-amber-400"
+                        title="No classification on record — run the CPA Agent on /pipeline to classify."
+                      >
+                        unclassified
+                      </span>
+                    )}
                   </div>
                   <div className="p-2">
                     <select
@@ -489,8 +559,10 @@ export function LedgerClient({ year, rows, accounts }: Props) {
                       }
                     >
                       <option value="">—</option>
-                      {SCHEDULE_C_LINES.map((l) => (
-                        <option key={l} value={l}>{l}</option>
+                      {lineOptionsForRow(r.scheduleCLine).map((l) => (
+                        <option key={l} value={l}>
+                          {isLegacyLine(l, r.scheduleCLine) ? `${l} (legacy)` : l}
+                        </option>
                       ))}
                     </select>
                   </div>
@@ -597,6 +669,7 @@ export function LedgerClient({ year, rows, accounts }: Props) {
           year={year}
           row={splitRow}
           onClose={() => setSplitRow(null)}
+          formLines={formLines}
         />
       )}
     </div>
@@ -660,10 +733,12 @@ function AmazonSplitDialog({
   year,
   row,
   onClose,
+  formLines: splitFormLines,
 }: {
   year: number
   row: LedgerRow
   onClose: () => void
+  formLines: string[]
 }) {
   const [splits, setSplits] = useState<SplitInput[]>([
     {
@@ -748,7 +823,7 @@ function AmazonSplitDialog({
                     onChange={(e) => update(i, { scheduleCLine: e.target.value || null })}
                   >
                     <option value="">—</option>
-                    {SCHEDULE_C_LINES.map((l) => (
+                    {splitFormLines.map((l) => (
                       <option key={l} value={l}>{l}</option>
                     ))}
                   </select>
