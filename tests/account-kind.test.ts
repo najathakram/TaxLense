@@ -71,4 +71,25 @@ describe("isMoneyMoverOutflow", () => {
     expect(isMoneyMoverOutflow("MONEYWISE FINANCIAL")).toBe(false)
     expect(isMoneyMoverOutflow("OTHERWISE INC")).toBe(false)
   })
+
+  it("matches one-sided transfer descriptors that don't pair 1:1", () => {
+    // Apple Cash — same semantic as Cash App
+    expect(isMoneyMoverOutflow("APPLE CASH BALANCE A")).toBe(true)
+    expect(isMoneyMoverOutflow("APPLE CASH BALANCE ADD 1INFINITELOOP")).toBe(true)
+    // Wise's account-side language for a top-up that landed
+    expect(isMoneyMoverOutflow("TOPPED UP ACCOUNT")).toBe(true)
+    // Chase / BofA descriptors for inter-account ACH where the memo names
+    // only the source bank (e.g. "ADV PLUS BANKING") not a known account ID
+    expect(isMoneyMoverOutflow("REAL TIME TRANSFER")).toBe(true)
+    expect(isMoneyMoverOutflow("REAL TIME TRANSFER RECD FROM ABA/CONTR BNK-021000021")).toBe(true)
+    expect(isMoneyMoverOutflow("ONLINE TRANSFER")).toBe(true)
+    expect(isMoneyMoverOutflow("ONLINE TRANSFER 26546892412 FROM ADV PLUS BANKING")).toBe(true)
+    expect(isMoneyMoverOutflow("ONLINE TRANSFER 23797987001 TO CHECKING")).toBe(true)
+    expect(isMoneyMoverOutflow("ONLINE REALTIME TRANSFER")).toBe(true)
+    // Liberis — merchant cash advance proceeds; loan basis (non-taxable),
+    // structurally one-sided
+    expect(isMoneyMoverOutflow("LIBERIS")).toBe(true)
+    // BofA mobile-app deposit (bank-side label, not a customer/vendor)
+    expect(isMoneyMoverOutflow("BKOFAMERICA MOBILE 11/21 3807790350 DEPOSIT *MOBILE")).toBe(true)
+  })
 })
