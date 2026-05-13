@@ -77,10 +77,19 @@ export async function buildAuditPacket(taxYearId: string, skipMemos = false): Pr
   // Build master ledger XLSX
   const ledgerBuf = await buildMasterLedger(taxYearId)
 
-  // Position memos (skipped in tests to avoid AI calls)
+  // Position memos (skipped in tests to avoid AI calls). Failure-resilient:
+  // a single Anthropic API hiccup must not blow up the entire audit packet.
+  // The deterministic content (substantiation CSVs, source-doc inventory,
+  // income reconciliation, ledger snapshot) still has audit value on its own.
   let memoMap: Map<string, { text: string; exposure: number; modelUsed: string }> = new Map()
+  let memoError: string | null = null
   if (!skipMemos) {
-    memoMap = await generateAllPositionMemos(taxYearId)
+    try {
+      memoMap = await generateAllPositionMemos(taxYearId)
+    } catch (e) {
+      memoError = e instanceof Error ? e.message : String(e)
+      console.error("[auditPacket] position-memo generation failed; continuing without memos:", memoError)
+    }
   }
 
   return new Promise<Buffer>((resolve, reject) => {
