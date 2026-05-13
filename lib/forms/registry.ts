@@ -213,3 +213,24 @@ export function getFormSpec(entityType: string | null | undefined): FormSpec {
 export function supportedEntityTypes(): EntityKey[] {
   return (Object.keys(FORM_REGISTRY) as EntityKey[]).filter((k) => FORM_REGISTRY[k].supported)
 }
+
+/**
+ * Short column-header label per entity. Drives the ledger's form-line column
+ * header and the STOP merchant-form line picker so an S-Corp user sees
+ * "Form 1120-S Line" instead of "Sch C Line".
+ */
+export function formLineLabel(entityType: string | null | undefined): string {
+  switch (entityType) {
+    case "S_CORP":
+      return "Form 1120-S Line"
+    case "LLC_MULTI":
+    case "PARTNERSHIP":
+      return "Form 1065 Line"
+    case "C_CORP":
+      return "Form 1120 Line"
+    case "SOLE_PROP":
+    case "LLC_SINGLE":
+    default:
+      return "Sch C Line"
+  }
+}

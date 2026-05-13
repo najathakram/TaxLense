@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useRef, useState, useTransition } from "react"
+import { createContext, useContext, useEffect, useRef, useState, useTransition } from "react"
 import { useRouter } from "next/navigation"
 import type { StopCategory, StopState } from "@/app/generated/prisma/client"
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs"
@@ -12,7 +12,6 @@ import { Textarea } from "@/components/ui/textarea"
 import { Label } from "@/components/ui/label"
 import { Switch } from "@/components/ui/switch"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
-import { SCHEDULE_C_LINES } from "@/lib/classification/constants"
 import { resolveStop, deferStop, archiveSupersededStops, type StopAnswer } from "./actions"
 import { runGenerateAiProposals, getPipelineRunStatus } from "@/app/(app)/years/[year]/pipeline/actions"
 import { FloatingProgress } from "@/components/pipeline/floating-progress"
@@ -66,6 +65,15 @@ const CATEGORIES: { key: StopCategory; label: string }[] = [
   { key: "PERIOD_GAP", label: "Period Gap" },
 ]
 
+// Entity-aware form-line context. The MerchantForm's "Override line"
+// dropdown reads this so an S-Corp user sees Form 1120-S lines instead of
+// Schedule C lines. Default keeps the page renderable in isolation (tests
+// that mount StopsClient with no provider get Schedule C semantics).
+const FormLinesContext = createContext<{ lines: string[]; label: string }>({
+  lines: [],
+  label: "Sch C Line",
+})
+
 const POLL_MS = 2_000
 
 export interface LastAutoSummary {
@@ -91,6 +99,8 @@ export function StopsClient({
   initialCategory,
   lastAutoSummary,
   pendingProposalsCount = 0,
+  formLines = [],
+  formLineLabel = "Sch C Line",
 }: {
   year: number
   stops: SerializedStop[]
@@ -105,6 +115,11 @@ export function StopsClient({
   /** Count of pending stops with an aiProposal — drives a banner that
    *  routes the CPA to /review even after a page reload. */
   pendingProposalsCount?: number
+  /** Allowed form-line strings for the taxpayer's entity. Drives the
+   *  MerchantForm "Override line" dropdown. */
+  formLines?: string[]
+  /** Column-label per entity ("Sch C Line", "Form 1120-S Line", …). */
+  formLineLabel?: string
 }) {
   const [activeRun, setActiveRun] = useState<{ runId: string; label: string } | null>(null)
   const [progress, setProgress] = useState<Record<string, unknown>>({})
@@ -231,6 +246,7 @@ export function StopsClient({
   const autoBusy = activeRun !== null
 
   return (
+    <FormLinesContext.Provider value={{ lines: formLines, label: formLineLabel }}>
     <div className="space-y-4">
       {/* Floating progress panel — shows live "X of N · resolved · skipped" while
           a run is in flight, then a green ✓ summary when it completes. */}
@@ -376,6 +392,7 @@ export function StopsClient({
       ))}
     </Tabs>
     </div>
+    </FormLinesContext.Provider>
   )
 }
 
@@ -739,19 +756,7 @@ function MerchantForm({
           onChange={(e) => setOther(e.target.value)}
         />
       )}
-      <div className="space-y-1">
-        <Label className="text-xs">Override Schedule C line (optional)</Label>
-        <select
-          className="w-full border rounded p-2 text-sm bg-background"
-          value={line}
-          onChange={(e) => setLine(e.target.value)}
-        >
-          <option value="">(use default for this code)</option>
-          {SCHEDULE_C_LINES.map((l) => (
-            <option key={l} value={l}>{l}</option>
-          ))}
-        </select>
-      </div>
+      <FormLineOverride value={line} onChange={setLine} />
       <label className="flex items-center gap-2 text-sm">
         <Switch checked={applyToSimilar} onCheckedChange={setApplyToSimilar} />
         Apply to similar merchants (updates MerchantRule)
@@ -779,6 +784,37 @@ function MerchantForm({
           Defer
         </Button>
       </div>
+    </div>
+  )
+}
+
+function FormLineOverride({
+  value,
+  onChange,
+}: {
+  value: string
+  onChange: (v: string) => void
+}) {
+  const { lines, label } = useContext(FormLinesContext)
+  // Surface a "(legacy)" tag if the prior answer's line isn't in the entity's
+  // current allowlist (e.g. entity flipped from sole prop to S-Corp after
+  // the stop was first answered) so the user can see and re-pick.
+  const options = value && !lines.includes(value) ? [...lines, value] : lines
+  return (
+    <div className="space-y-1">
+      <Label className="text-xs">Override {label.toLowerCase()} (optional)</Label>
+      <select
+        className="w-full border rounded p-2 text-sm bg-background"
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+      >
+        <option value="">(use default for this code)</option>
+        {options.map((l) => (
+          <option key={l} value={l}>
+            {l === value && !lines.includes(l) ? `${l} (legacy)` : l}
+          </option>
+        ))}
+      </select>
     </div>
   )
 }

@@ -3,6 +3,7 @@ import { prisma } from "@/lib/db"
 import { notFound } from "next/navigation"
 import { computeDeductibleAmt } from "@/lib/classification/deductible"
 import { inYearWindow } from "@/lib/queries/yearWindow"
+import { getFormSpec, formLineLabel } from "@/lib/forms/registry"
 import { LedgerClient, type LedgerRow } from "./ledger-client"
 
 interface Props {
@@ -19,6 +20,13 @@ export default async function LedgerPage({ params }: Props) {
     where: { userId_year: { userId, year } },
   })
   if (!taxYear) notFound()
+
+  const profile = await prisma.businessProfile.findUnique({
+    where: { taxYearId: taxYear.id },
+    select: { entityType: true },
+  })
+  const entityType = profile?.entityType ?? "SOLE_PROP"
+  const formSpec = getFormSpec(entityType)
 
   const txns = await prisma.transaction.findMany({
     where: {
@@ -89,6 +97,7 @@ export default async function LedgerPage({ params }: Props) {
       isChildOfSplit: !!t.splitOfId,
       openStopId: stopByTxn.get(t.id) ?? null,
       noteCount: c ? (noteCountByClassId.get(c.id) ?? 0) : 0,
+      isUnclassified: !c,
     }
   })
 
@@ -96,16 +105,26 @@ export default async function LedgerPage({ params }: Props) {
     new Map(rows.map((r) => [r.accountId, { id: r.accountId, nickname: r.accountNickname }])).values()
   )
 
+  const unclassifiedCount = rows.filter((r) => r.isUnclassified).length
+
   return (
     <div className="max-w-[95vw] mx-auto py-6 px-4 space-y-4">
       <div>
         <h1 className="text-2xl font-bold">Ledger — {year}</h1>
         <p className="text-sm text-muted-foreground mt-1">
-          {rows.length} transactions · inline-edit or use the bulk bar below · changes append new
-          Classification rows.
+          {rows.length} transactions · Files {formSpec.primaryReturn} · inline-edit or use the bulk
+          bar below · changes append new Classification rows.
         </p>
       </div>
-      <LedgerClient year={year} rows={rows} accounts={accounts} />
+      <LedgerClient
+        year={year}
+        rows={rows}
+        accounts={accounts}
+        entityType={entityType}
+        formLines={formSpec.lines}
+        formLineLabel={formLineLabel(entityType)}
+        unclassifiedCount={unclassifiedCount}
+      />
     </div>
   )
 }

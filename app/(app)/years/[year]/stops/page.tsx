@@ -4,6 +4,7 @@ import { notFound } from "next/navigation"
 import { StopsClient, type SerializedStop, type SerializedAffected } from "./stops-client"
 import { deriveAiSuggestion } from "@/lib/stops/aiSuggestion"
 import { deriveStopsFromAssertions } from "@/lib/stops/deriveFromAssertions"
+import { getFormSpec, formLineLabel } from "@/lib/forms/registry"
 
 interface Props {
   params: Promise<{ year: string }>
@@ -23,6 +24,13 @@ export default async function StopsPage({ params, searchParams }: Props) {
     where: { userId_year: { userId, year } },
   })
   if (!taxYear) notFound()
+
+  const profile = await prisma.businessProfile.findUnique({
+    where: { taxYearId: taxYear.id },
+    select: { entityType: true },
+  })
+  const entityType = profile?.entityType ?? "SOLE_PROP"
+  const formSpec = getFormSpec(entityType)
 
   // B-07: deterministically materialize DEPOSIT + §274(d) STOPs from
   // assertion failures on every page load. Idempotent (won't duplicate
@@ -202,6 +210,8 @@ export default async function StopsPage({ params, searchParams }: Props) {
         initialCategory={initialCategory}
         lastAutoSummary={lastAutoSummary}
         pendingProposalsCount={pendingProposalsCount}
+        formLines={formSpec.lines}
+        formLineLabel={formLineLabel(entityType)}
       />
     </div>
   )
