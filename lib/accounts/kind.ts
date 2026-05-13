@@ -51,9 +51,23 @@ export const MONEY_MOVER_INSTITUTIONS = [
  * The pattern requires "cash app" with whitespace (not "cashapp") so
  * "CASHAPP*MERCHANT" doesn't match. Asterisk negative-lookahead on the
  * single-token names handles the same case for paypal/venmo/wise.
+ *
+ * The pattern also recognises additional bank-system descriptors that
+ * indicate one-sided legitimate transfers (the destination side isn't a
+ * known account in the system, so 1:1 pairing is structurally
+ * impossible): "apple cash" (Apple's wallet, semantically identical to
+ * Cash App), "topped up account" (Wise's account-side language for an
+ * incoming top-up), "real time transfer" and "online transfer" (Chase /
+ * BofA descriptors for inter-account ACH that name only the source bank
+ * in the memo), "liberis" (merchant cash advance proceeds — loan basis,
+ * non-taxable, structurally one-sided), and "bkofamerica mobile" (BofA
+ * mobile-app deposit — a bank-side label, not a customer/vendor
+ * identity). Adding these stops A07_TRANSFER_PAIRED from flagging
+ * legitimate cash-movement rows where the counterparty account isn't
+ * uploaded.
  */
 export const MONEY_MOVER_OUTFLOW_RX =
-  /\b(wise(?!\*)(?:\s*inc)?|transferwise|paypal(?!\*)|venmo(?!\*)|cash\s+app|stripe|zelle\s*(?:to|payment)?|pocketsflow|remitly|revolut)\b/i
+  /\b(wise(?!\*)(?:\s*inc)?|transferwise|paypal(?!\*)|venmo(?!\*)|cash\s+app|apple\s+cash|stripe|zelle\s*(?:to|payment)?|pocketsflow|remitly|revolut|topped\s+up\s+account|real\s+time\s+transfer|online\s+(?:realtime\s+)?transfer|liberis|bkofamerica\s+mobile)\b/i
 
 export function inferAccountKind(institution: string): AccountKind {
   const norm = institution.trim().toLowerCase()
