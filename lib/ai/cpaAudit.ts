@@ -533,31 +533,51 @@ Find every defect a real auditor would flag. Respond with STRICT JSON only.`
     }
   }
 
-  // Graceful fall-through: write a single LOW finding noting the audit didn't run
+  // Graceful fall-through: supersede ANY prior PROPOSED CPA_AUDIT-fallthrough
+  // findings (don't accumulate stale ones), then write a single LOW finding.
   if (!parsed) {
-    await prisma.ledgerFinding.create({
-      data: {
-        taxYearId,
-        generatedRunId: options.runId ?? null,
-        severity: "LOW",
-        category: "DIF_RISK",
-        title: "CPA audit pass failed — manual review recommended",
-        rationale: `Both Opus and Sonnet attempts failed: ${lastError ?? "unknown"}`,
-        autoFixable: false,
-        proposedAction: { kind: "NOTE", suggestion: "Re-run CPA_AUDIT or review manually." },
-        citedTxnIds: [],
-      },
+    let supersededOnFailure = 0
+    await prisma.$transaction(async (tx) => {
+      const priorFallthroughs = await tx.ledgerFinding.findMany({
+        where: {
+          taxYearId,
+          state: "PROPOSED",
+          category: "DIF_RISK",
+          title: "CPA audit pass failed — manual review recommended",
+        },
+        select: { id: true },
+      })
+      if (priorFallthroughs.length > 0) {
+        await tx.ledgerFinding.updateMany({
+          where: { id: { in: priorFallthroughs.map((f) => f.id) } },
+          data: { state: "SUPERSEDED" },
+        })
+        supersededOnFailure = priorFallthroughs.length
+      }
+      await tx.ledgerFinding.create({
+        data: {
+          taxYearId,
+          generatedRunId: options.runId ?? null,
+          severity: "LOW",
+          category: "DIF_RISK",
+          title: "CPA audit pass failed — manual review recommended",
+          rationale: `Both Opus and Sonnet attempts failed: ${lastError ?? "unknown"}`,
+          autoFixable: false,
+          proposedAction: { kind: "NOTE", suggestion: "Re-run CPA_AUDIT or review manually." },
+          citedTxnIds: [],
+        },
+      })
+      await tx.auditEvent.create({
+        data: {
+          actorType: "AI",
+          eventType: "CPA_AUDIT_RUN",
+          entityType: "TaxYear",
+          entityId: taxYearId,
+          afterState: { success: false, modelUsed, error: lastError, supersededOnFailure },
+        },
+      })
     })
-    await prisma.auditEvent.create({
-      data: {
-        actorType: "AI",
-        eventType: "CPA_AUDIT_RUN",
-        entityType: "TaxYear",
-        entityId: taxYearId,
-        afterState: { success: false, modelUsed, error: lastError },
-      },
-    })
-    return { proposed: 0, superseded: 0, totalCost: 0, modelUsed }
+    return { proposed: 0, superseded: supersededOnFailure, totalCost: 0, modelUsed }
   }
 
   if (reportProgress) {
