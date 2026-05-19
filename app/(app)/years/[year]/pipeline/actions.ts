@@ -274,6 +274,45 @@ export async function runCpaAgentAction(year: number) {
   })
 }
 
+// ─────────────────────────────────────────────────────────────────────────────
+// Auto-CPA framework — new stage runners
+// ─────────────────────────────────────────────────────────────────────────────
+
+export async function runPreCleanupAction(year: number) {
+  return enqueue(year, "PRE_CLEANUP", async (taxYearId, setProgress) => {
+    const { runPreCleanup } = await import("@/lib/cleanup/preClassification")
+    return runPreCleanup(taxYearId, setProgress)
+  })
+}
+
+export async function runCpaAuditAction(year: number) {
+  return enqueue(year, "CPA_AUDIT", async (taxYearId, setProgress, runId) => {
+    const { runCpaAudit } = await import("@/lib/ai/cpaAudit")
+    return runCpaAudit(taxYearId, setProgress, { runId })
+  })
+}
+
+export async function runCohanSweepAction(year: number) {
+  return enqueue(year, "COHAN_SWEEP", async (taxYearId, setProgress, runId) => {
+    const { runCohanSweep } = await import("@/lib/ai/cohanSweep")
+    return runCohanSweep(taxYearId, setProgress, { runId })
+  })
+}
+
+export async function runSubstantiationQueueAction(year: number) {
+  return enqueue(year, "SUBSTANTIATION_QUEUE", async (taxYearId, setProgress, runId) => {
+    const { runSubstantiationQueue } = await import("@/lib/ai/substantiationQueue")
+    return runSubstantiationQueue(taxYearId, setProgress, { runId })
+  })
+}
+
+export async function runFindingsApplyAction(year: number) {
+  return enqueue(year, "FINDINGS_APPLY", async (taxYearId) => {
+    const { applyAcceptedFindings } = await import("@/lib/findings/apply")
+    return applyAcceptedFindings(taxYearId)
+  })
+}
+
 /**
  * Status-polling endpoint exposed as a server action. The pipeline page calls
  * this periodically while a run is RUNNING.

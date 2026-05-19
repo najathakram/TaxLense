@@ -9,6 +9,12 @@ import { computeRiskScore, type RiskReport } from "@/lib/risk/score"
 import { computeLedgerHash } from "@/lib/lock/hash"
 import { recomputeStatus } from "@/lib/taxYear/status"
 import { maybePopulateCarryforwardOnLock } from "@/lib/carryforward/compute"
+import {
+  runRelockVerify,
+  computePerLineTotals,
+  DriftApprovalRequiredError,
+  type RelockDriftReport,
+} from "@/lib/lock/relockVerify"
 
 export interface LockAttemptResult {
   blocked: boolean
@@ -39,7 +45,17 @@ export async function attemptLock(year: number): Promise<LockAttemptResult> {
   return { blocked: reasons.length > 0, reasons, assertions, risk }
 }
 
-export async function confirmLock(year: number): Promise<void> {
+/**
+ * Confirm lock — supports an optional `driftAck` arg for re-locks where the
+ * drift verifier requested user approval. When provided, RELOCK_VERIFY is
+ * skipped (the user has already acknowledged via the dialog). When omitted
+ * and a prior lock exists, RELOCK_VERIFY runs and may throw
+ * `DriftApprovalRequiredError` — the UI catches that and surfaces the dialog.
+ */
+export async function confirmLock(
+  year: number,
+  options: { driftAck?: string } = {}
+): Promise<void> {
   const { taxYear, userId } = await resolveTaxYear(year)
   if (taxYear.status === "LOCKED") throw new Error("Tax year already locked")
 
@@ -48,7 +64,29 @@ export async function confirmLock(year: number): Promise<void> {
     throw new Error(`Lock blocked: ${result.reasons.join("; ")}`)
   }
 
+  // Auto-CPA: RELOCK_VERIFY drift check when a prior lock exists and the
+  // user hasn't already acked. Non-blocking on first lock.
+  let driftReport: RelockDriftReport | null = null
+  const lastUnlock = await prisma.auditEvent.findFirst({
+    where: { entityType: "TaxYear", entityId: taxYear.id, eventType: "TAXYEAR_UNLOCKED" },
+    orderBy: { occurredAt: "desc" },
+    select: { rationale: true },
+  })
+  try {
+    driftReport = await runRelockVerify(taxYear.id, {
+      unlockRationale: lastUnlock?.rationale ?? null,
+    })
+    if (driftReport.hasPriorLock && driftReport.approvalRequired && !options.driftAck) {
+      throw new DriftApprovalRequiredError(driftReport)
+    }
+  } catch (err) {
+    if (err instanceof DriftApprovalRequiredError) throw err
+    // Non-DriftApproval errors are non-blocking — log and continue.
+    console.error("[confirmLock] RELOCK_VERIFY error (non-blocking):", err)
+  }
+
   const hash = await computeLedgerHash(taxYear.id)
+  const perLineSnapshot = await computePerLineTotals(taxYear.id)
 
   // Phase 5.3 / leftover-fix: when re-locking after an unlock, chain to the
   // previous locked snapshot. The prior TAXYEAR_LOCKED event is the most
@@ -91,9 +129,34 @@ export async function confirmLock(year: number): Promise<void> {
           band: result.risk.band,
           estimatedDeductions: result.risk.estimatedDeductions,
           parentLockedHash, // chain link for LockHistory panel
+          // Auto-CPA: persist per-line totals + gross receipts so the next
+          // re-lock's RELOCK_VERIFY can compute drift without reconstructing
+          // the locked ledger from the audit chain.
+          perLineTotals: perLineSnapshot.perLineTotals,
+          grossReceipts: perLineSnapshot.grossReceipts,
+          driftAck: options.driftAck ?? null,
         },
       },
     })
+    if (options.driftAck && driftReport) {
+      await tx.auditEvent.create({
+        data: {
+          userId,
+          actorType: "USER",
+          eventType: "RELOCK_DRIFT_APPROVED",
+          entityType: "TaxYear",
+          entityId: taxYear.id,
+          rationale: options.driftAck,
+          afterState: {
+            grossReceiptsDriftPct: driftReport.grossReceiptsDriftPct,
+            totalDeductionsDriftPct: driftReport.totalDeductionsDriftPct,
+            highDriftLines: driftReport.perLineDrift
+              .filter((d) => d.severity === "HIGH")
+              .map((d) => d.line),
+          },
+        },
+      })
+    }
   })
 
   // Phase G: if the next year already exists for this taxpayer, populate
@@ -102,6 +165,17 @@ export async function confirmLock(year: number): Promise<void> {
   await maybePopulateCarryforwardOnLock(taxYear.id).catch((e) => {
     console.error("[confirmLock] carryforward propagation failed:", e)
   })
+
+  // Auto-CPA framework: auto-generate every position memo the system flags
+  // as needed (§183, §274(n)(2), §280A, wardrobe, and the new §162 Cohan
+  // sweep memo). Failure is non-blocking — the user sees the partial set in
+  // /memos and can retry generation there.
+  try {
+    const { generateAllPositionMemos } = await import("@/lib/ai/positionMemo")
+    await generateAllPositionMemos(taxYear.id)
+  } catch (e) {
+    console.error("[confirmLock] position-memo auto-generation failed:", e)
+  }
 
   revalidatePath(`/years/${year}`)
   revalidatePath(`/years/${year}/finalize`)
