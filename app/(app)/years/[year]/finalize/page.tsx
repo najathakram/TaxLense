@@ -155,6 +155,14 @@ export default async function FinalizePage({ params }: Props) {
       filename: `taxlens-${year}-financial-statements.xlsx`,
     },
     {
+      kind: "FINANCIAL_STATEMENTS" as const,
+      slug: "financial-statements-csv",
+      title: "Financial Statements (CSV bundle)",
+      description:
+        "Same 5 sheets as the XLSX, transcoded to UTF-8 CSV files inside a ZIP — General Ledger, Schedule C, P&L, Balance Sheet, Schedule C Detail. Includes README + manifest.json. Use when feeding tools that don't read XLSX (databases, scripts, CSV diff).",
+      filename: `taxlens-${year}-financial-statements-csv.zip`,
+    },
+    {
       kind: "AUDIT_PACKET" as const,
       title: "Audit Defense Packet",
       description:
@@ -383,10 +391,18 @@ export default async function FinalizePage({ params }: Props) {
               </summary>
               <div className="space-y-3 p-3">
                 {artifacts.map((a) => {
-                  const report = reportMap.get(a.kind)
+                  // Two artifacts share the FINANCIAL_STATEMENTS kind (XLSX
+                  // and CSV-bundle), so the Report's last-generated timestamp
+                  // is only meaningful for the kind-default (no slug). The
+                  // CSV variant still records under FINANCIAL_STATEMENTS but
+                  // the per-filename Report row would clobber the XLSX's
+                  // timestamp — so suppress the "last generated" hint on
+                  // sibling rows that carry a slug.
+                  const report = "slug" in a ? null : reportMap.get(a.kind)
+                  const cardKey = "slug" in a && a.slug ? a.slug : a.kind
                   return (
                     <div
-                      key={a.kind}
+                      key={cardKey}
                       className="rounded-md border border-border p-3 flex items-start justify-between gap-3"
                     >
                       <div className="flex-1 min-w-0">
@@ -407,6 +423,7 @@ export default async function FinalizePage({ params }: Props) {
                         kind={a.kind}
                         filename={a.filename}
                         disabled={false}
+                        slug={"slug" in a ? a.slug : undefined}
                       />
                     </div>
                   )

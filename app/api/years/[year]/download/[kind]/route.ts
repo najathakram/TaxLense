@@ -3,10 +3,16 @@ import { getCurrentUserId } from "@/lib/auth"
 import { prisma } from "@/lib/db"
 import { buildMasterLedger } from "@/lib/reports/masterLedger"
 import { buildFinancialStatements } from "@/lib/reports/financialStatements"
+import { buildFinancialStatementsCsvZip } from "@/lib/reports/financialStatementsCsv"
 import { buildAuditPacket } from "@/lib/reports/auditPacket"
 import { buildTaxPackage } from "@/lib/reports/taxPackage"
 
-type KindSlug = "master-ledger" | "financial-statements" | "audit-packet" | "tax-package"
+type KindSlug =
+  | "master-ledger"
+  | "financial-statements"
+  | "financial-statements-csv"
+  | "audit-packet"
+  | "tax-package"
 
 const SLUG_TO_KIND: Record<KindSlug, { kind: "MASTER_LEDGER" | "FINANCIAL_STATEMENTS" | "AUDIT_PACKET" | "TAX_PACKAGE"; ext: string; contentType: string; label: string }> = {
   "master-ledger": {
@@ -20,6 +26,15 @@ const SLUG_TO_KIND: Record<KindSlug, { kind: "MASTER_LEDGER" | "FINANCIAL_STATEM
     ext: "xlsx",
     contentType: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
     label: "financial-statements",
+  },
+  // CSV-bundle variant of the same financial statements. Recorded under the
+  // FINANCIAL_STATEMENTS Report kind (no schema change required) — the filename
+  // and label distinguish it on disk and in Report.filePath.
+  "financial-statements-csv": {
+    kind: "FINANCIAL_STATEMENTS",
+    ext: "zip",
+    contentType: "application/zip",
+    label: "financial-statements-csv",
   },
   "audit-packet": {
     kind: "AUDIT_PACKET",
@@ -56,7 +71,10 @@ export async function GET(
   // Validate kind slug
   const meta = SLUG_TO_KIND[kindParam as KindSlug]
   if (!meta) {
-    return new Response(`Unknown kind: ${kindParam}. Valid: master-ledger, financial-statements, audit-packet`, { status: 400 })
+    return new Response(
+      `Unknown kind: ${kindParam}. Valid: master-ledger, financial-statements, financial-statements-csv, audit-packet, tax-package`,
+      { status: 400 },
+    )
   }
 
   // Resolve tax year — must belong to user
@@ -72,7 +90,11 @@ export async function GET(
         buf = await buildMasterLedger(taxYear.id)
         break
       case "FINANCIAL_STATEMENTS":
-        buf = await buildFinancialStatements(taxYear.id)
+        // CSV-bundle slug → ZIP of CSVs; default XLSX slug → multi-sheet XLSX.
+        buf =
+          kindParam === "financial-statements-csv"
+            ? await buildFinancialStatementsCsvZip(taxYear.id)
+            : await buildFinancialStatements(taxYear.id)
         break
       case "AUDIT_PACKET":
         buf = await buildAuditPacket(taxYear.id)
@@ -82,7 +104,7 @@ export async function GET(
         break
     }
   } catch (e) {
-    console.error(`[download] ${meta.kind} generation failed:`, e)
+    console.error(`[download] ${meta.kind} (${kindParam}) generation failed:`, e)
     return new Response("Report generation failed", { status: 500 })
   }
 

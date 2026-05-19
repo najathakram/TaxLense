@@ -9,9 +9,16 @@ interface Props {
   kind: ReportKind
   filename: string
   disabled: boolean
+  /**
+   * Optional explicit URL slug to use instead of deriving it from `kind`.
+   * Needed when two artifact buttons share a Prisma ReportKind but map to
+   * different download endpoints (e.g. financial-statements XLSX vs the
+   * financial-statements-csv ZIP — both recorded as FINANCIAL_STATEMENTS).
+   */
+  slug?: string
 }
 
-export function DownloadClient({ year, kind, filename, disabled }: Props) {
+export function DownloadClient({ year, kind, filename, disabled, slug }: Props) {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -19,7 +26,7 @@ export function DownloadClient({ year, kind, filename, disabled }: Props) {
     setLoading(true)
     setError(null)
     try {
-      const kindParam = kind.toLowerCase().replace(/_/g, "-")
+      const kindParam = slug ?? kind.toLowerCase().replace(/_/g, "-")
       const res = await fetch(`/api/years/${year}/download/${kindParam}`)
       if (!res.ok) {
         const msg = await res.text()
