@@ -76,6 +76,11 @@ const VALID_SEVERITIES = ["CRITICAL", "HIGH", "MEDIUM", "LOW", "COSMETIC"] as co
 // Output schema (per AI response)
 // ─────────────────────────────────────────────────────────────────────────────
 
+// Schema is permissive on optional/aliased fields so the AI's natural variance
+// doesn't crash the whole audit. Opus tends to use `txnIds` for both RECLASSIFY
+// and STOP actions even when the prompt names them differently; we accept
+// either spelling, and missing transactionIds defaults to []. The downstream
+// FINDINGS_APPLY layer enforces stricter invariants at apply time.
 const ReclassifyAction = z.object({
   kind: z.literal("RECLASSIFY"),
   txnIds: z.array(z.string()).min(1),
@@ -84,14 +89,25 @@ const ReclassifyAction = z.object({
   scheduleCLine: z.string().nullable(),
   ircCitations: z.array(z.string()),
   evidenceTier: z.number().int().min(1).max(5),
+  cohanFlag: z.boolean().optional(),
+  substantiation: z.record(z.string(), z.unknown()).optional(),
 })
 
-const StopAction = z.object({
-  kind: z.literal("STOP"),
-  category: z.string(),
-  question: z.string(),
-  transactionIds: z.array(z.string()),
-})
+const StopAction = z
+  .object({
+    kind: z.literal("STOP"),
+    category: z.string(),
+    question: z.string(),
+    // Either spelling is accepted; the runner normalizes to transactionIds.
+    transactionIds: z.array(z.string()).optional(),
+    txnIds: z.array(z.string()).optional(),
+  })
+  .transform((s) => ({
+    kind: s.kind,
+    category: s.category,
+    question: s.question,
+    transactionIds: s.transactionIds ?? s.txnIds ?? [],
+  }))
 
 const BlockAction = z.object({
   kind: z.literal("BLOCK"),

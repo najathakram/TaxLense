@@ -47,19 +47,30 @@ const VALID_CITATIONS = new Set([
   "Cohan",
 ])
 
-const ProposalSchema = z.object({
-  txId: z.string(),
-  decision: z.enum(["PROMOTE", "TIER_BUMP", "SKIP"]),
-  proposedCode: z.enum(["WRITE_OFF", "WRITE_OFF_COGS", "GRAY", "PERSONAL", "NEEDS_CONTEXT"]),
-  proposedLine: z.string().nullable(),
-  proposedTier: z.number().int().min(1).max(5),
-  ircCitations: z.array(z.string()),
-  rationale: z.string().min(20),
-  naicsNexus: z.string(),
-  bankVisibility: z.string(),
-  priorYearPattern: z.string().nullable(),
-  confidence: z.number().min(0).max(1),
-})
+// Permissive schema so the AI's natural variance doesn't tank a whole batch.
+// All explanatory fields fall back to empty strings; missing decisions default
+// to SKIP. The §274(d) hard rail runs at finding-write time regardless.
+const ProposalSchema = z
+  .object({
+    txId: z.string(),
+    decision: z.enum(["PROMOTE", "TIER_BUMP", "SKIP"]).default("SKIP"),
+    proposedCode: z.enum(["WRITE_OFF", "WRITE_OFF_COGS", "GRAY", "PERSONAL", "NEEDS_CONTEXT"]).optional(),
+    proposedLine: z.string().nullable().optional(),
+    proposedTier: z.number().int().min(1).max(5).optional(),
+    ircCitations: z.array(z.string()).default([]),
+    rationale: z.string().default(""),
+    naicsNexus: z.string().default(""),
+    bankVisibility: z.string().default(""),
+    priorYearPattern: z.string().nullable().optional(),
+    confidence: z.number().min(0).max(1).default(0),
+  })
+  .transform((p) => ({
+    ...p,
+    proposedCode: p.proposedCode ?? "WRITE_OFF",
+    proposedLine: p.proposedLine ?? null,
+    proposedTier: p.proposedTier ?? 3,
+    priorYearPattern: p.priorYearPattern ?? null,
+  }))
 
 const ResponseSchema = z.object({
   proposals: z.array(ProposalSchema),
