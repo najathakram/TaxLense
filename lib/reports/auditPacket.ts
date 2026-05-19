@@ -199,12 +199,20 @@ export async function buildAuditPacket(taxYearId: string, skipMemos = false): Pr
     )
 
     // ── 03_cohan_labels.csv ────────────────────────────────────────────────
+    // Auto-CPA framework: prefer the explicit cohanFlag column over the
+    // tier-4 derivation. Tier-4 alone is kept as a safety net for any row
+    // that escapes the COHAN_SWEEP (e.g. legacy data, manual edits).
     const cohanTxns = allTxns.filter((t) => {
       const c = t.classifications[0]
-      return c && DEDUCTIBLE_CODES.includes(c.code) && c.evidenceTier >= 4
+      if (!c) return false
+      if (!DEDUCTIBLE_CODES.includes(c.code)) return false
+      return c.cohanFlag || c.evidenceTier >= 4
     })
     const cohanRows: unknown[][] = cohanTxns.map((t) => {
       const c = t.classifications[0]!
+      const label = c.cohanFlag
+        ? "Cohan estimate (cohanFlag=true) — reconstructed from bank records"
+        : "Tier-4 reconstruction — receipts unavailable"
       return [
         t.postedDate.toISOString().slice(0, 10),
         t.merchantRaw,
@@ -212,13 +220,17 @@ export async function buildAuditPacket(taxYearId: string, skipMemos = false): Pr
         c.code,
         c.businessPct,
         c.evidenceTier,
-        "Cohan estimate — reconstructed from bank records",
+        c.cohanFlag ? "Yes" : "No",
+        label,
         c.reasoning ?? "",
         c.ircCitations.join("; "),
       ]
     })
     archive.append(
-      toCsv(["Date", "Merchant", "Amount", "Code", "Biz%", "Evidence Tier", "Label", "Reconstruction Note", "IRC Citations"], cohanRows),
+      toCsv(
+        ["Date", "Merchant", "Amount", "Code", "Biz%", "Evidence Tier", "cohanFlag", "Label", "Reconstruction Note", "IRC Citations"],
+        cohanRows
+      ),
       { name: "03_cohan_labels.csv" }
     )
 

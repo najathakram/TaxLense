@@ -147,6 +147,11 @@ export type MerchantRule = Prisma.MerchantRuleModel
  */
 export type StopItem = Prisma.StopItemModel
 /**
+ * Model LedgerFinding
+ * 
+ */
+export type LedgerFinding = Prisma.LedgerFindingModel
+/**
  * Model AuditEvent
  * 
  */

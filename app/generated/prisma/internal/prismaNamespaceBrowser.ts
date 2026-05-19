@@ -72,6 +72,7 @@ export const ModelName = {
   Classification: 'Classification',
   MerchantRule: 'MerchantRule',
   StopItem: 'StopItem',
+  LedgerFinding: 'LedgerFinding',
   AuditEvent: 'AuditEvent',
   Report: 'Report',
   Document: 'Document',
@@ -421,6 +422,7 @@ export const ClassificationScalarFieldEnum = {
   source: 'source',
   reasoning: 'reasoning',
   substantiation: 'substantiation',
+  cohanFlag: 'cohanFlag',
   isCurrent: 'isCurrent',
   createdAt: 'createdAt',
   createdByUserId: 'createdByUserId'
@@ -468,6 +470,27 @@ export const StopItemScalarFieldEnum = {
 } as const
 
 export type StopItemScalarFieldEnum = (typeof StopItemScalarFieldEnum)[keyof typeof StopItemScalarFieldEnum]
+
+
+export const LedgerFindingScalarFieldEnum = {
+  id: 'id',
+  taxYearId: 'taxYearId',
+  generatedRunId: 'generatedRunId',
+  severity: 'severity',
+  category: 'category',
+  title: 'title',
+  rationale: 'rationale',
+  autoFixable: 'autoFixable',
+  proposedAction: 'proposedAction',
+  citedTxnIds: 'citedTxnIds',
+  state: 'state',
+  dismissedRationale: 'dismissedRationale',
+  supersedesId: 'supersedesId',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type LedgerFindingScalarFieldEnum = (typeof LedgerFindingScalarFieldEnum)[keyof typeof LedgerFindingScalarFieldEnum]
 
 
 export const AuditEventScalarFieldEnum = {

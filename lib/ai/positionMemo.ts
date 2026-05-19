@@ -141,6 +141,108 @@ async function gather280AFacts(taxYearId: string): Promise<{ facts: string; expo
   return { facts, exposure: deduction }
 }
 
+async function gather162CohanFacts(taxYearId: string): Promise<{ facts: string; exposure: number }> {
+  const [profile, taxYear] = await Promise.all([
+    prisma.businessProfile.findUnique({ where: { taxYearId } }),
+    prisma.taxYear.findUnique({ where: { id: taxYearId }, select: { year: true, userId: true } }),
+  ])
+
+  const txns = await prisma.transaction.findMany({
+    where: { taxYearId, isSplit: false, isStale: false },
+    include: { classifications: { where: { isCurrent: true }, take: 1 } },
+  })
+
+  // PriorYearContext gives us "this merchant was claimed last year too" continuity.
+  const priorYearContext = await prisma.priorYearContext.findUnique({
+    where: { taxYearId },
+    select: { sourceLockedHash: true, sourcePriorYearId: true },
+  })
+
+  let totalCohanExposure = 0
+  let totalCohanCount = 0
+  const cohanByCode = new Map<string, { count: number; total: number }>()
+  const cohanByLine = new Map<string, { count: number; total: number }>()
+  const topClaims: Array<{ date: string; merchant: string; amount: number; code: string; line: string | null; reasoning: string }> = []
+
+  for (const t of txns) {
+    const c = t.classifications[0]
+    if (!c || !c.cohanFlag) continue
+    if (!DEDUCTIBLE_CODES.includes(c.code)) continue
+
+    // Hard rail check at the gather stage too — never include §274(d) rows
+    // even if cohanFlag was somehow set (defense in depth; the upstream
+    // assertNot274dCohan should have rejected the write).
+    const cites = c.ircCitations ?? []
+    if (cites.some((cite) => cite.includes("§274(d)"))) continue
+    if (c.code === "MEALS_50" || c.code === "MEALS_100" || c.code === "WRITE_OFF_TRAVEL") continue
+
+    const ded = deductibleAmt(Number(t.amountNormalized), c.code, c.businessPct)
+    totalCohanExposure += ded
+    totalCohanCount++
+
+    const byCode = cohanByCode.get(c.code) ?? { count: 0, total: 0 }
+    byCode.count++
+    byCode.total += ded
+    cohanByCode.set(c.code, byCode)
+
+    if (c.scheduleCLine) {
+      const byLine = cohanByLine.get(c.scheduleCLine) ?? { count: 0, total: 0 }
+      byLine.count++
+      byLine.total += ded
+      cohanByLine.set(c.scheduleCLine, byLine)
+    }
+
+    topClaims.push({
+      date: t.postedDate.toISOString().slice(0, 10),
+      merchant: t.merchantRaw,
+      amount: ded,
+      code: c.code,
+      line: c.scheduleCLine,
+      reasoning: (c.reasoning ?? "").slice(0, 200),
+    })
+  }
+
+  topClaims.sort((a, b) => b.amount - a.amount)
+  const top10 = topClaims.slice(0, 10)
+
+  const codeBreakdown = Array.from(cohanByCode.entries())
+    .map(([code, v]) => `  ${code}: ${v.count} txns, ${fmtUSD(v.total, { cents: true })}`)
+    .join("\n")
+
+  const lineBreakdown = Array.from(cohanByLine.entries())
+    .map(([line, v]) => `  ${line}: ${v.count} txns, ${fmtUSD(v.total, { cents: true })}`)
+    .join("\n")
+
+  const facts = [
+    `NAICS Code: ${profile?.naicsCode ?? "Not specified"}`,
+    `Business Description: ${profile?.businessDescription ?? "Not specified"}`,
+    `Tax Year: ${taxYear?.year ?? "Unknown"}`,
+    `Prior locked year available: ${priorYearContext?.sourceLockedHash ? "Yes" : "No"}`,
+    "",
+    `Aggregate Cohan-flagged classifications: ${totalCohanCount} transactions`,
+    `Aggregate Cohan-flagged deductible amount: ${fmtUSD(totalCohanExposure, { cents: true })}`,
+    "",
+    "Breakdown by classification code:",
+    codeBreakdown || "  (none)",
+    "",
+    "Breakdown by Schedule C line:",
+    lineBreakdown || "  (none)",
+    "",
+    "Top-10 Cohan-flagged claims:",
+    ...top10.map(
+      (c, i) =>
+        `  ${i + 1}. ${c.date} | ${c.merchant} | ${fmtUSD(c.amount, { cents: true })} | ${c.code}${c.line ? ` → ${c.line}` : ""}`
+    ),
+    "",
+    "Affirmative exclusion (hard §274(d) rail):",
+    "  No MEALS_50, MEALS_100, WRITE_OFF_TRAVEL, vehicle, gifts, or listed-property claims are",
+    "  included in this Cohan reconstruction. Those categories require contemporaneous substantiation",
+    "  under §274(d) and were demoted to PERSONAL when contemporaneous records were unavailable.",
+  ].join("\n")
+
+  return { facts, exposure: totalCohanExposure }
+}
+
 async function gatherWardrobeFacts(taxYearId: string): Promise<{ facts: string; exposure: number }> {
   const profile = await prisma.businessProfile.findUnique({ where: { taxYearId } })
 
@@ -208,6 +310,8 @@ export async function detectNeededMemos(taxYearId: string): Promise<MemoType[]> 
   let grossRevenue = 0
   let totalDeductions = 0
   let hasMeals100 = false
+  let cohanCount = 0
+  let cohanExposure = 0
 
   for (const t of txns) {
     const c = t.classifications[0]
@@ -215,6 +319,10 @@ export async function detectNeededMemos(taxYearId: string): Promise<MemoType[]> 
     if (c.code === "BIZ_INCOME") grossRevenue += Math.abs(Number(t.amountNormalized))
     if (DEDUCTIBLE_CODES.includes(c.code)) totalDeductions += deductibleAmt(Number(t.amountNormalized), c.code, c.businessPct)
     if (c.code === "MEALS_100") hasMeals100 = true
+    if (c.cohanFlag && DEDUCTIBLE_CODES.includes(c.code)) {
+      cohanCount++
+      cohanExposure += deductibleAmt(Number(t.amountNormalized), c.code, c.businessPct)
+    }
   }
 
   // §183: loss year
@@ -229,6 +337,10 @@ export async function detectNeededMemos(taxYearId: string): Promise<MemoType[]> 
 
   // Wardrobe: NAICS 711510 (performing arts) — opt-in
   if (profile?.naicsCode?.startsWith("7115")) needed.push("wardrobe")
+
+  // §162 Cohan sweep — auto-trigger when explicit cohanFlag count or exposure
+  // crosses defense-memo thresholds. Either signal alone is enough.
+  if (cohanCount >= 10 || cohanExposure >= 2500) needed.push("§162_cohan_sweep")
 
   return needed
 }
@@ -256,6 +368,9 @@ export async function generatePositionMemo(
       break
     case "wardrobe":
       ;({ facts, exposure } = await gatherWardrobeFacts(taxYearId))
+      break
+    case "§162_cohan_sweep":
+      ;({ facts, exposure } = await gather162CohanFacts(taxYearId))
       break
   }
 

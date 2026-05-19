@@ -13,6 +13,7 @@ export type MemoType =
   | "§274n2_100pct_meals"
   | "§280A_home_office"
   | "wardrobe"
+  | "§162_cohan_sweep"
 
 export interface MemoRuleEntry {
   type: MemoType
@@ -116,6 +117,31 @@ export const MEMO_RULES: Record<MemoType, MemoRuleEntry> = {
       "Receipts and description of each claimed item",
     ],
   },
+
+  "§162_cohan_sweep": {
+    type: "§162_cohan_sweep",
+    title: "§162 Cohan Reconstruction Defense Memo",
+    exposureDescription: "Aggregate §162 deductions claimed with bank-statement (Cohan) evidence",
+    ircCitations: [
+      "§162 (ordinary and necessary business expenses)",
+      "§162(a) (deduction allowed for trade-or-business expenses)",
+      "§6001 (recordkeeping requirement)",
+      "Cohan v. Commissioner, 39 F.2d 540 (2d Cir. 1930) (Learned Hand — reasonable estimation when records are incomplete)",
+      "§274(d) (substantiation requirements — affirmatively EXCLUDED from this memo)",
+      "Reg. §1.6001-1 (records to be maintained)",
+      "Reg. §1.162-1(a) (deductibility of business expenses)",
+      "Rev. Proc. 92-71 (estimation methodology)",
+    ],
+    ruleIds: ["R-Cohan-001", "R-162-001"],
+    factCheckpoints: [
+      "Aggregate dollar exposure of Cohan-flagged classifications",
+      "Per-claim NAICS nexus (why this expense is ordinary-and-necessary for the taxpayer's trade)",
+      "Bank-statement visibility (transaction date, amount, payee verifiable from the original statement)",
+      "Prior-year pattern (same merchant or category appearing in a prior locked year, if applicable)",
+      "Affirmative exclusion of all §274(d) categories (meals, travel, vehicle, gifts, listed property)",
+      "Evidence-tier acknowledgment (tier 3–4, reconstructed — not contemporaneous receipts)",
+    ],
+  },
 }
 
 export function getMemoRule(type: MemoType): MemoRuleEntry {
@@ -127,4 +153,5 @@ export const ALL_MEMO_TYPES: MemoType[] = [
   "§274n2_100pct_meals",
   "§280A_home_office",
   "wardrobe",
+  "§162_cohan_sweep",
 ]

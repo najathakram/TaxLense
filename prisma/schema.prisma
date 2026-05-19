@@ -121,6 +121,14 @@ enum PipelineRunKind {
   CPA_AGENT
   // Phase A follow-up — re-extract low-confidence PDFs via Sonnet vision.
   EXTRACT_REPASS
+  // Auto-CPA framework (this PR). Each stage is a separate PipelineRun so
+  // the per-stage progress UI + stuck-run detector continue to work.
+  PRE_CLEANUP
+  CPA_AUDIT
+  COHAN_SWEEP
+  SUBSTANTIATION_QUEUE
+  FINDINGS_APPLY
+  RELOCK_VERIFY
 }
 
 // All 9 classification codes + 2 supplementary (spec §3.1)
@@ -399,6 +407,7 @@ model TaxYear {
   documents         Document[]
   pipelineRuns      PipelineRun[]
   inactiveMonths    AccountInactiveMonth[]
+  ledgerFindings    LedgerFinding[]
 
   // Phase 4 — carryforward (this year's PriorYearContext + back-references
   // from any years that consumed THIS year's locked snapshot). Owners
@@ -815,6 +824,14 @@ model Classification {
   source          ClassificationSource
   reasoning       String?
   substantiation  Json?                // §274(d) attendees/purpose/outcome + freeform tags (spec §12.1, Prompt 6)
+  // Auto-CPA framework: explicit flag that this deduction relies on Cohan
+  // reconstruction (bank visibility + NAICS nexus, no contemporaneous receipt).
+  // Set by COHAN_SWEEP. Read by auditPacket's 03_cohan_labels.csv and by the
+  // §162_cohan_sweep position memo's detectNeededMemos.
+  // HARD RAIL: never set true on §274(d) categories (MEALS_*, WRITE_OFF_TRAVEL,
+  // or any classification carrying a §274(d) citation). Enforced by
+  // assertNot274dCohan() before any FINDINGS_APPLY write.
+  cohanFlag       Boolean              @default(false)
   isCurrent       Boolean              @default(true)
   createdAt       DateTime             @default(now())
   createdByUserId String?              // User ID or null when actor is AI/SYSTEM
@@ -911,6 +928,64 @@ model StopItem {
 
   taxYear      TaxYear       @relation(fields: [taxYearId],      references: [id], onDelete: Cascade)
   merchantRule MerchantRule? @relation(fields: [merchantRuleId], references: [id])
+}
+
+// ---------------------------------------------------------------------------
+// LEDGER FINDING — auto-CPA framework's structured audit output.
+// ---------------------------------------------------------------------------
+//
+// Emitted by CPA_AUDIT (Opus 4.7 ledger review) and COHAN_SWEEP (Sonnet/Opus
+// §162 reconstruction). One row per discrete finding. State machine:
+//
+//   PROPOSED → ACCEPTED → APPLIED   (user accepts, FINDINGS_APPLY commits)
+//   PROPOSED → DISMISSED            (user rejects with rationale)
+//   PROPOSED → SUPERSEDED           (next run regenerates; old row preserved)
+//
+// `proposedAction` shapes (discriminated by `kind`):
+//   { kind: "RECLASSIFY", txnIds[], code, businessPct, scheduleCLine,
+//     ircCitations[], evidenceTier, cohanFlag?, substantiation? }
+//   { kind: "STOP", category, question, context, transactionIds[] }
+//   { kind: "BLOCK", reason }   // e.g. missing W-9 — surface only
+//   { kind: "NOTE", suggestion } // cosmetic / advisory only
+model LedgerFinding {
+  id              String   @id @default(cuid())
+  taxYearId       String
+  // PipelineRun that produced this finding — lets us trace any finding back
+  // to the AI run that created it for cost / audit accounting.
+  generatedRunId  String?
+  // CRITICAL | HIGH | MEDIUM | LOW | COSMETIC. Free-form string (not enum)
+  // because the AI emits these and we don't want a schema migration every
+  // time the audit prompt's severity vocabulary evolves.
+  severity        String
+  // DOUBLE_COUNT | PHANTOM_TRANSFER | MISSING_LINE | DIF_RISK | SUSPECT_CLASS
+  //  | MISSING_W9 | DUP_LINE_BUCKET | PERSONAL_ANOMALY | TIER_BUMP_COHAN
+  category        String
+  title           String
+  rationale       String   @db.Text
+  // True iff the proposed action can be applied without further human input.
+  // FORBIDDEN for proposals with code in (MEALS_50, MEALS_100, WRITE_OFF_TRAVEL)
+  // or any merchant matching the §274(d) deny-list — those always go to the
+  // SUBSTANTIATION_QUEUE for human-supplied facts.
+  autoFixable     Boolean
+  proposedAction  Json
+  citedTxnIds     String[]
+  // PROPOSED | ACCEPTED | DISMISSED | APPLIED | SUPERSEDED
+  state           String   @default("PROPOSED")
+  // When the user dismisses, capture the rationale for audit defense.
+  dismissedRationale String?
+  // Chains re-runs: the new PROPOSED row's supersedesId points at the prior
+  // PROPOSED row's id. Accepted/applied findings are never superseded.
+  supersedesId    String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  taxYear         TaxYear         @relation(fields: [taxYearId], references: [id], onDelete: Cascade)
+  supersedes      LedgerFinding?  @relation("FindingSupersession", fields: [supersedesId], references: [id])
+  supersededBy    LedgerFinding[] @relation("FindingSupersession")
+
+  @@index([taxYearId, state])
+  @@index([taxYearId, severity])
+  @@index([generatedRunId])
 }
 
 // ---------------------------------------------------------------------------

@@ -342,6 +342,23 @@ export async function runCpaAgent(taxYearId: string, opts: CpaAgentOptions = {})
         where: { transactionId: d.txId, isCurrent: true },
         data: { isCurrent: false },
       })
+      // Defense-in-depth: even though the prompt forbids §274(d) Cohan,
+      // strip the flag here if the agent slipped one through. The audit
+      // packet + position memo will then treat the row as non-Cohan.
+      let cohanFlagToWrite = d.cohanFlag === true
+      if (cohanFlagToWrite) {
+        const { assertNot274dCohan } = await import("@/lib/classification/cohanGuards")
+        const txLookup = txnLookupById.get(d.txId)
+        const guard = assertNot274dCohan({
+          code: d.code,
+          merchantRaw: txLookup?.merchantRaw ?? null,
+          merchantNormalized: txLookup?.merchantNormalized ?? null,
+          ircCitations: d.ircCitations,
+          scheduleCLine: scheduleLineToWrite,
+        })
+        if (!guard.allowed) cohanFlagToWrite = false
+      }
+
       await tx.classification.create({
         data: {
           transactionId: d.txId,
@@ -353,6 +370,7 @@ export async function runCpaAgent(taxYearId: string, opts: CpaAgentOptions = {})
           evidenceTier: d.evidenceTier,
           source: "AI",
           reasoning: d.reasoning,
+          cohanFlag: cohanFlagToWrite,
           isCurrent: true,
         },
       })

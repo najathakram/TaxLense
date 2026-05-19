@@ -405,6 +405,7 @@ export const ModelName = {
   Classification: 'Classification',
   MerchantRule: 'MerchantRule',
   StopItem: 'StopItem',
+  LedgerFinding: 'LedgerFinding',
   AuditEvent: 'AuditEvent',
   Report: 'Report',
   Document: 'Document',
@@ -430,7 +431,7 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
     omit: GlobalOmitOptions
   }
   meta: {
-    modelProps: "user" | "cpaClient" | "account" | "session" | "verificationToken" | "ruleVersion" | "taxYear" | "businessProfile" | "knownEntity" | "trip" | "owner" | "financialAccount" | "accountYearLink" | "accountInactiveMonth" | "statementImport" | "importSession" | "pipelineRun" | "transaction" | "classification" | "merchantRule" | "stopItem" | "auditEvent" | "report" | "document" | "priorYearContext" | "engagementLetter" | "form8879" | "filingMilestone" | "w9Submission" | "form1099Filing" | "classificationNote"
+    modelProps: "user" | "cpaClient" | "account" | "session" | "verificationToken" | "ruleVersion" | "taxYear" | "businessProfile" | "knownEntity" | "trip" | "owner" | "financialAccount" | "accountYearLink" | "accountInactiveMonth" | "statementImport" | "importSession" | "pipelineRun" | "transaction" | "classification" | "merchantRule" | "stopItem" | "ledgerFinding" | "auditEvent" | "report" | "document" | "priorYearContext" | "engagementLetter" | "form8879" | "filingMilestone" | "w9Submission" | "form1099Filing" | "classificationNote"
     txIsolationLevel: TransactionIsolationLevel
   }
   model: {
@@ -1988,6 +1989,80 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
         }
       }
     }
+    LedgerFinding: {
+      payload: Prisma.$LedgerFindingPayload<ExtArgs>
+      fields: Prisma.LedgerFindingFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.LedgerFindingFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$LedgerFindingPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.LedgerFindingFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$LedgerFindingPayload>
+        }
+        findFirst: {
+          args: Prisma.LedgerFindingFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$LedgerFindingPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.LedgerFindingFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$LedgerFindingPayload>
+        }
+        findMany: {
+          args: Prisma.LedgerFindingFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$LedgerFindingPayload>[]
+        }
+        create: {
+          args: Prisma.LedgerFindingCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$LedgerFindingPayload>
+        }
+        createMany: {
+          args: Prisma.LedgerFindingCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.LedgerFindingCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$LedgerFindingPayload>[]
+        }
+        delete: {
+          args: Prisma.LedgerFindingDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$LedgerFindingPayload>
+        }
+        update: {
+          args: Prisma.LedgerFindingUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$LedgerFindingPayload>
+        }
+        deleteMany: {
+          args: Prisma.LedgerFindingDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.LedgerFindingUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.LedgerFindingUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$LedgerFindingPayload>[]
+        }
+        upsert: {
+          args: Prisma.LedgerFindingUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$LedgerFindingPayload>
+        }
+        aggregate: {
+          args: Prisma.LedgerFindingAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateLedgerFinding>
+        }
+        groupBy: {
+          args: Prisma.LedgerFindingGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.LedgerFindingGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.LedgerFindingCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.LedgerFindingCountAggregateOutputType> | number
+        }
+      }
+    }
     AuditEvent: {
       payload: Prisma.$AuditEventPayload<ExtArgs>
       fields: Prisma.AuditEventFieldRefs
@@ -3088,6 +3163,7 @@ export const ClassificationScalarFieldEnum = {
   source: 'source',
   reasoning: 'reasoning',
   substantiation: 'substantiation',
+  cohanFlag: 'cohanFlag',
   isCurrent: 'isCurrent',
   createdAt: 'createdAt',
   createdByUserId: 'createdByUserId'
@@ -3135,6 +3211,27 @@ export const StopItemScalarFieldEnum = {
 } as const
 
 export type StopItemScalarFieldEnum = (typeof StopItemScalarFieldEnum)[keyof typeof StopItemScalarFieldEnum]
+
+
+export const LedgerFindingScalarFieldEnum = {
+  id: 'id',
+  taxYearId: 'taxYearId',
+  generatedRunId: 'generatedRunId',
+  severity: 'severity',
+  category: 'category',
+  title: 'title',
+  rationale: 'rationale',
+  autoFixable: 'autoFixable',
+  proposedAction: 'proposedAction',
+  citedTxnIds: 'citedTxnIds',
+  state: 'state',
+  dismissedRationale: 'dismissedRationale',
+  supersedesId: 'supersedesId',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type LedgerFindingScalarFieldEnum = (typeof LedgerFindingScalarFieldEnum)[keyof typeof LedgerFindingScalarFieldEnum]
 
 
 export const AuditEventScalarFieldEnum = {
@@ -3892,6 +3989,7 @@ export type GlobalOmitConfig = {
   classification?: Prisma.ClassificationOmit
   merchantRule?: Prisma.MerchantRuleOmit
   stopItem?: Prisma.StopItemOmit
+  ledgerFinding?: Prisma.LedgerFindingOmit
   auditEvent?: Prisma.AuditEventOmit
   report?: Prisma.ReportOmit
   document?: Prisma.DocumentOmit

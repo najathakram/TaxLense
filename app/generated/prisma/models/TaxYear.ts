@@ -258,6 +258,7 @@ export type TaxYearWhereInput = {
   documents?: Prisma.DocumentListRelationFilter
   pipelineRuns?: Prisma.PipelineRunListRelationFilter
   inactiveMonths?: Prisma.AccountInactiveMonthListRelationFilter
+  ledgerFindings?: Prisma.LedgerFindingListRelationFilter
   priorYearContext?: Prisma.XOR<Prisma.PriorYearContextNullableScalarRelationFilter, Prisma.PriorYearContextWhereInput> | null
   consumedByContexts?: Prisma.PriorYearContextListRelationFilter
   engagementLetter?: Prisma.XOR<Prisma.EngagementLetterNullableScalarRelationFilter, Prisma.EngagementLetterWhereInput> | null
@@ -291,6 +292,7 @@ export type TaxYearOrderByWithRelationInput = {
   documents?: Prisma.DocumentOrderByRelationAggregateInput
   pipelineRuns?: Prisma.PipelineRunOrderByRelationAggregateInput
   inactiveMonths?: Prisma.AccountInactiveMonthOrderByRelationAggregateInput
+  ledgerFindings?: Prisma.LedgerFindingOrderByRelationAggregateInput
   priorYearContext?: Prisma.PriorYearContextOrderByWithRelationInput
   consumedByContexts?: Prisma.PriorYearContextOrderByRelationAggregateInput
   engagementLetter?: Prisma.EngagementLetterOrderByWithRelationInput
@@ -328,6 +330,7 @@ export type TaxYearWhereUniqueInput = Prisma.AtLeast<{
   documents?: Prisma.DocumentListRelationFilter
   pipelineRuns?: Prisma.PipelineRunListRelationFilter
   inactiveMonths?: Prisma.AccountInactiveMonthListRelationFilter
+  ledgerFindings?: Prisma.LedgerFindingListRelationFilter
   priorYearContext?: Prisma.XOR<Prisma.PriorYearContextNullableScalarRelationFilter, Prisma.PriorYearContextWhereInput> | null
   consumedByContexts?: Prisma.PriorYearContextListRelationFilter
   engagementLetter?: Prisma.XOR<Prisma.EngagementLetterNullableScalarRelationFilter, Prisma.EngagementLetterWhereInput> | null
@@ -391,6 +394,7 @@ export type TaxYearCreateInput = {
   documents?: Prisma.DocumentCreateNestedManyWithoutTaxYearInput
   pipelineRuns?: Prisma.PipelineRunCreateNestedManyWithoutTaxYearInput
   inactiveMonths?: Prisma.AccountInactiveMonthCreateNestedManyWithoutTaxYearInput
+  ledgerFindings?: Prisma.LedgerFindingCreateNestedManyWithoutTaxYearInput
   priorYearContext?: Prisma.PriorYearContextCreateNestedOneWithoutTaxYearInput
   consumedByContexts?: Prisma.PriorYearContextCreateNestedManyWithoutSourcePriorYearInput
   engagementLetter?: Prisma.EngagementLetterCreateNestedOneWithoutTaxYearInput
@@ -422,6 +426,7 @@ export type TaxYearUncheckedCreateInput = {
   documents?: Prisma.DocumentUncheckedCreateNestedManyWithoutTaxYearInput
   pipelineRuns?: Prisma.PipelineRunUncheckedCreateNestedManyWithoutTaxYearInput
   inactiveMonths?: Prisma.AccountInactiveMonthUncheckedCreateNestedManyWithoutTaxYearInput
+  ledgerFindings?: Prisma.LedgerFindingUncheckedCreateNestedManyWithoutTaxYearInput
   priorYearContext?: Prisma.PriorYearContextUncheckedCreateNestedOneWithoutTaxYearInput
   consumedByContexts?: Prisma.PriorYearContextUncheckedCreateNestedManyWithoutSourcePriorYearInput
   engagementLetter?: Prisma.EngagementLetterUncheckedCreateNestedOneWithoutTaxYearInput
@@ -453,6 +458,7 @@ export type TaxYearUpdateInput = {
   documents?: Prisma.DocumentUpdateManyWithoutTaxYearNestedInput
   pipelineRuns?: Prisma.PipelineRunUpdateManyWithoutTaxYearNestedInput
   inactiveMonths?: Prisma.AccountInactiveMonthUpdateManyWithoutTaxYearNestedInput
+  ledgerFindings?: Prisma.LedgerFindingUpdateManyWithoutTaxYearNestedInput
   priorYearContext?: Prisma.PriorYearContextUpdateOneWithoutTaxYearNestedInput
   consumedByContexts?: Prisma.PriorYearContextUpdateManyWithoutSourcePriorYearNestedInput
   engagementLetter?: Prisma.EngagementLetterUpdateOneWithoutTaxYearNestedInput
@@ -484,6 +490,7 @@ export type TaxYearUncheckedUpdateInput = {
   documents?: Prisma.DocumentUncheckedUpdateManyWithoutTaxYearNestedInput
   pipelineRuns?: Prisma.PipelineRunUncheckedUpdateManyWithoutTaxYearNestedInput
   inactiveMonths?: Prisma.AccountInactiveMonthUncheckedUpdateManyWithoutTaxYearNestedInput
+  ledgerFindings?: Prisma.LedgerFindingUncheckedUpdateManyWithoutTaxYearNestedInput
   priorYearContext?: Prisma.PriorYearContextUncheckedUpdateOneWithoutTaxYearNestedInput
   consumedByContexts?: Prisma.PriorYearContextUncheckedUpdateManyWithoutSourcePriorYearNestedInput
   engagementLetter?: Prisma.EngagementLetterUncheckedUpdateOneWithoutTaxYearNestedInput
@@ -830,6 +837,20 @@ export type TaxYearUpdateOneRequiredWithoutStopItemsNestedInput = {
   update?: Prisma.XOR<Prisma.XOR<Prisma.TaxYearUpdateToOneWithWhereWithoutStopItemsInput, Prisma.TaxYearUpdateWithoutStopItemsInput>, Prisma.TaxYearUncheckedUpdateWithoutStopItemsInput>
 }
 
+export type TaxYearCreateNestedOneWithoutLedgerFindingsInput = {
+  create?: Prisma.XOR<Prisma.TaxYearCreateWithoutLedgerFindingsInput, Prisma.TaxYearUncheckedCreateWithoutLedgerFindingsInput>
+  connectOrCreate?: Prisma.TaxYearCreateOrConnectWithoutLedgerFindingsInput
+  connect?: Prisma.TaxYearWhereUniqueInput
+}
+
+export type TaxYearUpdateOneRequiredWithoutLedgerFindingsNestedInput = {
+  create?: Prisma.XOR<Prisma.TaxYearCreateWithoutLedgerFindingsInput, Prisma.TaxYearUncheckedCreateWithoutLedgerFindingsInput>
+  connectOrCreate?: Prisma.TaxYearCreateOrConnectWithoutLedgerFindingsInput
+  upsert?: Prisma.TaxYearUpsertWithoutLedgerFindingsInput
+  connect?: Prisma.TaxYearWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.TaxYearUpdateToOneWithWhereWithoutLedgerFindingsInput, Prisma.TaxYearUpdateWithoutLedgerFindingsInput>, Prisma.TaxYearUncheckedUpdateWithoutLedgerFindingsInput>
+}
+
 export type TaxYearCreateNestedOneWithoutReportsInput = {
   create?: Prisma.XOR<Prisma.TaxYearCreateWithoutReportsInput, Prisma.TaxYearUncheckedCreateWithoutReportsInput>
   connectOrCreate?: Prisma.TaxYearCreateOrConnectWithoutReportsInput
@@ -981,6 +1002,7 @@ export type TaxYearCreateWithoutUserInput = {
   documents?: Prisma.DocumentCreateNestedManyWithoutTaxYearInput
   pipelineRuns?: Prisma.PipelineRunCreateNestedManyWithoutTaxYearInput
   inactiveMonths?: Prisma.AccountInactiveMonthCreateNestedManyWithoutTaxYearInput
+  ledgerFindings?: Prisma.LedgerFindingCreateNestedManyWithoutTaxYearInput
   priorYearContext?: Prisma.PriorYearContextCreateNestedOneWithoutTaxYearInput
   consumedByContexts?: Prisma.PriorYearContextCreateNestedManyWithoutSourcePriorYearInput
   engagementLetter?: Prisma.EngagementLetterCreateNestedOneWithoutTaxYearInput
@@ -1011,6 +1033,7 @@ export type TaxYearUncheckedCreateWithoutUserInput = {
   documents?: Prisma.DocumentUncheckedCreateNestedManyWithoutTaxYearInput
   pipelineRuns?: Prisma.PipelineRunUncheckedCreateNestedManyWithoutTaxYearInput
   inactiveMonths?: Prisma.AccountInactiveMonthUncheckedCreateNestedManyWithoutTaxYearInput
+  ledgerFindings?: Prisma.LedgerFindingUncheckedCreateNestedManyWithoutTaxYearInput
   priorYearContext?: Prisma.PriorYearContextUncheckedCreateNestedOneWithoutTaxYearInput
   consumedByContexts?: Prisma.PriorYearContextUncheckedCreateNestedManyWithoutSourcePriorYearInput
   engagementLetter?: Prisma.EngagementLetterUncheckedCreateNestedOneWithoutTaxYearInput
@@ -1082,6 +1105,7 @@ export type TaxYearCreateWithoutRuleVersionInput = {
   documents?: Prisma.DocumentCreateNestedManyWithoutTaxYearInput
   pipelineRuns?: Prisma.PipelineRunCreateNestedManyWithoutTaxYearInput
   inactiveMonths?: Prisma.AccountInactiveMonthCreateNestedManyWithoutTaxYearInput
+  ledgerFindings?: Prisma.LedgerFindingCreateNestedManyWithoutTaxYearInput
   priorYearContext?: Prisma.PriorYearContextCreateNestedOneWithoutTaxYearInput
   consumedByContexts?: Prisma.PriorYearContextCreateNestedManyWithoutSourcePriorYearInput
   engagementLetter?: Prisma.EngagementLetterCreateNestedOneWithoutTaxYearInput
@@ -1112,6 +1136,7 @@ export type TaxYearUncheckedCreateWithoutRuleVersionInput = {
   documents?: Prisma.DocumentUncheckedCreateNestedManyWithoutTaxYearInput
   pipelineRuns?: Prisma.PipelineRunUncheckedCreateNestedManyWithoutTaxYearInput
   inactiveMonths?: Prisma.AccountInactiveMonthUncheckedCreateNestedManyWithoutTaxYearInput
+  ledgerFindings?: Prisma.LedgerFindingUncheckedCreateNestedManyWithoutTaxYearInput
   priorYearContext?: Prisma.PriorYearContextUncheckedCreateNestedOneWithoutTaxYearInput
   consumedByContexts?: Prisma.PriorYearContextUncheckedCreateNestedManyWithoutSourcePriorYearInput
   engagementLetter?: Prisma.EngagementLetterUncheckedCreateNestedOneWithoutTaxYearInput
@@ -1168,6 +1193,7 @@ export type TaxYearCreateWithoutBusinessProfileInput = {
   documents?: Prisma.DocumentCreateNestedManyWithoutTaxYearInput
   pipelineRuns?: Prisma.PipelineRunCreateNestedManyWithoutTaxYearInput
   inactiveMonths?: Prisma.AccountInactiveMonthCreateNestedManyWithoutTaxYearInput
+  ledgerFindings?: Prisma.LedgerFindingCreateNestedManyWithoutTaxYearInput
   priorYearContext?: Prisma.PriorYearContextCreateNestedOneWithoutTaxYearInput
   consumedByContexts?: Prisma.PriorYearContextCreateNestedManyWithoutSourcePriorYearInput
   engagementLetter?: Prisma.EngagementLetterCreateNestedOneWithoutTaxYearInput
@@ -1198,6 +1224,7 @@ export type TaxYearUncheckedCreateWithoutBusinessProfileInput = {
   documents?: Prisma.DocumentUncheckedCreateNestedManyWithoutTaxYearInput
   pipelineRuns?: Prisma.PipelineRunUncheckedCreateNestedManyWithoutTaxYearInput
   inactiveMonths?: Prisma.AccountInactiveMonthUncheckedCreateNestedManyWithoutTaxYearInput
+  ledgerFindings?: Prisma.LedgerFindingUncheckedCreateNestedManyWithoutTaxYearInput
   priorYearContext?: Prisma.PriorYearContextUncheckedCreateNestedOneWithoutTaxYearInput
   consumedByContexts?: Prisma.PriorYearContextUncheckedCreateNestedManyWithoutSourcePriorYearInput
   engagementLetter?: Prisma.EngagementLetterUncheckedCreateNestedOneWithoutTaxYearInput
@@ -1244,6 +1271,7 @@ export type TaxYearUpdateWithoutBusinessProfileInput = {
   documents?: Prisma.DocumentUpdateManyWithoutTaxYearNestedInput
   pipelineRuns?: Prisma.PipelineRunUpdateManyWithoutTaxYearNestedInput
   inactiveMonths?: Prisma.AccountInactiveMonthUpdateManyWithoutTaxYearNestedInput
+  ledgerFindings?: Prisma.LedgerFindingUpdateManyWithoutTaxYearNestedInput
   priorYearContext?: Prisma.PriorYearContextUpdateOneWithoutTaxYearNestedInput
   consumedByContexts?: Prisma.PriorYearContextUpdateManyWithoutSourcePriorYearNestedInput
   engagementLetter?: Prisma.EngagementLetterUpdateOneWithoutTaxYearNestedInput
@@ -1274,6 +1302,7 @@ export type TaxYearUncheckedUpdateWithoutBusinessProfileInput = {
   documents?: Prisma.DocumentUncheckedUpdateManyWithoutTaxYearNestedInput
   pipelineRuns?: Prisma.PipelineRunUncheckedUpdateManyWithoutTaxYearNestedInput
   inactiveMonths?: Prisma.AccountInactiveMonthUncheckedUpdateManyWithoutTaxYearNestedInput
+  ledgerFindings?: Prisma.LedgerFindingUncheckedUpdateManyWithoutTaxYearNestedInput
   priorYearContext?: Prisma.PriorYearContextUncheckedUpdateOneWithoutTaxYearNestedInput
   consumedByContexts?: Prisma.PriorYearContextUncheckedUpdateManyWithoutSourcePriorYearNestedInput
   engagementLetter?: Prisma.EngagementLetterUncheckedUpdateOneWithoutTaxYearNestedInput
@@ -1304,6 +1333,7 @@ export type TaxYearCreateWithoutFinancialAccountsInput = {
   documents?: Prisma.DocumentCreateNestedManyWithoutTaxYearInput
   pipelineRuns?: Prisma.PipelineRunCreateNestedManyWithoutTaxYearInput
   inactiveMonths?: Prisma.AccountInactiveMonthCreateNestedManyWithoutTaxYearInput
+  ledgerFindings?: Prisma.LedgerFindingCreateNestedManyWithoutTaxYearInput
   priorYearContext?: Prisma.PriorYearContextCreateNestedOneWithoutTaxYearInput
   consumedByContexts?: Prisma.PriorYearContextCreateNestedManyWithoutSourcePriorYearInput
   engagementLetter?: Prisma.EngagementLetterCreateNestedOneWithoutTaxYearInput
@@ -1334,6 +1364,7 @@ export type TaxYearUncheckedCreateWithoutFinancialAccountsInput = {
   documents?: Prisma.DocumentUncheckedCreateNestedManyWithoutTaxYearInput
   pipelineRuns?: Prisma.PipelineRunUncheckedCreateNestedManyWithoutTaxYearInput
   inactiveMonths?: Prisma.AccountInactiveMonthUncheckedCreateNestedManyWithoutTaxYearInput
+  ledgerFindings?: Prisma.LedgerFindingUncheckedCreateNestedManyWithoutTaxYearInput
   priorYearContext?: Prisma.PriorYearContextUncheckedCreateNestedOneWithoutTaxYearInput
   consumedByContexts?: Prisma.PriorYearContextUncheckedCreateNestedManyWithoutSourcePriorYearInput
   engagementLetter?: Prisma.EngagementLetterUncheckedCreateNestedOneWithoutTaxYearInput
@@ -1380,6 +1411,7 @@ export type TaxYearUpdateWithoutFinancialAccountsInput = {
   documents?: Prisma.DocumentUpdateManyWithoutTaxYearNestedInput
   pipelineRuns?: Prisma.PipelineRunUpdateManyWithoutTaxYearNestedInput
   inactiveMonths?: Prisma.AccountInactiveMonthUpdateManyWithoutTaxYearNestedInput
+  ledgerFindings?: Prisma.LedgerFindingUpdateManyWithoutTaxYearNestedInput
   priorYearContext?: Prisma.PriorYearContextUpdateOneWithoutTaxYearNestedInput
   consumedByContexts?: Prisma.PriorYearContextUpdateManyWithoutSourcePriorYearNestedInput
   engagementLetter?: Prisma.EngagementLetterUpdateOneWithoutTaxYearNestedInput
@@ -1410,6 +1442,7 @@ export type TaxYearUncheckedUpdateWithoutFinancialAccountsInput = {
   documents?: Prisma.DocumentUncheckedUpdateManyWithoutTaxYearNestedInput
   pipelineRuns?: Prisma.PipelineRunUncheckedUpdateManyWithoutTaxYearNestedInput
   inactiveMonths?: Prisma.AccountInactiveMonthUncheckedUpdateManyWithoutTaxYearNestedInput
+  ledgerFindings?: Prisma.LedgerFindingUncheckedUpdateManyWithoutTaxYearNestedInput
   priorYearContext?: Prisma.PriorYearContextUncheckedUpdateOneWithoutTaxYearNestedInput
   consumedByContexts?: Prisma.PriorYearContextUncheckedUpdateManyWithoutSourcePriorYearNestedInput
   engagementLetter?: Prisma.EngagementLetterUncheckedUpdateOneWithoutTaxYearNestedInput
@@ -1440,6 +1473,7 @@ export type TaxYearCreateWithoutAccountYearLinksInput = {
   documents?: Prisma.DocumentCreateNestedManyWithoutTaxYearInput
   pipelineRuns?: Prisma.PipelineRunCreateNestedManyWithoutTaxYearInput
   inactiveMonths?: Prisma.AccountInactiveMonthCreateNestedManyWithoutTaxYearInput
+  ledgerFindings?: Prisma.LedgerFindingCreateNestedManyWithoutTaxYearInput
   priorYearContext?: Prisma.PriorYearContextCreateNestedOneWithoutTaxYearInput
   consumedByContexts?: Prisma.PriorYearContextCreateNestedManyWithoutSourcePriorYearInput
   engagementLetter?: Prisma.EngagementLetterCreateNestedOneWithoutTaxYearInput
@@ -1470,6 +1504,7 @@ export type TaxYearUncheckedCreateWithoutAccountYearLinksInput = {
   documents?: Prisma.DocumentUncheckedCreateNestedManyWithoutTaxYearInput
   pipelineRuns?: Prisma.PipelineRunUncheckedCreateNestedManyWithoutTaxYearInput
   inactiveMonths?: Prisma.AccountInactiveMonthUncheckedCreateNestedManyWithoutTaxYearInput
+  ledgerFindings?: Prisma.LedgerFindingUncheckedCreateNestedManyWithoutTaxYearInput
   priorYearContext?: Prisma.PriorYearContextUncheckedCreateNestedOneWithoutTaxYearInput
   consumedByContexts?: Prisma.PriorYearContextUncheckedCreateNestedManyWithoutSourcePriorYearInput
   engagementLetter?: Prisma.EngagementLetterUncheckedCreateNestedOneWithoutTaxYearInput
@@ -1516,6 +1551,7 @@ export type TaxYearUpdateWithoutAccountYearLinksInput = {
   documents?: Prisma.DocumentUpdateManyWithoutTaxYearNestedInput
   pipelineRuns?: Prisma.PipelineRunUpdateManyWithoutTaxYearNestedInput
   inactiveMonths?: Prisma.AccountInactiveMonthUpdateManyWithoutTaxYearNestedInput
+  ledgerFindings?: Prisma.LedgerFindingUpdateManyWithoutTaxYearNestedInput
   priorYearContext?: Prisma.PriorYearContextUpdateOneWithoutTaxYearNestedInput
   consumedByContexts?: Prisma.PriorYearContextUpdateManyWithoutSourcePriorYearNestedInput
   engagementLetter?: Prisma.EngagementLetterUpdateOneWithoutTaxYearNestedInput
@@ -1546,6 +1582,7 @@ export type TaxYearUncheckedUpdateWithoutAccountYearLinksInput = {
   documents?: Prisma.DocumentUncheckedUpdateManyWithoutTaxYearNestedInput
   pipelineRuns?: Prisma.PipelineRunUncheckedUpdateManyWithoutTaxYearNestedInput
   inactiveMonths?: Prisma.AccountInactiveMonthUncheckedUpdateManyWithoutTaxYearNestedInput
+  ledgerFindings?: Prisma.LedgerFindingUncheckedUpdateManyWithoutTaxYearNestedInput
   priorYearContext?: Prisma.PriorYearContextUncheckedUpdateOneWithoutTaxYearNestedInput
   consumedByContexts?: Prisma.PriorYearContextUncheckedUpdateManyWithoutSourcePriorYearNestedInput
   engagementLetter?: Prisma.EngagementLetterUncheckedUpdateOneWithoutTaxYearNestedInput
@@ -1576,6 +1613,7 @@ export type TaxYearCreateWithoutInactiveMonthsInput = {
   importSessions?: Prisma.ImportSessionCreateNestedManyWithoutTaxYearInput
   documents?: Prisma.DocumentCreateNestedManyWithoutTaxYearInput
   pipelineRuns?: Prisma.PipelineRunCreateNestedManyWithoutTaxYearInput
+  ledgerFindings?: Prisma.LedgerFindingCreateNestedManyWithoutTaxYearInput
   priorYearContext?: Prisma.PriorYearContextCreateNestedOneWithoutTaxYearInput
   consumedByContexts?: Prisma.PriorYearContextCreateNestedManyWithoutSourcePriorYearInput
   engagementLetter?: Prisma.EngagementLetterCreateNestedOneWithoutTaxYearInput
@@ -1606,6 +1644,7 @@ export type TaxYearUncheckedCreateWithoutInactiveMonthsInput = {
   importSessions?: Prisma.ImportSessionUncheckedCreateNestedManyWithoutTaxYearInput
   documents?: Prisma.DocumentUncheckedCreateNestedManyWithoutTaxYearInput
   pipelineRuns?: Prisma.PipelineRunUncheckedCreateNestedManyWithoutTaxYearInput
+  ledgerFindings?: Prisma.LedgerFindingUncheckedCreateNestedManyWithoutTaxYearInput
   priorYearContext?: Prisma.PriorYearContextUncheckedCreateNestedOneWithoutTaxYearInput
   consumedByContexts?: Prisma.PriorYearContextUncheckedCreateNestedManyWithoutSourcePriorYearInput
   engagementLetter?: Prisma.EngagementLetterUncheckedCreateNestedOneWithoutTaxYearInput
@@ -1652,6 +1691,7 @@ export type TaxYearUpdateWithoutInactiveMonthsInput = {
   importSessions?: Prisma.ImportSessionUpdateManyWithoutTaxYearNestedInput
   documents?: Prisma.DocumentUpdateManyWithoutTaxYearNestedInput
   pipelineRuns?: Prisma.PipelineRunUpdateManyWithoutTaxYearNestedInput
+  ledgerFindings?: Prisma.LedgerFindingUpdateManyWithoutTaxYearNestedInput
   priorYearContext?: Prisma.PriorYearContextUpdateOneWithoutTaxYearNestedInput
   consumedByContexts?: Prisma.PriorYearContextUpdateManyWithoutSourcePriorYearNestedInput
   engagementLetter?: Prisma.EngagementLetterUpdateOneWithoutTaxYearNestedInput
@@ -1682,6 +1722,7 @@ export type TaxYearUncheckedUpdateWithoutInactiveMonthsInput = {
   importSessions?: Prisma.ImportSessionUncheckedUpdateManyWithoutTaxYearNestedInput
   documents?: Prisma.DocumentUncheckedUpdateManyWithoutTaxYearNestedInput
   pipelineRuns?: Prisma.PipelineRunUncheckedUpdateManyWithoutTaxYearNestedInput
+  ledgerFindings?: Prisma.LedgerFindingUncheckedUpdateManyWithoutTaxYearNestedInput
   priorYearContext?: Prisma.PriorYearContextUncheckedUpdateOneWithoutTaxYearNestedInput
   consumedByContexts?: Prisma.PriorYearContextUncheckedUpdateManyWithoutSourcePriorYearNestedInput
   engagementLetter?: Prisma.EngagementLetterUncheckedUpdateOneWithoutTaxYearNestedInput
@@ -1712,6 +1753,7 @@ export type TaxYearCreateWithoutStatementImportsInput = {
   documents?: Prisma.DocumentCreateNestedManyWithoutTaxYearInput
   pipelineRuns?: Prisma.PipelineRunCreateNestedManyWithoutTaxYearInput
   inactiveMonths?: Prisma.AccountInactiveMonthCreateNestedManyWithoutTaxYearInput
+  ledgerFindings?: Prisma.LedgerFindingCreateNestedManyWithoutTaxYearInput
   priorYearContext?: Prisma.PriorYearContextCreateNestedOneWithoutTaxYearInput
   consumedByContexts?: Prisma.PriorYearContextCreateNestedManyWithoutSourcePriorYearInput
   engagementLetter?: Prisma.EngagementLetterCreateNestedOneWithoutTaxYearInput
@@ -1742,6 +1784,7 @@ export type TaxYearUncheckedCreateWithoutStatementImportsInput = {
   documents?: Prisma.DocumentUncheckedCreateNestedManyWithoutTaxYearInput
   pipelineRuns?: Prisma.PipelineRunUncheckedCreateNestedManyWithoutTaxYearInput
   inactiveMonths?: Prisma.AccountInactiveMonthUncheckedCreateNestedManyWithoutTaxYearInput
+  ledgerFindings?: Prisma.LedgerFindingUncheckedCreateNestedManyWithoutTaxYearInput
   priorYearContext?: Prisma.PriorYearContextUncheckedCreateNestedOneWithoutTaxYearInput
   consumedByContexts?: Prisma.PriorYearContextUncheckedCreateNestedManyWithoutSourcePriorYearInput
   engagementLetter?: Prisma.EngagementLetterUncheckedCreateNestedOneWithoutTaxYearInput
@@ -1788,6 +1831,7 @@ export type TaxYearUpdateWithoutStatementImportsInput = {
   documents?: Prisma.DocumentUpdateManyWithoutTaxYearNestedInput
   pipelineRuns?: Prisma.PipelineRunUpdateManyWithoutTaxYearNestedInput
   inactiveMonths?: Prisma.AccountInactiveMonthUpdateManyWithoutTaxYearNestedInput
+  ledgerFindings?: Prisma.LedgerFindingUpdateManyWithoutTaxYearNestedInput
   priorYearContext?: Prisma.PriorYearContextUpdateOneWithoutTaxYearNestedInput
   consumedByContexts?: Prisma.PriorYearContextUpdateManyWithoutSourcePriorYearNestedInput
   engagementLetter?: Prisma.EngagementLetterUpdateOneWithoutTaxYearNestedInput
@@ -1818,6 +1862,7 @@ export type TaxYearUncheckedUpdateWithoutStatementImportsInput = {
   documents?: Prisma.DocumentUncheckedUpdateManyWithoutTaxYearNestedInput
   pipelineRuns?: Prisma.PipelineRunUncheckedUpdateManyWithoutTaxYearNestedInput
   inactiveMonths?: Prisma.AccountInactiveMonthUncheckedUpdateManyWithoutTaxYearNestedInput
+  ledgerFindings?: Prisma.LedgerFindingUncheckedUpdateManyWithoutTaxYearNestedInput
   priorYearContext?: Prisma.PriorYearContextUncheckedUpdateOneWithoutTaxYearNestedInput
   consumedByContexts?: Prisma.PriorYearContextUncheckedUpdateManyWithoutSourcePriorYearNestedInput
   engagementLetter?: Prisma.EngagementLetterUncheckedUpdateOneWithoutTaxYearNestedInput
@@ -1848,6 +1893,7 @@ export type TaxYearCreateWithoutImportSessionsInput = {
   documents?: Prisma.DocumentCreateNestedManyWithoutTaxYearInput
   pipelineRuns?: Prisma.PipelineRunCreateNestedManyWithoutTaxYearInput
   inactiveMonths?: Prisma.AccountInactiveMonthCreateNestedManyWithoutTaxYearInput
+  ledgerFindings?: Prisma.LedgerFindingCreateNestedManyWithoutTaxYearInput
   priorYearContext?: Prisma.PriorYearContextCreateNestedOneWithoutTaxYearInput
   consumedByContexts?: Prisma.PriorYearContextCreateNestedManyWithoutSourcePriorYearInput
   engagementLetter?: Prisma.EngagementLetterCreateNestedOneWithoutTaxYearInput
@@ -1878,6 +1924,7 @@ export type TaxYearUncheckedCreateWithoutImportSessionsInput = {
   documents?: Prisma.DocumentUncheckedCreateNestedManyWithoutTaxYearInput
   pipelineRuns?: Prisma.PipelineRunUncheckedCreateNestedManyWithoutTaxYearInput
   inactiveMonths?: Prisma.AccountInactiveMonthUncheckedCreateNestedManyWithoutTaxYearInput
+  ledgerFindings?: Prisma.LedgerFindingUncheckedCreateNestedManyWithoutTaxYearInput
   priorYearContext?: Prisma.PriorYearContextUncheckedCreateNestedOneWithoutTaxYearInput
   consumedByContexts?: Prisma.PriorYearContextUncheckedCreateNestedManyWithoutSourcePriorYearInput
   engagementLetter?: Prisma.EngagementLetterUncheckedCreateNestedOneWithoutTaxYearInput
@@ -1924,6 +1971,7 @@ export type TaxYearUpdateWithoutImportSessionsInput = {
   documents?: Prisma.DocumentUpdateManyWithoutTaxYearNestedInput
   pipelineRuns?: Prisma.PipelineRunUpdateManyWithoutTaxYearNestedInput
   inactiveMonths?: Prisma.AccountInactiveMonthUpdateManyWithoutTaxYearNestedInput
+  ledgerFindings?: Prisma.LedgerFindingUpdateManyWithoutTaxYearNestedInput
   priorYearContext?: Prisma.PriorYearContextUpdateOneWithoutTaxYearNestedInput
   consumedByContexts?: Prisma.PriorYearContextUpdateManyWithoutSourcePriorYearNestedInput
   engagementLetter?: Prisma.EngagementLetterUpdateOneWithoutTaxYearNestedInput
@@ -1954,6 +2002,7 @@ export type TaxYearUncheckedUpdateWithoutImportSessionsInput = {
   documents?: Prisma.DocumentUncheckedUpdateManyWithoutTaxYearNestedInput
   pipelineRuns?: Prisma.PipelineRunUncheckedUpdateManyWithoutTaxYearNestedInput
   inactiveMonths?: Prisma.AccountInactiveMonthUncheckedUpdateManyWithoutTaxYearNestedInput
+  ledgerFindings?: Prisma.LedgerFindingUncheckedUpdateManyWithoutTaxYearNestedInput
   priorYearContext?: Prisma.PriorYearContextUncheckedUpdateOneWithoutTaxYearNestedInput
   consumedByContexts?: Prisma.PriorYearContextUncheckedUpdateManyWithoutSourcePriorYearNestedInput
   engagementLetter?: Prisma.EngagementLetterUncheckedUpdateOneWithoutTaxYearNestedInput
@@ -1984,6 +2033,7 @@ export type TaxYearCreateWithoutPipelineRunsInput = {
   importSessions?: Prisma.ImportSessionCreateNestedManyWithoutTaxYearInput
   documents?: Prisma.DocumentCreateNestedManyWithoutTaxYearInput
   inactiveMonths?: Prisma.AccountInactiveMonthCreateNestedManyWithoutTaxYearInput
+  ledgerFindings?: Prisma.LedgerFindingCreateNestedManyWithoutTaxYearInput
   priorYearContext?: Prisma.PriorYearContextCreateNestedOneWithoutTaxYearInput
   consumedByContexts?: Prisma.PriorYearContextCreateNestedManyWithoutSourcePriorYearInput
   engagementLetter?: Prisma.EngagementLetterCreateNestedOneWithoutTaxYearInput
@@ -2014,6 +2064,7 @@ export type TaxYearUncheckedCreateWithoutPipelineRunsInput = {
   importSessions?: Prisma.ImportSessionUncheckedCreateNestedManyWithoutTaxYearInput
   documents?: Prisma.DocumentUncheckedCreateNestedManyWithoutTaxYearInput
   inactiveMonths?: Prisma.AccountInactiveMonthUncheckedCreateNestedManyWithoutTaxYearInput
+  ledgerFindings?: Prisma.LedgerFindingUncheckedCreateNestedManyWithoutTaxYearInput
   priorYearContext?: Prisma.PriorYearContextUncheckedCreateNestedOneWithoutTaxYearInput
   consumedByContexts?: Prisma.PriorYearContextUncheckedCreateNestedManyWithoutSourcePriorYearInput
   engagementLetter?: Prisma.EngagementLetterUncheckedCreateNestedOneWithoutTaxYearInput
@@ -2060,6 +2111,7 @@ export type TaxYearUpdateWithoutPipelineRunsInput = {
   importSessions?: Prisma.ImportSessionUpdateManyWithoutTaxYearNestedInput
   documents?: Prisma.DocumentUpdateManyWithoutTaxYearNestedInput
   inactiveMonths?: Prisma.AccountInactiveMonthUpdateManyWithoutTaxYearNestedInput
+  ledgerFindings?: Prisma.LedgerFindingUpdateManyWithoutTaxYearNestedInput
   priorYearContext?: Prisma.PriorYearContextUpdateOneWithoutTaxYearNestedInput
   consumedByContexts?: Prisma.PriorYearContextUpdateManyWithoutSourcePriorYearNestedInput
   engagementLetter?: Prisma.EngagementLetterUpdateOneWithoutTaxYearNestedInput
@@ -2090,6 +2142,7 @@ export type TaxYearUncheckedUpdateWithoutPipelineRunsInput = {
   importSessions?: Prisma.ImportSessionUncheckedUpdateManyWithoutTaxYearNestedInput
   documents?: Prisma.DocumentUncheckedUpdateManyWithoutTaxYearNestedInput
   inactiveMonths?: Prisma.AccountInactiveMonthUncheckedUpdateManyWithoutTaxYearNestedInput
+  ledgerFindings?: Prisma.LedgerFindingUncheckedUpdateManyWithoutTaxYearNestedInput
   priorYearContext?: Prisma.PriorYearContextUncheckedUpdateOneWithoutTaxYearNestedInput
   consumedByContexts?: Prisma.PriorYearContextUncheckedUpdateManyWithoutSourcePriorYearNestedInput
   engagementLetter?: Prisma.EngagementLetterUncheckedUpdateOneWithoutTaxYearNestedInput
@@ -2120,6 +2173,7 @@ export type TaxYearCreateWithoutTransactionsInput = {
   documents?: Prisma.DocumentCreateNestedManyWithoutTaxYearInput
   pipelineRuns?: Prisma.PipelineRunCreateNestedManyWithoutTaxYearInput
   inactiveMonths?: Prisma.AccountInactiveMonthCreateNestedManyWithoutTaxYearInput
+  ledgerFindings?: Prisma.LedgerFindingCreateNestedManyWithoutTaxYearInput
   priorYearContext?: Prisma.PriorYearContextCreateNestedOneWithoutTaxYearInput
   consumedByContexts?: Prisma.PriorYearContextCreateNestedManyWithoutSourcePriorYearInput
   engagementLetter?: Prisma.EngagementLetterCreateNestedOneWithoutTaxYearInput
@@ -2150,6 +2204,7 @@ export type TaxYearUncheckedCreateWithoutTransactionsInput = {
   documents?: Prisma.DocumentUncheckedCreateNestedManyWithoutTaxYearInput
   pipelineRuns?: Prisma.PipelineRunUncheckedCreateNestedManyWithoutTaxYearInput
   inactiveMonths?: Prisma.AccountInactiveMonthUncheckedCreateNestedManyWithoutTaxYearInput
+  ledgerFindings?: Prisma.LedgerFindingUncheckedCreateNestedManyWithoutTaxYearInput
   priorYearContext?: Prisma.PriorYearContextUncheckedCreateNestedOneWithoutTaxYearInput
   consumedByContexts?: Prisma.PriorYearContextUncheckedCreateNestedManyWithoutSourcePriorYearInput
   engagementLetter?: Prisma.EngagementLetterUncheckedCreateNestedOneWithoutTaxYearInput
@@ -2196,6 +2251,7 @@ export type TaxYearUpdateWithoutTransactionsInput = {
   documents?: Prisma.DocumentUpdateManyWithoutTaxYearNestedInput
   pipelineRuns?: Prisma.PipelineRunUpdateManyWithoutTaxYearNestedInput
   inactiveMonths?: Prisma.AccountInactiveMonthUpdateManyWithoutTaxYearNestedInput
+  ledgerFindings?: Prisma.LedgerFindingUpdateManyWithoutTaxYearNestedInput
   priorYearContext?: Prisma.PriorYearContextUpdateOneWithoutTaxYearNestedInput
   consumedByContexts?: Prisma.PriorYearContextUpdateManyWithoutSourcePriorYearNestedInput
   engagementLetter?: Prisma.EngagementLetterUpdateOneWithoutTaxYearNestedInput
@@ -2226,6 +2282,7 @@ export type TaxYearUncheckedUpdateWithoutTransactionsInput = {
   documents?: Prisma.DocumentUncheckedUpdateManyWithoutTaxYearNestedInput
   pipelineRuns?: Prisma.PipelineRunUncheckedUpdateManyWithoutTaxYearNestedInput
   inactiveMonths?: Prisma.AccountInactiveMonthUncheckedUpdateManyWithoutTaxYearNestedInput
+  ledgerFindings?: Prisma.LedgerFindingUncheckedUpdateManyWithoutTaxYearNestedInput
   priorYearContext?: Prisma.PriorYearContextUncheckedUpdateOneWithoutTaxYearNestedInput
   consumedByContexts?: Prisma.PriorYearContextUncheckedUpdateManyWithoutSourcePriorYearNestedInput
   engagementLetter?: Prisma.EngagementLetterUncheckedUpdateOneWithoutTaxYearNestedInput
@@ -2256,6 +2313,7 @@ export type TaxYearCreateWithoutMerchantRulesInput = {
   documents?: Prisma.DocumentCreateNestedManyWithoutTaxYearInput
   pipelineRuns?: Prisma.PipelineRunCreateNestedManyWithoutTaxYearInput
   inactiveMonths?: Prisma.AccountInactiveMonthCreateNestedManyWithoutTaxYearInput
+  ledgerFindings?: Prisma.LedgerFindingCreateNestedManyWithoutTaxYearInput
   priorYearContext?: Prisma.PriorYearContextCreateNestedOneWithoutTaxYearInput
   consumedByContexts?: Prisma.PriorYearContextCreateNestedManyWithoutSourcePriorYearInput
   engagementLetter?: Prisma.EngagementLetterCreateNestedOneWithoutTaxYearInput
@@ -2286,6 +2344,7 @@ export type TaxYearUncheckedCreateWithoutMerchantRulesInput = {
   documents?: Prisma.DocumentUncheckedCreateNestedManyWithoutTaxYearInput
   pipelineRuns?: Prisma.PipelineRunUncheckedCreateNestedManyWithoutTaxYearInput
   inactiveMonths?: Prisma.AccountInactiveMonthUncheckedCreateNestedManyWithoutTaxYearInput
+  ledgerFindings?: Prisma.LedgerFindingUncheckedCreateNestedManyWithoutTaxYearInput
   priorYearContext?: Prisma.PriorYearContextUncheckedCreateNestedOneWithoutTaxYearInput
   consumedByContexts?: Prisma.PriorYearContextUncheckedCreateNestedManyWithoutSourcePriorYearInput
   engagementLetter?: Prisma.EngagementLetterUncheckedCreateNestedOneWithoutTaxYearInput
@@ -2332,6 +2391,7 @@ export type TaxYearUpdateWithoutMerchantRulesInput = {
   documents?: Prisma.DocumentUpdateManyWithoutTaxYearNestedInput
   pipelineRuns?: Prisma.PipelineRunUpdateManyWithoutTaxYearNestedInput
   inactiveMonths?: Prisma.AccountInactiveMonthUpdateManyWithoutTaxYearNestedInput
+  ledgerFindings?: Prisma.LedgerFindingUpdateManyWithoutTaxYearNestedInput
   priorYearContext?: Prisma.PriorYearContextUpdateOneWithoutTaxYearNestedInput
   consumedByContexts?: Prisma.PriorYearContextUpdateManyWithoutSourcePriorYearNestedInput
   engagementLetter?: Prisma.EngagementLetterUpdateOneWithoutTaxYearNestedInput
@@ -2362,6 +2422,7 @@ export type TaxYearUncheckedUpdateWithoutMerchantRulesInput = {
   documents?: Prisma.DocumentUncheckedUpdateManyWithoutTaxYearNestedInput
   pipelineRuns?: Prisma.PipelineRunUncheckedUpdateManyWithoutTaxYearNestedInput
   inactiveMonths?: Prisma.AccountInactiveMonthUncheckedUpdateManyWithoutTaxYearNestedInput
+  ledgerFindings?: Prisma.LedgerFindingUncheckedUpdateManyWithoutTaxYearNestedInput
   priorYearContext?: Prisma.PriorYearContextUncheckedUpdateOneWithoutTaxYearNestedInput
   consumedByContexts?: Prisma.PriorYearContextUncheckedUpdateManyWithoutSourcePriorYearNestedInput
   engagementLetter?: Prisma.EngagementLetterUncheckedUpdateOneWithoutTaxYearNestedInput
@@ -2392,6 +2453,7 @@ export type TaxYearCreateWithoutStopItemsInput = {
   documents?: Prisma.DocumentCreateNestedManyWithoutTaxYearInput
   pipelineRuns?: Prisma.PipelineRunCreateNestedManyWithoutTaxYearInput
   inactiveMonths?: Prisma.AccountInactiveMonthCreateNestedManyWithoutTaxYearInput
+  ledgerFindings?: Prisma.LedgerFindingCreateNestedManyWithoutTaxYearInput
   priorYearContext?: Prisma.PriorYearContextCreateNestedOneWithoutTaxYearInput
   consumedByContexts?: Prisma.PriorYearContextCreateNestedManyWithoutSourcePriorYearInput
   engagementLetter?: Prisma.EngagementLetterCreateNestedOneWithoutTaxYearInput
@@ -2422,6 +2484,7 @@ export type TaxYearUncheckedCreateWithoutStopItemsInput = {
   documents?: Prisma.DocumentUncheckedCreateNestedManyWithoutTaxYearInput
   pipelineRuns?: Prisma.PipelineRunUncheckedCreateNestedManyWithoutTaxYearInput
   inactiveMonths?: Prisma.AccountInactiveMonthUncheckedCreateNestedManyWithoutTaxYearInput
+  ledgerFindings?: Prisma.LedgerFindingUncheckedCreateNestedManyWithoutTaxYearInput
   priorYearContext?: Prisma.PriorYearContextUncheckedCreateNestedOneWithoutTaxYearInput
   consumedByContexts?: Prisma.PriorYearContextUncheckedCreateNestedManyWithoutSourcePriorYearInput
   engagementLetter?: Prisma.EngagementLetterUncheckedCreateNestedOneWithoutTaxYearInput
@@ -2468,6 +2531,7 @@ export type TaxYearUpdateWithoutStopItemsInput = {
   documents?: Prisma.DocumentUpdateManyWithoutTaxYearNestedInput
   pipelineRuns?: Prisma.PipelineRunUpdateManyWithoutTaxYearNestedInput
   inactiveMonths?: Prisma.AccountInactiveMonthUpdateManyWithoutTaxYearNestedInput
+  ledgerFindings?: Prisma.LedgerFindingUpdateManyWithoutTaxYearNestedInput
   priorYearContext?: Prisma.PriorYearContextUpdateOneWithoutTaxYearNestedInput
   consumedByContexts?: Prisma.PriorYearContextUpdateManyWithoutSourcePriorYearNestedInput
   engagementLetter?: Prisma.EngagementLetterUpdateOneWithoutTaxYearNestedInput
@@ -2493,6 +2557,147 @@ export type TaxYearUncheckedUpdateWithoutStopItemsInput = {
   statementImports?: Prisma.StatementImportUncheckedUpdateManyWithoutTaxYearNestedInput
   transactions?: Prisma.TransactionUncheckedUpdateManyWithoutTaxYearNestedInput
   merchantRules?: Prisma.MerchantRuleUncheckedUpdateManyWithoutTaxYearNestedInput
+  reports?: Prisma.ReportUncheckedUpdateManyWithoutTaxYearNestedInput
+  importSessions?: Prisma.ImportSessionUncheckedUpdateManyWithoutTaxYearNestedInput
+  documents?: Prisma.DocumentUncheckedUpdateManyWithoutTaxYearNestedInput
+  pipelineRuns?: Prisma.PipelineRunUncheckedUpdateManyWithoutTaxYearNestedInput
+  inactiveMonths?: Prisma.AccountInactiveMonthUncheckedUpdateManyWithoutTaxYearNestedInput
+  ledgerFindings?: Prisma.LedgerFindingUncheckedUpdateManyWithoutTaxYearNestedInput
+  priorYearContext?: Prisma.PriorYearContextUncheckedUpdateOneWithoutTaxYearNestedInput
+  consumedByContexts?: Prisma.PriorYearContextUncheckedUpdateManyWithoutSourcePriorYearNestedInput
+  engagementLetter?: Prisma.EngagementLetterUncheckedUpdateOneWithoutTaxYearNestedInput
+  form8879?: Prisma.Form8879UncheckedUpdateOneWithoutTaxYearNestedInput
+  filingMilestones?: Prisma.FilingMilestoneUncheckedUpdateManyWithoutTaxYearNestedInput
+  w9Submissions?: Prisma.W9SubmissionUncheckedUpdateManyWithoutTaxYearNestedInput
+  form1099Filings?: Prisma.Form1099FilingUncheckedUpdateManyWithoutTaxYearNestedInput
+}
+
+export type TaxYearCreateWithoutLedgerFindingsInput = {
+  id?: string
+  year: number
+  status?: $Enums.TaxYearStatus
+  lockedAt?: Date | string | null
+  lockedSnapshotHash?: string | null
+  acceptedRiskOverrides?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  createdAt?: Date | string
+  user: Prisma.UserCreateNestedOneWithoutTaxYearsInput
+  ruleVersion?: Prisma.RuleVersionCreateNestedOneWithoutTaxYearsInput
+  businessProfile?: Prisma.BusinessProfileCreateNestedOneWithoutTaxYearInput
+  financialAccounts?: Prisma.FinancialAccountCreateNestedManyWithoutTaxYearInput
+  accountYearLinks?: Prisma.AccountYearLinkCreateNestedManyWithoutTaxYearInput
+  statementImports?: Prisma.StatementImportCreateNestedManyWithoutTaxYearInput
+  transactions?: Prisma.TransactionCreateNestedManyWithoutTaxYearInput
+  merchantRules?: Prisma.MerchantRuleCreateNestedManyWithoutTaxYearInput
+  stopItems?: Prisma.StopItemCreateNestedManyWithoutTaxYearInput
+  reports?: Prisma.ReportCreateNestedManyWithoutTaxYearInput
+  importSessions?: Prisma.ImportSessionCreateNestedManyWithoutTaxYearInput
+  documents?: Prisma.DocumentCreateNestedManyWithoutTaxYearInput
+  pipelineRuns?: Prisma.PipelineRunCreateNestedManyWithoutTaxYearInput
+  inactiveMonths?: Prisma.AccountInactiveMonthCreateNestedManyWithoutTaxYearInput
+  priorYearContext?: Prisma.PriorYearContextCreateNestedOneWithoutTaxYearInput
+  consumedByContexts?: Prisma.PriorYearContextCreateNestedManyWithoutSourcePriorYearInput
+  engagementLetter?: Prisma.EngagementLetterCreateNestedOneWithoutTaxYearInput
+  form8879?: Prisma.Form8879CreateNestedOneWithoutTaxYearInput
+  filingMilestones?: Prisma.FilingMilestoneCreateNestedManyWithoutTaxYearInput
+  w9Submissions?: Prisma.W9SubmissionCreateNestedManyWithoutTaxYearInput
+  form1099Filings?: Prisma.Form1099FilingCreateNestedManyWithoutTaxYearInput
+}
+
+export type TaxYearUncheckedCreateWithoutLedgerFindingsInput = {
+  id?: string
+  userId: string
+  year: number
+  status?: $Enums.TaxYearStatus
+  ruleVersionId?: string | null
+  lockedAt?: Date | string | null
+  lockedSnapshotHash?: string | null
+  acceptedRiskOverrides?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  createdAt?: Date | string
+  businessProfile?: Prisma.BusinessProfileUncheckedCreateNestedOneWithoutTaxYearInput
+  financialAccounts?: Prisma.FinancialAccountUncheckedCreateNestedManyWithoutTaxYearInput
+  accountYearLinks?: Prisma.AccountYearLinkUncheckedCreateNestedManyWithoutTaxYearInput
+  statementImports?: Prisma.StatementImportUncheckedCreateNestedManyWithoutTaxYearInput
+  transactions?: Prisma.TransactionUncheckedCreateNestedManyWithoutTaxYearInput
+  merchantRules?: Prisma.MerchantRuleUncheckedCreateNestedManyWithoutTaxYearInput
+  stopItems?: Prisma.StopItemUncheckedCreateNestedManyWithoutTaxYearInput
+  reports?: Prisma.ReportUncheckedCreateNestedManyWithoutTaxYearInput
+  importSessions?: Prisma.ImportSessionUncheckedCreateNestedManyWithoutTaxYearInput
+  documents?: Prisma.DocumentUncheckedCreateNestedManyWithoutTaxYearInput
+  pipelineRuns?: Prisma.PipelineRunUncheckedCreateNestedManyWithoutTaxYearInput
+  inactiveMonths?: Prisma.AccountInactiveMonthUncheckedCreateNestedManyWithoutTaxYearInput
+  priorYearContext?: Prisma.PriorYearContextUncheckedCreateNestedOneWithoutTaxYearInput
+  consumedByContexts?: Prisma.PriorYearContextUncheckedCreateNestedManyWithoutSourcePriorYearInput
+  engagementLetter?: Prisma.EngagementLetterUncheckedCreateNestedOneWithoutTaxYearInput
+  form8879?: Prisma.Form8879UncheckedCreateNestedOneWithoutTaxYearInput
+  filingMilestones?: Prisma.FilingMilestoneUncheckedCreateNestedManyWithoutTaxYearInput
+  w9Submissions?: Prisma.W9SubmissionUncheckedCreateNestedManyWithoutTaxYearInput
+  form1099Filings?: Prisma.Form1099FilingUncheckedCreateNestedManyWithoutTaxYearInput
+}
+
+export type TaxYearCreateOrConnectWithoutLedgerFindingsInput = {
+  where: Prisma.TaxYearWhereUniqueInput
+  create: Prisma.XOR<Prisma.TaxYearCreateWithoutLedgerFindingsInput, Prisma.TaxYearUncheckedCreateWithoutLedgerFindingsInput>
+}
+
+export type TaxYearUpsertWithoutLedgerFindingsInput = {
+  update: Prisma.XOR<Prisma.TaxYearUpdateWithoutLedgerFindingsInput, Prisma.TaxYearUncheckedUpdateWithoutLedgerFindingsInput>
+  create: Prisma.XOR<Prisma.TaxYearCreateWithoutLedgerFindingsInput, Prisma.TaxYearUncheckedCreateWithoutLedgerFindingsInput>
+  where?: Prisma.TaxYearWhereInput
+}
+
+export type TaxYearUpdateToOneWithWhereWithoutLedgerFindingsInput = {
+  where?: Prisma.TaxYearWhereInput
+  data: Prisma.XOR<Prisma.TaxYearUpdateWithoutLedgerFindingsInput, Prisma.TaxYearUncheckedUpdateWithoutLedgerFindingsInput>
+}
+
+export type TaxYearUpdateWithoutLedgerFindingsInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  year?: Prisma.IntFieldUpdateOperationsInput | number
+  status?: Prisma.EnumTaxYearStatusFieldUpdateOperationsInput | $Enums.TaxYearStatus
+  lockedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  lockedSnapshotHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  acceptedRiskOverrides?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  user?: Prisma.UserUpdateOneRequiredWithoutTaxYearsNestedInput
+  ruleVersion?: Prisma.RuleVersionUpdateOneWithoutTaxYearsNestedInput
+  businessProfile?: Prisma.BusinessProfileUpdateOneWithoutTaxYearNestedInput
+  financialAccounts?: Prisma.FinancialAccountUpdateManyWithoutTaxYearNestedInput
+  accountYearLinks?: Prisma.AccountYearLinkUpdateManyWithoutTaxYearNestedInput
+  statementImports?: Prisma.StatementImportUpdateManyWithoutTaxYearNestedInput
+  transactions?: Prisma.TransactionUpdateManyWithoutTaxYearNestedInput
+  merchantRules?: Prisma.MerchantRuleUpdateManyWithoutTaxYearNestedInput
+  stopItems?: Prisma.StopItemUpdateManyWithoutTaxYearNestedInput
+  reports?: Prisma.ReportUpdateManyWithoutTaxYearNestedInput
+  importSessions?: Prisma.ImportSessionUpdateManyWithoutTaxYearNestedInput
+  documents?: Prisma.DocumentUpdateManyWithoutTaxYearNestedInput
+  pipelineRuns?: Prisma.PipelineRunUpdateManyWithoutTaxYearNestedInput
+  inactiveMonths?: Prisma.AccountInactiveMonthUpdateManyWithoutTaxYearNestedInput
+  priorYearContext?: Prisma.PriorYearContextUpdateOneWithoutTaxYearNestedInput
+  consumedByContexts?: Prisma.PriorYearContextUpdateManyWithoutSourcePriorYearNestedInput
+  engagementLetter?: Prisma.EngagementLetterUpdateOneWithoutTaxYearNestedInput
+  form8879?: Prisma.Form8879UpdateOneWithoutTaxYearNestedInput
+  filingMilestones?: Prisma.FilingMilestoneUpdateManyWithoutTaxYearNestedInput
+  w9Submissions?: Prisma.W9SubmissionUpdateManyWithoutTaxYearNestedInput
+  form1099Filings?: Prisma.Form1099FilingUpdateManyWithoutTaxYearNestedInput
+}
+
+export type TaxYearUncheckedUpdateWithoutLedgerFindingsInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  userId?: Prisma.StringFieldUpdateOperationsInput | string
+  year?: Prisma.IntFieldUpdateOperationsInput | number
+  status?: Prisma.EnumTaxYearStatusFieldUpdateOperationsInput | $Enums.TaxYearStatus
+  ruleVersionId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  lockedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  lockedSnapshotHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  acceptedRiskOverrides?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  businessProfile?: Prisma.BusinessProfileUncheckedUpdateOneWithoutTaxYearNestedInput
+  financialAccounts?: Prisma.FinancialAccountUncheckedUpdateManyWithoutTaxYearNestedInput
+  accountYearLinks?: Prisma.AccountYearLinkUncheckedUpdateManyWithoutTaxYearNestedInput
+  statementImports?: Prisma.StatementImportUncheckedUpdateManyWithoutTaxYearNestedInput
+  transactions?: Prisma.TransactionUncheckedUpdateManyWithoutTaxYearNestedInput
+  merchantRules?: Prisma.MerchantRuleUncheckedUpdateManyWithoutTaxYearNestedInput
+  stopItems?: Prisma.StopItemUncheckedUpdateManyWithoutTaxYearNestedInput
   reports?: Prisma.ReportUncheckedUpdateManyWithoutTaxYearNestedInput
   importSessions?: Prisma.ImportSessionUncheckedUpdateManyWithoutTaxYearNestedInput
   documents?: Prisma.DocumentUncheckedUpdateManyWithoutTaxYearNestedInput
@@ -2528,6 +2733,7 @@ export type TaxYearCreateWithoutReportsInput = {
   documents?: Prisma.DocumentCreateNestedManyWithoutTaxYearInput
   pipelineRuns?: Prisma.PipelineRunCreateNestedManyWithoutTaxYearInput
   inactiveMonths?: Prisma.AccountInactiveMonthCreateNestedManyWithoutTaxYearInput
+  ledgerFindings?: Prisma.LedgerFindingCreateNestedManyWithoutTaxYearInput
   priorYearContext?: Prisma.PriorYearContextCreateNestedOneWithoutTaxYearInput
   consumedByContexts?: Prisma.PriorYearContextCreateNestedManyWithoutSourcePriorYearInput
   engagementLetter?: Prisma.EngagementLetterCreateNestedOneWithoutTaxYearInput
@@ -2558,6 +2764,7 @@ export type TaxYearUncheckedCreateWithoutReportsInput = {
   documents?: Prisma.DocumentUncheckedCreateNestedManyWithoutTaxYearInput
   pipelineRuns?: Prisma.PipelineRunUncheckedCreateNestedManyWithoutTaxYearInput
   inactiveMonths?: Prisma.AccountInactiveMonthUncheckedCreateNestedManyWithoutTaxYearInput
+  ledgerFindings?: Prisma.LedgerFindingUncheckedCreateNestedManyWithoutTaxYearInput
   priorYearContext?: Prisma.PriorYearContextUncheckedCreateNestedOneWithoutTaxYearInput
   consumedByContexts?: Prisma.PriorYearContextUncheckedCreateNestedManyWithoutSourcePriorYearInput
   engagementLetter?: Prisma.EngagementLetterUncheckedCreateNestedOneWithoutTaxYearInput
@@ -2604,6 +2811,7 @@ export type TaxYearUpdateWithoutReportsInput = {
   documents?: Prisma.DocumentUpdateManyWithoutTaxYearNestedInput
   pipelineRuns?: Prisma.PipelineRunUpdateManyWithoutTaxYearNestedInput
   inactiveMonths?: Prisma.AccountInactiveMonthUpdateManyWithoutTaxYearNestedInput
+  ledgerFindings?: Prisma.LedgerFindingUpdateManyWithoutTaxYearNestedInput
   priorYearContext?: Prisma.PriorYearContextUpdateOneWithoutTaxYearNestedInput
   consumedByContexts?: Prisma.PriorYearContextUpdateManyWithoutSourcePriorYearNestedInput
   engagementLetter?: Prisma.EngagementLetterUpdateOneWithoutTaxYearNestedInput
@@ -2634,6 +2842,7 @@ export type TaxYearUncheckedUpdateWithoutReportsInput = {
   documents?: Prisma.DocumentUncheckedUpdateManyWithoutTaxYearNestedInput
   pipelineRuns?: Prisma.PipelineRunUncheckedUpdateManyWithoutTaxYearNestedInput
   inactiveMonths?: Prisma.AccountInactiveMonthUncheckedUpdateManyWithoutTaxYearNestedInput
+  ledgerFindings?: Prisma.LedgerFindingUncheckedUpdateManyWithoutTaxYearNestedInput
   priorYearContext?: Prisma.PriorYearContextUncheckedUpdateOneWithoutTaxYearNestedInput
   consumedByContexts?: Prisma.PriorYearContextUncheckedUpdateManyWithoutSourcePriorYearNestedInput
   engagementLetter?: Prisma.EngagementLetterUncheckedUpdateOneWithoutTaxYearNestedInput
@@ -2664,6 +2873,7 @@ export type TaxYearCreateWithoutDocumentsInput = {
   importSessions?: Prisma.ImportSessionCreateNestedManyWithoutTaxYearInput
   pipelineRuns?: Prisma.PipelineRunCreateNestedManyWithoutTaxYearInput
   inactiveMonths?: Prisma.AccountInactiveMonthCreateNestedManyWithoutTaxYearInput
+  ledgerFindings?: Prisma.LedgerFindingCreateNestedManyWithoutTaxYearInput
   priorYearContext?: Prisma.PriorYearContextCreateNestedOneWithoutTaxYearInput
   consumedByContexts?: Prisma.PriorYearContextCreateNestedManyWithoutSourcePriorYearInput
   engagementLetter?: Prisma.EngagementLetterCreateNestedOneWithoutTaxYearInput
@@ -2694,6 +2904,7 @@ export type TaxYearUncheckedCreateWithoutDocumentsInput = {
   importSessions?: Prisma.ImportSessionUncheckedCreateNestedManyWithoutTaxYearInput
   pipelineRuns?: Prisma.PipelineRunUncheckedCreateNestedManyWithoutTaxYearInput
   inactiveMonths?: Prisma.AccountInactiveMonthUncheckedCreateNestedManyWithoutTaxYearInput
+  ledgerFindings?: Prisma.LedgerFindingUncheckedCreateNestedManyWithoutTaxYearInput
   priorYearContext?: Prisma.PriorYearContextUncheckedCreateNestedOneWithoutTaxYearInput
   consumedByContexts?: Prisma.PriorYearContextUncheckedCreateNestedManyWithoutSourcePriorYearInput
   engagementLetter?: Prisma.EngagementLetterUncheckedCreateNestedOneWithoutTaxYearInput
@@ -2740,6 +2951,7 @@ export type TaxYearUpdateWithoutDocumentsInput = {
   importSessions?: Prisma.ImportSessionUpdateManyWithoutTaxYearNestedInput
   pipelineRuns?: Prisma.PipelineRunUpdateManyWithoutTaxYearNestedInput
   inactiveMonths?: Prisma.AccountInactiveMonthUpdateManyWithoutTaxYearNestedInput
+  ledgerFindings?: Prisma.LedgerFindingUpdateManyWithoutTaxYearNestedInput
   priorYearContext?: Prisma.PriorYearContextUpdateOneWithoutTaxYearNestedInput
   consumedByContexts?: Prisma.PriorYearContextUpdateManyWithoutSourcePriorYearNestedInput
   engagementLetter?: Prisma.EngagementLetterUpdateOneWithoutTaxYearNestedInput
@@ -2770,6 +2982,7 @@ export type TaxYearUncheckedUpdateWithoutDocumentsInput = {
   importSessions?: Prisma.ImportSessionUncheckedUpdateManyWithoutTaxYearNestedInput
   pipelineRuns?: Prisma.PipelineRunUncheckedUpdateManyWithoutTaxYearNestedInput
   inactiveMonths?: Prisma.AccountInactiveMonthUncheckedUpdateManyWithoutTaxYearNestedInput
+  ledgerFindings?: Prisma.LedgerFindingUncheckedUpdateManyWithoutTaxYearNestedInput
   priorYearContext?: Prisma.PriorYearContextUncheckedUpdateOneWithoutTaxYearNestedInput
   consumedByContexts?: Prisma.PriorYearContextUncheckedUpdateManyWithoutSourcePriorYearNestedInput
   engagementLetter?: Prisma.EngagementLetterUncheckedUpdateOneWithoutTaxYearNestedInput
@@ -2801,6 +3014,7 @@ export type TaxYearCreateWithoutPriorYearContextInput = {
   documents?: Prisma.DocumentCreateNestedManyWithoutTaxYearInput
   pipelineRuns?: Prisma.PipelineRunCreateNestedManyWithoutTaxYearInput
   inactiveMonths?: Prisma.AccountInactiveMonthCreateNestedManyWithoutTaxYearInput
+  ledgerFindings?: Prisma.LedgerFindingCreateNestedManyWithoutTaxYearInput
   consumedByContexts?: Prisma.PriorYearContextCreateNestedManyWithoutSourcePriorYearInput
   engagementLetter?: Prisma.EngagementLetterCreateNestedOneWithoutTaxYearInput
   form8879?: Prisma.Form8879CreateNestedOneWithoutTaxYearInput
@@ -2831,6 +3045,7 @@ export type TaxYearUncheckedCreateWithoutPriorYearContextInput = {
   documents?: Prisma.DocumentUncheckedCreateNestedManyWithoutTaxYearInput
   pipelineRuns?: Prisma.PipelineRunUncheckedCreateNestedManyWithoutTaxYearInput
   inactiveMonths?: Prisma.AccountInactiveMonthUncheckedCreateNestedManyWithoutTaxYearInput
+  ledgerFindings?: Prisma.LedgerFindingUncheckedCreateNestedManyWithoutTaxYearInput
   consumedByContexts?: Prisma.PriorYearContextUncheckedCreateNestedManyWithoutSourcePriorYearInput
   engagementLetter?: Prisma.EngagementLetterUncheckedCreateNestedOneWithoutTaxYearInput
   form8879?: Prisma.Form8879UncheckedCreateNestedOneWithoutTaxYearInput
@@ -2866,6 +3081,7 @@ export type TaxYearCreateWithoutConsumedByContextsInput = {
   documents?: Prisma.DocumentCreateNestedManyWithoutTaxYearInput
   pipelineRuns?: Prisma.PipelineRunCreateNestedManyWithoutTaxYearInput
   inactiveMonths?: Prisma.AccountInactiveMonthCreateNestedManyWithoutTaxYearInput
+  ledgerFindings?: Prisma.LedgerFindingCreateNestedManyWithoutTaxYearInput
   priorYearContext?: Prisma.PriorYearContextCreateNestedOneWithoutTaxYearInput
   engagementLetter?: Prisma.EngagementLetterCreateNestedOneWithoutTaxYearInput
   form8879?: Prisma.Form8879CreateNestedOneWithoutTaxYearInput
@@ -2896,6 +3112,7 @@ export type TaxYearUncheckedCreateWithoutConsumedByContextsInput = {
   documents?: Prisma.DocumentUncheckedCreateNestedManyWithoutTaxYearInput
   pipelineRuns?: Prisma.PipelineRunUncheckedCreateNestedManyWithoutTaxYearInput
   inactiveMonths?: Prisma.AccountInactiveMonthUncheckedCreateNestedManyWithoutTaxYearInput
+  ledgerFindings?: Prisma.LedgerFindingUncheckedCreateNestedManyWithoutTaxYearInput
   priorYearContext?: Prisma.PriorYearContextUncheckedCreateNestedOneWithoutTaxYearInput
   engagementLetter?: Prisma.EngagementLetterUncheckedCreateNestedOneWithoutTaxYearInput
   form8879?: Prisma.Form8879UncheckedCreateNestedOneWithoutTaxYearInput
@@ -2942,6 +3159,7 @@ export type TaxYearUpdateWithoutPriorYearContextInput = {
   documents?: Prisma.DocumentUpdateManyWithoutTaxYearNestedInput
   pipelineRuns?: Prisma.PipelineRunUpdateManyWithoutTaxYearNestedInput
   inactiveMonths?: Prisma.AccountInactiveMonthUpdateManyWithoutTaxYearNestedInput
+  ledgerFindings?: Prisma.LedgerFindingUpdateManyWithoutTaxYearNestedInput
   consumedByContexts?: Prisma.PriorYearContextUpdateManyWithoutSourcePriorYearNestedInput
   engagementLetter?: Prisma.EngagementLetterUpdateOneWithoutTaxYearNestedInput
   form8879?: Prisma.Form8879UpdateOneWithoutTaxYearNestedInput
@@ -2972,6 +3190,7 @@ export type TaxYearUncheckedUpdateWithoutPriorYearContextInput = {
   documents?: Prisma.DocumentUncheckedUpdateManyWithoutTaxYearNestedInput
   pipelineRuns?: Prisma.PipelineRunUncheckedUpdateManyWithoutTaxYearNestedInput
   inactiveMonths?: Prisma.AccountInactiveMonthUncheckedUpdateManyWithoutTaxYearNestedInput
+  ledgerFindings?: Prisma.LedgerFindingUncheckedUpdateManyWithoutTaxYearNestedInput
   consumedByContexts?: Prisma.PriorYearContextUncheckedUpdateManyWithoutSourcePriorYearNestedInput
   engagementLetter?: Prisma.EngagementLetterUncheckedUpdateOneWithoutTaxYearNestedInput
   form8879?: Prisma.Form8879UncheckedUpdateOneWithoutTaxYearNestedInput
@@ -3013,6 +3232,7 @@ export type TaxYearUpdateWithoutConsumedByContextsInput = {
   documents?: Prisma.DocumentUpdateManyWithoutTaxYearNestedInput
   pipelineRuns?: Prisma.PipelineRunUpdateManyWithoutTaxYearNestedInput
   inactiveMonths?: Prisma.AccountInactiveMonthUpdateManyWithoutTaxYearNestedInput
+  ledgerFindings?: Prisma.LedgerFindingUpdateManyWithoutTaxYearNestedInput
   priorYearContext?: Prisma.PriorYearContextUpdateOneWithoutTaxYearNestedInput
   engagementLetter?: Prisma.EngagementLetterUpdateOneWithoutTaxYearNestedInput
   form8879?: Prisma.Form8879UpdateOneWithoutTaxYearNestedInput
@@ -3043,6 +3263,7 @@ export type TaxYearUncheckedUpdateWithoutConsumedByContextsInput = {
   documents?: Prisma.DocumentUncheckedUpdateManyWithoutTaxYearNestedInput
   pipelineRuns?: Prisma.PipelineRunUncheckedUpdateManyWithoutTaxYearNestedInput
   inactiveMonths?: Prisma.AccountInactiveMonthUncheckedUpdateManyWithoutTaxYearNestedInput
+  ledgerFindings?: Prisma.LedgerFindingUncheckedUpdateManyWithoutTaxYearNestedInput
   priorYearContext?: Prisma.PriorYearContextUncheckedUpdateOneWithoutTaxYearNestedInput
   engagementLetter?: Prisma.EngagementLetterUncheckedUpdateOneWithoutTaxYearNestedInput
   form8879?: Prisma.Form8879UncheckedUpdateOneWithoutTaxYearNestedInput
@@ -3073,6 +3294,7 @@ export type TaxYearCreateWithoutEngagementLetterInput = {
   documents?: Prisma.DocumentCreateNestedManyWithoutTaxYearInput
   pipelineRuns?: Prisma.PipelineRunCreateNestedManyWithoutTaxYearInput
   inactiveMonths?: Prisma.AccountInactiveMonthCreateNestedManyWithoutTaxYearInput
+  ledgerFindings?: Prisma.LedgerFindingCreateNestedManyWithoutTaxYearInput
   priorYearContext?: Prisma.PriorYearContextCreateNestedOneWithoutTaxYearInput
   consumedByContexts?: Prisma.PriorYearContextCreateNestedManyWithoutSourcePriorYearInput
   form8879?: Prisma.Form8879CreateNestedOneWithoutTaxYearInput
@@ -3103,6 +3325,7 @@ export type TaxYearUncheckedCreateWithoutEngagementLetterInput = {
   documents?: Prisma.DocumentUncheckedCreateNestedManyWithoutTaxYearInput
   pipelineRuns?: Prisma.PipelineRunUncheckedCreateNestedManyWithoutTaxYearInput
   inactiveMonths?: Prisma.AccountInactiveMonthUncheckedCreateNestedManyWithoutTaxYearInput
+  ledgerFindings?: Prisma.LedgerFindingUncheckedCreateNestedManyWithoutTaxYearInput
   priorYearContext?: Prisma.PriorYearContextUncheckedCreateNestedOneWithoutTaxYearInput
   consumedByContexts?: Prisma.PriorYearContextUncheckedCreateNestedManyWithoutSourcePriorYearInput
   form8879?: Prisma.Form8879UncheckedCreateNestedOneWithoutTaxYearInput
@@ -3149,6 +3372,7 @@ export type TaxYearUpdateWithoutEngagementLetterInput = {
   documents?: Prisma.DocumentUpdateManyWithoutTaxYearNestedInput
   pipelineRuns?: Prisma.PipelineRunUpdateManyWithoutTaxYearNestedInput
   inactiveMonths?: Prisma.AccountInactiveMonthUpdateManyWithoutTaxYearNestedInput
+  ledgerFindings?: Prisma.LedgerFindingUpdateManyWithoutTaxYearNestedInput
   priorYearContext?: Prisma.PriorYearContextUpdateOneWithoutTaxYearNestedInput
   consumedByContexts?: Prisma.PriorYearContextUpdateManyWithoutSourcePriorYearNestedInput
   form8879?: Prisma.Form8879UpdateOneWithoutTaxYearNestedInput
@@ -3179,6 +3403,7 @@ export type TaxYearUncheckedUpdateWithoutEngagementLetterInput = {
   documents?: Prisma.DocumentUncheckedUpdateManyWithoutTaxYearNestedInput
   pipelineRuns?: Prisma.PipelineRunUncheckedUpdateManyWithoutTaxYearNestedInput
   inactiveMonths?: Prisma.AccountInactiveMonthUncheckedUpdateManyWithoutTaxYearNestedInput
+  ledgerFindings?: Prisma.LedgerFindingUncheckedUpdateManyWithoutTaxYearNestedInput
   priorYearContext?: Prisma.PriorYearContextUncheckedUpdateOneWithoutTaxYearNestedInput
   consumedByContexts?: Prisma.PriorYearContextUncheckedUpdateManyWithoutSourcePriorYearNestedInput
   form8879?: Prisma.Form8879UncheckedUpdateOneWithoutTaxYearNestedInput
@@ -3209,6 +3434,7 @@ export type TaxYearCreateWithoutForm8879Input = {
   documents?: Prisma.DocumentCreateNestedManyWithoutTaxYearInput
   pipelineRuns?: Prisma.PipelineRunCreateNestedManyWithoutTaxYearInput
   inactiveMonths?: Prisma.AccountInactiveMonthCreateNestedManyWithoutTaxYearInput
+  ledgerFindings?: Prisma.LedgerFindingCreateNestedManyWithoutTaxYearInput
   priorYearContext?: Prisma.PriorYearContextCreateNestedOneWithoutTaxYearInput
   consumedByContexts?: Prisma.PriorYearContextCreateNestedManyWithoutSourcePriorYearInput
   engagementLetter?: Prisma.EngagementLetterCreateNestedOneWithoutTaxYearInput
@@ -3239,6 +3465,7 @@ export type TaxYearUncheckedCreateWithoutForm8879Input = {
   documents?: Prisma.DocumentUncheckedCreateNestedManyWithoutTaxYearInput
   pipelineRuns?: Prisma.PipelineRunUncheckedCreateNestedManyWithoutTaxYearInput
   inactiveMonths?: Prisma.AccountInactiveMonthUncheckedCreateNestedManyWithoutTaxYearInput
+  ledgerFindings?: Prisma.LedgerFindingUncheckedCreateNestedManyWithoutTaxYearInput
   priorYearContext?: Prisma.PriorYearContextUncheckedCreateNestedOneWithoutTaxYearInput
   consumedByContexts?: Prisma.PriorYearContextUncheckedCreateNestedManyWithoutSourcePriorYearInput
   engagementLetter?: Prisma.EngagementLetterUncheckedCreateNestedOneWithoutTaxYearInput
@@ -3285,6 +3512,7 @@ export type TaxYearUpdateWithoutForm8879Input = {
   documents?: Prisma.DocumentUpdateManyWithoutTaxYearNestedInput
   pipelineRuns?: Prisma.PipelineRunUpdateManyWithoutTaxYearNestedInput
   inactiveMonths?: Prisma.AccountInactiveMonthUpdateManyWithoutTaxYearNestedInput
+  ledgerFindings?: Prisma.LedgerFindingUpdateManyWithoutTaxYearNestedInput
   priorYearContext?: Prisma.PriorYearContextUpdateOneWithoutTaxYearNestedInput
   consumedByContexts?: Prisma.PriorYearContextUpdateManyWithoutSourcePriorYearNestedInput
   engagementLetter?: Prisma.EngagementLetterUpdateOneWithoutTaxYearNestedInput
@@ -3315,6 +3543,7 @@ export type TaxYearUncheckedUpdateWithoutForm8879Input = {
   documents?: Prisma.DocumentUncheckedUpdateManyWithoutTaxYearNestedInput
   pipelineRuns?: Prisma.PipelineRunUncheckedUpdateManyWithoutTaxYearNestedInput
   inactiveMonths?: Prisma.AccountInactiveMonthUncheckedUpdateManyWithoutTaxYearNestedInput
+  ledgerFindings?: Prisma.LedgerFindingUncheckedUpdateManyWithoutTaxYearNestedInput
   priorYearContext?: Prisma.PriorYearContextUncheckedUpdateOneWithoutTaxYearNestedInput
   consumedByContexts?: Prisma.PriorYearContextUncheckedUpdateManyWithoutSourcePriorYearNestedInput
   engagementLetter?: Prisma.EngagementLetterUncheckedUpdateOneWithoutTaxYearNestedInput
@@ -3345,6 +3574,7 @@ export type TaxYearCreateWithoutFilingMilestonesInput = {
   documents?: Prisma.DocumentCreateNestedManyWithoutTaxYearInput
   pipelineRuns?: Prisma.PipelineRunCreateNestedManyWithoutTaxYearInput
   inactiveMonths?: Prisma.AccountInactiveMonthCreateNestedManyWithoutTaxYearInput
+  ledgerFindings?: Prisma.LedgerFindingCreateNestedManyWithoutTaxYearInput
   priorYearContext?: Prisma.PriorYearContextCreateNestedOneWithoutTaxYearInput
   consumedByContexts?: Prisma.PriorYearContextCreateNestedManyWithoutSourcePriorYearInput
   engagementLetter?: Prisma.EngagementLetterCreateNestedOneWithoutTaxYearInput
@@ -3375,6 +3605,7 @@ export type TaxYearUncheckedCreateWithoutFilingMilestonesInput = {
   documents?: Prisma.DocumentUncheckedCreateNestedManyWithoutTaxYearInput
   pipelineRuns?: Prisma.PipelineRunUncheckedCreateNestedManyWithoutTaxYearInput
   inactiveMonths?: Prisma.AccountInactiveMonthUncheckedCreateNestedManyWithoutTaxYearInput
+  ledgerFindings?: Prisma.LedgerFindingUncheckedCreateNestedManyWithoutTaxYearInput
   priorYearContext?: Prisma.PriorYearContextUncheckedCreateNestedOneWithoutTaxYearInput
   consumedByContexts?: Prisma.PriorYearContextUncheckedCreateNestedManyWithoutSourcePriorYearInput
   engagementLetter?: Prisma.EngagementLetterUncheckedCreateNestedOneWithoutTaxYearInput
@@ -3421,6 +3652,7 @@ export type TaxYearUpdateWithoutFilingMilestonesInput = {
   documents?: Prisma.DocumentUpdateManyWithoutTaxYearNestedInput
   pipelineRuns?: Prisma.PipelineRunUpdateManyWithoutTaxYearNestedInput
   inactiveMonths?: Prisma.AccountInactiveMonthUpdateManyWithoutTaxYearNestedInput
+  ledgerFindings?: Prisma.LedgerFindingUpdateManyWithoutTaxYearNestedInput
   priorYearContext?: Prisma.PriorYearContextUpdateOneWithoutTaxYearNestedInput
   consumedByContexts?: Prisma.PriorYearContextUpdateManyWithoutSourcePriorYearNestedInput
   engagementLetter?: Prisma.EngagementLetterUpdateOneWithoutTaxYearNestedInput
@@ -3451,6 +3683,7 @@ export type TaxYearUncheckedUpdateWithoutFilingMilestonesInput = {
   documents?: Prisma.DocumentUncheckedUpdateManyWithoutTaxYearNestedInput
   pipelineRuns?: Prisma.PipelineRunUncheckedUpdateManyWithoutTaxYearNestedInput
   inactiveMonths?: Prisma.AccountInactiveMonthUncheckedUpdateManyWithoutTaxYearNestedInput
+  ledgerFindings?: Prisma.LedgerFindingUncheckedUpdateManyWithoutTaxYearNestedInput
   priorYearContext?: Prisma.PriorYearContextUncheckedUpdateOneWithoutTaxYearNestedInput
   consumedByContexts?: Prisma.PriorYearContextUncheckedUpdateManyWithoutSourcePriorYearNestedInput
   engagementLetter?: Prisma.EngagementLetterUncheckedUpdateOneWithoutTaxYearNestedInput
@@ -3481,6 +3714,7 @@ export type TaxYearCreateWithoutW9SubmissionsInput = {
   documents?: Prisma.DocumentCreateNestedManyWithoutTaxYearInput
   pipelineRuns?: Prisma.PipelineRunCreateNestedManyWithoutTaxYearInput
   inactiveMonths?: Prisma.AccountInactiveMonthCreateNestedManyWithoutTaxYearInput
+  ledgerFindings?: Prisma.LedgerFindingCreateNestedManyWithoutTaxYearInput
   priorYearContext?: Prisma.PriorYearContextCreateNestedOneWithoutTaxYearInput
   consumedByContexts?: Prisma.PriorYearContextCreateNestedManyWithoutSourcePriorYearInput
   engagementLetter?: Prisma.EngagementLetterCreateNestedOneWithoutTaxYearInput
@@ -3511,6 +3745,7 @@ export type TaxYearUncheckedCreateWithoutW9SubmissionsInput = {
   documents?: Prisma.DocumentUncheckedCreateNestedManyWithoutTaxYearInput
   pipelineRuns?: Prisma.PipelineRunUncheckedCreateNestedManyWithoutTaxYearInput
   inactiveMonths?: Prisma.AccountInactiveMonthUncheckedCreateNestedManyWithoutTaxYearInput
+  ledgerFindings?: Prisma.LedgerFindingUncheckedCreateNestedManyWithoutTaxYearInput
   priorYearContext?: Prisma.PriorYearContextUncheckedCreateNestedOneWithoutTaxYearInput
   consumedByContexts?: Prisma.PriorYearContextUncheckedCreateNestedManyWithoutSourcePriorYearInput
   engagementLetter?: Prisma.EngagementLetterUncheckedCreateNestedOneWithoutTaxYearInput
@@ -3557,6 +3792,7 @@ export type TaxYearUpdateWithoutW9SubmissionsInput = {
   documents?: Prisma.DocumentUpdateManyWithoutTaxYearNestedInput
   pipelineRuns?: Prisma.PipelineRunUpdateManyWithoutTaxYearNestedInput
   inactiveMonths?: Prisma.AccountInactiveMonthUpdateManyWithoutTaxYearNestedInput
+  ledgerFindings?: Prisma.LedgerFindingUpdateManyWithoutTaxYearNestedInput
   priorYearContext?: Prisma.PriorYearContextUpdateOneWithoutTaxYearNestedInput
   consumedByContexts?: Prisma.PriorYearContextUpdateManyWithoutSourcePriorYearNestedInput
   engagementLetter?: Prisma.EngagementLetterUpdateOneWithoutTaxYearNestedInput
@@ -3587,6 +3823,7 @@ export type TaxYearUncheckedUpdateWithoutW9SubmissionsInput = {
   documents?: Prisma.DocumentUncheckedUpdateManyWithoutTaxYearNestedInput
   pipelineRuns?: Prisma.PipelineRunUncheckedUpdateManyWithoutTaxYearNestedInput
   inactiveMonths?: Prisma.AccountInactiveMonthUncheckedUpdateManyWithoutTaxYearNestedInput
+  ledgerFindings?: Prisma.LedgerFindingUncheckedUpdateManyWithoutTaxYearNestedInput
   priorYearContext?: Prisma.PriorYearContextUncheckedUpdateOneWithoutTaxYearNestedInput
   consumedByContexts?: Prisma.PriorYearContextUncheckedUpdateManyWithoutSourcePriorYearNestedInput
   engagementLetter?: Prisma.EngagementLetterUncheckedUpdateOneWithoutTaxYearNestedInput
@@ -3617,6 +3854,7 @@ export type TaxYearCreateWithoutForm1099FilingsInput = {
   documents?: Prisma.DocumentCreateNestedManyWithoutTaxYearInput
   pipelineRuns?: Prisma.PipelineRunCreateNestedManyWithoutTaxYearInput
   inactiveMonths?: Prisma.AccountInactiveMonthCreateNestedManyWithoutTaxYearInput
+  ledgerFindings?: Prisma.LedgerFindingCreateNestedManyWithoutTaxYearInput
   priorYearContext?: Prisma.PriorYearContextCreateNestedOneWithoutTaxYearInput
   consumedByContexts?: Prisma.PriorYearContextCreateNestedManyWithoutSourcePriorYearInput
   engagementLetter?: Prisma.EngagementLetterCreateNestedOneWithoutTaxYearInput
@@ -3647,6 +3885,7 @@ export type TaxYearUncheckedCreateWithoutForm1099FilingsInput = {
   documents?: Prisma.DocumentUncheckedCreateNestedManyWithoutTaxYearInput
   pipelineRuns?: Prisma.PipelineRunUncheckedCreateNestedManyWithoutTaxYearInput
   inactiveMonths?: Prisma.AccountInactiveMonthUncheckedCreateNestedManyWithoutTaxYearInput
+  ledgerFindings?: Prisma.LedgerFindingUncheckedCreateNestedManyWithoutTaxYearInput
   priorYearContext?: Prisma.PriorYearContextUncheckedCreateNestedOneWithoutTaxYearInput
   consumedByContexts?: Prisma.PriorYearContextUncheckedCreateNestedManyWithoutSourcePriorYearInput
   engagementLetter?: Prisma.EngagementLetterUncheckedCreateNestedOneWithoutTaxYearInput
@@ -3693,6 +3932,7 @@ export type TaxYearUpdateWithoutForm1099FilingsInput = {
   documents?: Prisma.DocumentUpdateManyWithoutTaxYearNestedInput
   pipelineRuns?: Prisma.PipelineRunUpdateManyWithoutTaxYearNestedInput
   inactiveMonths?: Prisma.AccountInactiveMonthUpdateManyWithoutTaxYearNestedInput
+  ledgerFindings?: Prisma.LedgerFindingUpdateManyWithoutTaxYearNestedInput
   priorYearContext?: Prisma.PriorYearContextUpdateOneWithoutTaxYearNestedInput
   consumedByContexts?: Prisma.PriorYearContextUpdateManyWithoutSourcePriorYearNestedInput
   engagementLetter?: Prisma.EngagementLetterUpdateOneWithoutTaxYearNestedInput
@@ -3723,6 +3963,7 @@ export type TaxYearUncheckedUpdateWithoutForm1099FilingsInput = {
   documents?: Prisma.DocumentUncheckedUpdateManyWithoutTaxYearNestedInput
   pipelineRuns?: Prisma.PipelineRunUncheckedUpdateManyWithoutTaxYearNestedInput
   inactiveMonths?: Prisma.AccountInactiveMonthUncheckedUpdateManyWithoutTaxYearNestedInput
+  ledgerFindings?: Prisma.LedgerFindingUncheckedUpdateManyWithoutTaxYearNestedInput
   priorYearContext?: Prisma.PriorYearContextUncheckedUpdateOneWithoutTaxYearNestedInput
   consumedByContexts?: Prisma.PriorYearContextUncheckedUpdateManyWithoutSourcePriorYearNestedInput
   engagementLetter?: Prisma.EngagementLetterUncheckedUpdateOneWithoutTaxYearNestedInput
@@ -3763,6 +4004,7 @@ export type TaxYearUpdateWithoutUserInput = {
   documents?: Prisma.DocumentUpdateManyWithoutTaxYearNestedInput
   pipelineRuns?: Prisma.PipelineRunUpdateManyWithoutTaxYearNestedInput
   inactiveMonths?: Prisma.AccountInactiveMonthUpdateManyWithoutTaxYearNestedInput
+  ledgerFindings?: Prisma.LedgerFindingUpdateManyWithoutTaxYearNestedInput
   priorYearContext?: Prisma.PriorYearContextUpdateOneWithoutTaxYearNestedInput
   consumedByContexts?: Prisma.PriorYearContextUpdateManyWithoutSourcePriorYearNestedInput
   engagementLetter?: Prisma.EngagementLetterUpdateOneWithoutTaxYearNestedInput
@@ -3793,6 +4035,7 @@ export type TaxYearUncheckedUpdateWithoutUserInput = {
   documents?: Prisma.DocumentUncheckedUpdateManyWithoutTaxYearNestedInput
   pipelineRuns?: Prisma.PipelineRunUncheckedUpdateManyWithoutTaxYearNestedInput
   inactiveMonths?: Prisma.AccountInactiveMonthUncheckedUpdateManyWithoutTaxYearNestedInput
+  ledgerFindings?: Prisma.LedgerFindingUncheckedUpdateManyWithoutTaxYearNestedInput
   priorYearContext?: Prisma.PriorYearContextUncheckedUpdateOneWithoutTaxYearNestedInput
   consumedByContexts?: Prisma.PriorYearContextUncheckedUpdateManyWithoutSourcePriorYearNestedInput
   engagementLetter?: Prisma.EngagementLetterUncheckedUpdateOneWithoutTaxYearNestedInput
@@ -3845,6 +4088,7 @@ export type TaxYearUpdateWithoutRuleVersionInput = {
   documents?: Prisma.DocumentUpdateManyWithoutTaxYearNestedInput
   pipelineRuns?: Prisma.PipelineRunUpdateManyWithoutTaxYearNestedInput
   inactiveMonths?: Prisma.AccountInactiveMonthUpdateManyWithoutTaxYearNestedInput
+  ledgerFindings?: Prisma.LedgerFindingUpdateManyWithoutTaxYearNestedInput
   priorYearContext?: Prisma.PriorYearContextUpdateOneWithoutTaxYearNestedInput
   consumedByContexts?: Prisma.PriorYearContextUpdateManyWithoutSourcePriorYearNestedInput
   engagementLetter?: Prisma.EngagementLetterUpdateOneWithoutTaxYearNestedInput
@@ -3875,6 +4119,7 @@ export type TaxYearUncheckedUpdateWithoutRuleVersionInput = {
   documents?: Prisma.DocumentUncheckedUpdateManyWithoutTaxYearNestedInput
   pipelineRuns?: Prisma.PipelineRunUncheckedUpdateManyWithoutTaxYearNestedInput
   inactiveMonths?: Prisma.AccountInactiveMonthUncheckedUpdateManyWithoutTaxYearNestedInput
+  ledgerFindings?: Prisma.LedgerFindingUncheckedUpdateManyWithoutTaxYearNestedInput
   priorYearContext?: Prisma.PriorYearContextUncheckedUpdateOneWithoutTaxYearNestedInput
   consumedByContexts?: Prisma.PriorYearContextUncheckedUpdateManyWithoutSourcePriorYearNestedInput
   engagementLetter?: Prisma.EngagementLetterUncheckedUpdateOneWithoutTaxYearNestedInput
@@ -3912,6 +4157,7 @@ export type TaxYearCountOutputType = {
   documents: number
   pipelineRuns: number
   inactiveMonths: number
+  ledgerFindings: number
   consumedByContexts: number
   filingMilestones: number
   w9Submissions: number
@@ -3930,6 +4176,7 @@ export type TaxYearCountOutputTypeSelect<ExtArgs extends runtime.Types.Extension
   documents?: boolean | TaxYearCountOutputTypeCountDocumentsArgs
   pipelineRuns?: boolean | TaxYearCountOutputTypeCountPipelineRunsArgs
   inactiveMonths?: boolean | TaxYearCountOutputTypeCountInactiveMonthsArgs
+  ledgerFindings?: boolean | TaxYearCountOutputTypeCountLedgerFindingsArgs
   consumedByContexts?: boolean | TaxYearCountOutputTypeCountConsumedByContextsArgs
   filingMilestones?: boolean | TaxYearCountOutputTypeCountFilingMilestonesArgs
   w9Submissions?: boolean | TaxYearCountOutputTypeCountW9SubmissionsArgs
@@ -4026,6 +4273,13 @@ export type TaxYearCountOutputTypeCountInactiveMonthsArgs<ExtArgs extends runtim
 /**
  * TaxYearCountOutputType without action
  */
+export type TaxYearCountOutputTypeCountLedgerFindingsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.LedgerFindingWhereInput
+}
+
+/**
+ * TaxYearCountOutputType without action
+ */
 export type TaxYearCountOutputTypeCountConsumedByContextsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   where?: Prisma.PriorYearContextWhereInput
 }
@@ -4076,6 +4330,7 @@ export type TaxYearSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs 
   documents?: boolean | Prisma.TaxYear$documentsArgs<ExtArgs>
   pipelineRuns?: boolean | Prisma.TaxYear$pipelineRunsArgs<ExtArgs>
   inactiveMonths?: boolean | Prisma.TaxYear$inactiveMonthsArgs<ExtArgs>
+  ledgerFindings?: boolean | Prisma.TaxYear$ledgerFindingsArgs<ExtArgs>
   priorYearContext?: boolean | Prisma.TaxYear$priorYearContextArgs<ExtArgs>
   consumedByContexts?: boolean | Prisma.TaxYear$consumedByContextsArgs<ExtArgs>
   engagementLetter?: boolean | Prisma.TaxYear$engagementLetterArgs<ExtArgs>
@@ -4142,6 +4397,7 @@ export type TaxYearInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs
   documents?: boolean | Prisma.TaxYear$documentsArgs<ExtArgs>
   pipelineRuns?: boolean | Prisma.TaxYear$pipelineRunsArgs<ExtArgs>
   inactiveMonths?: boolean | Prisma.TaxYear$inactiveMonthsArgs<ExtArgs>
+  ledgerFindings?: boolean | Prisma.TaxYear$ledgerFindingsArgs<ExtArgs>
   priorYearContext?: boolean | Prisma.TaxYear$priorYearContextArgs<ExtArgs>
   consumedByContexts?: boolean | Prisma.TaxYear$consumedByContextsArgs<ExtArgs>
   engagementLetter?: boolean | Prisma.TaxYear$engagementLetterArgs<ExtArgs>
@@ -4177,6 +4433,7 @@ export type $TaxYearPayload<ExtArgs extends runtime.Types.Extensions.InternalArg
     documents: Prisma.$DocumentPayload<ExtArgs>[]
     pipelineRuns: Prisma.$PipelineRunPayload<ExtArgs>[]
     inactiveMonths: Prisma.$AccountInactiveMonthPayload<ExtArgs>[]
+    ledgerFindings: Prisma.$LedgerFindingPayload<ExtArgs>[]
     priorYearContext: Prisma.$PriorYearContextPayload<ExtArgs> | null
     consumedByContexts: Prisma.$PriorYearContextPayload<ExtArgs>[]
     engagementLetter: Prisma.$EngagementLetterPayload<ExtArgs> | null
@@ -4603,6 +4860,7 @@ export interface Prisma__TaxYearClient<T, Null = never, ExtArgs extends runtime.
   documents<T extends Prisma.TaxYear$documentsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.TaxYear$documentsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$DocumentPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   pipelineRuns<T extends Prisma.TaxYear$pipelineRunsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.TaxYear$pipelineRunsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$PipelineRunPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   inactiveMonths<T extends Prisma.TaxYear$inactiveMonthsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.TaxYear$inactiveMonthsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$AccountInactiveMonthPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+  ledgerFindings<T extends Prisma.TaxYear$ledgerFindingsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.TaxYear$ledgerFindingsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$LedgerFindingPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   priorYearContext<T extends Prisma.TaxYear$priorYearContextArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.TaxYear$priorYearContextArgs<ExtArgs>>): Prisma.Prisma__PriorYearContextClient<runtime.Types.Result.GetResult<Prisma.$PriorYearContextPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
   consumedByContexts<T extends Prisma.TaxYear$consumedByContextsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.TaxYear$consumedByContextsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$PriorYearContextPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   engagementLetter<T extends Prisma.TaxYear$engagementLetterArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.TaxYear$engagementLetterArgs<ExtArgs>>): Prisma.Prisma__EngagementLetterClient<runtime.Types.Result.GetResult<Prisma.$EngagementLetterPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
@@ -5348,6 +5606,30 @@ export type TaxYear$inactiveMonthsArgs<ExtArgs extends runtime.Types.Extensions.
   take?: number
   skip?: number
   distinct?: Prisma.AccountInactiveMonthScalarFieldEnum | Prisma.AccountInactiveMonthScalarFieldEnum[]
+}
+
+/**
+ * TaxYear.ledgerFindings
+ */
+export type TaxYear$ledgerFindingsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the LedgerFinding
+   */
+  select?: Prisma.LedgerFindingSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the LedgerFinding
+   */
+  omit?: Prisma.LedgerFindingOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.LedgerFindingInclude<ExtArgs> | null
+  where?: Prisma.LedgerFindingWhereInput
+  orderBy?: Prisma.LedgerFindingOrderByWithRelationInput | Prisma.LedgerFindingOrderByWithRelationInput[]
+  cursor?: Prisma.LedgerFindingWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.LedgerFindingScalarFieldEnum | Prisma.LedgerFindingScalarFieldEnum[]
 }
 
 /**
