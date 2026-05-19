@@ -126,15 +126,32 @@ const ProposedAction = z.discriminatedUnion("kind", [
   NoteAction,
 ])
 
-const FindingSchema = z.object({
-  severity: z.enum(VALID_SEVERITIES as unknown as [string, ...string[]]),
-  category: z.enum(VALID_CATEGORIES as unknown as [string, ...string[]]),
-  title: z.string().min(5).max(150),
-  rationale: z.string().min(20),
-  autoFixable: z.boolean(),
-  proposedAction: ProposedAction,
-  citedTxnIds: z.array(z.string()),
-})
+// Permissive top-level schema. The AI's wording variance + category
+// invention + over-long titles shouldn't crash a whole batch:
+//   - severity: known string set with passthrough; unknown → "LOW"
+//   - category: free string; unknown values written verbatim (DB is String not enum)
+//   - title: capped via slice() in post-process, not refused
+//   - citedTxnIds: empty array default
+const FindingSchema = z
+  .object({
+    severity: z.string().default("LOW"),
+    category: z.string().default("DIF_RISK"),
+    title: z.string().default(""),
+    rationale: z.string().default(""),
+    autoFixable: z.boolean().default(false),
+    proposedAction: ProposedAction,
+    citedTxnIds: z.array(z.string()).default([]),
+  })
+  .transform((f) => ({
+    ...f,
+    severity: (VALID_SEVERITIES as readonly string[]).includes(f.severity)
+      ? f.severity
+      : "LOW",
+    // Category stays free-form — the DB column is String. Unknown values are
+    // preserved so a future migration can group them, but the apply layer
+    // treats anything outside VALID_CATEGORIES as advisory.
+    title: f.title.length > 200 ? f.title.slice(0, 197) + "..." : f.title,
+  }))
 
 const AuditResponseSchema = z.object({
   findings: z.array(FindingSchema),
