@@ -103,14 +103,15 @@ describe("buildFinancialStatementsCsvZip", () => {
     expect(buf[1]).toBe(0x4b) // 'K'
   })
 
-  it("Central Directory lists README, manifest, and 5 numbered CSVs", () => {
+  it("Central Directory lists README, manifest, and numbered CSVs", () => {
     const cd = buf.toString("latin1")
     expect(cd).toContain("00_README.md")
     expect(cd).toContain("manifest.json")
     expect(cd).toContain("01_general_ledger.csv")
-    expect(cd).toContain("03_profit_and_loss.csv")
+    expect(cd).toContain("03_p_and_l.csv") // P&L sheet → safeFilename → "p_and_l"
     expect(cd).toContain("04_balance_sheet.csv")
-    // 02_ + 05_ are entity-specific names; just confirm prefixes appear
+    // 02_ and 05_ vary by entity type (Schedule C vs Form 1120-S etc.) —
+    // assert the prefix shape only.
     expect(cd).toMatch(/02_[a-z0-9_]+\.csv/)
     expect(cd).toMatch(/05_[a-z0-9_]+\.csv/)
   })

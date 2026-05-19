@@ -57,7 +57,9 @@ function sheetToCsv(ws: ExcelJS.Worksheet): string {
 function safeFilename(name: string): string {
   return name
     .toLowerCase()
-    .replace(/&/g, "and")
+    // Keep separator-friendly conversions BEFORE collapsing non-alnum to _.
+    // Otherwise "P&L" → "pandl" instead of the readable "p_and_l".
+    .replace(/&/g, " and ")
     .replace(/[^a-z0-9]+/g, "_")
     .replace(/^_+|_+$/g, "")
     .slice(0, 40)
@@ -100,23 +102,15 @@ export async function buildFinancialStatementsCsvZip(taxYearId: string): Promise
   const manifestSheets: ManifestEntry[] = []
   const csvFiles: { name: string; content: string }[] = []
 
-  // Assign sequence numbers and filenames per sheet.
-  // Sheet order from buildFinancialStatements() is:
-  //   1. General Ledger
-  //   2. <Tax Return Summary>  (e.g. "Schedule C" / "Form 1120-S")
-  //   3. P&L
-  //   4. Balance Sheet
-  //   5. <Tax Return Detail>   (e.g. "Schedule C Detail")
-  const sequenceLabels = ["01_general_ledger", null, "03_profit_and_loss", "04_balance_sheet", null]
+  // Auto-number sheets in workbook order so we never collide on prefixes when
+  // buildFinancialStatements() adds new sheets (Cash Flow, Trial Balance,
+  // Vendor List etc.) in future revisions. ExcelJS's eachSheet visits in
+  // insertion order, which is the order they're built and displayed in Excel.
   let idx = 0
   wb.eachSheet((ws) => {
-    let baseLabel = sequenceLabels[idx]
-    if (baseLabel == null) {
-      // Use the sheet name to derive a sequence-prefixed filename.
-      const prefix = idx === 1 ? "02_" : "05_"
-      baseLabel = `${prefix}${safeFilename(ws.name)}`
-    }
-    const filename = `${baseLabel}.csv`
+    idx++
+    const seq = idx.toString().padStart(2, "0")
+    const filename = `${seq}_${safeFilename(ws.name)}.csv`
     const csv = sheetToCsv(ws)
     csvFiles.push({ name: filename, content: csv })
     manifestSheets.push({
@@ -124,7 +118,6 @@ export async function buildFinancialStatementsCsvZip(taxYearId: string): Promise
       sheetName: ws.name,
       rowCount: ws.rowCount,
     })
-    idx++
   })
 
   const manifest: CsvManifest = {
