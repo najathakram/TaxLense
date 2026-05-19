@@ -617,7 +617,9 @@ Find every defect a real auditor would flag. Respond with STRICT JSON only.`
           title: f.title,
           rationale: f.rationale,
           autoFixable: f.autoFixable,
-          proposedAction: f.proposedAction,
+          // Round-trip through JSON so Prisma's InputJsonValue is happy with
+          // the optional `substantiation` Record on ReclassifyAction.
+          proposedAction: JSON.parse(JSON.stringify(f.proposedAction)),
           citedTxnIds: f.citedTxnIds,
           supersedesId: null,
         },
