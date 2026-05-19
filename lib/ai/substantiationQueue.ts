@@ -33,12 +33,14 @@ const MAX_CANDIDATES_PER_RUN = 50
 const TemplateSchema = z.object({
   txId: z.string(),
   // Why does this row LOOK business-adjacent? Used in the question prompt.
-  contextReason: z.string().min(10),
+  contextReason: z.string().default(""),
   // The question shown to the user. Phrased to elicit attendees + purpose if
   // the row was actually business; or to confirm personal otherwise.
-  question: z.string().min(20),
+  question: z.string().min(10),
   // What category does the AI think this falls into IF the user confirms business?
-  hypotheticalCategory: z.enum(["MEAL_BUSINESS", "TRAVEL_BUSINESS", "VEHICLE_BUSINESS", "GIFT_BUSINESS", "OTHER_274D"]),
+  hypotheticalCategory: z
+    .enum(["MEAL_BUSINESS", "TRAVEL_BUSINESS", "VEHICLE_BUSINESS", "GIFT_BUSINESS", "OTHER_274D"])
+    .default("OTHER_274D"),
 })
 
 const ResponseSchema = z.object({
