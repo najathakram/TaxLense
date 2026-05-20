@@ -136,7 +136,19 @@ export async function runRelockVerify(taxYearId: string, options: {
   const priorGrossReceipts = priorState.grossReceipts ?? 0
   const priorTotalDeductions = priorState.estimatedDeductions ?? 0
 
-  // Per-line drift
+  // Per-line drift.
+  //
+  // Bug fix (Atif 2025 prod): when the prior snapshot's perLineTotals doesn't
+  // contain a key (e.g. legacy snapshot pre-auto-CPA-framework, OR a line
+  // label that was relabeled in this cycle from "(no line)" to "Part III
+  // COGS"), the line shows up as `before=0, after>0`. The old logic flagged
+  // that as HIGH severity (Infinity drift) which falsely tripped
+  // approvalRequired on every relock with no real per-line baseline.
+  //
+  // New rule: only flag HIGH-severity drift on lines that EXIST in both
+  // snapshots AND moved >15%. Lines that appear in only one snapshot are
+  // surfaced as MEDIUM (informational) so the UI/AI narrative can still
+  // explain the delta, but they don't trigger approvalRequired by themselves.
   const allLines = new Set([...Object.keys(priorPerLine), ...Object.keys(current.perLineTotals)])
   const perLineDrift: RelockDriftReport["perLineDrift"] = []
   let anyHighDrift = false
@@ -144,23 +156,29 @@ export async function runRelockVerify(taxYearId: string, options: {
   for (const line of Array.from(allLines).sort()) {
     const before = priorPerLine[line] ?? 0
     const after = current.perLineTotals[line] ?? 0
+    const presentBefore = Object.prototype.hasOwnProperty.call(priorPerLine, line) && before > 0
     let deltaPct: number | null = null
-    if (before > 0) {
+    if (presentBefore) {
       deltaPct = (after - before) / before
     } else if (after !== 0) {
-      deltaPct = null // new line; can't compute %
+      deltaPct = null // no baseline (key absent in prior snapshot); can't compute %
     } else {
       deltaPct = 0
     }
     let severity: "OK" | "LOW" | "MEDIUM" | "HIGH" = "OK"
-    const absPct = deltaPct == null ? Infinity : Math.abs(deltaPct)
-    if (absPct === Infinity || absPct >= SINGLE_LINE_DRIFT_THRESHOLD) {
-      severity = "HIGH"
-      anyHighDrift = true
-    } else if (absPct >= 0.05) {
+    if (deltaPct == null) {
+      // No baseline → informational only. Don't trip approvalRequired.
       severity = "MEDIUM"
-    } else if (absPct >= 0.01) {
-      severity = "LOW"
+    } else {
+      const absPct = Math.abs(deltaPct)
+      if (absPct >= SINGLE_LINE_DRIFT_THRESHOLD) {
+        severity = "HIGH"
+        anyHighDrift = true
+      } else if (absPct >= 0.05) {
+        severity = "MEDIUM"
+      } else if (absPct >= 0.01) {
+        severity = "LOW"
+      }
     }
     perLineDrift.push({ line, before, after, deltaPct, severity })
   }
