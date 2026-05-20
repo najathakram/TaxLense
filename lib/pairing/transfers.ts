@@ -12,6 +12,7 @@ import { prisma } from "@/lib/db"
 import type { Transaction, FinancialAccount } from "@/app/generated/prisma/client"
 import { fmtUSD } from "@/lib/format/currency"
 import { isMoneyMoverOutflow } from "@/lib/accounts/kind"
+import { extractTransferHints, matchHintToAccount, type AccountForMatching } from "@/lib/pairing/accountAliases"
 
 type TxWithAccount = Transaction & { account: FinancialAccount }
 
@@ -29,7 +30,10 @@ const TRANSFER_KEYWORDS = /zelle|venmo|transfer|move|xfer|ach|wire|wise|topup|to
 // --------------------------------------------------------------------------
 // Score a candidate inflow against an outflow (higher = better match)
 // --------------------------------------------------------------------------
-function scoreCandidate(outflow: Transaction, candidate: Transaction): number {
+function scoreCandidate(
+  outflow: TxWithAccount,
+  candidate: TxWithAccount,
+): number {
   let score = 0
 
   const dayDelta = Math.abs(
@@ -46,7 +50,43 @@ function scoreCandidate(outflow: Transaction, candidate: Transaction): number {
   if (TRANSFER_KEYWORDS.test(outflow.merchantRaw)) score += 20
   if (TRANSFER_KEYWORDS.test(candidate.merchantRaw)) score += 20
 
+  // Account-alias hints — if the outflow merchantRaw names the candidate's
+  // institution (via routing # or bank product) or mask, that's a strong
+  // signal these are the two legs of the same transfer. Mirror check on
+  // the candidate's merchantRaw vs the outflow's account.
+  const outflowHints = extractTransferHints(outflow.merchantRaw)
+  const candidateHints = extractTransferHints(candidate.merchantRaw)
+
+  if (
+    outflowHints.inferredInstitution &&
+    matchesInstitution(outflowHints.inferredInstitution, candidate.account.institution)
+  ) {
+    score += 40
+  }
+  if (outflowHints.maskHint && outflowHints.maskHint === candidate.account.mask) {
+    score += 60
+  }
+  if (
+    candidateHints.inferredInstitution &&
+    matchesInstitution(candidateHints.inferredInstitution, outflow.account.institution)
+  ) {
+    score += 40
+  }
+  if (candidateHints.maskHint && candidateHints.maskHint === outflow.account.mask) {
+    score += 60
+  }
+
   return score
+}
+
+function matchesInstitution(a: string, b: string): boolean {
+  const norm = (s: string) =>
+    s
+      .toLowerCase()
+      .replace(/\b(bank|jpmorgan|j\.?p\.?\s*morgan|n\.?a\.?|inc|corp|holdings)\b/g, "")
+      .replace(/[^a-z0-9]+/g, "")
+      .trim()
+  return norm(a) === norm(b)
 }
 
 // --------------------------------------------------------------------------
@@ -69,6 +109,16 @@ export interface MatchTransfersResult {
    * possible. These are intentionally unpaired; A07 excludes them.
    */
   moneyMoverTransfers: number
+  /**
+   * Transfers that the routing/product/mask hint identified as inter-account
+   * movements where the OTHER side isn't a tracked FinancialAccount. Per
+   * Sole Prop / SMLLC convention these are owner contributions (inflow) or
+   * draws (outflow). Classified as OWNER_EQUITY, businessPct=0,
+   * scheduleCLine=null, ircCitations=["§61" for inflows, "§263" for outflows].
+   * For other entity types these stay TRANSFER (Owner record / Schedule M-2
+   * flow handles them separately).
+   */
+  hintBasedOwnerEquity: number
   stopItemsCreated: number
 }
 
@@ -233,6 +283,111 @@ export async function matchTransfers(taxYearId: string): Promise<MatchTransfersR
     moneyMoverTransfers++
   }
 
+  // Hint-based owner-equity classification — for remaining unpaired
+  // transfers (both outflow and inflow) where the merchant text contains a
+  // routing number, bank product name, or mask hint pointing to an
+  // institution but no SPECIFIC tracked FinancialAccount matches.
+  //
+  // Atif's prod example: "ONLINE TRANSFER · Transfer from Aba/Contr Bnk-
+  // 021000021" (+$26.69) — routing 021000021 = Chase. Atif's tracked Chase
+  // accounts don't have a matching outflow at $26.69, so this is from
+  // Atif's UNTRACKED personal Chase account. For a Sole Prop that's an
+  // owner contribution.
+  //
+  // Convention: same sign rule as the OWNER_EQUITY code itself —
+  // amountNormalized > 0 (outflow from business) → owner draw (§263),
+  // amountNormalized < 0 (inflow to business)   → owner contribution (§61).
+  //
+  // We only flip rows for SOLE_PROP / LLC_SINGLE entities; multi-owner
+  // entities use the manual Owner record + K-1 / Schedule M-2 flow.
+  const taxYear = await prisma.taxYear.findUnique({
+    where: { id: taxYearId },
+    include: { businessProfile: true },
+  })
+  const entityType = taxYear?.businessProfile?.entityType ?? "SOLE_PROP"
+  const ownerEquityEligible = entityType === "SOLE_PROP" || entityType === "LLC_SINGLE"
+
+  // Build the per-user tracked-account list (id, institution, mask, nickname)
+  // used by matchHintToAccount to determine "tracked vs untracked source".
+  const userId = outflows[0]?.account.userId ?? inflows[0]?.account.userId
+  const trackedAccounts: AccountForMatching[] = userId
+    ? (
+        await prisma.financialAccount.findMany({
+          where: { userId },
+          select: { id: true, institution: true, mask: true, nickname: true },
+        })
+      ).map((a) => ({ id: a.id, institution: a.institution, mask: a.mask, nickname: a.nickname }))
+    : []
+
+  let hintBasedOwnerEquity = 0
+  if (ownerEquityEligible) {
+    // Process both outflows and inflows for hint-based classification.
+    const candidates = [...outflows, ...inflows].filter(
+      (t) => !claimed.has(t.id),
+    )
+    for (const t of candidates) {
+      const hints = extractTransferHints(t.merchantRaw)
+      if (!hints.inferredInstitution && !hints.maskHint) continue
+
+      // Does the hint resolve to a TRACKED account? If yes, the regular
+      // pairing pass should've caught it — leave it alone (don't overwrite).
+      const matched = matchHintToAccount(hints, trackedAccounts, t.accountId)
+      if (matched) continue
+
+      // Hint points to an external/untracked source/destination → owner
+      // activity. Classify as OWNER_EQUITY.
+      const amt = Number(t.amountNormalized.toString())
+      const isOutflow = amt > 0
+      await prisma.$transaction([
+        prisma.classification.updateMany({
+          where: { transactionId: t.id, isCurrent: true },
+          data: { isCurrent: false },
+        }),
+        prisma.classification.create({
+          data: {
+            transactionId: t.id,
+            code: "OWNER_EQUITY",
+            scheduleCLine: null,
+            businessPct: 0,
+            ircCitations: [isOutflow ? "§263" : "§61"],
+            confidence: 0.85,
+            evidenceTier: 2,
+            source: "AI_USER_CONFIRMED",
+            reasoning: `Hint-based owner equity: merchant "${t.merchantRaw}" identifies ${
+              hints.routingInstitution ? `routing → ${hints.routingInstitution}` :
+              hints.productInstitution ? `bank product → ${hints.productInstitution}` :
+              `mask hint ${hints.maskHint}`
+            } but no tracked FinancialAccount matches. For SOLE_PROP this is an owner ${
+              isOutflow ? "draw (§263)" : "contribution (§61)"
+            }. Balance Sheet Owner's Equity (not Schedule C).`,
+            isCurrent: true,
+          },
+        }),
+        prisma.auditEvent.create({
+          data: {
+            actorType: "SYSTEM",
+            eventType: "TRANSFER_HINT_OWNER_EQUITY",
+            entityType: "Transaction",
+            entityId: t.id,
+            afterState: JSON.parse(
+              JSON.stringify({
+                hints,
+                direction: isOutflow ? "draw" : "contribution",
+                merchantRaw: t.merchantRaw,
+                amount: amt,
+              }),
+            ),
+            rationale: `Hint-detected owner equity activity: ${hints.inferredInstitution ?? "mask-only"} ${
+              isOutflow ? "draw" : "contribution"
+            }`,
+          },
+        }),
+      ])
+      claimed.add(t.id)
+      hintBasedOwnerEquity++
+    }
+  }
+
   // STOP items for unmatched outflows > $500 with transfer-like keywords
   // (excluding the money-mover sweep above — those are correctly classified).
   // De-dupe against existing STOPs first — without this, every Run autonomous
@@ -284,5 +439,5 @@ export async function matchTransfers(taxYearId: string): Promise<MatchTransfersR
     stopItemsCreated++
   }
 
-  return { paired, moneyMoverTransfers, stopItemsCreated }
+  return { paired, moneyMoverTransfers, hintBasedOwnerEquity, stopItemsCreated }
 }

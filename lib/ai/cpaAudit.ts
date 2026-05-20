@@ -423,6 +423,17 @@ Example 8 — OWNER_ACTIVITY: owner contributions / draws hidden in TRANSFER or 
     - Zelle/Venmo/Cash App movements to/from the owner's known name or known personal aliases
     - PAYMENT-style rows to a card NOT tracked as a FinancialAccount (likely owner's personal CC)
     - Large cross-account TRANSFER pairs where one side is mixed-use / personal
+    - **Routing-number signals**: merchantRaw contains a 9-digit ABA routing number (e.g.,
+      "Aba/Contr Bnk-021000021" = JPMorgan Chase) AND the user's tracked FinancialAccounts at
+      that institution either don't match the amount/date or the user has multiple Chase
+      accounts so the routing alone is ambiguous → likely a personal Chase account funding
+      the business or vice versa. (See lib/pairing/transfers.ts hint-based OWNER_EQUITY pass
+      — already handles obvious cases; this finding picks up edges where the hint pass
+      missed because the merchant wording was non-standard.)
+    - **Bank-product hints**: "ADV PLUS BANKING" (BofA), "TOTAL CHECKING" (Chase), etc., when
+      the user doesn't have a tracked account at that institution → external source.
+    - **Mask hints**: "Transfer To Checking 7403" or "CC ending in NNNN" where NNNN doesn't
+      match any tracked FinancialAccount.mask → external/personal destination.
   Finding: { severity: MEDIUM, category: OWNER_ACTIVITY,
     proposedAction: { kind: RECLASSIFY, txnIds: [...], code: OWNER_EQUITY, businessPct: 0,
       scheduleCLine: null, ircCitations: ["§61"] (inflow) or ["§263"] (outflow), evidenceTier: 2,
