@@ -184,6 +184,52 @@ export async function confirmLock(
 }
 
 /**
+ * Pre-flight RELOCK_VERIFY for the client UI.
+ *
+ * Background: Next.js 16 production builds scrub server-action error messages
+ * to avoid leaking sensitive details, so the client cannot reliably detect
+ * `DriftApprovalRequiredError` from the thrown error. This action exposes the
+ * drift report directly so the lock-client can decide BEFORE calling
+ * `confirmLock` whether to prompt the user for a rationale (driftAck).
+ *
+ * Returns null when no prior lock exists or the verify step fails (errors
+ * are non-blocking — the actual lock action will retry the check and capture
+ * the result on success).
+ */
+export async function getRelockDriftReport(year: number): Promise<{
+  approvalRequired: boolean
+  hasPriorLock: boolean
+  grossReceiptsDriftPct: number | null
+  totalDeductionsDriftPct: number | null
+  highDriftLines: Array<{ line: string; before: number; after: number; deltaPct: number | null }>
+} | null> {
+  try {
+    const { taxYear } = await resolveTaxYear(year)
+    const lastUnlock = await prisma.auditEvent.findFirst({
+      where: { entityType: "TaxYear", entityId: taxYear.id, eventType: "TAXYEAR_UNLOCKED" },
+      orderBy: { occurredAt: "desc" },
+      select: { rationale: true },
+    })
+    const report = await runRelockVerify(taxYear.id, {
+      unlockRationale: lastUnlock?.rationale ?? null,
+    })
+    if (!report.hasPriorLock) return null
+    return {
+      approvalRequired: report.approvalRequired,
+      hasPriorLock: report.hasPriorLock,
+      grossReceiptsDriftPct: report.grossReceiptsDriftPct,
+      totalDeductionsDriftPct: report.totalDeductionsDriftPct,
+      highDriftLines: report.perLineDrift
+        .filter((d) => d.severity === "HIGH")
+        .map((d) => ({ line: d.line, before: d.before, after: d.after, deltaPct: d.deltaPct })),
+    }
+  } catch (e) {
+    console.error("[getRelockDriftReport] failed:", e)
+    return null
+  }
+}
+
+/**
  * B-23: muting a non-blocking risk signal (e.g. INCOME_SHORT — gross
  * receipts came in under expected because of currency conversion or a gig
  * cancellation). Records the user's rationale on TaxYear.acceptedRiskOverrides

@@ -3,29 +3,31 @@
 import { useState, useTransition } from "react"
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
-import { confirmLock, unlockTaxYear } from "./actions"
+import { confirmLock, getRelockDriftReport, unlockTaxYear } from "./actions"
 
 /**
  * Lock + unlock client. Shared by /years/[year]/lock and the lock section of
  * /years/[year]/finalize.
  *
- * RELOCK_VERIFY drift handling: when a prior locked snapshot exists and the
- * proposed snapshot has drift over threshold, confirmLock throws
- * DriftApprovalRequiredError. The client catches that, surfaces a textarea so
- * the user can type a rationale, and re-submits with `driftAck` populated. The
- * rationale lands on the new TAXYEAR_LOCKED.afterState.driftAck and on a paired
- * RELOCK_DRIFT_APPROVED AuditEvent.
+ * RELOCK_VERIFY drift handling — Next.js 16 production builds scrub
+ * server-action error messages so we can't catch `DriftApprovalRequiredError`
+ * reliably. Instead, the client calls `getRelockDriftReport()` as a
+ * pre-flight check. If `approvalRequired === true`, we surface a textarea so
+ * the user can type a rationale; on submit we pass that rationale as
+ * `driftAck` to `confirmLock`, which writes a paired RELOCK_DRIFT_APPROVED
+ * AuditEvent.
  *
  * Why this lives client-side: server actions can't open a dialog mid-call.
  * The two-step confirm (`I understand` → `Confirm lock`) was already a
- * client-state machine; this adds a third optional state when drift is caught.
+ * client-state machine; this adds a third optional state when drift is over
+ * threshold.
  */
 
-const isDriftApprovalError = (e: unknown): boolean => {
-  if (!e) return false
-  const msg = e instanceof Error ? e.message : String(e)
-  const name = e instanceof Error ? e.name : ""
-  return name === "DriftApprovalRequiredError" || /drift.*approval required/i.test(msg)
+type HighDriftLine = {
+  line: string
+  before: number
+  after: number
+  deltaPct: number | null
 }
 
 export function LockClient({ mode, year }: { mode: "lock" | "unlock"; year: number }) {
@@ -35,6 +37,7 @@ export function LockClient({ mode, year }: { mode: "lock" | "unlock"; year: numb
   const [confirmed, setConfirmed] = useState(false)
   const [needsDriftAck, setNeedsDriftAck] = useState(false)
   const [driftRationale, setDriftRationale] = useState("")
+  const [highDriftLines, setHighDriftLines] = useState<HighDriftLine[]>([])
 
   if (mode === "lock") {
     return (
@@ -50,9 +53,21 @@ export function LockClient({ mode, year }: { mode: "lock" | "unlock"; year: numb
               <p className="font-medium text-amber-500">Drift detected vs prior locked snapshot</p>
               <p className="mt-1 text-foreground/80">
                 One or more Schedule C lines, gross receipts, or total deductions changed by more than
-                the threshold (15% per line, 10% for gross receipts, 15% for total deductions). Type a
-                rationale explaining the changes — it lands on the audit trail as your acknowledgement.
+                the threshold (15% per line, 10% for gross receipts, 15% for total deductions).
+                Type a rationale explaining the changes — it lands on the audit trail as your
+                acknowledgement.
               </p>
+              {highDriftLines.length > 0 && (
+                <ul className="mt-2 list-disc pl-5 text-foreground/80">
+                  {highDriftLines.slice(0, 6).map((d) => (
+                    <li key={d.line}>
+                      <span className="font-mono">{d.line}</span>: ${d.before.toFixed(2)} →
+                      ${d.after.toFixed(2)}
+                      {d.deltaPct != null && ` (${(d.deltaPct * 100).toFixed(0)}%)`}
+                    </li>
+                  ))}
+                </ul>
+              )}
             </div>
             <label className="text-sm font-medium">Drift acknowledgement (required, ≥20 chars)</label>
             <Textarea
@@ -84,6 +99,7 @@ export function LockClient({ mode, year }: { mode: "lock" | "unlock"; year: numb
                   setNeedsDriftAck(false)
                   setConfirmed(false)
                   setDriftRationale("")
+                  setHighDriftLines([])
                 }}
                 disabled={pending}
               >
@@ -100,13 +116,19 @@ export function LockClient({ mode, year }: { mode: "lock" | "unlock"; year: numb
                 startTransition(async () => {
                   setError(null)
                   try {
-                    await confirmLock(year)
-                  } catch (e) {
-                    if (isDriftApprovalError(e)) {
-                      // RELOCK_VERIFY thresholds exceeded — collect rationale and retry.
+                    // Pre-flight: ask the server for a drift report. If
+                    // approval is required, switch to drift-ack mode instead
+                    // of calling confirmLock (which would throw a
+                    // DriftApprovalRequiredError that prod-build error
+                    // scrubbing makes unidentifiable on the client).
+                    const drift = await getRelockDriftReport(year)
+                    if (drift && drift.approvalRequired) {
+                      setHighDriftLines(drift.highDriftLines)
                       setNeedsDriftAck(true)
                       return
                     }
+                    await confirmLock(year)
+                  } catch (e) {
                     setError(e instanceof Error ? e.message : String(e))
                   }
                 })
