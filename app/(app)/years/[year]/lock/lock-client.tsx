@@ -10,12 +10,16 @@ import { confirmLock, getRelockDriftReport, unlockTaxYear } from "./actions"
  * /years/[year]/finalize.
  *
  * RELOCK_VERIFY drift handling — Next.js 16 production builds scrub
- * server-action error messages so we can't catch `DriftApprovalRequiredError`
- * reliably. Instead, the client calls `getRelockDriftReport()` as a
- * pre-flight check. If `approvalRequired === true`, we surface a textarea so
- * the user can type a rationale; on submit we pass that rationale as
- * `driftAck` to `confirmLock`, which writes a paired RELOCK_DRIFT_APPROVED
- * AuditEvent.
+ * server-action error messages so we can't reliably catch
+ * `DriftApprovalRequiredError` by inspecting the thrown error. Instead the
+ * client calls `getRelockDriftReport()` as a pre-flight check. If
+ * `approvalRequired === true`, we surface a textarea so the user can type a
+ * rationale; on submit we pass that rationale as `driftAck` to `confirmLock`,
+ * which writes a paired RELOCK_DRIFT_APPROVED AuditEvent.
+ *
+ * A safety-belt catch on the message/name still runs after confirmLock in case
+ * the pre-flight missed something or the server scrubbing is different in
+ * future builds.
  *
  * Why this lives client-side: server actions can't open a dialog mid-call.
  * The two-step confirm (`I understand` → `Confirm lock`) was already a
@@ -28,6 +32,13 @@ type HighDriftLine = {
   before: number
   after: number
   deltaPct: number | null
+}
+
+const isDriftApprovalError = (e: unknown): boolean => {
+  if (!e) return false
+  const msg = e instanceof Error ? e.message : String(e)
+  const name = e instanceof Error ? e.name : ""
+  return name === "DriftApprovalRequiredError" || /drift.*approval required/i.test(msg)
 }
 
 export function LockClient({ mode, year }: { mode: "lock" | "unlock"; year: number }) {
@@ -129,6 +140,13 @@ export function LockClient({ mode, year }: { mode: "lock" | "unlock"; year: numb
                     }
                     await confirmLock(year)
                   } catch (e) {
+                    if (isDriftApprovalError(e)) {
+                      // Safety belt: pre-flight missed it for some reason.
+                      // Switch to drift-ack mode without the highDriftLines
+                      // list (we don't have the report here).
+                      setNeedsDriftAck(true)
+                      return
+                    }
                     setError(e instanceof Error ? e.message : String(e))
                   }
                 })
