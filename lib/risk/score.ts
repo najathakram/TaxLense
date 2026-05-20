@@ -82,6 +82,7 @@ export async function computeRiskScore(taxYearId: string): Promise<RiskReport> {
   let totalDeductibleCents = 0
   let mealDeductibleCents = 0
   let otherLineCents = 0 // Line 27a "Other"
+  let ownerEquityActivityCents = 0 // |draws| + |contribs| (both directions)
   let tier4_274d_rows: string[] = []
   let roundNumberRows: string[] = []
   let needsContextIds: string[] = []
@@ -93,6 +94,9 @@ export async function computeRiskScore(taxYearId: string): Promise<RiskReport> {
     if (!c) continue
     if (c.code === "BIZ_INCOME") {
       grossReceiptsCents += Math.round(Math.abs(amt) * 100)
+    }
+    if (c.code === "OWNER_EQUITY") {
+      ownerEquityActivityCents += Math.round(Math.abs(amt) * 100)
     }
     if (DEDUCTIBLE_CODES.includes(c.code)) {
       const dedCents = Math.round(computeDeductibleAmt(amt, c.code, c.businessPct) * 100)
@@ -124,6 +128,26 @@ export async function computeRiskScore(taxYearId: string): Promise<RiskReport> {
         points: 15,
         title: "Meal deductions exceed 5% of gross receipts",
         details: `Meals ${(ratio * 100).toFixed(1)}% of gross (industry norm ~3%)`,
+        blocking: false,
+      })
+    }
+  }
+
+  // --- Signal: owner-equity activity ratio (informational only) ---
+  // Fires when total OWNER_EQUITY movement (draws + contributions) exceeds
+  // 50% of gross receipts. Pure CPA-attention signal — never blocks lock.
+  // Surface this so the CPA looks at the Balance Sheet equity composition,
+  // not because the IRS audits owner draws specifically (a Sole Prop's draws
+  // aren't on Schedule C at all).
+  if (grossReceiptsCents > 0 && ownerEquityActivityCents > 0) {
+    const ratio = ownerEquityActivityCents / grossReceiptsCents
+    if (ratio > 0.5) {
+      signals.push({
+        id: "OWNER_ACTIVITY_RATIO",
+        severity: "LOW",
+        points: 0,
+        title: "Owner draws + contributions exceed 50% of gross receipts",
+        details: `Owner equity activity ${(ratio * 100).toFixed(0)}% of gross — review Balance Sheet Owner's Equity composition with the CPA.`,
         blocking: false,
       })
     }

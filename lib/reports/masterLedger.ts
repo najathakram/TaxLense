@@ -26,6 +26,7 @@ const CODE_FILL: Record<TransactionCode, string> = {
   TRANSFER: "FFDBEAFE",
   PAYMENT: "FFDBEAFE",
   BIZ_INCOME: "FFD1FCE4",
+  OWNER_EQUITY: "FFE5E5E5", // Neutral gray — Balance Sheet item, no deductibility implication
   NEEDS_CONTEXT: "FFFEF9C3",
 }
 

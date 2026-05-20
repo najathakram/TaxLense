@@ -841,8 +841,9 @@ export async function buildFinancialStatements(taxYearId: string): Promise<Buffe
   applyRowStyle(bsSheet.getRow(3), fsSubtitleStyle())
   bsSheet.mergeCells("A3:E3")
 
-  // Load supporting data: accounts, owners, prior-year context (for depreciation schedule)
-  const [accounts, owners, priorYear] = await Promise.all([
+  // Load supporting data: accounts, owners, prior-year context (for depreciation schedule),
+  // and OWNER_EQUITY classifications (drives the new ledger-derived owner equity rows).
+  const [accounts, owners, priorYear, ownerEquityClassifications] = await Promise.all([
     prisma.financialAccount.findMany({
       where: { taxYearId },
       include: {
@@ -857,7 +858,25 @@ export async function buildFinancialStatements(taxYearId: string): Promise<Buffe
       orderBy: { name: "asc" },
     }),
     prisma.priorYearContext.findUnique({ where: { taxYearId } }),
+    prisma.classification.findMany({
+      where: {
+        isCurrent: true,
+        code: "OWNER_EQUITY",
+        transaction: { taxYearId, isSplit: false, isStale: false },
+      },
+      include: { transaction: { select: { amountNormalized: true } } },
+    }),
   ])
+
+  // Sum OWNER_EQUITY by direction. Sign convention: amountNormalized > 0 is
+  // an outflow (owner draw); < 0 is an inflow (owner contribution).
+  let ledgerOwnerContributions = 0
+  let ledgerOwnerDistributions = 0
+  for (const c of ownerEquityClassifications) {
+    const amt = Number(c.transaction.amountNormalized)
+    if (amt < 0) ledgerOwnerContributions += -amt
+    else ledgerOwnerDistributions += amt
+  }
 
   let bsCursor = 5
 
@@ -1011,28 +1030,42 @@ export async function buildFinancialStatements(taxYearId: string): Promise<Buffe
   bsSheet.mergeCells(`A${bsCursor}:E${bsCursor}`)
   bsCursor++
 
-  // Per-owner contributions
-  let totalContributions = 0
+  // Per-owner contributions (manual entry on /owners page; primarily for
+  // multi-owner entities). For Sole Prop / SMLLC, this is typically empty —
+  // the ledger-derived OWNER_EQUITY rows below are the canonical source.
+  let totalManualContributions = 0
   if (owners.length > 0) {
     for (const owner of owners) {
       const contrib = Number(owner.capitalContribution ?? 0)
-      totalContributions += contrib
+      if (contrib === 0) continue // Skip empty per-owner lines; ledger rows below cover Sole Prop.
+      totalManualContributions += contrib
       const r = bsSheet.getRow(bsCursor)
-      r.getCell(1).value = `    Member Contributions — ${owner.name}`
+      r.getCell(1).value = `    Member Contributions — ${owner.name} (recorded)`
       r.getCell(5).value = contrib
       applyRowStyle(r, fsBodyStyle())
       r.getCell(5).numFmt = FS_NUM_FMT_MONEY
       bsCursor++
     }
-  } else {
-    // Single-owner default (no Owner rows): just one line
-    const r = bsSheet.getRow(bsCursor)
-    r.getCell(1).value = "    Owner Contributions"
-    r.getCell(5).value = 0
-    applyRowStyle(r, fsBodyStyle())
-    r.getCell(5).numFmt = FS_NUM_FMT_MONEY
-    bsCursor++
   }
+
+  // Ledger-derived OWNER_EQUITY rows — actual cash movement classified as
+  // owner contributions (inflows) and owner draws (outflows). Sole Prop /
+  // SMLLC pipeline auto-classifies ATM withdrawals + owner-name Zelle/Venmo +
+  // personal-card payments into OWNER_EQUITY. Shown even when zero so the
+  // CPA can see "we looked for owner activity and found $0".
+  const ownerContribsRow = bsSheet.getRow(bsCursor)
+  ownerContribsRow.getCell(1).value = "    Owner Contributions — Detected (ledger)"
+  ownerContribsRow.getCell(5).value = ledgerOwnerContributions
+  applyRowStyle(ownerContribsRow, fsBodyStyle())
+  ownerContribsRow.getCell(5).numFmt = FS_NUM_FMT_MONEY
+  bsCursor++
+
+  const ownerDrawsRow = bsSheet.getRow(bsCursor)
+  ownerDrawsRow.getCell(1).value = "    Owner Distributions / Draws — Detected (ledger)"
+  ownerDrawsRow.getCell(5).value = -ledgerOwnerDistributions // Display as negative — reduces equity
+  applyRowStyle(ownerDrawsRow, fsBodyStyle())
+  ownerDrawsRow.getCell(5).numFmt = FS_NUM_FMT_MONEY
+  bsCursor++
 
   // Retained Earnings (prior periods)
   const retainedRow = bsSheet.getRow(bsCursor)
@@ -1050,7 +1083,7 @@ export async function buildFinancialStatements(taxYearId: string): Promise<Buffe
   niRow.getCell(5).numFmt = FS_NUM_FMT_MONEY
   bsCursor++
 
-  const totalEquity = totalContributions + netIncome
+  const totalEquity = totalManualContributions + ledgerOwnerContributions - ledgerOwnerDistributions + netIncome
   const totalEqRow = bsSheet.getRow(bsCursor)
   totalEqRow.getCell(1).value = "Total Owner's Equity"
   totalEqRow.getCell(5).value = totalEquity
@@ -1231,17 +1264,32 @@ export async function buildFinancialStatements(taxYearId: string): Promise<Buffe
   addCfRow("Cash from Investing Activities", 0, "", true, subtotalFill())
   addCfRow("", "", "")
   addCfRow("FINANCING ACTIVITIES", "", "", true, subtotalFill())
-  addCfRow("  Owner contributions", 0, "Captured separately on Owner records (Phase B)")
-  addCfRow("  Owner distributions", 0, "Captured separately on Owner records (Phase B)")
-  addCfRow("Cash from Financing Activities", 0, "", true, subtotalFill())
+  addCfRow(
+    "  Owner contributions",
+    ledgerOwnerContributions,
+    `OWNER_EQUITY inflows from ledger (${ownerEquityClassifications.filter((c) => Number(c.transaction.amountNormalized) < 0).length} txns)`,
+  )
+  addCfRow(
+    "  Owner distributions / draws",
+    -ledgerOwnerDistributions,
+    `OWNER_EQUITY outflows from ledger (${ownerEquityClassifications.filter((c) => Number(c.transaction.amountNormalized) > 0).length} txns)`,
+  )
+  const financingCash = ledgerOwnerContributions - ledgerOwnerDistributions
+  addCfRow("Cash from Financing Activities", financingCash, "", true, subtotalFill())
   addCfRow("", "", "")
-  addCfRow("Net change in cash", operatingCash, "Sum of operating + investing + financing", true, totalFill())
+  addCfRow(
+    "Net change in cash",
+    operatingCash + financingCash,
+    "Sum of operating + investing + financing",
+    true,
+    totalFill(),
+  )
   addCfRow("", "", "")
   addCfRow("INFORMATIONAL — Inter-account transfers", transferTotal, `${transferTxns.length} paired transfer/payment txns; excluded from P&L by design`)
   addCfRow(
     "NOTE",
     "",
-    "Cash-method indirect cash flow. Investing / financing rely on Owner records (Phase B); update those for full fidelity.",
+    "Cash-method indirect cash flow. Owner contributions/draws derived from OWNER_EQUITY classifications; manual Owner records still drive K-1 capital roll-forward for multi-owner entities.",
   )
 
   // ── Sheet 7: Trial Balance ───────────────────────────────────────────────

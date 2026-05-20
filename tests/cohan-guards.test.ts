@@ -14,6 +14,7 @@
 import { describe, it, expect } from "vitest"
 import {
   assertNot274dCohan,
+  assertOwnerEquityInvariants,
   isSection274dCandidate,
   SECTION_274D_MERCHANT_FRAGMENTS,
   SECTION_274D_CODES,
@@ -219,5 +220,55 @@ describe("SECTION_274D_MERCHANT_FRAGMENTS — vocabulary coverage", () => {
     expect(all).toContain("RESTAURANT")
     // Gifts
     expect(all).toContain("GIFT")
+  })
+})
+
+describe("assertOwnerEquityInvariants", () => {
+  it("passes through non-OWNER_EQUITY codes (no-op)", () => {
+    const r = assertOwnerEquityInvariants({ code: "WRITE_OFF", businessPct: 100, cohanFlag: true })
+    expect(r.allowed).toBe(true)
+  })
+
+  it("rejects OWNER_EQUITY with cohanFlag=true", () => {
+    const r = assertOwnerEquityInvariants({ code: "OWNER_EQUITY", businessPct: 0, cohanFlag: true })
+    expect(r.allowed).toBe(false)
+    expect(r.reason).toMatch(/cohanFlag must be false/i)
+  })
+
+  it("rejects OWNER_EQUITY with businessPct !== 0", () => {
+    const r = assertOwnerEquityInvariants({ code: "OWNER_EQUITY", businessPct: 100, cohanFlag: false })
+    expect(r.allowed).toBe(false)
+    expect(r.reason).toMatch(/businessPct must be 0/i)
+  })
+
+  it("rejects OWNER_EQUITY with a Schedule C line", () => {
+    const r = assertOwnerEquityInvariants({
+      code: "OWNER_EQUITY",
+      businessPct: 0,
+      cohanFlag: false,
+      scheduleCLine: "Line 27a Other Expenses",
+    })
+    expect(r.allowed).toBe(false)
+    expect(r.reason).toMatch(/must not carry a Schedule C line/i)
+  })
+
+  it("allows OWNER_EQUITY with the canonical shape (pct=0, no cohan, no line)", () => {
+    const r = assertOwnerEquityInvariants({
+      code: "OWNER_EQUITY",
+      businessPct: 0,
+      cohanFlag: false,
+      scheduleCLine: null,
+    })
+    expect(r.allowed).toBe(true)
+  })
+
+  it("allows OWNER_EQUITY with scheduleCLine set to N/A explicitly", () => {
+    const r = assertOwnerEquityInvariants({
+      code: "OWNER_EQUITY",
+      businessPct: 0,
+      cohanFlag: false,
+      scheduleCLine: "N/A",
+    })
+    expect(r.allowed).toBe(true)
   })
 })

@@ -11,6 +11,7 @@ export const TRANSACTION_CODES: TransactionCode[] = [
   "TRANSFER",
   "PAYMENT",
   "BIZ_INCOME",
+  "OWNER_EQUITY",
   "NEEDS_CONTEXT",
 ]
 
@@ -42,6 +43,7 @@ export function codeToCategory(code: TransactionCode, scheduleCLine: string | nu
     case "TRANSFER": return "Transfer"
     case "PAYMENT": return "Payment"
     case "BIZ_INCOME": return "Business Income"
+    case "OWNER_EQUITY": return "Owner Equity"
     case "NEEDS_CONTEXT": return "Needs Review"
     case "GRAY": return "Unclear"
     case "MEALS_50": return "Meals (50%)"
@@ -77,6 +79,9 @@ export function codeColorClass(code: TransactionCode): string {
       return "bg-blue-50 dark:bg-blue-950/30"
     case "BIZ_INCOME":
       return "bg-emerald-50 dark:bg-emerald-950/30"
+    case "OWNER_EQUITY":
+      // Neutral gray — Balance Sheet item, neither income nor deduction.
+      return "bg-zinc-100 dark:bg-zinc-800/40"
     case "NEEDS_CONTEXT":
       return "bg-yellow-50 dark:bg-yellow-950/30"
     default:

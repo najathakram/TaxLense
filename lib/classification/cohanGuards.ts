@@ -181,3 +181,54 @@ export function isSection274dCandidate(merchantRaw: string | null | undefined): 
   if (!m) return false
   return SECTION_274D_MERCHANT_FRAGMENTS.some((fragment) => m.includes(fragment))
 }
+
+// ─────────────────────────────────────────────────────────────────────────────
+// OWNER_EQUITY invariants — companion guard to the §274(d) rail above.
+// ─────────────────────────────────────────────────────────────────────────────
+
+export interface OwnerEquityProposal {
+  code: TransactionCode
+  businessPct: number
+  cohanFlag?: boolean
+  scheduleCLine?: string | null
+}
+
+export interface OwnerEquityGuardResult {
+  allowed: boolean
+  reason?: string
+}
+
+/**
+ * Hard invariants on OWNER_EQUITY classifications. Owner contributions and
+ * draws are Balance Sheet items, not Schedule C items — they must never be
+ * §162-deductible (no cohanFlag), never carry a Schedule C line, and must
+ * have businessPct=0.
+ *
+ * Returns `{ allowed: false, reason }` when a proposal violates any invariant.
+ * Called from:
+ *   - lib/findings/apply.ts (defense-in-depth at flip-and-insert time)
+ *   - lib/ai/cohanSweep.ts (filter out any AI-proposed OWNER_EQUITY + cohan)
+ *   - lib/ai/cpaAgent.ts write path (per-row guard)
+ */
+export function assertOwnerEquityInvariants(p: OwnerEquityProposal): OwnerEquityGuardResult {
+  if (p.code !== "OWNER_EQUITY") return { allowed: true }
+  if (p.cohanFlag === true) {
+    return {
+      allowed: false,
+      reason: "OWNER_EQUITY is a Balance Sheet item (Owner's Equity), never a §162 deduction. cohanFlag must be false.",
+    }
+  }
+  if (p.businessPct !== 0) {
+    return {
+      allowed: false,
+      reason: `OWNER_EQUITY businessPct must be 0 (not ${p.businessPct}). Owner activity is non-deductible by definition.`,
+    }
+  }
+  if (p.scheduleCLine && p.scheduleCLine !== "N/A") {
+    return {
+      allowed: false,
+      reason: `OWNER_EQUITY must not carry a Schedule C line (got "${p.scheduleCLine}"). Owner activity lands on the Balance Sheet only.`,
+    }
+  }
+  return { allowed: true }
+}

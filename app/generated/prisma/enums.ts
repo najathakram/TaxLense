@@ -145,7 +145,8 @@ export const TransactionCode = {
   TRANSFER: 'TRANSFER',
   PAYMENT: 'PAYMENT',
   BIZ_INCOME: 'BIZ_INCOME',
-  NEEDS_CONTEXT: 'NEEDS_CONTEXT'
+  NEEDS_CONTEXT: 'NEEDS_CONTEXT',
+  OWNER_EQUITY: 'OWNER_EQUITY'
 } as const
 
 export type TransactionCode = (typeof TransactionCode)[keyof typeof TransactionCode]

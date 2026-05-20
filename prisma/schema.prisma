@@ -144,6 +144,12 @@ enum TransactionCode {
   PAYMENT
   BIZ_INCOME
   NEEDS_CONTEXT
+  // Sole Prop / SMLLC ONLY. Owner moving cash between business and personal.
+  // Direction by amountNormalized sign: > 0 (outflow) = owner DRAW;
+  // < 0 (inflow) = owner CONTRIBUTION. NOT income, NOT deductible.
+  // Lands in the Balance Sheet's Owner's Equity section, never on Schedule C.
+  // businessPct is always 0; cohanFlag must never be true on this code.
+  OWNER_EQUITY
 }
 
 enum ClassificationSource {
