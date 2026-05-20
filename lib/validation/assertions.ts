@@ -367,6 +367,7 @@ export async function A13_DEPOSITS_RECONSTRUCTED(taxYearId: string): Promise<Ass
   let totalInflows = 0
   let pairedTransfers = 0
   let bizIncome = 0
+  let ownerContribution = 0
   let classifiedNonIncome = 0
   let unclassified = 0
 
@@ -383,11 +384,12 @@ export async function A13_DEPOSITS_RECONSTRUCTED(taxYearId: string): Promise<Ass
       continue
     }
     if (c.code === "BIZ_INCOME") bizIncome += abs
+    else if (c.code === "OWNER_EQUITY") ownerContribution += abs
     else if (c.code === "TRANSFER" || c.code === "PERSONAL" || c.code === "PAYMENT") classifiedNonIncome += abs
     else unclassified += abs
   }
 
-  const explained = pairedTransfers + bizIncome + classifiedNonIncome
+  const explained = pairedTransfers + bizIncome + ownerContribution + classifiedNonIncome
   const delta = totalInflows - explained - unclassified
   const passed = unclassified < 500 && Math.abs(delta) < 500
   // Lead with the actual reason for failure when one is present — without
@@ -403,7 +405,7 @@ export async function A13_DEPOSITS_RECONSTRUCTED(taxYearId: string): Promise<Ass
     name: "Deposits reconstruction (§12.1)",
     passed,
     blocking: true,
-    details: `${reason ? reason + " — " : ""}Inflows ${fmtUSD(totalInflows, { cents: true })} = transfers ${fmtUSD(pairedTransfers, { cents: true })} + biz income ${fmtUSD(bizIncome, { cents: true })} + other ${fmtUSD(classifiedNonIncome, { cents: true })} + unclassified ${fmtUSD(unclassified, { cents: true })} (Δ ${fmtUSD(delta, { cents: true, signed: true })})`,
+    details: `${reason ? reason + " — " : ""}Inflows ${fmtUSD(totalInflows, { cents: true })} = transfers ${fmtUSD(pairedTransfers, { cents: true })} + biz income ${fmtUSD(bizIncome, { cents: true })} + owner contrib ${fmtUSD(ownerContribution, { cents: true })} + other ${fmtUSD(classifiedNonIncome, { cents: true })} + unclassified ${fmtUSD(unclassified, { cents: true })} (Δ ${fmtUSD(delta, { cents: true, signed: true })})`,
   }
 }
 

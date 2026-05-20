@@ -38,6 +38,7 @@ export interface PreCleanupSummary {
   outOfYearStaled: number
   stopsArchived: number
   documentsBackfilled: number
+  bizIncomePctBackfilled: number
   errors: Array<{ step: string; message: string }>
 }
 
@@ -50,11 +51,13 @@ export async function runPreCleanup(
     outOfYearStaled: 0,
     stopsArchived: 0,
     documentsBackfilled: 0,
+    bizIncomePctBackfilled: 0,
     errors: [],
   }
 
   const steps: Array<{ name: string; fn: () => Promise<number>; key: keyof Omit<PreCleanupSummary, "errors"> }> = [
     { name: "fix_inflow_misclassifications", fn: () => fixInflowMisclassifications(taxYearId), key: "inflowFlipped" },
+    { name: "backfill_biz_income_business_pct", fn: () => backfillBizIncomeBusinessPct(taxYearId), key: "bizIncomePctBackfilled" },
     { name: "mark_out_of_year_stale", fn: () => markOutOfYearStale(taxYearId), key: "outOfYearStaled" },
     { name: "archive_superseded_stops", fn: () => archiveSupersededStops(taxYearId), key: "stopsArchived" },
     { name: "backfill_documents", fn: () => backfillDocuments(taxYearId), key: "documentsBackfilled" },
@@ -85,7 +88,7 @@ export async function runPreCleanup(
       phase: "pre_cleanup",
       processed: steps.length,
       total: steps.length,
-      label: `Done · ${summary.inflowFlipped} inflows · ${summary.outOfYearStaled} stale · ${summary.stopsArchived} stops · ${summary.documentsBackfilled} docs`,
+      label: `Done · ${summary.inflowFlipped} inflows · ${summary.bizIncomePctBackfilled} biz-pct · ${summary.outOfYearStaled} stale · ${summary.stopsArchived} stops · ${summary.documentsBackfilled} docs`,
     })
   }
 
@@ -149,6 +152,87 @@ export async function fixInflowMisclassifications(taxYearId: string): Promise<nu
           beforeState: { code: offender.code },
           afterState: { code: "NEEDS_CONTEXT" },
           rationale: "Inflow row had deductible code — demoted to NEEDS_CONTEXT",
+        },
+      })
+    })
+    fixed++
+  }
+  return fixed
+}
+
+/**
+ * Backfill businessPct=100 on BIZ_INCOME Classifications that still carry the
+ * legacy default 0.
+ *
+ * Semantic intent: for income / non-deductible codes, businessPct doesn't drive
+ * any tax math (gross-receipts sums use the absolute amount; the deductible
+ * formula short-circuits to 0). But the stored 0 is misleading on the ledger
+ * UI and forward-incompatible with any future allocation logic (K-1 owner
+ * splits, multi-entity allocations). PR #N normalizes the data: every
+ * BIZ_INCOME row carries `businessPct=100` going forward.
+ *
+ * Idempotent: only flips rows currently at pct=0. Append-only flip-and-insert
+ * preserves the audit chain.
+ */
+export async function backfillBizIncomeBusinessPct(taxYearId: string): Promise<number> {
+  const offenders = await prisma.classification.findMany({
+    where: {
+      isCurrent: true,
+      code: "BIZ_INCOME",
+      businessPct: 0,
+      transaction: {
+        taxYearId,
+        isStale: false,
+        isSplit: false,
+      },
+    },
+    select: {
+      id: true,
+      transactionId: true,
+      scheduleCLine: true,
+      ircCitations: true,
+      confidence: true,
+      evidenceTier: true,
+      source: true,
+      reasoning: true,
+      substantiation: true,
+      cohanFlag: true,
+    },
+  })
+
+  let fixed = 0
+  for (const o of offenders) {
+    await prisma.$transaction(async (tx) => {
+      await tx.classification.update({
+        where: { id: o.id },
+        data: { isCurrent: false },
+      })
+      await tx.classification.create({
+        data: {
+          transactionId: o.transactionId,
+          code: "BIZ_INCOME",
+          scheduleCLine: o.scheduleCLine,
+          businessPct: 100,
+          ircCitations: o.ircCitations,
+          confidence: o.confidence,
+          evidenceTier: o.evidenceTier,
+          source: o.source,
+          reasoning: o.reasoning,
+          substantiation: o.substantiation ?? undefined,
+          cohanFlag: o.cohanFlag,
+          isCurrent: true,
+        },
+      })
+      await tx.auditEvent.create({
+        data: {
+          actorType: "SYSTEM",
+          eventType: "PRECLEANUP_BIZ_INCOME_PCT_FIXED",
+          entityType: "Classification",
+          entityId: o.id,
+          beforeState: { businessPct: 0 },
+          afterState: { businessPct: 100 },
+          rationale:
+            "BIZ_INCOME businessPct backfilled to 100 — semantic consistency with the rest of the pipeline (cohanSweep, derive.ts already write 100).",
         },
       })
     })

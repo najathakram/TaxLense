@@ -56,6 +56,7 @@ const VALID_CODES: TransactionCode[] = [
   "TRANSFER",
   "PAYMENT",
   "BIZ_INCOME",
+  "OWNER_EQUITY",
   "NEEDS_CONTEXT",
 ]
 
@@ -68,6 +69,7 @@ const VALID_CATEGORIES = [
   "MISSING_W9",
   "DUP_LINE_BUCKET",
   "PERSONAL_ANOMALY",
+  "OWNER_ACTIVITY",
 ] as const
 
 const VALID_SEVERITIES = ["CRITICAL", "HIGH", "MEDIUM", "LOW", "COSMETIC"] as const
@@ -408,13 +410,35 @@ Example 7 — OPPORTUNITY large PERSONAL rows that look business:
     proposedAction: { kind: STOP, category: MERCHANT, question: "<merchant> $<amt> looks business-adjacent — promote to WRITE_OFF or confirm personal?", transactionIds:[...] },
     autoFixable: false }
 
+Example 8 — OWNER_ACTIVITY: owner contributions / draws hidden in TRANSFER or PERSONAL:
+  Pattern (Sole Prop / SMLLC only — skip if entityType is S_CORP / LLC_MULTI / C_CORP / PARTNERSHIP):
+  A current Classification (TRANSFER, PERSONAL, or PAYMENT) appears to be owner equity movement
+  that should be OWNER_EQUITY instead. Direction by amountNormalized sign:
+    > 0 (outflow from business): owner DRAW / distribution
+    < 0 (inflow to business):    owner CONTRIBUTION
+  Surface when:
+    - ATM withdrawals from business account currently coded PERSONAL or TRANSFER
+    - "OWNER DRAW", "OWNER CONTRIBUTION", "TRANSFER TO PERSONAL", "TRANSFER FROM PERSONAL"
+      literally in description
+    - Zelle/Venmo/Cash App movements to/from the owner's known name or known personal aliases
+    - PAYMENT-style rows to a card NOT tracked as a FinancialAccount (likely owner's personal CC)
+    - Large cross-account TRANSFER pairs where one side is mixed-use / personal
+  Finding: { severity: MEDIUM, category: OWNER_ACTIVITY,
+    proposedAction: { kind: RECLASSIFY, txnIds: [...], code: OWNER_EQUITY, businessPct: 0,
+      scheduleCLine: null, ircCitations: ["§61"] (inflow) or ["§263"] (outflow), evidenceTier: 2,
+      cohanFlag: false },
+    autoFixable: true }
+  Hard invariants on OWNER_EQUITY: businessPct=0, scheduleCLine=null, cohanFlag=false. FINDINGS_APPLY
+  rejects any violation.
+
 HARD RAILS:
-1. proposedAction.code MUST be in VALID_CODES.
-2. proposedAction.ircCitations MUST be in VALID_CITATIONS (§61, §162, §162(a), §263A, §274(d), §274(n), §274(n)(1), §274(n)(2), §262, §1402, §280A, §280A(c), §168(k), §179, §280F, §195, §6001, §163(h), §471, §471(c), Cohan).
+1. proposedAction.code MUST be in VALID_CODES (now 12 codes including OWNER_EQUITY).
+2. proposedAction.ircCitations MUST be in VALID_CITATIONS (§61, §162, §162(a), §263, §263A, §274(d), §274(n), §274(n)(1), §274(n)(2), §262, §1402, §280A, §280A(c), §168(k), §179, §280F, §195, §6001, §163(h), §471, §471(c), Cohan).
 3. autoFixable=true is ONLY allowed for kind=RECLASSIFY with a single homogeneous merchant cluster (all rows have the same merchant + same proposed code).
 4. autoFixable=false REQUIRED when proposedAction.code is MEALS_50, MEALS_100, or WRITE_OFF_TRAVEL — those go to the SUBSTANTIATION_QUEUE.
-5. Never invent transaction IDs. citedTxnIds and proposedAction.txnIds MUST be from the provided summary.
-6. Severity scale: CRITICAL (income/deduction error >$1K), HIGH (>$500 or W-9 blocker), MEDIUM ($100–500), LOW (<$100 or cosmetic with audit implication), COSMETIC (no audit implication).
+5. OWNER_EQUITY proposals MUST have businessPct=0, scheduleCLine=null, cohanFlag=false. Use citations ["§61"] for contributions (inflow) or ["§263"] for draws (outflow).
+6. Never invent transaction IDs. citedTxnIds and proposedAction.txnIds MUST be from the provided summary.
+7. Severity scale: CRITICAL (income/deduction error >$1K), HIGH (>$500 or W-9 blocker), MEDIUM ($100–500), LOW (<$100 or cosmetic with audit implication), COSMETIC (no audit implication).
 
 OUTPUT FORMAT — STRICT JSON ONLY (no prose, no markdown):
 

@@ -46,6 +46,7 @@ const TransactionCodeEnum = z.enum([
   "TRANSFER",
   "PAYMENT",
   "BIZ_INCOME",
+  "OWNER_EQUITY",
   "NEEDS_CONTEXT",
 ])
 

@@ -134,6 +134,12 @@ export async function confirmLock(
           // the locked ledger from the audit chain.
           perLineTotals: perLineSnapshot.perLineTotals,
           grossReceipts: perLineSnapshot.grossReceipts,
+          // OWNER_EQUITY snapshot so future drift checks can flag changes to
+          // Balance Sheet owner activity even though it doesn't appear on
+          // Schedule C / perLineTotals.
+          ownerContributions: perLineSnapshot.ownerContributions,
+          ownerDistributions: perLineSnapshot.ownerDistributions,
+          ownerEquityNet: perLineSnapshot.ownerEquityNet,
           driftAck: options.driftAck ?? null,
         },
       },

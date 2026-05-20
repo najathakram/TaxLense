@@ -22,6 +22,7 @@ const NON_DEDUCTIBLE_CODES = new Set<TransactionCode>([
   "TRANSFER",
   "PAYMENT",
   "BIZ_INCOME",
+  "OWNER_EQUITY",
 ])
 import {
   editClassification,

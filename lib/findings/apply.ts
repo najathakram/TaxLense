@@ -12,7 +12,7 @@
 
 import { prisma } from "@/lib/db"
 import type { TransactionCode } from "@/app/generated/prisma/client"
-import { assertNot274dCohan } from "@/lib/classification/cohanGuards"
+import { assertNot274dCohan, assertOwnerEquityInvariants } from "@/lib/classification/cohanGuards"
 
 export interface ApplyFindingsResult {
   applied: number
@@ -151,6 +151,38 @@ async function applyReclassify(
             entityType: "LedgerFinding",
             entityId: findingId,
             afterState: { reason: guard.reason },
+          },
+        })
+      })
+      return "rejected"
+    }
+  }
+
+  // OWNER_EQUITY invariant guard — Balance Sheet item, never §162-deductible,
+  // never carries a Schedule C line, businessPct always 0.
+  if (action.code === "OWNER_EQUITY") {
+    const oeGuard = assertOwnerEquityInvariants({
+      code: action.code,
+      businessPct: action.businessPct,
+      cohanFlag: action.cohanFlag,
+      scheduleCLine: action.scheduleCLine,
+    })
+    if (!oeGuard.allowed) {
+      await prisma.$transaction(async (tx) => {
+        await tx.ledgerFinding.update({
+          where: { id: findingId },
+          data: {
+            state: "DISMISSED",
+            dismissedRationale: `OWNER_EQUITY invariant: ${oeGuard.reason}`,
+          },
+        })
+        await tx.auditEvent.create({
+          data: {
+            actorType: "SYSTEM",
+            eventType: "OWNER_EQUITY_INVARIANT_REJECTED",
+            entityType: "LedgerFinding",
+            entityId: findingId,
+            afterState: { reason: oeGuard.reason },
           },
         })
       })

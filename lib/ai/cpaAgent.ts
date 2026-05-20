@@ -79,12 +79,13 @@ const VALID_CODES: TransactionCode[] = [
   "TRANSFER",
   "PAYMENT",
   "BIZ_INCOME",
+  "OWNER_EQUITY",
   "NEEDS_CONTEXT",
 ]
 const VALID_CODE_SET = new Set<string>(VALID_CODES)
 
 const VALID_CITATIONS = new Set([
-  "§61", "§162", "§162(a)", "§263A", "§274(d)", "§274(n)", "§274(n)(1)", "§274(n)(2)",
+  "§61", "§162", "§162(a)", "§263", "§263A", "§274(d)", "§274(n)", "§274(n)(1)", "§274(n)(2)",
   "§262", "§1402", "§280A", "§280A(c)", "§168(k)", "§179", "§280F", "§195", "§6001",
   "§163(h)", "§471", "§471(c)",
   "Cohan",
@@ -629,11 +630,12 @@ You operate as a senior CPA / bookkeeper for THIS specific taxpayer. You will re
 ${notesBlock}
 
 === NON-NEGOTIABLE RULES ===
-- Use ONLY these 11 codes:
+- Use ONLY these 12 codes:
     WRITE_OFF, WRITE_OFF_TRAVEL, WRITE_OFF_COGS, MEALS_50, MEALS_100,
-    GRAY, PERSONAL, TRANSFER, PAYMENT, BIZ_INCOME, NEEDS_CONTEXT
+    GRAY, PERSONAL, TRANSFER, PAYMENT, BIZ_INCOME, OWNER_EQUITY,
+    NEEDS_CONTEXT
 - IRC citations must come from this allowlist. Anything else → "[VERIFY]":
-    §61, §162, §162(a), §263A, §274(d), §274(n)(1), §274(n)(2),
+    §61, §162, §162(a), §263, §263A, §274(d), §274(n)(1), §274(n)(2),
     §262, §1402, §280A, §280A(c), §168(k), §179, §280F, §195, §6001,
     §163(h), §471(c), Cohan
 - Personal interest (CASH ADVANCE INTEREST CHARGE, INTEREST CHARGE on
@@ -648,8 +650,32 @@ ${notesBlock}
   (owner top-up from Chase) or a refund/reversal, not a deduction.
   When you see an inflow without clear context, prefer TRANSFER (if
   mid-account-to-account pattern), BIZ_INCOME (if from a customer/
-  marketplace), PERSONAL, or NEEDS_CONTEXT. Never WRITE_OFF on a
+  marketplace), PERSONAL, OWNER_EQUITY (if it looks like an owner top-up
+  from a personal source), or NEEDS_CONTEXT. Never WRITE_OFF on a
   positive-into-account row.
+- BIZ_INCOME ALWAYS carries businessPct=100. Income is fully recognized;
+  the pct field has no allocation meaning for income codes, but the
+  canonical value is 100 (NOT 0). PERSONAL/TRANSFER/PAYMENT/OWNER_EQUITY/
+  NEEDS_CONTEXT carry businessPct=0.
+- OWNER_EQUITY — Sole Prop / SMLLC ONLY. Owner moving cash between business
+  and personal. NOT income, NOT a deductible expense. Direction by sign:
+    amountNormalized > 0 (outflow from business): owner DRAW / distribution
+    amountNormalized < 0 (inflow to business):    owner CONTRIBUTION
+  Detect when:
+    - merchantRaw matches ATM WITHDRAWAL, ATM DEBIT, CASH WITHDRAWAL,
+      OWNER DRAW, OWNER CONTRIBUTION, "TRANSFER TO PERSONAL",
+      "TRANSFER FROM PERSONAL"
+    - ZELLE/VENMO/CASH APP TO/FROM the taxpayer's own name or known
+      personal aliases (provided in KNOWN ENTITIES with kind=OWNER_ALIAS)
+    - PAYMENT-style row to a credit card that is NOT a tracked
+      FinancialAccount (likely owner's personal CC)
+  businessPct: always 0. scheduleCLine: null.
+  ircCitations: ["§61"] for contributions, ["§263"] for draws (capital
+  account, not P&L).
+  evidenceTier: 2 (bank-visible identity), 3 if merchant-pattern only.
+  For S_CORP / LLC_MULTI / C_CORP / PARTNERSHIP entity types: do NOT use
+  OWNER_EQUITY — use TRANSFER + ${"`requires_human_input: true`"} so the
+  CPA can map to the Owner record / K-1 / Schedule M-2 flow.
 - Card payments + transfers between the taxpayer's own accounts are
   already paired (excluded from this chunk). Don't classify them.
 
@@ -698,7 +724,7 @@ Return ONLY a JSON array of decisions, one per input transaction in the SAME ord
 [
   {
     "txId": "<echo input id>",
-    "code": "ONE_OF_11_CODES",
+    "code": "ONE_OF_12_CODES",
     "scheduleLine": "Line 18 Office Expense" | null,
     "businessPct": 0-100,
     "ircCitations": ["§162", "§274(d)"],

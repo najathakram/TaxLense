@@ -30,7 +30,7 @@ export function isDeductibleCode(code: TransactionCode): boolean {
  * Deductible dollar amount for one transaction row.
  *
  * - Inflows (amountNormalized < 0) deduct nothing.
- * - PERSONAL / TRANSFER / PAYMENT / BIZ_INCOME / NEEDS_CONTEXT → 0.
+ * - PERSONAL / TRANSFER / PAYMENT / BIZ_INCOME / OWNER_EQUITY / NEEDS_CONTEXT → 0.
  * - businessPct of 0..100 prorates the outflow.
  * - MEALS_50 applies the §274(n)(1) 50% multiplier on top of businessPct.
  */

@@ -59,6 +59,9 @@ export async function computePerLineTotals(taxYearId: string): Promise<{
   perLineTotals: Record<string, number>
   grossReceipts: number
   totalDeductions: number
+  ownerContributions: number   // absolute sum of OWNER_EQUITY inflows  (amountNormalized < 0)
+  ownerDistributions: number   // sum of OWNER_EQUITY outflows           (amountNormalized > 0)
+  ownerEquityNet: number       // contributions − distributions (positive = net contribution into business)
 }> {
   const txns = await prisma.transaction.findMany({
     where: { taxYearId, isSplit: false, isStale: false },
@@ -67,11 +70,17 @@ export async function computePerLineTotals(taxYearId: string): Promise<{
   const perLineTotals: Record<string, number> = {}
   let grossReceipts = 0
   let totalDeductions = 0
+  let ownerContributions = 0
+  let ownerDistributions = 0
   for (const t of txns) {
     const c = t.classifications[0]
     if (!c) continue
     const amt = Number(t.amountNormalized)
     if (c.code === "BIZ_INCOME") grossReceipts += Math.abs(amt)
+    if (c.code === "OWNER_EQUITY") {
+      if (amt < 0) ownerContributions += -amt
+      else ownerDistributions += amt
+    }
     if (DEDUCTIBLE_CODES.includes(c.code)) {
       let ded = Math.max(0, amt) * (c.businessPct / 100)
       if (c.code === "MEALS_50") ded *= 0.5
@@ -80,7 +89,14 @@ export async function computePerLineTotals(taxYearId: string): Promise<{
       totalDeductions += ded
     }
   }
-  return { perLineTotals, grossReceipts, totalDeductions }
+  return {
+    perLineTotals,
+    grossReceipts,
+    totalDeductions,
+    ownerContributions,
+    ownerDistributions,
+    ownerEquityNet: ownerContributions - ownerDistributions,
+  }
 }
 
 /**

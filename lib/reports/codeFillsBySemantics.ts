@@ -64,7 +64,9 @@ export function classifySemanticFill(
   // Step 6: allocated partial (e.g. 65% biz interest)
   if (fullDeductibleCodes.includes(code) && businessPct > 0 && businessPct < 100) return "allocatedPartial"
 
-  // Step 7: everything else (PERSONAL, TRANSFER, PAYMENT, BIZ_INCOME, NEEDS_CONTEXT)
+  // Step 7: everything else (PERSONAL, TRANSFER, PAYMENT, BIZ_INCOME,
+  // OWNER_EQUITY, NEEDS_CONTEXT) — Balance Sheet items, payment plumbing,
+  // income, and unresolved rows get no Schedule C deductibility fill.
   return "none"
 }
 
