@@ -106,27 +106,99 @@ function SignalGroup({
   )
 }
 
-function AssertionsPanel({ result, year }: { result: AssertionRunResult; year: number }) {
+/**
+ * Lookup of offending row details, keyed by transaction id. Built once in the
+ * server component and passed to AssertionsPanel so the panel can render the
+ * actual rows responsible for each failed assertion. Without this the CPA
+ * sees "21 unpaired transfer rows" with no path to the rows themselves.
+ */
+interface TxnLite {
+  id: string
+  date: string
+  merchant: string
+  amount: number
+}
+
+function AssertionsPanel({
+  result,
+  year,
+  txnLookup,
+}: {
+  result: AssertionRunResult
+  year: number
+  txnLookup: Map<string, TxnLite>
+}) {
   const all = [...result.passed, ...result.failed].sort((a, b) => a.id.localeCompare(b.id))
   return (
     <Card>
       <CardHeader><CardTitle className="text-base">QA Assertions</CardTitle></CardHeader>
       <CardContent>
         <ul className="space-y-2 text-sm">
-          {all.map((a) => (
-            <li key={a.id} className="flex items-start gap-2">
-              <span>{a.passed ? "✓" : a.blocking ? "✗" : "!"}</span>
-              <span className="flex-1">
-                <strong>[{a.id}]</strong> {a.name}
-                <span className="ml-1 text-xs text-muted-foreground">— {a.details}</span>
-                {!a.passed && (
-                  <div className="mt-1">
-                    <FixItButton year={year} signalId={a.id} />
-                  </div>
-                )}
-              </span>
-            </li>
-          ))}
+          {all.map((a) => {
+            const offending = a.offendingTransactionIds ?? []
+            const sampleRows = offending
+              .map((id) => txnLookup.get(id))
+              .filter((t): t is TxnLite => t !== undefined)
+              .slice(0, 12)
+            return (
+              <li key={a.id} className="flex items-start gap-2">
+                <span>{a.passed ? "✓" : a.blocking ? "✗" : "!"}</span>
+                <span className="flex-1">
+                  <strong>[{a.id}]</strong> {a.name}
+                  <span className="ml-1 text-xs text-muted-foreground">— {a.details}</span>
+                  {!a.passed && (
+                    <>
+                      {sampleRows.length > 0 && (
+                        <details className="mt-1.5">
+                          <summary className="cursor-pointer text-xs text-blue-300 hover:text-blue-200">
+                            Show {offending.length} offending row{offending.length === 1 ? "" : "s"}
+                          </summary>
+                          <div className="mt-2 rounded border border-border bg-muted/40 p-2">
+                            <table className="w-full text-xs">
+                              <thead className="text-muted-foreground">
+                                <tr>
+                                  <th className="text-left pb-1">Date</th>
+                                  <th className="text-left pb-1">Merchant</th>
+                                  <th className="text-right pb-1">Amount</th>
+                                </tr>
+                              </thead>
+                              <tbody>
+                                {sampleRows.map((t) => (
+                                  <tr key={t.id} className="border-t border-border/40">
+                                    <td className="py-1 pr-2">{t.date}</td>
+                                    <td className="py-1 pr-2 truncate max-w-[260px]" title={t.merchant}>
+                                      {t.merchant}
+                                    </td>
+                                    <td className="py-1 text-right tabular-nums">
+                                      {fmtUSD(t.amount, { cents: true })}
+                                    </td>
+                                  </tr>
+                                ))}
+                              </tbody>
+                            </table>
+                            {offending.length > sampleRows.length && (
+                              <p className="mt-1.5 text-[10px] text-muted-foreground">
+                                +{offending.length - sampleRows.length} more (open ledger to see all)
+                              </p>
+                            )}
+                            <Link
+                              className="mt-1.5 inline-block text-[10px] text-blue-300 hover:text-blue-200 underline"
+                              href={`/years/${year}/ledger?ids=${offending.slice(0, 200).join(",")}`}
+                            >
+                              Open all {offending.length} row{offending.length === 1 ? "" : "s"} in ledger →
+                            </Link>
+                          </div>
+                        </details>
+                      )}
+                      <div className="mt-1">
+                        <FixItButton year={year} signalId={a.id} />
+                      </div>
+                    </>
+                  )}
+                </span>
+              </li>
+            )
+          })}
         </ul>
       </CardContent>
     </Card>
@@ -165,6 +237,37 @@ export default async function RiskPage({ params }: Props) {
     runLockAssertions(taxYear.id),
     getYearCounts(taxYear.id),
   ])
+
+  // Hydrate the offending-transaction rows for every failed assertion so
+  // AssertionsPanel can render date/merchant/amount inline. Cap at 12 rows
+  // per assertion to keep the DB query bounded and the dropdown readable.
+  const offendingIds = Array.from(
+    new Set(
+      assertions.failed.flatMap((a) => (a.offendingTransactionIds ?? []).slice(0, 12))
+    )
+  )
+  const offendingTxns = offendingIds.length
+    ? await prisma.transaction.findMany({
+        where: { id: { in: offendingIds } },
+        select: {
+          id: true,
+          postedDate: true,
+          merchantRaw: true,
+          amountNormalized: true,
+        },
+      })
+    : []
+  const txnLookup = new Map(
+    offendingTxns.map((t) => [
+      t.id,
+      {
+        id: t.id,
+        date: t.postedDate.toISOString().slice(0, 10),
+        merchant: t.merchantRaw,
+        amount: Number(t.amountNormalized),
+      },
+    ])
+  )
 
   // Derive the live stage from row counts so the "Lock Status" pill is honest
   // even if TaxYear.status hasn't been recomputed since the last classification
@@ -251,7 +354,7 @@ export default async function RiskPage({ params }: Props) {
             </Alert>
           )}
         </div>
-        <AssertionsPanel result={assertions} year={year} />
+        <AssertionsPanel result={assertions} year={year} txnLookup={txnLookup} />
       </div>
     </div>
   )
