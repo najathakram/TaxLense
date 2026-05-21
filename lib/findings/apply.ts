@@ -11,7 +11,7 @@
  */
 
 import { prisma } from "@/lib/db"
-import type { TransactionCode } from "@/app/generated/prisma/client"
+import type { Prisma, TransactionCode } from "@/app/generated/prisma/client"
 import { assertNot274dCohan, assertOwnerEquityInvariants } from "@/lib/classification/cohanGuards"
 
 export interface ApplyFindingsResult {
@@ -21,6 +21,12 @@ export interface ApplyFindingsResult {
   errors: Array<{ findingId: string; message: string }>
 }
 
+// ProposedAction shape lives in lib/findings/humanize.ts so both the server
+// (this file) and the client UI can import it without pulling in the Prisma
+// graph. We mirror the type here with a narrower `code` field so the apply
+// layer can use the Prisma TransactionCode union for switch exhaustiveness.
+//
+// At runtime there's no difference — both shapes use the same string codes.
 interface ReclassifyAction {
   kind: "RECLASSIFY"
   txnIds: string[]
@@ -52,6 +58,13 @@ interface NoteAction {
 
 type ProposedAction = ReclassifyAction | StopAction | BlockAction | NoteAction
 
+// Re-export the shared client-safe shape so callers (server actions) that
+// already import the humanize type can pass it straight through without a
+// double-cast. The two shapes differ only in code's union type (the apply
+// layer's TransactionCode is the same set of strings as humanize's `string`).
+import type { ProposedAction as ClientProposedAction } from "@/lib/findings/humanize"
+export type { ClientProposedAction as ProposedActionFromUi }
+
 /**
  * Apply every ACCEPTED finding for the year. Failure of an individual finding
  * is recorded in errors[] but never blocks the rest — best-effort sweep.
@@ -66,7 +79,13 @@ export async function applyAcceptedFindings(taxYearId: string): Promise<ApplyFin
 
   for (const f of findings) {
     try {
-      const outcome = await applyOneFinding(f.id, f.proposedAction as unknown as ProposedAction, taxYearId)
+      // Prefer the CPA-supplied override action over the AI's original
+      // proposal. acceptedOption captures the human label of the chosen
+      // alternative; overrideAction holds the modified ProposedAction
+      // (same JSON shape, same hard-rail guards). When neither is set,
+      // we fall back to proposedAction — the legacy path.
+      const effectiveAction = (f.overrideAction ?? f.proposedAction) as unknown as ProposedAction
+      const outcome = await applyOneFinding(f.id, effectiveAction, taxYearId)
       if (outcome === "applied") result.applied++
       else if (outcome === "superseded") result.superseded++
       else if (outcome === "rejected") result.rejected++
@@ -306,7 +325,9 @@ async function applyStopCreation(
 }
 
 /**
- * Accept a single finding. Used by the findings UI.
+ * Accept a single finding "as proposed". Used by the findings UI's plain
+ * Accept button. The apply path will execute the finding's proposedAction
+ * verbatim.
  */
 export async function acceptFinding(findingId: string): Promise<void> {
   await prisma.$transaction(async (tx) => {
@@ -320,6 +341,99 @@ export async function acceptFinding(findingId: string): Promise<void> {
         eventType: "FINDING_ACCEPTED",
         entityType: "LedgerFinding",
         entityId: findingId,
+      },
+    })
+  })
+}
+
+/**
+ * Accept a finding with a *modified* ProposedAction (one of the
+ * case-derived alternatives the UI offers via humanize.deriveAlternatives).
+ *
+ * `optionLabel` is the short human-readable label the CPA picked
+ * ("Move to Line 17 Legal & Professional", "Promote to COGS", etc.) — stored
+ * for audit-trail display so the workpaper shows what the CPA chose, not
+ * just the resulting Classification.
+ *
+ * The override is checked against the same §274(d) Cohan + OWNER_EQUITY
+ * invariant guards at apply time as the AI's original proposal — the
+ * alternatives can't sneak past the hard rails.
+ */
+export async function acceptFindingWithOverride(
+  findingId: string,
+  override: ClientProposedAction,
+  optionLabel: string
+): Promise<void> {
+  if (!optionLabel || optionLabel.trim().length === 0) {
+    throw new Error("acceptedOption label required when overriding the proposed action")
+  }
+  await prisma.$transaction(async (tx) => {
+    await tx.ledgerFinding.update({
+      where: { id: findingId },
+      data: {
+        state: "ACCEPTED",
+        overrideAction: override as unknown as Prisma.InputJsonValue,
+        acceptedOption: optionLabel.trim().slice(0, 200),
+      },
+    })
+    await tx.auditEvent.create({
+      data: {
+        actorType: "USER",
+        eventType: "FINDING_ACCEPTED",
+        entityType: "LedgerFinding",
+        entityId: findingId,
+        afterState: {
+          acceptedOption: optionLabel,
+          override: override as unknown as Prisma.InputJsonValue,
+        } as unknown as Prisma.InputJsonValue,
+      },
+    })
+  })
+}
+
+/**
+ * Accept a finding with a free-text "Other…" instruction. The instruction is
+ * stored verbatim; the apply path turns it into a STOP carrying the
+ * instruction as the surfaced question. We DON'T translate the instruction
+ * into a Classification — that would risk fabricating a tax position from
+ * ambiguous English. The CPA reviews the resulting STOP and resolves it
+ * through the existing STOP flow.
+ */
+export async function acceptFindingWithInstruction(
+  findingId: string,
+  instruction: string,
+  citedTxnIds: string[]
+): Promise<void> {
+  const trimmed = instruction.trim()
+  if (trimmed.length < 5) {
+    throw new Error("Custom instruction must be at least 5 characters")
+  }
+  const stopOverride: ClientProposedAction = {
+    kind: "STOP",
+    category: "MERCHANT",
+    question: `CPA instruction: ${trimmed.slice(0, 500)}`,
+    transactionIds: citedTxnIds,
+  }
+  await prisma.$transaction(async (tx) => {
+    await tx.ledgerFinding.update({
+      where: { id: findingId },
+      data: {
+        state: "ACCEPTED",
+        overrideAction: stopOverride as unknown as Prisma.InputJsonValue,
+        userInstruction: trimmed,
+        acceptedOption: "Other (custom instruction)",
+      },
+    })
+    await tx.auditEvent.create({
+      data: {
+        actorType: "USER",
+        eventType: "FINDING_ACCEPTED",
+        entityType: "LedgerFinding",
+        entityId: findingId,
+        afterState: {
+          userInstruction: trimmed,
+          override: stopOverride as unknown as Prisma.InputJsonValue,
+        } as unknown as Prisma.InputJsonValue,
       },
     })
   })

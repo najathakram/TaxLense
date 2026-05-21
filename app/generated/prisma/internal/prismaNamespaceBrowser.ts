@@ -485,6 +485,9 @@ export const LedgerFindingScalarFieldEnum = {
   citedTxnIds: 'citedTxnIds',
   state: 'state',
   dismissedRationale: 'dismissedRationale',
+  acceptedOption: 'acceptedOption',
+  overrideAction: 'overrideAction',
+  userInstruction: 'userInstruction',
   supersedesId: 'supersedesId',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
