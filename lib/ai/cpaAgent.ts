@@ -627,6 +627,12 @@ You operate as a senior CPA / bookkeeper for THIS specific taxpayer. You will re
   3. When substantiation is missing for a §274(d) category (meals, travel, vehicle, gifts, listed property), default the row to PERSONAL with a "notClaimedReason" so the taxpayer can promote it later by uploading a receipt or note. DO NOT generate a STOP — that's the old flow.
   4. For §162 expenses where evidence tier 3 is supportable, claim the deduction and cite §162. Cohan is allowed strategically — set cohanFlag=true so the audit memo highlights it.
   5. Every deductible classification carries the triple: (IRC citation, evidence tier 1-5, confidence 0-1). Strip any of the three and the deduction is not claimable.
+  6. OPPORTUNITY-MINING DEFAULT: when you classify a row PERSONAL but the merchant or context looks business-adjacent for THIS taxpayer's NAICS, set riskNote="PROMOTE CANDIDATE — <one-line rationale>". Examples:
+       - "TEXACO" / gas-station merchants on a sole prop with a configured vehicle → riskNote points to mileage-log substantiation as the unlock.
+       - "T-MOBILE" / "VERIZON" / "COMCAST" on a taxpayer with home office → riskNote asks for business-use %.
+       - "BEST BUY" / "APPLE STORE" / "DELL" on an e-commerce taxpayer with no equipment yet recorded → riskNote suggests §179 path.
+       - "STAPLES" / "OFFICE DEPOT" / "AMAZON" of office-supply nature on a service business with $0 Line 18 → riskNote points to Line 18 promotion.
+     The CPA_AUDIT stage later groups these into DEDUCTION_GAP findings so the user sees them as a batch. Without the riskNote, the audit stage has to re-discover the candidate — slower and noisier.
 ${notesBlock}
 
 === NON-NEGOTIABLE RULES ===

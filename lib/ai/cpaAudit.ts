@@ -31,6 +31,7 @@ import { prisma } from "@/lib/db"
 import type { TransactionCode } from "@/app/generated/prisma/client"
 import type { ProgressReporter } from "@/lib/jobs/pipelineRun"
 import { fmtUSD } from "@/lib/format/currency"
+import { benchmarksForNaics, type IrsBenchmark } from "@/lib/analytics/irsBenchmarks"
 
 const MODEL = "claude-opus-4-7" as const
 const FALLBACK_MODEL = "claude-sonnet-4-6" as const
@@ -70,6 +71,14 @@ const VALID_CATEGORIES = [
   "DUP_LINE_BUCKET",
   "PERSONAL_ANOMALY",
   "OWNER_ACTIVITY",
+  // Deduction-opportunity-mining categories. Added 2026-05-21 after a CPA
+  // walkthrough of Atif's 2025 found ~$7-13K of likely-missed §162 deductions
+  // that the prior audit prompt did not surface. The auditor's job isn't
+  // only to catch defects — it's also to spot lines that should have spend
+  // but don't, and items in COGS that belong on operating-expense lines.
+  "DEDUCTION_GAP",
+  "MISCLASSIFIED_LINE",
+  "ABOVE_THE_LINE",
 ] as const
 
 const VALID_SEVERITIES = ["CRITICAL", "HIGH", "MEDIUM", "LOW", "COSMETIC"] as const
@@ -179,7 +188,45 @@ interface LedgerSummary {
   travelCount: number
   noLineDeductibleCount: number
   cohanCount: number
+  /**
+   * Deduction-opportunity-mining inputs. Deterministic comparisons against
+   * IRS SOI per-NAICS benchmarks. Opus's job is to translate these into
+   * DEDUCTION_GAP / MISCLASSIFIED_LINE / ABOVE_THE_LINE findings — it does
+   * NOT compute the ratios; we compute them in TypeScript so the AI can
+   * spend its tokens on judgment, not arithmetic.
+   */
+  deductionGap: {
+    naicsPrefix: string
+    benchmarks: Array<{
+      label: string
+      scheduleCLine: string
+      expectedShare: number       // 0..1 from IRS SOI benchmark
+      actualAmount: number        // dollars currently on this line for THIS taxpayer
+      actualShare: number         // actualAmount / totalDeductions
+      gapAmount: number           // (expectedShare - actualShare) * totalDeductions; positive = under-claimed
+      severity: "ZERO" | "UNDER" | "INLINE" | "OVER"
+    }>
+    /** Common payment-processor / wire fees that ended up coded WRITE_OFF_COGS
+     *  instead of an operating-expense line. Same deductible amount; moving
+     *  them off COGS reduces audit-flag risk on the gross-margin ratio. */
+    feeRowsInCogs: Array<{ id: string; merchant: string; amount: number; line: string | null }>
+  }
 }
+
+// Heuristic patterns for fees masquerading as COGS. Match against the
+// normalized merchant string — these vendors are almost universally
+// financial-service fees, not inventory cost. The pattern list is
+// intentionally narrow; broader payment-processor detection lives in
+// lib/ai/feeGuards.ts and the CPA agent's runtime guards.
+const COGS_FEE_PATTERNS = [
+  /^WISE/i,         // Wise (formerly TransferWise) wire fees
+  /\bSTRIPE\b/i,    // Stripe TRANSFER / merchant fees
+  /\bPAYPAL\b/i,    // PayPal fees
+  /\bSQUARE\b/i,    // Square fees
+  /AUTHNET/i,       // Authorize.net gateway
+  /WORLDPAY/i,      // WorldPay processor
+  /\bACH\b/i,       // generic ACH service fees
+]
 
 async function buildLedgerSummary(taxYearId: string): Promise<LedgerSummary> {
   const txns = await prisma.transaction.findMany({
@@ -202,6 +249,11 @@ async function buildLedgerSummary(taxYearId: string): Promise<LedgerSummary> {
     travelCount: 0,
     noLineDeductibleCount: 0,
     cohanCount: 0,
+    deductionGap: {
+      naicsPrefix: "",
+      benchmarks: [],
+      feeRowsInCogs: [],
+    },
   }
 
   const byMerchant = new Map<string, { inflowCount: number; outflowCount: number; netCents: number }>()
@@ -294,6 +346,63 @@ async function buildLedgerSummary(taxYearId: string): Promise<LedgerSummary> {
   summary.twoSidedCounterparties.sort((a, b) => Math.abs(b.netCents) - Math.abs(a.netCents))
   summary.twoSidedCounterparties = summary.twoSidedCounterparties.slice(0, 20)
 
+  // ── Deduction-opportunity-mining: NAICS-benchmark gap analysis ──────────
+  // Fetch NAICS to pick the right benchmark set. Falls back to DEFAULT when
+  // profile.naicsCode is null (rare for a year that's reached cpa_audit).
+  const profileForGap = await prisma.businessProfile.findUnique({
+    where: { taxYearId },
+    select: { naicsCode: true },
+  })
+  const naics = profileForGap?.naicsCode ?? null
+  const bench: IrsBenchmark[] = benchmarksForNaics(naics)
+  summary.deductionGap.naicsPrefix = naics ? naics.slice(0, 2) : "default"
+  summary.deductionGap.benchmarks = bench.map((b) => {
+    // Sum across canonical + legacy-spelling buckets for the same line.
+    // "Line 27a Other Expenses" and bare "Line 27a" both map to the same
+    // Schedule C line in tax software; treat them as one for the gap calc.
+    const canonicalRoot = b.scheduleCLine.replace(/ Other Expenses$/, "").replace(/ Other deductions$/, "")
+    const actualAmount = Object.entries(summary.perLineTotals)
+      .filter(([line]) => line === b.scheduleCLine || line.startsWith(canonicalRoot))
+      .reduce((sum, [, t]) => sum + t.total, 0)
+    const actualShare = summary.totalDeductions > 0 ? actualAmount / summary.totalDeductions : 0
+    const gapAmount = (b.deductionShare - actualShare) * summary.totalDeductions
+    let severity: "ZERO" | "UNDER" | "INLINE" | "OVER"
+    if (actualAmount === 0 && b.deductionShare >= 0.04) severity = "ZERO"        // $0 on a line industry spends ≥4% on
+    else if (actualShare < b.deductionShare * 0.5 && gapAmount > 200) severity = "UNDER"  // <50% of benchmark AND material
+    else if (actualShare > b.deductionShare * 1.5) severity = "OVER"             // 1.5× benchmark (also a DIF signal)
+    else severity = "INLINE"
+    return {
+      label: b.label,
+      scheduleCLine: b.scheduleCLine,
+      expectedShare: b.deductionShare,  // local field renamed for clarity in the prompt
+      actualAmount,
+      actualShare,
+      gapAmount,
+      severity,
+    }
+  })
+
+  // Fee-rows-in-COGS detection. Iterate deductible rows once more — cheaper
+  // than re-querying the DB. We only care about COGS-coded rows here; rows
+  // in WRITE_OFF Line 17/27a are already on the right operating-expense line.
+  for (const t of txns) {
+    const c = t.classifications[0]
+    if (!c) continue
+    if (c.code !== "WRITE_OFF_COGS" && c.scheduleCLine !== "Part III COGS") continue
+    const m = (t.merchantNormalized ?? t.merchantRaw).toUpperCase()
+    if (COGS_FEE_PATTERNS.some((rx) => rx.test(m))) {
+      summary.deductionGap.feeRowsInCogs.push({
+        id: t.id,
+        merchant: t.merchantRaw,
+        amount: Math.abs(Number(t.amountNormalized)),
+        line: c.scheduleCLine,
+      })
+    }
+  }
+  // Sort by amount desc, cap at 30 rows so the prompt stays compact.
+  summary.deductionGap.feeRowsInCogs.sort((a, b) => b.amount - a.amount)
+  summary.deductionGap.feeRowsInCogs = summary.deductionGap.feeRowsInCogs.slice(0, 30)
+
   return summary
 }
 
@@ -344,6 +453,22 @@ function renderSummary(s: LedgerSummary): string {
       (r) =>
         `  ${r.merchant} | inflows: ${r.inflowCount} | outflows: ${r.outflowCount} | net: ${fmtUSD(r.netCents / 100, { cents: true })}`
     ),
+    ``,
+    `--- deduction-gap analysis vs IRS SOI benchmark (NAICS prefix ${s.deductionGap.naicsPrefix}) ---`,
+    `(Industry medians from IRS SOI Table 1A. ZERO = $0 on a line industry spends ≥4% on. UNDER = <50% of benchmark AND material. INLINE = within normal range. OVER = >150% of benchmark, also a DIF signal.)`,
+    ...s.deductionGap.benchmarks.map(
+      (b) =>
+        `  ${b.severity.padEnd(6)} | ${b.scheduleCLine.padEnd(40)} | expected ${(b.expectedShare * 100).toFixed(1)}% | actual ${(b.actualShare * 100).toFixed(1)}% (${fmtUSD(b.actualAmount, { cents: true })}) | gap ${fmtUSD(b.gapAmount, { cents: true, signed: true })}`
+    ),
+    ``,
+    `--- fee-rows-in-COGS (likely belong on Line 17/27a, NOT Part III COGS) ---`,
+    s.deductionGap.feeRowsInCogs.length === 0
+      ? `  (none detected — Wise/Stripe/PayPal/Square/AuthNet/WorldPay/ACH patterns are clean)`
+      : s.deductionGap.feeRowsInCogs
+          .map(
+            (r) => `  ${r.id} | ${r.merchant.slice(0, 50)} | ${fmtUSD(r.amount, { cents: true })} | currently on ${r.line ?? "(no line)"}`
+          )
+          .join("\n"),
   ].join("\n")
 }
 
@@ -353,9 +478,12 @@ function renderSummary(s: LedgerSummary): string {
 
 const SYSTEM_PROMPT = `You are an IRS-auditor-style CPA reviewing a tax-year ledger BEFORE the return is locked and filed.
 
-Your job: find every defect a real auditor would flag, and emit STRUCTURED findings with proposed fixes.
+Your job has TWO halves of equal weight:
 
-You do NOT do arithmetic — all per-line totals + per-code totals are computed for you and shown in the summary. Your job is PATTERN RECOGNITION: spot the rows that don't fit, the double-counts, the missed deductions, the DIF-score risks.
+  (A) DEFECT HUNTING — find every error a real auditor would flag (double-counts, phantom transfers, missing W-9s, DIF-score risks, §274(d) leaks, code/line mismatches).
+  (B) OPPORTUNITY MINING — find every legitimate §162 deduction the taxpayer is leaving on the table. A senior CPA does NOT just fix what's wrong; they catch what's missing. The ledger is what the taxpayer's connected accounts saw — if a category that every business at this NAICS has is $0 here, ASK about it. If a payment-processor fee landed in COGS instead of Line 17, MOVE it. If the entity is sole prop and no above-the-line SE health insurance / retirement contribution is on file, FLAG it.
+
+You do NOT do arithmetic — all per-line totals + per-code totals + NAICS-benchmark gap analysis are computed for you and shown in the summary. Your job is PATTERN RECOGNITION + JUDGMENT: spot the rows that don't fit, the double-counts, the missed deductions, the DIF-score risks, AND the $0 lines that should have spend.
 
 REAL-WORLD FINDING EXAMPLES (from a recent production audit — match this style):
 
@@ -442,14 +570,115 @@ Example 8 — OWNER_ACTIVITY: owner contributions / draws hidden in TRANSFER or 
   Hard invariants on OWNER_EQUITY: businessPct=0, scheduleCLine=null, cohanFlag=false. FINDINGS_APPLY
   rejects any violation.
 
+Example 9 — HIGH DEDUCTION_GAP missing-category (opportunity mining):
+  Pattern: The deduction-gap analysis shows a Schedule C line at severity=ZERO or severity=UNDER with
+  a material gap dollar amount (positive gapAmount > $500). For example, a dropshipping client
+  (NAICS 454110) with $0 on Line 8 Advertising, or a freelance client (NAICS 54) with $0 on Line 25
+  Utilities. The expected % is from IRS SOI medians — actual being $0 strongly suggests the spend
+  exists but is on a non-connected account, paid in cash, or paid from a personal card.
+  Finding: { severity: HIGH (when gap > $1K) or MEDIUM (gap $250-$1K) or LOW (gap < $250),
+    category: DEDUCTION_GAP,
+    title: "Line X $0 actual vs ~Y% NAICS-benchmark — gap ~$Z",
+    rationale: "For NAICS <prefix>, the SOI Table 1A median for <line label> is <expected%> of total
+      deductions. This taxpayer has $0 on this line. Common explanations: paid from a non-connected
+      personal card / cash / a different bank. Ask the taxpayer for receipts or platform exports
+      (Meta Ads, Google Ads, T-Mobile, Comcast, etc.) before filing.",
+    proposedAction: { kind: STOP, category: DEPOSIT, question: "Do you have <line label> spend paid from
+      a non-connected account? If yes, upload receipts or share platform export.", transactionIds: [] },
+    autoFixable: false }
+  Use category=STOP not RECLASSIFY — the AI can't classify spend it doesn't see. The user supplies it.
+
+Example 10 — MEDIUM MISCLASSIFIED_LINE payment-processor fees in COGS:
+  Pattern: The "fee-rows-in-COGS" list at the bottom of the summary names specific rows where
+  Wise / Stripe / PayPal / Square / AuthNet / WorldPay / generic ACH fees are coded WRITE_OFF_COGS
+  with scheduleCLine="Part III COGS". These are financial-service fees, not inventory cost. Moving
+  them off COGS doesn't change the deductible total, but it fixes the gross-margin ratio (a key DIF
+  signal) and puts the spend on the correct line per Reg §1.162-1 (ordinary & necessary business
+  expense) rather than Reg §1.471 (inventory).
+  Finding: { severity: MEDIUM, category: MISCLASSIFIED_LINE,
+    title: "Wise/Stripe/PayPal fees $X currently in Part III COGS — move to Line 17/27a",
+    rationale: "<N> rows totaling $<X> are payment-processor fees miscoded as COGS. Same deduction,
+      cleaner line. Reduces COGS ratio and clarifies gross margin on Schedule C / Form 1065 page 1.",
+    proposedAction: { kind: RECLASSIFY, txnIds: [...fee row ids...],
+      code: WRITE_OFF, businessPct: 100,
+      scheduleCLine: "Line 17 Legal & Professional" (for AuthNet/Stripe gateway-style fees)
+        OR "Line 27a Other Expenses" (for Wise/PayPal/ACH wire fees),
+      ircCitations: ["§162"], evidenceTier: 3 },
+    autoFixable: true }
+  This is the rare RECLASSIFY where the deductible amount doesn't change — only the line.
+  Apply path enforces the cohanGuards layer; this never touches §274(d) categories.
+
+Example 11 — HIGH ABOVE_THE_LINE opportunity (Sole Prop / SMLLC ONLY):
+  Pattern: Entity is SOLE_PROP or LLC_SINGLE (disregarded), the taxpayer has positive net SE income,
+  AND none of the standard above-the-line self-employment deductions are referenced anywhere in the
+  ledger or profile. These don't appear as transactions — they're elections the taxpayer has to
+  make. Three to ask about:
+    (a) Self-employed health insurance — 100% above-the-line on Schedule 1 if the taxpayer pays
+        their own health premiums and isn't eligible for spouse's employer plan (§162(l)).
+    (b) Retirement — SEP-IRA: up to 25% of net SE income; Solo 401(k): up to $23,500 employee
+        deferral 2025 + 25% employer (Reg §1.401(k)-1). Even a small contribution is meaningful.
+    (c) Home-office actual method (only when current is simplified $500 and home office is large
+        enough that depreciation + utilities + mortgage interest × biz% > $500).
+  Finding: { severity: HIGH (combined potential lift > $3K) or MEDIUM (< $3K),
+    category: ABOVE_THE_LINE,
+    title: "Above-the-line: SE health / retirement / home-office actual method",
+    rationale: "Net SE income is $<NET>. Three above-the-line options the taxpayer should evaluate
+      before filing: (a) §162(l) self-employed health insurance — 100% deductible if eligible;
+      (b) SEP-IRA up to ~25% of net SE income (≈$<EST_SEP>) or Solo 401(k) up to $23,500 + employer;
+      (c) Form 8829 actual method may exceed simplified $500 if home office is dedicated and
+      utilities/depreciation are material. None of these show up automatically — must come from
+      the taxpayer.",
+    proposedAction: { kind: STOP, category: DEPOSIT, question: "Did you pay your own health
+      insurance? Do you have / want to fund a SEP-IRA or Solo 401(k)? Should we compute Form 8829
+      actual method?", transactionIds: [] },
+    autoFixable: false }
+  Skip this finding for S_CORP / LLC_MULTI / C_CORP / PARTNERSHIP — those use different mechanics
+  (W-2 health, employer-side retirement contributions, no Schedule C).
+
+Example 12 — MEDIUM DEDUCTION_GAP PERSONAL row with business signal (promote candidate):
+  Pattern: A PERSONAL row whose merchant or description strongly matches an industry expense pattern
+  for the taxpayer's NAICS. Examples: TEXACO / SHELL / CHEVRON gas on a sole prop with vehicle
+  configured for business use; T-MOBILE / VERIZON / COMCAST cell or internet for a sole prop with
+  home office; BEST BUY / APPLE STORE / DELL for an e-commerce taxpayer with no Line 13 depreciation;
+  STAPLES / OFFICE DEPOT for a service business with $0 on Line 18.
+  Finding: { severity: MEDIUM (when amount > $200) or LOW,
+    category: DEDUCTION_GAP,
+    title: "<merchant> $<amt> coded PERSONAL — likely <Line X> if substantiated",
+    rationale: "<NAICS context>. Without a mileage log / phone bill / receipt this can't be moved
+      autonomously; surface as STOP for the taxpayer to confirm and upload documentation.",
+    proposedAction: { kind: STOP, category: MERCHANT, question: "<merchant> $<amt> on <date> —
+      personal or business? If business, upload supporting documentation (mileage log, phone bill,
+      receipt).", transactionIds: [<rowId>] },
+    autoFixable: false }
+
 HARD RAILS:
 1. proposedAction.code MUST be in VALID_CODES (now 12 codes including OWNER_EQUITY).
-2. proposedAction.ircCitations MUST be in VALID_CITATIONS (§61, §162, §162(a), §263, §263A, §274(d), §274(n), §274(n)(1), §274(n)(2), §262, §1402, §280A, §280A(c), §168(k), §179, §280F, §195, §6001, §163(h), §471, §471(c), Cohan).
-3. autoFixable=true is ONLY allowed for kind=RECLASSIFY with a single homogeneous merchant cluster (all rows have the same merchant + same proposed code).
+2. proposedAction.ircCitations MUST be in VALID_CITATIONS (§61, §162, §162(a), §162(l), §263, §263A, §274(d), §274(n), §274(n)(1), §274(n)(2), §262, §1402, §280A, §280A(c), §168(k), §179, §280F, §195, §6001, §163(h), §471, §471(c), Cohan).
+3. autoFixable=true is ONLY allowed for kind=RECLASSIFY with a single homogeneous cluster:
+   - Same merchant pattern + same proposed code, OR
+   - The "fee-rows-in-COGS" MISCLASSIFIED_LINE case where each row is independently identified by id and the new code is a same-deduction line move (Line 17 / 27a).
 4. autoFixable=false REQUIRED when proposedAction.code is MEALS_50, MEALS_100, or WRITE_OFF_TRAVEL — those go to the SUBSTANTIATION_QUEUE.
 5. OWNER_EQUITY proposals MUST have businessPct=0, scheduleCLine=null, cohanFlag=false. Use citations ["§61"] for contributions (inflow) or ["§263"] for draws (outflow).
 6. Never invent transaction IDs. citedTxnIds and proposedAction.txnIds MUST be from the provided summary.
-7. Severity scale: CRITICAL (income/deduction error >$1K), HIGH (>$500 or W-9 blocker), MEDIUM ($100–500), LOW (<$100 or cosmetic with audit implication), COSMETIC (no audit implication).
+7. Severity scale: CRITICAL (income/deduction error >$1K), HIGH (>$500 or W-9 blocker, or DEDUCTION_GAP/ABOVE_THE_LINE with potential lift >$1K), MEDIUM ($100–500 defect, or DEDUCTION_GAP with lift $250-$1K), LOW (<$100 or cosmetic with audit implication, or DEDUCTION_GAP/PROMOTE candidate <$250), COSMETIC (no audit implication).
+8. DEDUCTION_GAP / ABOVE_THE_LINE / MISCLASSIFIED_LINE findings are first-class — they are the OPPORTUNITY MINING half of your job and must appear when the summary indicates them. Do not skip them to stay under the 20-finding cap; promote them ABOVE cosmetic/low-severity defects when ranking.
+9. Above-the-line / opportunity STOPs (Examples 9, 11) carry transactionIds: [] — there are no specific transactions yet; the user has to surface them.
+
+OPPORTUNITY MINING CHECKLIST (work through this AFTER the defect-hunt pass):
+  □ Read the "deduction-gap analysis vs IRS SOI benchmark" table. For each row with severity=ZERO,
+    emit a DEDUCTION_GAP finding asking about that category.
+  □ For each row with severity=UNDER and gapAmount > $250, emit a DEDUCTION_GAP finding.
+  □ Read the "fee-rows-in-COGS" list. If non-empty, emit ONE MISCLASSIFIED_LINE finding covering
+    the whole cluster (one finding, txnIds = all listed rows).
+  □ Scan PERSONAL rows > $200 in the personalOver500 list for industry-expected patterns
+    (gas/fuel for sole prop with vehicle, internet/cell for home-office, Best Buy/Apple Store
+    for e-commerce equipment, office-supply chains for service businesses). Emit DEDUCTION_GAP
+    PROMOTE candidates with transactionIds populated.
+  □ If entity is SOLE_PROP or LLC_SINGLE and net SE income (grossReceipts - totalDeductions) is
+    positive, emit ONE ABOVE_THE_LINE finding for SE health / retirement / home-office actual.
+    Skip this for S_CORP / LLC_MULTI / C_CORP / PARTNERSHIP.
+  □ If Line 22 Supplies is under $50 AND gross receipts > $20K, surface as DEDUCTION_GAP — a real
+    business buys more supplies than that.
 
 OUTPUT FORMAT — STRICT JSON ONLY (no prose, no markdown):
 
