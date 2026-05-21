@@ -25,7 +25,6 @@
 import { prisma } from "@/lib/db"
 import { fmtUSD } from "@/lib/format/currency"
 import { isMoneyMoverOutflow } from "@/lib/accounts/kind"
-import { archiveSupersededStopsForYear } from "@/lib/stops/archiveSuperseded"
 
 export interface DeriveStopsResult {
   depositStops: number
@@ -39,14 +38,23 @@ export interface DeriveStopsResult {
 export async function deriveStopsFromAssertions(
   taxYearId: string,
 ): Promise<DeriveStopsResult> {
-  // Clean up PENDING stops whose underlying transactions are now classified
-  // (e.g. a §274(d) stop on a row that's since been recoded to PERSONAL).
-  // Without this, stale stops linger in the queue forever — the queue stops
-  // matching the assertion's offender set, which is the disconnect this
-  // module is supposed to bridge.
-  await archiveSupersededStopsForYear(taxYearId).catch((e) => {
-    console.error("[deriveStopsFromAssertions] auto-archive failed:", e)
-  })
+  // NOTE: an earlier iteration of this module called
+  // archiveSupersededStopsForYear at the top here to clean up stale stops.
+  // It backfired: that helper archives any PENDING stop whose underlying
+  // transaction has a non-NEEDS_CONTEXT classification — but a TRANSFER-
+  // coded row WITHOUT a paired counterparty is still an A07 offender even
+  // though TRANSFER ≠ NEEDS_CONTEXT. The archive ran first, then the
+  // "skip if existing stop" guard further down stopped fresh stops from
+  // being created (the just-archived stop matched the existsAny query).
+  // Net effect on Atif's prod ledger: 38 PENDING stops disappeared in
+  // one shot and the queue went empty while A07 still failed.
+  //
+  // The right place to archive stops is at the resolve/answer site (which
+  // already calls archiveSupersededStopsForYear) and the user's explicit
+  // "Archive superseded" button on /stops. Both honor the semantic
+  // intended for archive — "the user resolved this STOP and the
+  // classification changed" — instead of "any stop whose row isn't
+  // NEEDS_CONTEXT." Don't auto-archive on every page load.
 
   let depositStops = 0
   let section274dStops = 0
@@ -97,11 +105,19 @@ export async function deriveStopsFromAssertions(
     //
     // The user can still re-answer an ANSWERED stop via the "Show
     // answered" toggle on /stops — we just don't materialize a duplicate.
+    // Skip only when an *active* stop already covers this transaction.
+    // PENDING/DEFERRED count as active — the CPA is mid-decision and we
+    // shouldn't duplicate the card. ANSWERED stops do NOT count: a prior
+    // auto-archive run (or a stale answer that didn't actually fix the
+    // assertion) shouldn't permanently block re-surfacing. Without this
+    // narrower filter the auto-archive hotfix would have stranded Atif's
+    // 21 A07 stops in ANSWERED state with no path back to PENDING.
     const existingStop = await prisma.stopItem.findFirst({
       where: {
         taxYearId,
         category: "DEPOSIT",
         transactionIds: { has: tx.id },
+        state: { in: ["PENDING", "DEFERRED"] },
       },
     })
     if (existingStop) continue
@@ -156,12 +172,14 @@ export async function deriveStopsFromAssertions(
     const purposeOk = !!sub?.purpose && sub.purpose.trim().length >= 2
     if (attendeesOk && purposeOk) continue
 
-    // Same any-state skip as the DEPOSIT branch above — see comment there.
+    // Same active-state filter as DEPOSIT/TRANSFER — let ANSWERED stops
+    // re-surface if the assertion is still failing.
     const existingStop = await prisma.stopItem.findFirst({
       where: {
         taxYearId,
         category: "SECTION_274D",
         transactionIds: { has: tx.id },
+        state: { in: ["PENDING", "DEFERRED"] },
       },
     })
     if (existingStop) continue
@@ -223,11 +241,14 @@ export async function deriveStopsFromAssertions(
     if (seenTransferKeys.has(dedupKey)) continue
     seenTransferKeys.add(dedupKey)
 
+    // Same active-state filter as DEPOSIT (see comment above) — let
+    // ANSWERED stops re-surface if the assertion is still failing.
     const existingStop = await prisma.stopItem.findFirst({
       where: {
         taxYearId,
         category: "TRANSFER",
         transactionIds: { has: tx.id },
+        state: { in: ["PENDING", "DEFERRED"] },
       },
     })
     if (existingStop) continue
@@ -309,11 +330,14 @@ export async function deriveStopsFromAssertions(
     const has274d = c.ircCitations.some((cit) => cit.startsWith("§274(d)"))
     if (!has274d) continue
 
+    // Same active-state filter — let ANSWERED stops re-surface if the
+    // assertion is still failing.
     const existingStop = await prisma.stopItem.findFirst({
       where: {
         taxYearId,
         category: "SECTION_274D",
         transactionIds: { has: tx.id },
+        state: { in: ["PENDING", "DEFERRED"] },
       },
     })
     if (existingStop) continue
