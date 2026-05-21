@@ -277,6 +277,15 @@ function codeToStopAnswer(
       return { kind: "merchant", choice: "OTHER", other: otherText }
     }
     case "TRANSFER": {
+      // 2026-05-22: TRANSFER STOP now exposes 7 choices instead of 4. Map
+      // AI-suggested codes to the most appropriate option so the radio
+      // pre-fill matches what the prompt would do:
+      //   WRITE_OFF_COGS  → SUPPLIER  (Wise outbound to overseas supplier)
+      //   BIZ_INCOME      → CHARGEBACK (bounced check / RETURN ITEM)
+      //   OWNER_EQUITY    → OWNER_EQUITY (sole prop / SMLLC owner movement)
+      if (code === "WRITE_OFF_COGS") return { kind: "transfer", choice: "SUPPLIER" }
+      if (code === "BIZ_INCOME") return { kind: "transfer", choice: "CHARGEBACK" }
+      if (code === "OWNER_EQUITY") return { kind: "transfer", choice: "OWNER_EQUITY" }
       if (code === "PERSONAL") return { kind: "transfer", choice: "PERSONAL" }
       if (code === "WRITE_OFF") return { kind: "transfer", choice: "CONTRACTOR" }
       if (code === "TRANSFER") return { kind: "transfer", choice: "LOAN" }
