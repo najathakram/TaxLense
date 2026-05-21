@@ -112,6 +112,13 @@ export function LedgerClient({
   const initCode = initialParams?.get("code")?.split(",").filter(Boolean) ?? []
   const initMerchant = initialParams?.get("merchant") ?? ""
   const initAccount = initialParams?.get("account") ?? ""
+  // ?ids=tx_a,tx_b,tx_c — Risk page passes the exact offending row IDs from
+  // a failed QA assertion so the CPA can open the same set the dashboard
+  // showed. Capped at 200 to avoid blowing up the URL.
+  const initIds = useMemo(
+    () => new Set((initialParams?.get("ids")?.split(",").filter(Boolean) ?? []).slice(0, 200)),
+    [],
+  )
 
   // ---- filter state ----
   const [accountFilter, setAccountFilter] = useState<Set<string>>(() => {
@@ -125,6 +132,7 @@ export function LedgerClient({
   const [codeFilter, setCodeFilter] = useState<Set<TransactionCode>>(
     () => new Set(initCode as TransactionCode[]),
   )
+  const [idsFilter, setIdsFilter] = useState<Set<string>>(initIds)
   const [merchantSearch, setMerchantSearch] = useState(initMerchant)
   const [dateFrom, setDateFrom] = useState("")
   const [dateTo, setDateTo] = useState("")
@@ -175,6 +183,7 @@ export function LedgerClient({
     const q = merchantSearch.trim().toLowerCase()
     const list = rows.filter((r) => {
       if (stopsOnly && !r.openStopId) return false
+      if (idsFilter.size > 0 && !idsFilter.has(r.id)) return false
       if (accountFilter.size > 0 && !accountFilter.has(r.accountId)) return false
       if (codeFilter.size > 0 && !codeFilter.has(r.code)) return false
       if (q && !(r.merchantRaw.toLowerCase().includes(q) || (r.merchantNormalized ?? "").toLowerCase().includes(q) || (r.descriptionRaw ?? "").toLowerCase().includes(q))) return false
@@ -189,7 +198,7 @@ export function LedgerClient({
       if (sortKey === "amount") return dir * (a.amount - b.amount)
       return 0
     })
-  }, [rows, accountFilter, codeFilter, merchantSearch, dateFrom, dateTo, sortKey, sortDir, stopsOnly])
+  }, [rows, accountFilter, codeFilter, idsFilter, merchantSearch, dateFrom, dateTo, sortKey, sortDir, stopsOnly])
 
   // ---- virtualizer ----
   const scrollRef = useRef<HTMLDivElement>(null)

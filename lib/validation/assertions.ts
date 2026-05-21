@@ -370,6 +370,12 @@ export async function A13_DEPOSITS_RECONSTRUCTED(taxYearId: string): Promise<Ass
   let ownerContribution = 0
   let classifiedNonIncome = 0
   let unclassified = 0
+  // Capture the row IDs that actually drive the "unclassified" bucket so the
+  // Risk dashboard can render them inline (T1 of the risk↔stops disconnect
+  // fix). Without this the CPA sees "$1,700 unclassified" but no path to the
+  // 5 rows that produced the number — the FixItButton lands them on /stops
+  // with an empty Deposit tab.
+  const offenders: string[] = []
 
   for (const t of txns) {
     const abs = Math.abs(Number(t.amountNormalized))
@@ -381,12 +387,16 @@ export async function A13_DEPOSITS_RECONSTRUCTED(taxYearId: string): Promise<Ass
     const c = t.classifications[0]
     if (!c) {
       unclassified += abs
+      offenders.push(t.id)
       continue
     }
     if (c.code === "BIZ_INCOME") bizIncome += abs
     else if (c.code === "OWNER_EQUITY") ownerContribution += abs
     else if (c.code === "TRANSFER" || c.code === "PERSONAL" || c.code === "PAYMENT") classifiedNonIncome += abs
-    else unclassified += abs
+    else {
+      unclassified += abs
+      offenders.push(t.id)
+    }
   }
 
   const explained = pairedTransfers + bizIncome + ownerContribution + classifiedNonIncome
@@ -406,6 +416,7 @@ export async function A13_DEPOSITS_RECONSTRUCTED(taxYearId: string): Promise<Ass
     passed,
     blocking: true,
     details: `${reason ? reason + " — " : ""}Inflows ${fmtUSD(totalInflows, { cents: true })} = transfers ${fmtUSD(pairedTransfers, { cents: true })} + biz income ${fmtUSD(bizIncome, { cents: true })} + owner contrib ${fmtUSD(ownerContribution, { cents: true })} + other ${fmtUSD(classifiedNonIncome, { cents: true })} + unclassified ${fmtUSD(unclassified, { cents: true })} (Δ ${fmtUSD(delta, { cents: true, signed: true })})`,
+    offendingTransactionIds: offenders,
   }
 }
 
