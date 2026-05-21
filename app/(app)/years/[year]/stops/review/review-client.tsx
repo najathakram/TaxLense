@@ -407,8 +407,21 @@ function buildAnswer(category: string, choice: string): StopAnswer | null {
     }
   }
   if (category === "TRANSFER") {
-    if (["PERSONAL", "CONTRACTOR", "LOAN"].includes(choice)) {
-      return { kind: "transfer", choice: choice as "PERSONAL" | "CONTRACTOR" | "LOAN" }
+    // Extended 2026-05-22 with SUPPLIER / CHARGEBACK / OWNER_EQUITY so the
+    // review screen can surface the same options as the resolve form.
+    if (
+      ["PERSONAL", "CONTRACTOR", "SUPPLIER", "CHARGEBACK", "OWNER_EQUITY", "LOAN"].includes(choice)
+    ) {
+      return {
+        kind: "transfer",
+        choice: choice as
+          | "PERSONAL"
+          | "CONTRACTOR"
+          | "SUPPLIER"
+          | "CHARGEBACK"
+          | "OWNER_EQUITY"
+          | "LOAN",
+      }
     }
   }
   if (category === "DEPOSIT") {

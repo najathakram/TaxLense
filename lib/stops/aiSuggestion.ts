@@ -36,6 +36,9 @@ export type MerchantChoice =
 export type TransferChoice =
   | "PERSONAL"
   | "CONTRACTOR"
+  | "SUPPLIER"
+  | "CHARGEBACK"
+  | "OWNER_EQUITY"
   | "LOAN"
   | "OTHER"
 

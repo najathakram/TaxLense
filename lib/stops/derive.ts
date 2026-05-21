@@ -9,7 +9,23 @@ export type StopAnswer =
     }
   | {
       kind: "transfer"
-      choice: "PERSONAL" | "CONTRACTOR" | "LOAN" | "OTHER"
+      // Extended 2026-05-22 with the three cases that the CPA flow surfaced
+      // most often on Atif's prod ledger:
+      //   - SUPPLIER : Wise/PayPal/etc. outbound to an overseas inventory
+      //                supplier — was getting force-fit into CONTRACTOR
+      //   - CHARGEBACK: bounced check / RETURN ITEM CHARGEBACK on the bank
+      //                 side; nets against prior BIZ_INCOME via Line 1b
+      //   - OWNER_EQUITY: true transfer to / from the owner's external
+      //                   account (sole prop / SMLLC only — partnerships
+      //                   route through the K-1 / Schedule M-2 flow)
+      choice:
+        | "PERSONAL"
+        | "CONTRACTOR"
+        | "SUPPLIER"
+        | "CHARGEBACK"
+        | "OWNER_EQUITY"
+        | "LOAN"
+        | "OTHER"
       other?: string
       payeeName?: string
       purpose?: string
@@ -120,6 +136,41 @@ export function deriveFromAnswer(
             ircCitations: ["§162"],
             evidenceTier: 3,
             reasoning: `Contractor payment to ${answer.payeeName ?? "(unnamed)"}: ${answer.purpose ?? ""}`,
+            source: "USER",
+          }
+        case "SUPPLIER":
+          return {
+            code: "WRITE_OFF_COGS",
+            businessPct: 100,
+            scheduleCLine: "Part III COGS",
+            ircCitations: ["§162", "§263A"],
+            evidenceTier: 3,
+            reasoning: `Supplier payment to ${answer.payeeName ?? "(unnamed)"}: ${answer.purpose ?? "inventory/COGS"}.`,
+            source: "USER",
+          }
+        case "CHARGEBACK":
+          // Bounced check / RETURN ITEM CHARGEBACK — the inflow row is a
+          // reversal of a prior BIZ_INCOME deposit. Classifying it as
+          // BIZ_INCOME with negative amount nets correctly against Line 1b
+          // returns/allowances. CPA must confirm the original deposit was
+          // also coded BIZ_INCOME; the audit packet flags the pair.
+          return {
+            code: "BIZ_INCOME",
+            businessPct: 100,
+            scheduleCLine: "Line 1b Returns and allowances",
+            ircCitations: ["§61"],
+            evidenceTier: 2,
+            reasoning: `User confirmed bank-side chargeback/bounced item — nets the prior BIZ_INCOME deposit.`,
+            source: "USER",
+          }
+        case "OWNER_EQUITY":
+          return {
+            code: "OWNER_EQUITY",
+            businessPct: 0,
+            scheduleCLine: null,
+            ircCitations: ["§61"],
+            evidenceTier: 2,
+            reasoning: "User confirmed transfer to/from the owner's external account.",
             source: "USER",
           }
         case "LOAN":

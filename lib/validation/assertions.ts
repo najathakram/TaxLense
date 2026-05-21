@@ -274,9 +274,17 @@ export async function A08_MEAL_274D(taxYearId: string): Promise<AssertionResult>
 export async function A09_274D_TIER(taxYearId: string): Promise<AssertionResult> {
   const ledger = await loadLedger(taxYearId)
   const offenders: string[] = []
+  // §274(d) substantiation rules only bind on *deductible* rows. A
+  // PERSONAL / TRANSFER / PAYMENT / OWNER_EQUITY / NEEDS_CONTEXT row is
+  // non-deductible by code, so a §274(d) citation on it is residue from
+  // a prior classification cycle, not a real audit risk. Filter those out
+  // so the assertion doesn't flag "tier 5 Cohan-rail leak" on a PERSONAL
+  // $26.51 cafe row that's already excluded from Schedule C.
+  const DEDUCTIBLE_CODES = ["WRITE_OFF", "WRITE_OFF_COGS", "WRITE_OFF_TRAVEL", "MEALS_50", "MEALS_100", "GRAY"]
   for (const r of ledger) {
     const c = r.classifications[0]
     if (!c) continue
+    if (!DEDUCTIBLE_CODES.includes(c.code)) continue
     const has274d = c.ircCitations.some((cit) => cit.startsWith("§274(d)"))
     if (has274d && c.evidenceTier > 3) offenders.push(r.id)
   }

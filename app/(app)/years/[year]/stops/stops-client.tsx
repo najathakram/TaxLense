@@ -819,11 +819,25 @@ function FormLineOverride({
   )
 }
 
-type TransferChoice = "PERSONAL" | "CONTRACTOR" | "LOAN" | "OTHER"
+type TransferChoice =
+  | "PERSONAL"
+  | "CONTRACTOR"
+  | "SUPPLIER"
+  | "CHARGEBACK"
+  | "OWNER_EQUITY"
+  | "LOAN"
+  | "OTHER"
+
+// Order matters: the radios render in this order, and the most-common
+// answers for the cases we see in production (supplier wires, chargebacks,
+// owner equity movements) sit near the top.
 const TRANSFER_CHOICE_LABEL: Record<TransferChoice, string> = {
-  PERSONAL: "Personal (household)",
+  SUPPLIER: "Supplier payment / inventory (WRITE_OFF_COGS)",
+  CHARGEBACK: "Bounced check / chargeback — reverses prior income",
+  OWNER_EQUITY: "Owner equity — transfer to/from owner's external account",
   CONTRACTOR: "Contractor (business)",
   LOAN: "Loan proceeds / repayment",
+  PERSONAL: "Personal (household)",
   OTHER: "Other — explain",
 }
 
@@ -882,10 +896,18 @@ function TransferForm({
           </label>
         ))}
       </RadioGroup>
-      {choice === "CONTRACTOR" && (
+      {(choice === "CONTRACTOR" || choice === "SUPPLIER") && (
         <div className="space-y-2">
           <Input placeholder="Payee name" value={payeeName} onChange={(e) => setPayeeName(e.target.value)} />
-          <Input placeholder="Purpose" value={purpose} onChange={(e) => setPurpose(e.target.value)} />
+          <Input
+            placeholder={
+              choice === "SUPPLIER"
+                ? "Purpose (inventory category, PO #, etc.)"
+                : "Purpose (services rendered)"
+            }
+            value={purpose}
+            onChange={(e) => setPurpose(e.target.value)}
+          />
         </div>
       )}
       {choice === "OTHER" && (

@@ -25,6 +25,7 @@
 import { prisma } from "@/lib/db"
 import { fmtUSD } from "@/lib/format/currency"
 import { isMoneyMoverOutflow } from "@/lib/accounts/kind"
+import { archiveSupersededStopsForYear } from "@/lib/stops/archiveSuperseded"
 
 export interface DeriveStopsResult {
   depositStops: number
@@ -38,6 +39,15 @@ export interface DeriveStopsResult {
 export async function deriveStopsFromAssertions(
   taxYearId: string,
 ): Promise<DeriveStopsResult> {
+  // Clean up PENDING stops whose underlying transactions are now classified
+  // (e.g. a §274(d) stop on a row that's since been recoded to PERSONAL).
+  // Without this, stale stops linger in the queue forever — the queue stops
+  // matching the assertion's offender set, which is the disconnect this
+  // module is supposed to bridge.
+  await archiveSupersededStopsForYear(taxYearId).catch((e) => {
+    console.error("[deriveStopsFromAssertions] auto-archive failed:", e)
+  })
+
   let depositStops = 0
   let section274dStops = 0
   let section274dTierStops = 0
@@ -194,9 +204,24 @@ export async function deriveStopsFromAssertions(
     include: { account: true },
   })
 
+  // Dedup TRANSFER stops: when two transactions share the same merchant +
+  // amount + date (e.g. duplicate ingest, or a pair that should have been
+  // refund-paired), they produce two STOPs with identical questions. The
+  // CPA sees the same card twice in the queue. Track which (merchant,
+  // amount, date) tuples we've already created a stop for in this run.
+  const seenTransferKeys = new Set<string>()
+
   for (const tx of unpairedTransfers) {
     // Skip money-mover outflows (Wise/PayPal funding) — A07 doesn't flag them.
     if (isMoneyMoverOutflow(tx.merchantRaw)) continue
+
+    const dedupKey = [
+      (tx.merchantNormalized ?? tx.merchantRaw).toLowerCase(),
+      Math.round(Number(tx.amountNormalized) * 100), // cents
+      tx.postedDate.toISOString().slice(0, 10),
+    ].join("|")
+    if (seenTransferKeys.has(dedupKey)) continue
+    seenTransferKeys.add(dedupKey)
 
     const existingStop = await prisma.stopItem.findFirst({
       where: {
@@ -212,11 +237,26 @@ export async function deriveStopsFromAssertions(
     const absDisplay = fmtUSD(absDollars, { cents: true })
     const dateStr = tx.postedDate.toISOString().slice(0, 10)
     const direction = Number(tx.amountNormalized) < 0 ? "inflow" : "outflow"
+    // Hint the most likely option based on the merchant pattern. The
+    // resolve form already accepts SUPPLIER / CHARGEBACK / OWNER_EQUITY;
+    // this just primes the question wording so the CPA reads the right
+    // path first.
+    const merchUpper = tx.merchantRaw.toUpperCase()
+    const looksChargeback =
+      /RETURN ITEM|RETURNED|CHARGEBACK|REVERSAL|REFER TO MAKER|FEE REVERSAL/i.test(merchUpper)
+    const looksSupplier =
+      direction === "outflow" &&
+      /^(SENT MONEY|WISE|PAYPAL|TRANSFERWISE)/.test(merchUpper)
+    const hint = looksChargeback
+      ? `Looks like a bank-side chargeback / bounced item. If yes, pick "Bounced check / chargeback" to net it against the prior BIZ_INCOME deposit on Line 1b.`
+      : looksSupplier
+        ? `Looks like a wire to an overseas supplier. If yes, pick "Supplier payment / inventory" to send it to Part III COGS.`
+        : `Pick the option that matches: SUPPLIER (inventory), CHARGEBACK (bounced check), OWNER_EQUITY (transfer to/from owner's external account), CONTRACTOR (services), LOAN (proceeds/repayment), PERSONAL, or OTHER.`
     await prisma.stopItem.create({
       data: {
         taxYearId,
         category: "TRANSFER",
-        question: `Unpaired TRANSFER ${direction} of ${absDisplay} on ${dateStr} (${tx.merchantRaw}) — counterparty wasn't found in any tracked account. Is this a transfer to an external account (recode as OWNER_EQUITY), a missing statement (upload it), or really a business expense (recode WRITE_OFF)?`,
+        question: `Unpaired TRANSFER ${direction} of ${absDisplay} on ${dateStr} (${tx.merchantRaw}) — counterparty wasn't found in any tracked account. ${hint}`,
         context: {
           merchant: tx.merchantRaw,
           totalAmount: abs,
@@ -249,9 +289,23 @@ export async function deriveStopsFromAssertions(
     },
   })
 
+  // Mirror A09's filter: §274(d) substantiation only binds deductible rows.
+  // A PERSONAL/TRANSFER/PAYMENT row with a residual §274(d) citation isn't
+  // a real audit risk — surfacing it as a STOP asks the CPA for attendees
+  // and purpose on a row that's already excluded from Schedule C.
+  const DEDUCTIBLE_CODES_274D = new Set([
+    "WRITE_OFF",
+    "WRITE_OFF_COGS",
+    "WRITE_OFF_TRAVEL",
+    "MEALS_50",
+    "MEALS_100",
+    "GRAY",
+  ])
+
   for (const tx of tier4_274d) {
     const c = tx.classifications[0]
     if (!c) continue
+    if (!DEDUCTIBLE_CODES_274D.has(c.code)) continue
     const has274d = c.ircCitations.some((cit) => cit.startsWith("§274(d)"))
     if (!has274d) continue
 
