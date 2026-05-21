@@ -5,9 +5,12 @@ import { prisma } from "@/lib/db"
 import { getCurrentUserId } from "@/lib/auth"
 import {
   acceptFinding as acceptFindingImpl,
+  acceptFindingWithOverride as acceptFindingWithOverrideImpl,
+  acceptFindingWithInstruction as acceptFindingWithInstructionImpl,
   dismissFinding as dismissFindingImpl,
   applyAcceptedFindings,
 } from "@/lib/findings/apply"
+import type { ProposedAction } from "@/lib/findings/humanize"
 
 async function assertOwnsTaxYear(year: number) {
   const userId = await getCurrentUserId()
@@ -22,6 +25,38 @@ async function assertOwnsTaxYear(year: number) {
 export async function acceptFindingAction(year: number, findingId: string) {
   await assertOwnsTaxYear(year)
   await acceptFindingImpl(findingId)
+  revalidatePath(`/years/${year}/findings`)
+}
+
+/**
+ * Accept a finding with one of the case-derived alternatives.
+ * `override` is a serialized ProposedAction; `optionLabel` is the short
+ * human label the UI displayed.
+ */
+export async function acceptFindingWithOverrideAction(
+  year: number,
+  findingId: string,
+  override: ProposedAction,
+  optionLabel: string
+) {
+  await assertOwnsTaxYear(year)
+  await acceptFindingWithOverrideImpl(findingId, override, optionLabel)
+  revalidatePath(`/years/${year}/findings`)
+}
+
+/**
+ * Accept a finding with a free-text instruction from the "Other…" dialog.
+ * The instruction is stored verbatim; apply turns it into a STOP carrying
+ * the instruction as the question (no AI fabrication).
+ */
+export async function acceptFindingWithInstructionAction(
+  year: number,
+  findingId: string,
+  instruction: string,
+  citedTxnIds: string[]
+) {
+  await assertOwnsTaxYear(year)
+  await acceptFindingWithInstructionImpl(findingId, instruction, citedTxnIds)
   revalidatePath(`/years/${year}/findings`)
 }
 

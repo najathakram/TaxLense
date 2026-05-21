@@ -2,11 +2,10 @@ import { getCurrentUserId } from "@/lib/auth"
 import { prisma } from "@/lib/db"
 import { notFound } from "next/navigation"
 import Link from "next/link"
-import { Badge } from "@/components/ui/badge"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { fmtUSD } from "@/lib/format/currency"
 import { FindingsClient } from "./findings-client"
+import type { ProposedAction } from "@/lib/findings/humanize"
 
 interface Props {
   params: Promise<{ year: string }>
@@ -91,7 +90,7 @@ export default async function FindingsPage(props: Props) {
           title: f.title,
           rationale: f.rationale,
           autoFixable: f.autoFixable,
-          proposedAction: f.proposedAction as unknown,
+          proposedAction: f.proposedAction as unknown as ProposedAction,
           citedTxns: f.citedTxnIds.map((id) => {
             const t = txnById.get(id)
             return t

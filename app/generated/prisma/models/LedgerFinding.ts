@@ -35,6 +35,8 @@ export type LedgerFindingMinAggregateOutputType = {
   autoFixable: boolean | null
   state: string | null
   dismissedRationale: string | null
+  acceptedOption: string | null
+  userInstruction: string | null
   supersedesId: string | null
   createdAt: Date | null
   updatedAt: Date | null
@@ -51,6 +53,8 @@ export type LedgerFindingMaxAggregateOutputType = {
   autoFixable: boolean | null
   state: string | null
   dismissedRationale: string | null
+  acceptedOption: string | null
+  userInstruction: string | null
   supersedesId: string | null
   createdAt: Date | null
   updatedAt: Date | null
@@ -69,6 +73,9 @@ export type LedgerFindingCountAggregateOutputType = {
   citedTxnIds: number
   state: number
   dismissedRationale: number
+  acceptedOption: number
+  overrideAction: number
+  userInstruction: number
   supersedesId: number
   createdAt: number
   updatedAt: number
@@ -87,6 +94,8 @@ export type LedgerFindingMinAggregateInputType = {
   autoFixable?: true
   state?: true
   dismissedRationale?: true
+  acceptedOption?: true
+  userInstruction?: true
   supersedesId?: true
   createdAt?: true
   updatedAt?: true
@@ -103,6 +112,8 @@ export type LedgerFindingMaxAggregateInputType = {
   autoFixable?: true
   state?: true
   dismissedRationale?: true
+  acceptedOption?: true
+  userInstruction?: true
   supersedesId?: true
   createdAt?: true
   updatedAt?: true
@@ -121,6 +132,9 @@ export type LedgerFindingCountAggregateInputType = {
   citedTxnIds?: true
   state?: true
   dismissedRationale?: true
+  acceptedOption?: true
+  overrideAction?: true
+  userInstruction?: true
   supersedesId?: true
   createdAt?: true
   updatedAt?: true
@@ -212,6 +226,9 @@ export type LedgerFindingGroupByOutputType = {
   citedTxnIds: string[]
   state: string
   dismissedRationale: string | null
+  acceptedOption: string | null
+  overrideAction: runtime.JsonValue | null
+  userInstruction: string | null
   supersedesId: string | null
   createdAt: Date
   updatedAt: Date
@@ -251,6 +268,9 @@ export type LedgerFindingWhereInput = {
   citedTxnIds?: Prisma.StringNullableListFilter<"LedgerFinding">
   state?: Prisma.StringFilter<"LedgerFinding"> | string
   dismissedRationale?: Prisma.StringNullableFilter<"LedgerFinding"> | string | null
+  acceptedOption?: Prisma.StringNullableFilter<"LedgerFinding"> | string | null
+  overrideAction?: Prisma.JsonNullableFilter<"LedgerFinding">
+  userInstruction?: Prisma.StringNullableFilter<"LedgerFinding"> | string | null
   supersedesId?: Prisma.StringNullableFilter<"LedgerFinding"> | string | null
   createdAt?: Prisma.DateTimeFilter<"LedgerFinding"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"LedgerFinding"> | Date | string
@@ -272,6 +292,9 @@ export type LedgerFindingOrderByWithRelationInput = {
   citedTxnIds?: Prisma.SortOrder
   state?: Prisma.SortOrder
   dismissedRationale?: Prisma.SortOrderInput | Prisma.SortOrder
+  acceptedOption?: Prisma.SortOrderInput | Prisma.SortOrder
+  overrideAction?: Prisma.SortOrderInput | Prisma.SortOrder
+  userInstruction?: Prisma.SortOrderInput | Prisma.SortOrder
   supersedesId?: Prisma.SortOrderInput | Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
@@ -296,6 +319,9 @@ export type LedgerFindingWhereUniqueInput = Prisma.AtLeast<{
   citedTxnIds?: Prisma.StringNullableListFilter<"LedgerFinding">
   state?: Prisma.StringFilter<"LedgerFinding"> | string
   dismissedRationale?: Prisma.StringNullableFilter<"LedgerFinding"> | string | null
+  acceptedOption?: Prisma.StringNullableFilter<"LedgerFinding"> | string | null
+  overrideAction?: Prisma.JsonNullableFilter<"LedgerFinding">
+  userInstruction?: Prisma.StringNullableFilter<"LedgerFinding"> | string | null
   supersedesId?: Prisma.StringNullableFilter<"LedgerFinding"> | string | null
   createdAt?: Prisma.DateTimeFilter<"LedgerFinding"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"LedgerFinding"> | Date | string
@@ -317,6 +343,9 @@ export type LedgerFindingOrderByWithAggregationInput = {
   citedTxnIds?: Prisma.SortOrder
   state?: Prisma.SortOrder
   dismissedRationale?: Prisma.SortOrderInput | Prisma.SortOrder
+  acceptedOption?: Prisma.SortOrderInput | Prisma.SortOrder
+  overrideAction?: Prisma.SortOrderInput | Prisma.SortOrder
+  userInstruction?: Prisma.SortOrderInput | Prisma.SortOrder
   supersedesId?: Prisma.SortOrderInput | Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
@@ -341,6 +370,9 @@ export type LedgerFindingScalarWhereWithAggregatesInput = {
   citedTxnIds?: Prisma.StringNullableListFilter<"LedgerFinding">
   state?: Prisma.StringWithAggregatesFilter<"LedgerFinding"> | string
   dismissedRationale?: Prisma.StringNullableWithAggregatesFilter<"LedgerFinding"> | string | null
+  acceptedOption?: Prisma.StringNullableWithAggregatesFilter<"LedgerFinding"> | string | null
+  overrideAction?: Prisma.JsonNullableWithAggregatesFilter<"LedgerFinding">
+  userInstruction?: Prisma.StringNullableWithAggregatesFilter<"LedgerFinding"> | string | null
   supersedesId?: Prisma.StringNullableWithAggregatesFilter<"LedgerFinding"> | string | null
   createdAt?: Prisma.DateTimeWithAggregatesFilter<"LedgerFinding"> | Date | string
   updatedAt?: Prisma.DateTimeWithAggregatesFilter<"LedgerFinding"> | Date | string
@@ -358,6 +390,9 @@ export type LedgerFindingCreateInput = {
   citedTxnIds?: Prisma.LedgerFindingCreatecitedTxnIdsInput | string[]
   state?: string
   dismissedRationale?: string | null
+  acceptedOption?: string | null
+  overrideAction?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  userInstruction?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   taxYear: Prisma.TaxYearCreateNestedOneWithoutLedgerFindingsInput
@@ -378,6 +413,9 @@ export type LedgerFindingUncheckedCreateInput = {
   citedTxnIds?: Prisma.LedgerFindingCreatecitedTxnIdsInput | string[]
   state?: string
   dismissedRationale?: string | null
+  acceptedOption?: string | null
+  overrideAction?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  userInstruction?: string | null
   supersedesId?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
@@ -396,6 +434,9 @@ export type LedgerFindingUpdateInput = {
   citedTxnIds?: Prisma.LedgerFindingUpdatecitedTxnIdsInput | string[]
   state?: Prisma.StringFieldUpdateOperationsInput | string
   dismissedRationale?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  acceptedOption?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  overrideAction?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  userInstruction?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   taxYear?: Prisma.TaxYearUpdateOneRequiredWithoutLedgerFindingsNestedInput
@@ -416,6 +457,9 @@ export type LedgerFindingUncheckedUpdateInput = {
   citedTxnIds?: Prisma.LedgerFindingUpdatecitedTxnIdsInput | string[]
   state?: Prisma.StringFieldUpdateOperationsInput | string
   dismissedRationale?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  acceptedOption?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  overrideAction?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  userInstruction?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   supersedesId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -435,6 +479,9 @@ export type LedgerFindingCreateManyInput = {
   citedTxnIds?: Prisma.LedgerFindingCreatecitedTxnIdsInput | string[]
   state?: string
   dismissedRationale?: string | null
+  acceptedOption?: string | null
+  overrideAction?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  userInstruction?: string | null
   supersedesId?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
@@ -452,6 +499,9 @@ export type LedgerFindingUpdateManyMutationInput = {
   citedTxnIds?: Prisma.LedgerFindingUpdatecitedTxnIdsInput | string[]
   state?: Prisma.StringFieldUpdateOperationsInput | string
   dismissedRationale?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  acceptedOption?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  overrideAction?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  userInstruction?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -469,6 +519,9 @@ export type LedgerFindingUncheckedUpdateManyInput = {
   citedTxnIds?: Prisma.LedgerFindingUpdatecitedTxnIdsInput | string[]
   state?: Prisma.StringFieldUpdateOperationsInput | string
   dismissedRationale?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  acceptedOption?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  overrideAction?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  userInstruction?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   supersedesId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -502,6 +555,9 @@ export type LedgerFindingCountOrderByAggregateInput = {
   citedTxnIds?: Prisma.SortOrder
   state?: Prisma.SortOrder
   dismissedRationale?: Prisma.SortOrder
+  acceptedOption?: Prisma.SortOrder
+  overrideAction?: Prisma.SortOrder
+  userInstruction?: Prisma.SortOrder
   supersedesId?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
@@ -518,6 +574,8 @@ export type LedgerFindingMaxOrderByAggregateInput = {
   autoFixable?: Prisma.SortOrder
   state?: Prisma.SortOrder
   dismissedRationale?: Prisma.SortOrder
+  acceptedOption?: Prisma.SortOrder
+  userInstruction?: Prisma.SortOrder
   supersedesId?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
@@ -534,6 +592,8 @@ export type LedgerFindingMinOrderByAggregateInput = {
   autoFixable?: Prisma.SortOrder
   state?: Prisma.SortOrder
   dismissedRationale?: Prisma.SortOrder
+  acceptedOption?: Prisma.SortOrder
+  userInstruction?: Prisma.SortOrder
   supersedesId?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
@@ -660,6 +720,9 @@ export type LedgerFindingCreateWithoutTaxYearInput = {
   citedTxnIds?: Prisma.LedgerFindingCreatecitedTxnIdsInput | string[]
   state?: string
   dismissedRationale?: string | null
+  acceptedOption?: string | null
+  overrideAction?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  userInstruction?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   supersedes?: Prisma.LedgerFindingCreateNestedOneWithoutSupersededByInput
@@ -678,6 +741,9 @@ export type LedgerFindingUncheckedCreateWithoutTaxYearInput = {
   citedTxnIds?: Prisma.LedgerFindingCreatecitedTxnIdsInput | string[]
   state?: string
   dismissedRationale?: string | null
+  acceptedOption?: string | null
+  overrideAction?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  userInstruction?: string | null
   supersedesId?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
@@ -726,6 +792,9 @@ export type LedgerFindingScalarWhereInput = {
   citedTxnIds?: Prisma.StringNullableListFilter<"LedgerFinding">
   state?: Prisma.StringFilter<"LedgerFinding"> | string
   dismissedRationale?: Prisma.StringNullableFilter<"LedgerFinding"> | string | null
+  acceptedOption?: Prisma.StringNullableFilter<"LedgerFinding"> | string | null
+  overrideAction?: Prisma.JsonNullableFilter<"LedgerFinding">
+  userInstruction?: Prisma.StringNullableFilter<"LedgerFinding"> | string | null
   supersedesId?: Prisma.StringNullableFilter<"LedgerFinding"> | string | null
   createdAt?: Prisma.DateTimeFilter<"LedgerFinding"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"LedgerFinding"> | Date | string
@@ -743,6 +812,9 @@ export type LedgerFindingCreateWithoutSupersededByInput = {
   citedTxnIds?: Prisma.LedgerFindingCreatecitedTxnIdsInput | string[]
   state?: string
   dismissedRationale?: string | null
+  acceptedOption?: string | null
+  overrideAction?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  userInstruction?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   taxYear: Prisma.TaxYearCreateNestedOneWithoutLedgerFindingsInput
@@ -762,6 +834,9 @@ export type LedgerFindingUncheckedCreateWithoutSupersededByInput = {
   citedTxnIds?: Prisma.LedgerFindingCreatecitedTxnIdsInput | string[]
   state?: string
   dismissedRationale?: string | null
+  acceptedOption?: string | null
+  overrideAction?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  userInstruction?: string | null
   supersedesId?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
@@ -784,6 +859,9 @@ export type LedgerFindingCreateWithoutSupersedesInput = {
   citedTxnIds?: Prisma.LedgerFindingCreatecitedTxnIdsInput | string[]
   state?: string
   dismissedRationale?: string | null
+  acceptedOption?: string | null
+  overrideAction?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  userInstruction?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   taxYear: Prisma.TaxYearCreateNestedOneWithoutLedgerFindingsInput
@@ -803,6 +881,9 @@ export type LedgerFindingUncheckedCreateWithoutSupersedesInput = {
   citedTxnIds?: Prisma.LedgerFindingCreatecitedTxnIdsInput | string[]
   state?: string
   dismissedRationale?: string | null
+  acceptedOption?: string | null
+  overrideAction?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  userInstruction?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   supersededBy?: Prisma.LedgerFindingUncheckedCreateNestedManyWithoutSupersedesInput
@@ -841,6 +922,9 @@ export type LedgerFindingUpdateWithoutSupersededByInput = {
   citedTxnIds?: Prisma.LedgerFindingUpdatecitedTxnIdsInput | string[]
   state?: Prisma.StringFieldUpdateOperationsInput | string
   dismissedRationale?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  acceptedOption?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  overrideAction?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  userInstruction?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   taxYear?: Prisma.TaxYearUpdateOneRequiredWithoutLedgerFindingsNestedInput
@@ -860,6 +944,9 @@ export type LedgerFindingUncheckedUpdateWithoutSupersededByInput = {
   citedTxnIds?: Prisma.LedgerFindingUpdatecitedTxnIdsInput | string[]
   state?: Prisma.StringFieldUpdateOperationsInput | string
   dismissedRationale?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  acceptedOption?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  overrideAction?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  userInstruction?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   supersedesId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -893,6 +980,9 @@ export type LedgerFindingCreateManyTaxYearInput = {
   citedTxnIds?: Prisma.LedgerFindingCreatecitedTxnIdsInput | string[]
   state?: string
   dismissedRationale?: string | null
+  acceptedOption?: string | null
+  overrideAction?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  userInstruction?: string | null
   supersedesId?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
@@ -910,6 +1000,9 @@ export type LedgerFindingUpdateWithoutTaxYearInput = {
   citedTxnIds?: Prisma.LedgerFindingUpdatecitedTxnIdsInput | string[]
   state?: Prisma.StringFieldUpdateOperationsInput | string
   dismissedRationale?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  acceptedOption?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  overrideAction?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  userInstruction?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   supersedes?: Prisma.LedgerFindingUpdateOneWithoutSupersededByNestedInput
@@ -928,6 +1021,9 @@ export type LedgerFindingUncheckedUpdateWithoutTaxYearInput = {
   citedTxnIds?: Prisma.LedgerFindingUpdatecitedTxnIdsInput | string[]
   state?: Prisma.StringFieldUpdateOperationsInput | string
   dismissedRationale?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  acceptedOption?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  overrideAction?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  userInstruction?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   supersedesId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -946,6 +1042,9 @@ export type LedgerFindingUncheckedUpdateManyWithoutTaxYearInput = {
   citedTxnIds?: Prisma.LedgerFindingUpdatecitedTxnIdsInput | string[]
   state?: Prisma.StringFieldUpdateOperationsInput | string
   dismissedRationale?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  acceptedOption?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  overrideAction?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  userInstruction?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   supersedesId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -964,6 +1063,9 @@ export type LedgerFindingCreateManySupersedesInput = {
   citedTxnIds?: Prisma.LedgerFindingCreatecitedTxnIdsInput | string[]
   state?: string
   dismissedRationale?: string | null
+  acceptedOption?: string | null
+  overrideAction?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  userInstruction?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
 }
@@ -980,6 +1082,9 @@ export type LedgerFindingUpdateWithoutSupersedesInput = {
   citedTxnIds?: Prisma.LedgerFindingUpdatecitedTxnIdsInput | string[]
   state?: Prisma.StringFieldUpdateOperationsInput | string
   dismissedRationale?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  acceptedOption?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  overrideAction?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  userInstruction?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   taxYear?: Prisma.TaxYearUpdateOneRequiredWithoutLedgerFindingsNestedInput
@@ -999,6 +1104,9 @@ export type LedgerFindingUncheckedUpdateWithoutSupersedesInput = {
   citedTxnIds?: Prisma.LedgerFindingUpdatecitedTxnIdsInput | string[]
   state?: Prisma.StringFieldUpdateOperationsInput | string
   dismissedRationale?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  acceptedOption?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  overrideAction?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  userInstruction?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   supersededBy?: Prisma.LedgerFindingUncheckedUpdateManyWithoutSupersedesNestedInput
@@ -1017,6 +1125,9 @@ export type LedgerFindingUncheckedUpdateManyWithoutSupersedesInput = {
   citedTxnIds?: Prisma.LedgerFindingUpdatecitedTxnIdsInput | string[]
   state?: Prisma.StringFieldUpdateOperationsInput | string
   dismissedRationale?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  acceptedOption?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  overrideAction?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  userInstruction?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -1065,6 +1176,9 @@ export type LedgerFindingSelect<ExtArgs extends runtime.Types.Extensions.Interna
   citedTxnIds?: boolean
   state?: boolean
   dismissedRationale?: boolean
+  acceptedOption?: boolean
+  overrideAction?: boolean
+  userInstruction?: boolean
   supersedesId?: boolean
   createdAt?: boolean
   updatedAt?: boolean
@@ -1087,6 +1201,9 @@ export type LedgerFindingSelectCreateManyAndReturn<ExtArgs extends runtime.Types
   citedTxnIds?: boolean
   state?: boolean
   dismissedRationale?: boolean
+  acceptedOption?: boolean
+  overrideAction?: boolean
+  userInstruction?: boolean
   supersedesId?: boolean
   createdAt?: boolean
   updatedAt?: boolean
@@ -1107,6 +1224,9 @@ export type LedgerFindingSelectUpdateManyAndReturn<ExtArgs extends runtime.Types
   citedTxnIds?: boolean
   state?: boolean
   dismissedRationale?: boolean
+  acceptedOption?: boolean
+  overrideAction?: boolean
+  userInstruction?: boolean
   supersedesId?: boolean
   createdAt?: boolean
   updatedAt?: boolean
@@ -1127,12 +1247,15 @@ export type LedgerFindingSelectScalar = {
   citedTxnIds?: boolean
   state?: boolean
   dismissedRationale?: boolean
+  acceptedOption?: boolean
+  overrideAction?: boolean
+  userInstruction?: boolean
   supersedesId?: boolean
   createdAt?: boolean
   updatedAt?: boolean
 }
 
-export type LedgerFindingOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "taxYearId" | "generatedRunId" | "severity" | "category" | "title" | "rationale" | "autoFixable" | "proposedAction" | "citedTxnIds" | "state" | "dismissedRationale" | "supersedesId" | "createdAt" | "updatedAt", ExtArgs["result"]["ledgerFinding"]>
+export type LedgerFindingOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "taxYearId" | "generatedRunId" | "severity" | "category" | "title" | "rationale" | "autoFixable" | "proposedAction" | "citedTxnIds" | "state" | "dismissedRationale" | "acceptedOption" | "overrideAction" | "userInstruction" | "supersedesId" | "createdAt" | "updatedAt", ExtArgs["result"]["ledgerFinding"]>
 export type LedgerFindingInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   taxYear?: boolean | Prisma.TaxYearDefaultArgs<ExtArgs>
   supersedes?: boolean | Prisma.LedgerFinding$supersedesArgs<ExtArgs>
@@ -1168,6 +1291,9 @@ export type $LedgerFindingPayload<ExtArgs extends runtime.Types.Extensions.Inter
     citedTxnIds: string[]
     state: string
     dismissedRationale: string | null
+    acceptedOption: string | null
+    overrideAction: runtime.JsonValue | null
+    userInstruction: string | null
     supersedesId: string | null
     createdAt: Date
     updatedAt: Date
@@ -1609,6 +1735,9 @@ export interface LedgerFindingFieldRefs {
   readonly citedTxnIds: Prisma.FieldRef<"LedgerFinding", 'String[]'>
   readonly state: Prisma.FieldRef<"LedgerFinding", 'String'>
   readonly dismissedRationale: Prisma.FieldRef<"LedgerFinding", 'String'>
+  readonly acceptedOption: Prisma.FieldRef<"LedgerFinding", 'String'>
+  readonly overrideAction: Prisma.FieldRef<"LedgerFinding", 'Json'>
+  readonly userInstruction: Prisma.FieldRef<"LedgerFinding", 'String'>
   readonly supersedesId: Prisma.FieldRef<"LedgerFinding", 'String'>
   readonly createdAt: Prisma.FieldRef<"LedgerFinding", 'DateTime'>
   readonly updatedAt: Prisma.FieldRef<"LedgerFinding", 'DateTime'>

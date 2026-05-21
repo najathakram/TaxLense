@@ -979,6 +979,20 @@ model LedgerFinding {
   state           String   @default("PROPOSED")
   // When the user dismisses, capture the rationale for audit defense.
   dismissedRationale String?
+  // When the user accepts an *alternative* to the AI's proposed action instead
+  // of clicking plain "Accept", we capture three things:
+  //   - acceptedOption: short human label of the chosen path, e.g.
+  //     "Move to Line 17 Legal & Professional" or "Other (custom instruction)".
+  //     Drives the audit-trail render — what did the CPA actually pick?
+  //   - overrideAction: the modified ProposedAction the apply path executes
+  //     instead of the original proposedAction. Same JSON shape; same hard rails
+  //     (§274(d) Cohan rejection still runs in lib/findings/apply.ts).
+  //   - userInstruction: free-text from the "Other..." dialog. When set with
+  //     no overrideAction, the apply layer routes to a STOP carrying the
+  //     instruction as the question — no fabricated AI action.
+  acceptedOption    String?
+  overrideAction    Json?
+  userInstruction   String?
   // Chains re-runs: the new PROPOSED row's supersedesId points at the prior
   // PROPOSED row's id. Accepted/applied findings are never superseded.
   supersedesId    String?
